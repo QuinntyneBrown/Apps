@@ -7,7 +7,7 @@
 
 ### 1. **Personal Net Worth Dashboard**
 Track assets, liabilities, investments, and net worth over time with automatic portfolio rebalancing suggestions.
-- **Stack**: PostgreSQL, .NET Core API, Angular with Chart.js
+- **Stack**: SQL Server, .NET Core API, Angular with Chart.js
 - **Key Features**: Asset tracking, net worth trends, investment allocation
 
 ### 2. **Retirement Savings Calculator & Planner**
@@ -17,12 +17,12 @@ Model different retirement scenarios with multiple income streams, Social Securi
 
 ### 3. **Household Budget Manager**
 Collaborative budgeting app for couples with expense categorization and spending alerts.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Shared budgets, expense tracking, category limits, notifications
 
 ### 4. **Investment Portfolio Tracker**
 Aggregate all investment accounts with real-time performance tracking and tax-loss harvesting opportunities.
-- **Stack**: PostgreSQL, .NET Core with third-party APIs, Angular
+- **Stack**: SQL Server, .NET Core with third-party APIs, Angular
 - **Key Features**: Multi-account aggregation, performance analytics, dividend tracking
 
 ### 5. **College Savings Planner**
@@ -32,7 +32,7 @@ Aggregate all investment accounts with real-time performance tracking and tax-lo
 
 ### 6. **Side Hustle Income Tracker**
 Track multiple income streams, expenses, and profitability for side businesses or freelance work.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Multi-business support, P&L statements, tax estimation
 
 ### 7. **Mortgage Payoff Optimizer**
@@ -42,12 +42,12 @@ Calculate optimal extra payment strategies and compare refinancing scenarios.
 
 ### 8. **Subscription Audit Tool**
 Track all recurring subscriptions with cancellation reminders and spending analysis.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Subscription tracking, renewal alerts, cost analysis
 
 ### 9. **Tax Deduction Organizer**
 Year-round tax deduction tracking with document uploads and category management.
-- **Stack**: PostgreSQL with blob storage, .NET Core, Angular
+- **Stack**: SQL Server with blob storage, .NET Core, Angular
 - **Key Features**: Receipt scanning, category management, year-end reports
 
 ### 10. **Charitable Giving Tracker**
@@ -57,12 +57,12 @@ Track donations, generate tax reports, and discover tax-efficient giving strateg
 
 ### 11. **Bill Payment Scheduler**
 Automated bill tracking with payment reminders and cash flow projections.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Bill calendar, payment tracking, cash flow forecasting
 
 ### 12. **Crypto Portfolio Manager**
 Track cryptocurrency holdings across multiple wallets and exchanges with tax reporting.
-- **Stack**: PostgreSQL, .NET Core with crypto APIs, Angular
+- **Stack**: SQL Server, .NET Core with crypto APIs, Angular
 - **Key Features**: Multi-wallet tracking, gain/loss calculation, tax reports
 
 ### 13. **Real Estate Investment Analyzer**
@@ -72,7 +72,7 @@ Evaluate rental properties with cash flow analysis, ROI calculations, and market
 
 ### 14. **Personal Loan Comparison Tool**
 Compare loan offers, calculate total costs, and track existing debt payoff progress.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Loan comparison, amortization schedules, debt snowball/avalanche
 
 ### 15. **Financial Goal Tracker**
@@ -86,7 +86,7 @@ Set and track multiple financial goals with progress visualization and milestone
 
 ### 16. **Personal Health Dashboard**
 Aggregate health data from wearables, track vitals, and monitor health trends over time.
-- **Stack**: PostgreSQL, .NET Core, Angular with health API integrations
+- **Stack**: SQL Server, .NET Core, Angular with health API integrations
 - **Key Features**: Vital tracking, trend analysis, wearable integration
 
 ### 17. **Workout Plan Builder**
@@ -96,12 +96,12 @@ Create custom workout routines with progress tracking and exercise library.
 
 ### 18. **Meal Prep Planner**
 Weekly meal planning with grocery lists and macro tracking for health goals.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Recipe management, meal planning, grocery lists, macro calculator
 
 ### 19. **Running Log & Race Tracker**
 Track runs, analyze performance, and prepare for races with training plans.
-- **Stack**: PostgreSQL, .NET Core, Angular with mapping
+- **Stack**: SQL Server, .NET Core, Angular with mapping
 - **Key Features**: Route tracking, pace analysis, race preparation
 
 ### 20. **Sleep Quality Tracker**
@@ -111,7 +111,7 @@ Monitor sleep patterns, correlate with daily activities, and improve sleep hygie
 
 ### 21. **Medication Reminder System**
 Track medications, vitamins, and supplements with refill reminders.
-- **Stack**: PostgreSQL, .NET Core, Angular with notification system
+- **Stack**: SQL Server, .NET Core, Angular with notification system
 - **Key Features**: Medication schedules, refill tracking, interaction warnings
 
 ### 22. **Blood Pressure Monitor**
@@ -121,12 +121,12 @@ Log blood pressure readings with trend analysis and sharing for doctor visits.
 
 ### 23. **Injury Prevention & Recovery Tracker**
 Track injuries, rehabilitation exercises, and recovery progress.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Injury logging, exercise tracking, recovery milestones
 
 ### 24. **Nutrition Label Scanner**
 Scan food labels, track nutrition, and compare products for healthier choices.
-- **Stack**: PostgreSQL with OCR, .NET Core, Angular
+- **Stack**: SQL Server with OCR, .NET Core, Angular
 - **Key Features**: Barcode scanning, nutrition database, product comparison
 
 ### 25. **Golf Score Tracker & Analyzer**
@@ -136,7 +136,7 @@ Track rounds, analyze performance by hole, and identify improvement areas.
 
 ### 26. **Home Gym Equipment Manager**
 Inventory home gym equipment with maintenance schedules and workout integration.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Equipment inventory, maintenance tracking, exercise mapping
 
 ### 27. **Hydration Tracker**
@@ -146,7 +146,7 @@ Monitor daily water intake with smart reminders and hydration goals.
 
 ### 28. **Stress & Mood Tracker**
 Log daily mood, stress levels, and identify triggers with journal entries.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Mood logging, pattern recognition, journaling
 
 ### 29. **Habit Formation App**
@@ -156,7 +156,7 @@ Build healthy habits with streak tracking and accountability features.
 
 ### 30. **Annual Health Screening Reminder**
 Track recommended health screenings by age and schedule reminders.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Screening schedules, appointment tracking, health timeline
 
 ---
@@ -170,7 +170,7 @@ Track all home maintenance tasks with reminders and service history.
 
 ### 32. **Family Calendar & Event Planner**
 Shared family calendar with color-coding, reminders, and event coordination.
-- **Stack**: PostgreSQL, .NET Core, Angular with calendar libraries
+- **Stack**: SQL Server, .NET Core, Angular with calendar libraries
 - **Key Features**: Shared calendar, family member color-coding, event invites
 
 ### 33. **Chore Assignment & Tracker**
@@ -180,17 +180,17 @@ Assign household chores to family members with completion tracking and rewards.
 
 ### 34. **Home Inventory Manager**
 Catalog home possessions for insurance with photos and value tracking.
-- **Stack**: PostgreSQL with blob storage, .NET Core, Angular
+- **Stack**: SQL Server with blob storage, .NET Core, Angular
 - **Key Features**: Item cataloging, photo upload, insurance reporting
 
 ### 35. **Recipe Manager & Meal Planner**
 Store family recipes, plan meals, and generate shopping lists.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Recipe storage, meal calendar, ingredient lists
 
 ### 36. **Family Photo Album Organizer**
 Organize digital photos by event, person, and date with sharing capabilities.
-- **Stack**: PostgreSQL with blob storage, .NET Core, Angular
+- **Stack**: SQL Server with blob storage, .NET Core, Angular
 - **Key Features**: Photo organization, tagging, album creation, sharing
 
 ### 37. **Kids Activity & Sports Tracker**
@@ -200,7 +200,7 @@ Track children's activities, schedules, and manage carpools.
 
 ### 38. **Home Improvement Project Manager**
 Plan, budget, and track home improvement projects with contractor management.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Project planning, budget tracking, contractor database
 
 ### 39. **Appliance Warranty & Manual Organizer**
@@ -210,7 +210,7 @@ Store appliance manuals, warranty info, and service records in one place.
 
 ### 40. **Pet Care Manager**
 Track vet appointments, medications, and health records for family pets.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Health records, appointment scheduling, vaccination tracking
 
 ### 41. **Grocery Shopping List App**
@@ -220,7 +220,7 @@ Collaborative shopping lists with store organization and price tracking.
 
 ### 42. **Family Vacation Planner**
 Plan trips with itineraries, budget tracking, and booking management.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Itinerary builder, budget tracking, booking organizer
 
 ### 43. **Gift Idea Tracker**
@@ -230,7 +230,7 @@ Remember gift ideas year-round for family and friends with occasion reminders.
 
 ### 44. **Home Energy Usage Tracker**
 Monitor utility bills and identify energy-saving opportunities.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Bill tracking, usage trends, cost comparison
 
 ### 45. **Document Vault & Organizer**
@@ -244,7 +244,7 @@ Securely store important documents with categorization and quick retrieval.
 
 ### 46. **Resume & Career Achievement Tracker**
 Continuously document accomplishments, skills, and projects for resume updates.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Achievement logging, skill tracking, resume generation
 
 ### 47. **Professional Network CRM**
@@ -254,7 +254,7 @@ Manage professional contacts with interaction history and follow-up reminders.
 
 ### 48. **Skill Development Tracker**
 Track learning goals, courses, certifications, and skill progression.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Course tracking, skill assessment, learning path planning
 
 ### 49. **Job Search Organizer**
@@ -264,7 +264,7 @@ Track applications, interviews, and networking with analytics on job search prog
 
 ### 50. **Freelance Project Manager**
 Manage freelance projects, time tracking, and invoicing for side work.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Project tracking, time logging, invoice generation
 
 ### 51. **Meeting Notes & Action Item Tracker**
@@ -274,7 +274,7 @@ Capture meeting notes with automatic action item extraction and follow-ups.
 
 ### 52. **Professional Reading List**
 Track articles, books, and resources for professional development with notes.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Resource tracking, reading progress, note-taking
 
 ### 53. **Salary & Compensation Tracker**
@@ -284,7 +284,7 @@ Track compensation history, benefits, and market rate comparisons.
 
 ### 54. **Conference & Event Manager**
 Track professional conferences, sessions attended, and connections made.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Event tracking, session notes, contact management
 
 ### 55. **Performance Review Prep Tool**
@@ -298,7 +298,7 @@ Document achievements and prepare for annual reviews with goal tracking.
 
 ### 56. **Book Reading Tracker & Library**
 Track books read, manage reading lists, and review personal library.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Reading log, book ratings, reading goals, wish list
 
 ### 57. **Movie & TV Show Watchlist**
@@ -308,7 +308,7 @@ Track what to watch, what you've seen, and rate your favorites.
 
 ### 58. **BBQ & Grilling Recipe Book**
 Store grilling recipes, techniques, and cook times with photos.
-- **Stack**: PostgreSQL with blob storage, .NET Core, Angular
+- **Stack**: SQL Server with blob storage, .NET Core, Angular
 - **Key Features**: Recipe storage, cook time tracking, photo gallery
 
 ### 59. **Home Brewing Tracker**
@@ -318,7 +318,7 @@ Track beer brewing recipes, batch history, and tasting notes.
 
 ### 60. **Fishing Log & Spot Tracker**
 Record fishing trips, catches, and discover productive fishing spots.
-- **Stack**: PostgreSQL with geolocation, .NET Core, Angular
+- **Stack**: SQL Server with geolocation, .NET Core, Angular
 - **Key Features**: Trip logging, catch recording, spot mapping
 
 ### 61. **Woodworking Project Manager**
@@ -328,7 +328,7 @@ Plan projects, track materials, and document completed builds.
 
 ### 62. **Wine Cellar Inventory**
 Catalog wine collection with tasting notes and optimal drinking windows.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Inventory management, tasting notes, drinking windows
 
 ### 63. **Video Game Collection Manager**
@@ -338,7 +338,7 @@ Track game collection, backlog, and completion status across platforms.
 
 ### 64. **Music Collection Organizer**
 Catalog vinyl, CD, or digital music collection with listening stats.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Collection management, listening history, want list
 
 ### 65. **Travel Destination Wishlist**
@@ -348,7 +348,7 @@ Plan future trips, track places visited, and store travel memories.
 
 ### 66. **Photography Session Logger**
 Track photo shoots, camera settings, and organize by project or event.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Session tracking, EXIF data logging, project organization
 
 ### 67. **Sports Team Following Tracker**
@@ -358,7 +358,7 @@ Follow favorite teams with game schedules, scores, and season statistics.
 
 ### 68. **Poker Game Tracker**
 Log poker sessions, track wins/losses, and analyze playing patterns.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Session logging, bankroll tracking, performance analysis
 
 ### 69. **Classic Car Restoration Log**
@@ -368,7 +368,7 @@ Document restoration projects with parts tracking and photo timeline.
 
 ### 70. **Camping Trip Planner**
 Plan camping trips with gear checklists and campsite reviews.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Trip planning, gear lists, campsite database
 
 ---
@@ -382,7 +382,7 @@ Track all vehicle maintenance, repairs, and service history for multiple cars.
 
 ### 72. **Fuel Economy Tracker**
 Monitor gas mileage, fuel costs, and identify efficiency trends.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Mileage logging, cost tracking, efficiency analysis
 
 ### 73. **Car Modification & Parts Database**
@@ -392,7 +392,7 @@ Document vehicle modifications, parts installed, and performance upgrades.
 
 ### 74. **Roadside Assistance Info Hub**
 Store insurance, roadside assistance, and emergency contact information.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Contact storage, policy tracking, quick access dashboard
 
 ### 75. **Vehicle Value Tracker**
@@ -406,7 +406,7 @@ Monitor vehicle values over time and compare to market prices.
 
 ### 76. **Anniversary & Birthday Reminder**
 Never forget important dates with advance reminders and gift suggestions.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Date tracking, reminder system, gift idea storage
 
 ### 77. **Date Night Idea Generator**
@@ -416,7 +416,7 @@ Store date ideas with ratings and discover new activities to try together.
 
 ### 78. **Couples Goal Tracker**
 Set and track relationship goals together with milestone celebrations.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Shared goals, progress tracking, milestone marking
 
 ### 79. **Conversation Starter App**
@@ -426,7 +426,7 @@ Generate meaningful conversation prompts for deeper connections with spouse.
 
 ### 80. **Family Tree Builder**
 Create and maintain detailed family genealogy with photos and stories.
-- **Stack**: PostgreSQL, .NET Core, Angular with tree visualization
+- **Stack**: SQL Server, .NET Core, Angular with tree visualization
 - **Key Features**: Genealogy tracking, photo integration, story collection
 
 ### 81. **Friend Group Event Coordinator**
@@ -436,7 +436,7 @@ Organize gatherings, track RSVPs, and coordinate group activities.
 
 ### 82. **Marriage Enrichment Journal**
 Daily gratitude, appreciation logging, and relationship reflection prompts.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Journaling, gratitude tracking, reflection prompts
 
 ### 83. **Neighborhood Social Network**
@@ -446,7 +446,7 @@ Connect with neighbors for events, recommendations, and local information.
 
 ### 84. **Men's Group Discussion Tracker**
 Organize discussion topics, track attendance, and share resources for men's groups.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Topic planning, attendance tracking, resource library
 
 ### 85. **Letter to Future Self**
@@ -460,7 +460,7 @@ Write messages to your future self with scheduled delivery dates.
 
 ### 86. **Daily Journaling App**
 Structured journaling with prompts, mood tracking, and reflection.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Journal entries, mood logging, search and tagging
 
 ### 87. **Personal Mission Statement Builder**
@@ -470,7 +470,7 @@ Create and track progress toward personal mission and values.
 
 ### 88. **Time Audit & Tracker**
 Analyze how you spend time and optimize for important activities.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Time logging, category analysis, optimization suggestions
 
 ### 89. **Morning Routine Builder**
@@ -480,7 +480,7 @@ Design and track consistent morning routines with completion tracking.
 
 ### 90. **Personal Library of Lessons Learned**
 Document life lessons, insights, and wisdom gained over time.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Lesson logging, category tagging, random reminder
 
 ### 91. **Focus Session Tracker**
@@ -490,7 +490,7 @@ Pomodoro-style focus sessions with distraction logging and productivity analysis
 
 ### 92. **Weekly Review System**
 Structured weekly reflection on accomplishments, challenges, and next week's priorities.
-- **Stack**: PostgreSQL, .NET Core, Angular
+- **Stack**: SQL Server, .NET Core, Angular
 - **Key Features**: Review templates, progress tracking, priority setting
 
 ### 93. **Personal Project Pipeline**
@@ -500,7 +500,7 @@ Manage personal projects with priority ranking and progress tracking.
 
 ### 94. **Knowledge Base & Second Brain**
 Capture and organize knowledge, ideas, and insights for easy retrieval.
-- **Stack**: PostgreSQL with full-text search, .NET Core, Angular
+- **Stack**: SQL Server with full-text search, .NET Core, Angular
 - **Key Features**: Note taking, linking, tagging, search
 
 ### 95. **Bucket List Manager**
@@ -514,7 +514,7 @@ Track life goals and experiences with progress and completion celebration.
 
 ### 96. **Password & Account Auditor**
 Track online accounts, password strength, and breach monitoring (metadata only).
-- **Stack**: PostgreSQL with encryption, .NET Core, Angular
+- **Stack**: SQL Server with encryption, .NET Core, Angular
 - **Key Features**: Account inventory, security scoring, breach alerts
 
 ### 97. **Warranty & Return Period Tracker**
@@ -524,7 +524,7 @@ Never miss a warranty claim or return window with automated reminders.
 
 ### 98. **Personal Wiki**
 Create a personal knowledge repository for reference information and how-tos.
-- **Stack**: PostgreSQL, .NET Core, Angular with markdown support
+- **Stack**: SQL Server, .NET Core, Angular with markdown support
 - **Key Features**: Page creation, linking, search, version history
 
 ### 99. **Life Admin Dashboard**
@@ -534,7 +534,7 @@ Central hub for all administrative tasks, renewals, and important dates.
 
 ### 100. **Digital Legacy Planner**
 Document important information, accounts, and instructions for family in emergencies.
-- **Stack**: PostgreSQL with encryption, .NET Core, Angular
+- **Stack**: SQL Server with encryption, .NET Core, Angular
 - **Key Features**: Secure storage, emergency access, instruction documentation
 
 ---
@@ -543,7 +543,7 @@ Document important information, accounts, and instructions for family in emergen
 
 ### Common Technical Stack
 Most of these apps can be built with:
-- **Database**: PostgreSQL or SQL Server
+- **Database**: SQL Server
 - **Backend**: ASP.NET Core Web API with Clean Architecture, MediatR, Entity Framework Core
 - **Frontend**: Angular 18+ with Angular Material, standalone components, signals
 - **Authentication**: ASP.NET Core Identity or IdentityServer
