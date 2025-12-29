@@ -11,8 +11,6 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
-    .Enrich.WithEnvironmentName()
-    .Enrich.WithMachineName()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
     .CreateLogger();
 
@@ -23,12 +21,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure Entity Framework with SQL Express
+// Configure Entity Framework with SQLite (for easier development)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=.\\SQLEXPRESS;Database=MovieTVShowWatchlist;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true";
+    ?? "Data Source=MovieTVShowWatchlist.db";
 
 builder.Services.AddDbContext<MovieTVShowWatchlistContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<IMovieTVShowWatchlistContext>(provider =>
     provider.GetRequiredService<MovieTVShowWatchlistContext>());
@@ -70,8 +68,17 @@ app.MapControllers();
 // Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<MovieTVShowWatchlistContext>();
-    context.Database.EnsureCreated();
+    try
+    {
+        var context = scope.ServiceProvider.GetRequiredService<MovieTVShowWatchlistContext>();
+        context.Database.EnsureCreated();
+        Log.Information("Database initialized successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while initializing the database");
+        throw;
+    }
 }
 
 try
