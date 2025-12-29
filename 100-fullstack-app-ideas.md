@@ -1,6 +1,4 @@
-# 100 Full-Stack App Ideas for the Modern 40-Year-Old Male & Husband
-*Achievable in 3 months with 2 developers*
-
+# 100 Full-Stack App Ideas
 ---
 
 ## Personal Finance & Investment (1-15)
