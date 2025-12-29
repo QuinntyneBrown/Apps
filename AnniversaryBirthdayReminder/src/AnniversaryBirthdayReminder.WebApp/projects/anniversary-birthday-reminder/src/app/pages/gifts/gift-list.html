@@ -1,0 +1,84 @@
+<div class="gift-list">
+  <ng-container *ngIf="viewModel$ | async as vm">
+    <div class="gift-list__header">
+      <h1 class="gift-list__title">
+        {{ vm.date ? 'Gifts for ' + vm.date.personName : 'All Gifts' }}
+      </h1>
+      <button mat-raised-button color="primary" (click)="openAddDialog(vm.dateId)" *ngIf="vm.dateId">
+        <mat-icon>add</mat-icon>
+        Add Gift Idea
+      </button>
+    </div>
+
+    <mat-card class="gift-list__budget" *ngIf="vm.gifts.length > 0">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>account_balance_wallet</mat-icon>
+        <mat-card-title>Budget Tracker</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="gift-list__budget-stats">
+          <div class="gift-list__budget-stat">
+            <span class="gift-list__budget-label">Budget</span>
+            <span class="gift-list__budget-value">{{ vm.totalBudget | currency }}</span>
+          </div>
+          <div class="gift-list__budget-stat">
+            <span class="gift-list__budget-label">Spent</span>
+            <span class="gift-list__budget-value">{{ vm.totalSpent | currency }}</span>
+          </div>
+          <div class="gift-list__budget-stat">
+            <span class="gift-list__budget-label">Purchased</span>
+            <span class="gift-list__budget-value">{{ vm.purchasedCount }}/{{ vm.gifts.length }}</span>
+          </div>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="getProgress(vm)"></mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="gift-list__items" *ngIf="vm.gifts.length > 0; else emptyState">
+      <mat-card *ngFor="let gift of vm.gifts" class="gift-list__item">
+        <mat-card-content class="gift-list__item-content">
+          <mat-checkbox
+            [checked]="gift.status !== GiftStatus.Idea"
+            (change)="gift.status === GiftStatus.Idea ? markAsPurchased(gift.giftId) : null"
+            [disabled]="gift.status !== GiftStatus.Idea">
+          </mat-checkbox>
+          <div class="gift-list__item-details">
+            <span class="gift-list__item-name" [class.gift-list__item-name--purchased]="gift.status !== GiftStatus.Idea">
+              {{ gift.description }}
+            </span>
+            <span class="gift-list__item-price">
+              {{ gift.estimatedPrice | currency }}
+              <span *ngIf="gift.actualPrice && gift.actualPrice !== gift.estimatedPrice" class="gift-list__item-actual">
+                ({{ gift.actualPrice | currency }})
+              </span>
+            </span>
+          </div>
+          <mat-chip [color]="getStatusColor(gift.status)">{{ gift.status }}</mat-chip>
+          <div class="gift-list__item-actions">
+            <a mat-icon-button [href]="gift.purchaseUrl" target="_blank" *ngIf="gift.purchaseUrl" aria-label="View product">
+              <mat-icon>shopping_cart</mat-icon>
+            </a>
+            <button mat-icon-button *ngIf="gift.status === GiftStatus.Purchased" (click)="markAsDelivered(gift.giftId)" aria-label="Mark as delivered">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteGift(gift.giftId)" aria-label="Delete gift">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="gift-list__empty">
+        <mat-icon class="gift-list__empty-icon">card_giftcard</mat-icon>
+        <h2>No gift ideas yet</h2>
+        <p>Start planning by adding gift ideas for this celebration.</p>
+        <button mat-raised-button color="primary" (click)="openAddDialog(vm.dateId)" *ngIf="vm.dateId">
+          <mat-icon>add</mat-icon>
+          Add First Gift Idea
+        </button>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>
