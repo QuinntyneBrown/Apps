@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log New Injury - Injury Prevention & Recovery Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f7fafc;
+            color: #4a5568;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #edf2f7;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .required {
+            color: #f56565;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .body-diagram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .body-part-btn {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .body-part-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .body-part-btn.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .body-part-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .body-part-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .injury-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .type-btn {
+            padding: 0.875rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .type-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .type-btn.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+            color: #667eea;
+        }
+
+        .severity-slider {
+            width: 100%;
+        }
+
+        .severity-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .severity-label {
+            color: #718096;
+        }
+
+        .severity-value {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .pain-scale {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .pain-number {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pain-number:hover {
+            border-color: #cbd5e0;
+        }
+
+        .pain-number.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .date-input-wrapper {
+            position: relative;
+        }
+
+        .help-text {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-top: 0.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .upload-hint {
+            color: #a0aec0;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Log New Injury</h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>📍</span>
+                            <span>Injury Location</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Select Body Part <span class="required">*</span></label>
+                            <div class="body-diagram-grid">
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🧠</div>
+                                    <div class="body-part-label">Head</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">👐</div>
+                                    <div class="body-part-label">Neck</div>
+                                </button>
+                                <button type="button" class="body-part-btn selected">
+                                    <div class="body-part-icon">💪</div>
+                                    <div class="body-part-label">Shoulder</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">💪</div>
+                                    <div class="body-part-label">Elbow</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">✋</div>
+                                    <div class="body-part-label">Wrist/Hand</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🔄</div>
+                                    <div class="body-part-label">Back</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">💚</div>
+                                    <div class="body-part-label">Chest</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🦵</div>
+                                    <div class="body-part-label">Hip</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🦵</div>
+                                    <div class="body-part-label">Knee</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🦶</div>
+                                    <div class="body-part-label">Ankle</div>
+                                </button>
+                                <button type="button" class="body-part-btn">
+                                    <div class="body-part-icon">🦶</div>
+                                    <div class="body-part-label">Foot</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="specific-location">Specific Location</label>
+                            <input type="text" id="specific-location" class="form-input" placeholder="e.g., Rotator Cuff, Anterior Deltoid" value="Rotator Cuff">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>🏥</span>
+                            <span>Injury Details</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Injury Type <span class="required">*</span></label>
+                            <div class="injury-type-grid">
+                                <button type="button" class="type-btn">Fracture</button>
+                                <button type="button" class="type-btn selected">Strain</button>
+                                <button type="button" class="type-btn">Sprain</button>
+                                <button type="button" class="type-btn">Tendonitis</button>
+                                <button type="button" class="type-btn">Tear</button>
+                                <button type="button" class="type-btn">Other</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="injury-name">Injury Name <span class="required">*</span></label>
+                            <input type="text" id="injury-name" class="form-input" placeholder="e.g., Left Shoulder Impingement" value="Right Shoulder Strain">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="description">Description</label>
+                            <textarea id="description" class="form-input" placeholder="Describe how the injury occurred and any relevant details...">Felt sharp pain during overhead press exercise. Pain increases with arm elevation above shoulder height.</textarea>
+                            <div class="help-text">Include how the injury occurred, symptoms, and any relevant history</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>📊</span>
+                            <span>Severity & Pain Level</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Pain Level (0-10) <span class="required">*</span></label>
+                            <div class="pain-scale">
+                                <button type="button" class="pain-number">0</button>
+                                <button type="button" class="pain-number">1</button>
+                                <button type="button" class="pain-number">2</button>
+                                <button type="button" class="pain-number">3</button>
+                                <button type="button" class="pain-number">4</button>
+                                <button type="button" class="pain-number">5</button>
+                                <button type="button" class="pain-number selected">6</button>
+                                <button type="button" class="pain-number">7</button>
+                                <button type="button" class="pain-number">8</button>
+                                <button type="button" class="pain-number">9</button>
+                                <button type="button" class="pain-number">10</button>
+                            </div>
+                            <div class="severity-labels">
+                                <span class="severity-label">No Pain</span>
+                                <span class="severity-label">Moderate</span>
+                                <span class="severity-label">Severe</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>📅</span>
+                            <span>When Did It Happen?</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="injury-date">Date of Injury <span class="required">*</span></label>
+                            <input type="date" id="injury-date" class="form-input" value="2025-12-28">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>📸</span>
+                            <span>Initial Photo (Optional)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="upload-area">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">Click to upload or drag and drop</div>
+                                <div class="upload-hint">PNG, JPG or JPEG (max. 10MB)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>👨‍⚕️</span>
+                            <span>Medical Information (Optional)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="diagnosis">Medical Diagnosis</label>
+                            <input type="text" id="diagnosis" class="form-input" placeholder="e.g., Grade 2 rotator cuff strain">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="treatment">Treatment Plan</label>
+                            <textarea id="treatment" class="form-input" placeholder="Enter prescribed treatment, medications, or therapy plan..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Save Injury</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

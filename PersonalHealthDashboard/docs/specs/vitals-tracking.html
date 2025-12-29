@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitals Tracking - Personal Health Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            color: #1a202c;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .vital-selector {
+            display: flex;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .vital-tab {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+        }
+
+        .vital-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .chart-placeholder svg {
+            width: 100%;
+            height: 280px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-unit {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            color: #15803d;
+        }
+
+        .stat-change.negative {
+            color: #b91c1c;
+        }
+
+        .readings-list {
+            margin-bottom: 24px;
+        }
+
+        .reading-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #f8fafc;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .reading-item:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .reading-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .reading-info {
+            flex: 1;
+        }
+
+        .reading-date {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .reading-time {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .reading-value {
+            text-align: right;
+        }
+
+        .reading-main {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .reading-status {
+            display: inline-block;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status-normal {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .status-high {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-low {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .log-form {
+            position: sticky;
+            top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .quick-values {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-value {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .quick-value:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .device-source {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bae6fd;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .device-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .device-text h4 {
+            font-size: 14px;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .device-text p {
+            font-size: 12px;
+            color: #0369a1;
+        }
+
+        .range-indicator {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .range-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .range-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .range-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e 0%, #fbbf24 50%, #ef4444 100%);
+            border-radius: 4px;
+        }
+
+        .range-marker {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: #1a202c;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="back-btn">←</div>
+                <h1>Vitals Tracking</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary">Export Data</button>
+                <button class="btn btn-primary">+ Log Reading</button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div>
+                <div class="card">
+                    <div class="vital-selector">
+                        <div class="vital-tab active">Blood Pressure</div>
+                        <div class="vital-tab">Heart Rate</div>
+                        <div class="vital-tab">Weight</div>
+                        <div class="vital-tab">Temperature</div>
+                        <div class="vital-tab">Glucose</div>
+                    </div>
+
+                    <div class="chart-container">
+                        <svg class="chart-placeholder" viewBox="0 0 800 280">
+                            <!-- Grid lines -->
+                            <line x1="60" y1="20" x2="60" y2="260" stroke="#e2e8f0" stroke-width="2"/>
+                            <line x1="60" y1="260" x2="780" y2="260" stroke="#e2e8f0" stroke-width="2"/>
+
+                            <!-- Horizontal grid lines -->
+                            <line x1="60" y1="80" x2="780" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+                            <line x1="60" y1="140" x2="780" y2="140" stroke="#f1f5f9" stroke-width="1"/>
+                            <line x1="60" y1="200" x2="780" y2="200" stroke="#f1f5f9" stroke-width="1"/>
+
+                            <!-- Y-axis labels -->
+                            <text x="40" y="25" font-size="12" fill="#94a3b8">140</text>
+                            <text x="40" y="85" font-size="12" fill="#94a3b8">130</text>
+                            <text x="40" y="145" font-size="12" fill="#94a3b8">120</text>
+                            <text x="40" y="205" font-size="12" fill="#94a3b8">110</text>
+                            <text x="40" y="265" font-size="12" fill="#94a3b8">100</text>
+
+                            <!-- X-axis labels -->
+                            <text x="100" y="275" font-size="11" fill="#94a3b8">Mon</text>
+                            <text x="220" y="275" font-size="11" fill="#94a3b8">Tue</text>
+                            <text x="340" y="275" font-size="11" fill="#94a3b8">Wed</text>
+                            <text x="460" y="275" font-size="11" fill="#94a3b8">Thu</text>
+                            <text x="580" y="275" font-size="11" fill="#94a3b8">Fri</text>
+                            <text x="700" y="275" font-size="11" fill="#94a3b8">Sat</text>
+
+                            <!-- Systolic line (top) -->
+                            <path d="M 100 140 L 220 120 L 340 135 L 460 125 L 580 130 L 700 118"
+                                  stroke="url(#gradient1)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+                            <!-- Diastolic line (bottom) -->
+                            <path d="M 100 200 L 220 190 L 340 205 L 460 195 L 580 200 L 700 188"
+                                  stroke="url(#gradient2)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+                            <!-- Data points - Systolic -->
+                            <circle cx="100" cy="140" r="5" fill="#667eea"/>
+                            <circle cx="220" cy="120" r="5" fill="#667eea"/>
+                            <circle cx="340" cy="135" r="5" fill="#667eea"/>
+                            <circle cx="460" cy="125" r="5" fill="#667eea"/>
+                            <circle cx="580" cy="130" r="5" fill="#667eea"/>
+                            <circle cx="700" cy="118" r="5" fill="#667eea"/>
+
+                            <!-- Data points - Diastolic -->
+                            <circle cx="100" cy="200" r="5" fill="#764ba2"/>
+                            <circle cx="220" cy="190" r="5" fill="#764ba2"/>
+                            <circle cx="340" cy="205" r="5" fill="#764ba2"/>
+                            <circle cx="460" cy="195" r="5" fill="#764ba2"/>
+                            <circle cx="580" cy="200" r="5" fill="#764ba2"/>
+                            <circle cx="700" cy="188" r="5" fill="#764ba2"/>
+
+                            <defs>
+                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#764ba2;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#667eea;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Current</div>
+                            <div class="stat-value">118<span class="stat-unit">/75</span></div>
+                            <div class="stat-change positive">↓ 3 mmHg</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Average (7d)</div>
+                            <div class="stat-value">120<span class="stat-unit">/78</span></div>
+                            <div class="stat-change positive">↓ 2.5%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Lowest</div>
+                            <div class="stat-value">115<span class="stat-unit">/72</span></div>
+                            <div class="stat-change">Dec 27</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Highest</div>
+                            <div class="stat-value">128<span class="stat-unit">/84</span></div>
+                            <div class="stat-change">Dec 23</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Readings</div>
+                    </div>
+                    <div class="readings-list">
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">Today, December 29</div>
+                                <div class="reading-time">10:45 AM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">118/75</div>
+                                <span class="reading-status status-normal">Normal</span>
+                            </div>
+                        </div>
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">Yesterday, December 28</div>
+                                <div class="reading-time">9:30 AM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">122/79</div>
+                                <span class="reading-status status-normal">Normal</span>
+                            </div>
+                        </div>
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">December 27</div>
+                                <div class="reading-time">11:15 AM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">115/72</div>
+                                <span class="reading-status status-normal">Normal</span>
+                            </div>
+                        </div>
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">December 26</div>
+                                <div class="reading-time">10:00 AM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">120/76</div>
+                                <span class="reading-status status-normal">Normal</span>
+                            </div>
+                        </div>
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">December 25</div>
+                                <div class="reading-time">9:45 AM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">124/80</div>
+                                <span class="reading-status status-normal">Normal</span>
+                            </div>
+                        </div>
+                        <div class="reading-item">
+                            <div class="reading-icon" style="background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);">🩺</div>
+                            <div class="reading-info">
+                                <div class="reading-date">December 23</div>
+                                <div class="reading-time">2:30 PM</div>
+                            </div>
+                            <div class="reading-value">
+                                <div class="reading-main">128/84</div>
+                                <span class="reading-status status-warning">Elevated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card log-form">
+                <div class="card-header">
+                    <div class="card-title">Log New Reading</div>
+                </div>
+
+                <div class="device-source">
+                    <div class="device-icon">⌚</div>
+                    <div class="device-text">
+                        <h4>Apple Watch Series 8</h4>
+                        <p>Auto-sync enabled</p>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Measurement Type</label>
+                        <select class="form-select">
+                            <option>Blood Pressure</option>
+                            <option>Heart Rate</option>
+                            <option>Weight</option>
+                            <option>Body Temperature</option>
+                            <option>Blood Glucose</option>
+                            <option>Oxygen Saturation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Blood Pressure</label>
+                        <div class="input-row">
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" placeholder="120" value="118">
+                                <span class="input-unit">SYS</span>
+                            </div>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" placeholder="80" value="75">
+                                <span class="input-unit">DIA</span>
+                            </div>
+                        </div>
+                        <div class="range-indicator">
+                            <div class="range-label">Normal Range: 90/60 - 120/80 mmHg</div>
+                            <div class="range-bar">
+                                <div class="range-fill"></div>
+                                <div class="range-marker" style="left: 42%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Heart Rate (optional)</label>
+                        <div class="input-with-unit">
+                            <input type="number" class="form-input" placeholder="72" value="72">
+                            <span class="input-unit">bpm</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Date & Time</label>
+                        <div class="input-row">
+                            <input type="date" class="form-input" value="2025-12-29">
+                            <input type="time" class="form-input" value="10:45">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Condition</label>
+                        <select class="form-select">
+                            <option>Resting</option>
+                            <option>After Exercise</option>
+                            <option>Before Meal</option>
+                            <option>After Meal</option>
+                            <option>Stressed</option>
+                            <option>After Medication</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea class="form-textarea" placeholder="Add any additional notes about this reading..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">Save Reading</button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%;">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

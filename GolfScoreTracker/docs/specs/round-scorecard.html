@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Round - Scorecard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+
+        .logo span {
+            color: #4CAF50;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .course-info {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .course-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .score-summary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: white;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 24px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-value {
+            font-size: 42px;
+            font-weight: 800;
+        }
+
+        .summary-detail {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .scorecard {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .scorecard-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 700;
+            color: #333;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .hole-number {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .current-hole {
+            background: #4CAF50 !important;
+            color: white !important;
+            position: relative;
+        }
+
+        .current-hole::after {
+            content: '▼';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+
+        .total-cell {
+            background: #f9f9f9;
+            font-weight: 800;
+        }
+
+        .score-birdie {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 800;
+        }
+
+        .score-eagle {
+            background: #C8E6C9;
+            color: #1B5E20;
+            font-weight: 800;
+        }
+
+        .score-par {
+            background: #fff;
+        }
+
+        .score-bogey {
+            background: #FFF9C4;
+            color: #F57C00;
+            font-weight: 800;
+        }
+
+        .score-double-bogey {
+            background: #FFECB3;
+            color: #E65100;
+            font-weight: 800;
+        }
+
+        .score-over {
+            background: #FFEBEE;
+            color: #C62828;
+            font-weight: 800;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.green { background: #E8F5E9; }
+        .stat-icon.blue { background: #E3F2FD; }
+        .stat-icon.orange { background: #FFF3E0; }
+        .stat-icon.purple { background: #F3E5F5; }
+
+        .stat-info h4 {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .stat-info p {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .hole-detail {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .hole-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .hole-detail-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .hole-detail-par {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .score-input {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .score-btn {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .score-btn:hover {
+            border-color: #4CAF50;
+            background: #f5f5f5;
+        }
+
+        .score-btn.selected {
+            border-color: #4CAF50;
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .detail-stat {
+            text-align: center;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .detail-stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .detail-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                ⛳ Golf<span>Score</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Save & Exit</button>
+                <button class="btn btn-primary">Finish Round</button>
+            </div>
+        </header>
+
+        <div class="course-info">
+            <div class="course-header">
+                <h1 class="course-name">Pebble Beach Golf Links</h1>
+            </div>
+            <div class="course-meta">
+                <div class="meta-item">
+                    <span>📍</span>
+                    <span>Pebble Beach, CA</span>
+                </div>
+                <div class="meta-item">
+                    <span>⛳</span>
+                    <span>Blue Tees</span>
+                </div>
+                <div class="meta-item">
+                    <span>📊</span>
+                    <span>Rating: 75.5 / Slope: 145</span>
+                </div>
+                <div class="meta-item">
+                    <span>🌤️</span>
+                    <span>Partly Cloudy, 68°F</span>
+                </div>
+                <div class="meta-item">
+                    <span>📅</span>
+                    <span>Dec 29, 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="score-summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Current Score</div>
+                    <div class="summary-value">42</div>
+                    <div class="summary-detail">Through 11 holes</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">To Par</div>
+                    <div class="summary-value">+3</div>
+                    <div class="summary-detail">3 over par</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Pars</div>
+                    <div class="summary-value">6</div>
+                    <div class="summary-detail">54% par rate</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Birdies</div>
+                    <div class="summary-value">2</div>
+                    <div class="summary-detail">18% birdie rate</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Projected Score</div>
+                    <div class="summary-value">83</div>
+                    <div class="summary-detail">+11 to par</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon green">🎯</div>
+                <div class="stat-info">
+                    <h4>Fairways Hit</h4>
+                    <p>6/9 (67%)</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">🟢</div>
+                <div class="stat-info">
+                    <h4>Greens in Reg</h4>
+                    <p>5/11 (45%)</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">⛳</div>
+                <div class="stat-info">
+                    <h4>Total Putts</h4>
+                    <p>18</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">⚠️</div>
+                <div class="stat-info">
+                    <h4>Penalties</h4>
+                    <p>1</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="scorecard">
+            <h2 class="scorecard-title">Front Nine</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hole</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6</th>
+                        <th>7</th>
+                        <th>8</th>
+                        <th>9</th>
+                        <th>OUT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Par</strong></td>
+                        <td>4</td>
+                        <td>5</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>3</td>
+                        <td>5</td>
+                        <td>3</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td class="total-cell">36</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Yards</strong></td>
+                        <td>381</td>
+                        <td>502</td>
+                        <td>390</td>
+                        <td>331</td>
+                        <td>166</td>
+                        <td>513</td>
+                        <td>106</td>
+                        <td>418</td>
+                        <td>466</td>
+                        <td class="total-cell">3273</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Score</strong></td>
+                        <td class="score-par">4</td>
+                        <td class="score-birdie">4</td>
+                        <td class="score-bogey">5</td>
+                        <td class="score-par">4</td>
+                        <td class="score-par">3</td>
+                        <td class="score-par">5</td>
+                        <td class="score-par">3</td>
+                        <td class="score-birdie">3</td>
+                        <td class="score-bogey">5</td>
+                        <td class="total-cell">36</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Putts</strong></td>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td class="total-cell">14</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="scorecard">
+            <h2 class="scorecard-title">Back Nine</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hole</th>
+                        <th>10</th>
+                        <th class="current-hole">11</th>
+                        <th>12</th>
+                        <th>13</th>
+                        <th>14</th>
+                        <th>15</th>
+                        <th>16</th>
+                        <th>17</th>
+                        <th>18</th>
+                        <th>IN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Par</strong></td>
+                        <td>4</td>
+                        <td class="current-hole">4</td>
+                        <td>3</td>
+                        <td>4</td>
+                        <td>5</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>3</td>
+                        <td>5</td>
+                        <td class="total-cell">36</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Yards</strong></td>
+                        <td>446</td>
+                        <td class="current-hole">380</td>
+                        <td>202</td>
+                        <td>445</td>
+                        <td>573</td>
+                        <td>397</td>
+                        <td>403</td>
+                        <td>209</td>
+                        <td>543</td>
+                        <td class="total-cell">3598</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Score</strong></td>
+                        <td class="score-bogey">5</td>
+                        <td class="current-hole">-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="total-cell">-</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Putts</strong></td>
+                        <td>2</td>
+                        <td class="current-hole">-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="total-cell">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="hole-detail">
+            <div class="hole-detail-header">
+                <h2 class="hole-detail-title">Hole 11</h2>
+                <div class="hole-detail-par">Par 4 • 380 yards</div>
+            </div>
+
+            <h3 style="margin-bottom: 16px; font-size: 18px; color: #666;">Enter Score</h3>
+            <div class="score-input">
+                <button class="score-btn">2</button>
+                <button class="score-btn">3</button>
+                <button class="score-btn selected">4</button>
+                <button class="score-btn">5</button>
+                <button class="score-btn">6</button>
+                <button class="score-btn">7+</button>
+            </div>
+
+            <h3 style="margin-bottom: 16px; font-size: 18px; color: #666;">Hole Details</h3>
+            <div class="detail-stats">
+                <div class="detail-stat">
+                    <div class="detail-stat-label">Fairway Hit</div>
+                    <div class="detail-stat-value">✓</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="detail-stat-label">Green in Reg</div>
+                    <div class="detail-stat-value">✓</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="detail-stat-label">Putts</div>
+                    <div class="detail-stat-value">2</div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn btn-secondary">← Previous Hole</button>
+                <button class="nav-btn btn-primary">Next Hole →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

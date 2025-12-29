@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievement Tracker - Video Game Collection Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .featured-achievements {
+            background: linear-gradient(135deg, rgba(255, 165, 2, 0.1), rgba(255, 99, 72, 0.1));
+            border: 1px solid rgba(255, 165, 2, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .featured-header {
+            font-size: 20px;
+            color: #ffa502;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .featured-achievement {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(255, 165, 2, 0.3);
+        }
+
+        .achievement-badge {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffa502, #ff6348);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 10px 30px rgba(255, 165, 2, 0.3);
+        }
+
+        .achievement-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .achievement-game {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .achievement-rarity {
+            padding: 5px 12px;
+            background: rgba(255, 165, 2, 0.2);
+            border-radius: 20px;
+            font-size: 11px;
+            color: #ffa502;
+            display: inline-block;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            color: #00d4ff;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .filter-tab.active {
+            background: #00d4ff;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .game-achievements {
+            margin-bottom: 30px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .game-header:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .game-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .game-details h3 {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .game-progress {
+            font-size: 13px;
+            color: #00d4ff;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+        }
+
+        .achievement-list {
+            display: grid;
+            gap: 10px;
+            padding-left: 15px;
+        }
+
+        .achievement-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-item.unlocked {
+            border-left: 3px solid #00ff88;
+        }
+
+        .achievement-item.locked {
+            opacity: 0.5;
+            border-left: 3px solid #666;
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .achievement-icon.unlocked {
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+        }
+
+        .achievement-icon.locked {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-details {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .achievement-meta {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 10px;
+        }
+
+        .trophy-showcase {
+            margin-bottom: 20px;
+        }
+
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .trophy-card {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .trophy-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .trophy-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .trophy-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .recent-unlocks {
+            display: grid;
+            gap: 12px;
+        }
+
+        .recent-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 3px solid #00ff88;
+        }
+
+        .recent-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .recent-info {
+            flex: 1;
+        }
+
+        .recent-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .recent-game {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .recent-time {
+            font-size: 10px;
+            color: #666;
+            text-align: right;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .trophy-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span>🏆</span>
+            Achievement Tracker
+        </h1>
+    </div>
+
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">2,456</div>
+            <div class="stat-label">Total Achievements</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value">89,340</div>
+            <div class="stat-label">Gamerscore</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💯</div>
+            <div class="stat-value">42</div>
+            <div class="stat-label">Perfect Games</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💎</div>
+            <div class="stat-value">128</div>
+            <div class="stat-label">Rare Achievements</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value">73%</div>
+            <div class="stat-label">Completion Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value">+84</div>
+            <div class="stat-label">This Month</div>
+        </div>
+    </div>
+
+    <div class="featured-achievements">
+        <div class="featured-header">
+            <span>⭐</span>
+            Recent Rare Achievements
+        </div>
+        <div class="featured-grid">
+            <div class="featured-achievement">
+                <div class="achievement-badge">👑</div>
+                <div class="achievement-name">Elden Lord</div>
+                <div class="achievement-game">Elden Ring</div>
+                <div class="achievement-rarity">Ultra Rare • 8.2%</div>
+            </div>
+
+            <div class="featured-achievement">
+                <div class="achievement-badge">⚔️</div>
+                <div class="achievement-name">Shardbearer Malenia</div>
+                <div class="achievement-game">Elden Ring</div>
+                <div class="achievement-rarity">Ultra Rare • 4.1%</div>
+            </div>
+
+            <div class="featured-achievement">
+                <div class="achievement-badge">💯</div>
+                <div class="achievement-name">Embrace the Void</div>
+                <div class="achievement-game">Hollow Knight</div>
+                <div class="achievement-rarity">Ultra Rare • 2.7%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="section">
+            <div class="section-header">
+                <h2>Game Achievements</h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active">In Progress</button>
+                    <button class="filter-tab">Completed</button>
+                    <button class="filter-tab">All Games</button>
+                </div>
+            </div>
+
+            <div class="game-achievements">
+                <div class="game-header">
+                    <div class="game-info">
+                        <div class="game-icon" style="background: linear-gradient(135deg, #c94b4b, #4b134f);">ER</div>
+                        <div class="game-details">
+                            <h3>Elden Ring</h3>
+                            <div class="game-progress">28 / 42 achievements (67%)</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 67%;"></div>
+                    </div>
+                </div>
+
+                <div class="achievement-list">
+                    <div class="achievement-item unlocked">
+                        <div class="achievement-icon unlocked">👑</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Elden Lord</div>
+                            <div class="achievement-desc">Defeat the final boss and become Elden Lord</div>
+                            <div class="achievement-meta">
+                                <span>🏆 50G</span>
+                                <span>💎 Ultra Rare (8.2%)</span>
+                                <span>📅 Unlocked 2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-item unlocked">
+                        <div class="achievement-icon unlocked">⚔️</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Shardbearer Malenia</div>
+                            <div class="achievement-desc">Defeat Malenia, Blade of Miquella</div>
+                            <div class="achievement-meta">
+                                <span>🏆 30G</span>
+                                <span>💎 Ultra Rare (4.1%)</span>
+                                <span>📅 Unlocked yesterday</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-item unlocked">
+                        <div class="achievement-icon unlocked">🗡️</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Legendary Armaments</div>
+                            <div class="achievement-desc">Acquire all legendary armaments</div>
+                            <div class="achievement-meta">
+                                <span>🏆 30G</span>
+                                <span>💎 Rare (12.5%)</span>
+                                <span>📅 Unlocked 3 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-item locked">
+                        <div class="achievement-icon locked">🔒</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Age of Stars</div>
+                            <div class="achievement-desc">Complete Ranni's questline</div>
+                            <div class="achievement-meta">
+                                <span>🏆 50G</span>
+                                <span>💎 Rare (15.8%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-achievements">
+                <div class="game-header">
+                    <div class="game-info">
+                        <div class="game-icon" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">TOTK</div>
+                        <div class="game-details">
+                            <h3>The Legend of Zelda: Tears of the Kingdom</h3>
+                            <div class="game-progress">12 / 32 achievements (38%)</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 38%;"></div>
+                    </div>
+                </div>
+
+                <div class="achievement-list">
+                    <div class="achievement-item unlocked">
+                        <div class="achievement-icon unlocked">🗡️</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Master Sword Acquired</div>
+                            <div class="achievement-desc">Obtain the legendary Master Sword</div>
+                            <div class="achievement-meta">
+                                <span>📅 Unlocked 2 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-item unlocked">
+                        <div class="achievement-icon unlocked">⛰️</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Tower Activation Expert</div>
+                            <div class="achievement-desc">Activate all Skyview Towers</div>
+                            <div class="achievement-meta">
+                                <span>📅 Unlocked 4 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievement-item locked">
+                        <div class="achievement-icon locked">🔒</div>
+                        <div class="achievement-details">
+                            <div class="achievement-title">Shrine Seeker</div>
+                            <div class="achievement-desc">Complete all 152 shrines</div>
+                            <div class="achievement-meta">
+                                <span>💎 Rare (18.2%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-achievements">
+                <div class="game-header">
+                    <div class="game-info">
+                        <div class="game-icon" style="background: linear-gradient(135deg, #141e30, #243b55);">HK</div>
+                        <div class="game-details">
+                            <h3>Hollow Knight</h3>
+                            <div class="game-progress">57 / 57 achievements (100%)</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section trophy-showcase">
+                <div class="section-header">
+                    <h2>🏆 Trophy Collection</h2>
+                </div>
+
+                <div class="trophy-grid">
+                    <div class="trophy-card">
+                        <div class="trophy-icon">🥇</div>
+                        <div class="trophy-count">18</div>
+                        <div class="trophy-label">Platinum Trophies</div>
+                    </div>
+
+                    <div class="trophy-card" style="background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(169, 169, 169, 0.1));">
+                        <div class="trophy-icon">🥈</div>
+                        <div class="trophy-count" style="color: #c0c0c0;">234</div>
+                        <div class="trophy-label">Gold Trophies</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>⚡ Recent Unlocks</h2>
+                </div>
+
+                <div class="recent-unlocks">
+                    <div class="recent-item">
+                        <div class="recent-icon">👑</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Elden Lord</div>
+                            <div class="recent-game">Elden Ring</div>
+                        </div>
+                        <div class="recent-time">2 hrs ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">⚔️</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Shardbearer Malenia</div>
+                            <div class="recent-game">Elden Ring</div>
+                        </div>
+                        <div class="recent-time">1 day ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">🗡️</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Legendary Armaments</div>
+                            <div class="recent-game">Elden Ring</div>
+                        </div>
+                        <div class="recent-time">3 days ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">⛰️</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Tower Activation Expert</div>
+                            <div class="recent-game">Zelda: TOTK</div>
+                        </div>
+                        <div class="recent-time">4 days ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">💯</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Embrace the Void</div>
+                            <div class="recent-game">Hollow Knight</div>
+                        </div>
+                        <div class="recent-time">1 week ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">🏆</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Steel Soul</div>
+                            <div class="recent-game">Hollow Knight</div>
+                        </div>
+                        <div class="recent-time">1 week ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">⚡</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Speedrun Master</div>
+                            <div class="recent-game">Hollow Knight</div>
+                        </div>
+                        <div class="recent-time">1 week ago</div>
+                    </div>
+
+                    <div class="recent-item">
+                        <div class="recent-icon">🎯</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Pantheon Champion</div>
+                            <div class="recent-game">Hollow Knight</div>
+                        </div>
+                        <div class="recent-time">2 weeks ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

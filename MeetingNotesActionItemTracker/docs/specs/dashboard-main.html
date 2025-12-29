@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Notes & Action Item Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #434190;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat-change.positive {
+            color: #48bb78;
+        }
+
+        .stat-change.negative {
+            color: #f56565;
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .icon.purple { background: #e9d8fd; }
+        .icon.blue { background: #bee3f8; }
+        .icon.green { background: #c6f6d5; }
+        .icon.orange { background: #fbd38d; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .meeting-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .meeting-item:last-child {
+            border-bottom: none;
+        }
+
+        .meeting-item:hover {
+            background: #f7fafc;
+        }
+
+        .meeting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .meeting-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .meeting-time {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .meeting-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .participants {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .participant-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            font-size: 0.625rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .action-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .action-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .action-content {
+            flex: 1;
+        }
+
+        .action-title {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .action-meta {
+            font-size: 0.75rem;
+            color: #718096;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .badge.medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .badge.low {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge.overdue {
+            background: #fc8181;
+            color: white;
+        }
+
+        .upcoming-meeting {
+            padding: 1rem;
+            border-left: 4px solid #4c51bf;
+            background: #f7fafc;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .upcoming-meeting:last-child {
+            margin-bottom: 0;
+        }
+
+        .upcoming-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-time {
+            color: #718096;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .link {
+            color: #4c51bf;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📝 MeetingTracker</div>
+        <div class="header-actions">
+            <button class="btn btn-secondary">🔍 Search</button>
+            <button class="btn btn-primary">+ New Meeting</button>
+            <div class="user-avatar">RL</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back, Rachel! Here's what's happening today.</p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Upcoming Meetings</span>
+                    <div class="icon purple">📅</div>
+                </div>
+                <div class="stat-value">8</div>
+                <div class="stat-change positive">↑ 2 from last week</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Pending Action Items</span>
+                    <div class="icon blue">✓</div>
+                </div>
+                <div class="stat-value">23</div>
+                <div class="stat-change negative">↑ 5 overdue</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Completion Rate</span>
+                    <div class="icon green">📊</div>
+                </div>
+                <div class="stat-value">84%</div>
+                <div class="stat-change positive">↑ 4% from last week</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Meetings This Week</span>
+                    <div class="icon orange">🎯</div>
+                </div>
+                <div class="stat-value">12</div>
+                <div class="stat-change">Same as last week</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Meetings</h2>
+                        <a href="#" class="link">View all →</a>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div class="meeting-item">
+                            <div class="meeting-header">
+                                <div>
+                                    <div class="meeting-title">Q4 Product Planning Review</div>
+                                    <div class="meeting-time">Today at 2:00 PM • 1 hour</div>
+                                </div>
+                                <span class="badge high">High</span>
+                            </div>
+                            <div class="meeting-meta">
+                                <div class="participants">
+                                    <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                    <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                    <div class="participant-avatar" style="background: #ed8936;">DE</div>
+                                    <div class="participant-avatar" style="background: #9f7aea;">+3</div>
+                                </div>
+                                <span>• 8 action items</span>
+                                <span>• 3 decisions</span>
+                            </div>
+                        </div>
+
+                        <div class="meeting-item">
+                            <div class="meeting-header">
+                                <div>
+                                    <div class="meeting-title">Engineering Team Standup</div>
+                                    <div class="meeting-time">Yesterday at 9:00 AM • 30 minutes</div>
+                                </div>
+                                <span class="badge medium">Medium</span>
+                            </div>
+                            <div class="meeting-meta">
+                                <div class="participants">
+                                    <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                    <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                    <div class="participant-avatar" style="background: #ed8936;">SK</div>
+                                    <div class="participant-avatar" style="background: #9f7aea;">JD</div>
+                                </div>
+                                <span>• 5 action items</span>
+                                <span>• 1 decision</span>
+                            </div>
+                        </div>
+
+                        <div class="meeting-item">
+                            <div class="meeting-header">
+                                <div>
+                                    <div class="meeting-title">Client Feedback Session - Acme Corp</div>
+                                    <div class="meeting-time">Dec 26 at 3:00 PM • 45 minutes</div>
+                                </div>
+                                <span class="badge low">Low</span>
+                            </div>
+                            <div class="meeting-meta">
+                                <div class="participants">
+                                    <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                    <div class="participant-avatar" style="background: #48bb78;">DE</div>
+                                </div>
+                                <span>• 12 action items</span>
+                                <span>• 5 decisions</span>
+                            </div>
+                        </div>
+
+                        <div class="meeting-item">
+                            <div class="meeting-header">
+                                <div>
+                                    <div class="meeting-title">Marketing Campaign Brainstorm</div>
+                                    <div class="meeting-time">Dec 24 at 10:00 AM • 1.5 hours</div>
+                                </div>
+                                <span class="badge medium">Medium</span>
+                            </div>
+                            <div class="meeting-meta">
+                                <div class="participants">
+                                    <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                    <div class="participant-avatar" style="background: #ed8936;">TS</div>
+                                    <div class="participant-avatar" style="background: #9f7aea;">KL</div>
+                                </div>
+                                <span>• 6 action items</span>
+                                <span>• 2 decisions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Action Items</h2>
+                        <a href="#" class="link">View all →</a>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div class="action-item">
+                            <div class="checkbox"></div>
+                            <div class="action-content">
+                                <div class="action-title">Prepare Q4 budget presentation for board meeting</div>
+                                <div class="action-meta">
+                                    <span class="badge overdue">Overdue</span>
+                                    <span>Due: Dec 27</span>
+                                    <span>From: Q4 Product Planning Review</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="checkbox"></div>
+                            <div class="action-content">
+                                <div class="action-title">Review and approve new marketing designs</div>
+                                <div class="action-meta">
+                                    <span class="badge high">High</span>
+                                    <span>Due: Dec 30</span>
+                                    <span>From: Marketing Campaign Brainstorm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="checkbox"></div>
+                            <div class="action-content">
+                                <div class="action-title">Schedule follow-up with Acme Corp stakeholders</div>
+                                <div class="action-meta">
+                                    <span class="badge medium">Medium</span>
+                                    <span>Due: Jan 2</span>
+                                    <span>From: Client Feedback Session</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="checkbox"></div>
+                            <div class="action-content">
+                                <div class="action-title">Update product roadmap based on client feedback</div>
+                                <div class="action-meta">
+                                    <span class="badge medium">Medium</span>
+                                    <span>Due: Jan 5</span>
+                                    <span>From: Client Feedback Session</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="checkbox"></div>
+                            <div class="action-content">
+                                <div class="action-title">Send engineering team capacity analysis</div>
+                                <div class="action-meta">
+                                    <span class="badge low">Low</span>
+                                    <span>Due: Jan 8</span>
+                                    <span>From: Engineering Team Standup</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Upcoming Meetings</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="upcoming-meeting">
+                            <div class="upcoming-title">Sprint Planning - Team Alpha</div>
+                            <div class="upcoming-time">🕐 Today at 4:00 PM</div>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                <div class="participant-avatar" style="background: #ed8936;">SK</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">+5</div>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="btn btn-secondary btn-small">Join Zoom</button>
+                                <button class="btn btn-secondary btn-small">View Agenda</button>
+                            </div>
+                        </div>
+
+                        <div class="upcoming-meeting">
+                            <div class="upcoming-title">1:1 with Marcus</div>
+                            <div class="upcoming-time">🕐 Tomorrow at 10:00 AM</div>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="btn btn-secondary btn-small">Join Teams</button>
+                                <button class="btn btn-secondary btn-small">View Notes</button>
+                            </div>
+                        </div>
+
+                        <div class="upcoming-meeting">
+                            <div class="upcoming-title">Design Review - Mobile App</div>
+                            <div class="upcoming-time">🕐 Tomorrow at 2:00 PM</div>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #ed8936;">TS</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">KL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">+2</div>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="btn btn-secondary btn-small">Join Meet</button>
+                                <button class="btn btn-secondary btn-small">View Designs</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Decisions</h2>
+                        <a href="#" class="link">View all →</a>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Delay feature launch to Q1</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Q4 Product Planning Review • Today</div>
+                        </div>
+                        <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Allocate additional budget for marketing</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Marketing Campaign Brainstorm • Dec 24</div>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Hire 2 additional engineers in Q1</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Engineering Team Standup • Dec 23</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Tracking - Home Energy Usage Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .add-bill-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-bill-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .summary-card.total::before {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .summary-card.paid::before {
+            background: linear-gradient(90deg, #48bb78 0%, #38b2ac 100%);
+        }
+
+        .summary-card.due::before {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .summary-card.overdue::before {
+            background: linear-gradient(90deg, #fc466b 0%, #3f5efb 100%);
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .summary-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            background: #f7fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .bills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .bill-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bill-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .bill-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .bill-card.electric::before {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .bill-card.gas::before {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .bill-card.water::before {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .bill-type {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .bill-card.electric .bill-icon {
+            background: rgba(240, 147, 251, 0.1);
+            color: #f5576c;
+        }
+
+        .bill-card.gas .bill-icon {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .bill-card.water .bill-icon {
+            background: rgba(67, 233, 123, 0.1);
+            color: #43e97b;
+        }
+
+        .bill-type-info h3 {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .bill-type-info p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .bill-status {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .bill-status.paid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .bill-status.due {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .bill-status.overdue {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+
+        .bill-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .bill-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .bill-detail {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .bill-detail-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .bill-detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .bill-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #1a202c;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .upcoming-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .upcoming-section h2 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .upcoming-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .upcoming-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+
+        .upcoming-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upcoming-date {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            min-width: 70px;
+        }
+
+        .upcoming-date-day {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        .upcoming-date-month {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+        }
+
+        .upcoming-details h4 {
+            font-size: 16px;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .upcoming-details p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .upcoming-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bills-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="breadcrumb">
+                    <a href="dashboard-main.html">Dashboard</a> / Bill Tracking
+                </div>
+                <h1>
+                    <div class="header-icon">📄</div>
+                    Bill Tracking
+                </h1>
+            </div>
+            <button class="add-bill-btn">+ Add New Bill</button>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card total">
+                <div class="summary-label">Total Bills This Year</div>
+                <div class="summary-value">$3,987.45</div>
+                <div class="summary-subtitle">36 bills tracked</div>
+            </div>
+
+            <div class="summary-card paid">
+                <div class="summary-label">Paid This Month</div>
+                <div class="summary-value">$92.15</div>
+                <div class="summary-subtitle">1 of 3 bills paid</div>
+            </div>
+
+            <div class="summary-card due">
+                <div class="summary-label">Due Soon</div>
+                <div class="summary-value">$255.65</div>
+                <div class="summary-subtitle">2 bills due in 7 days</div>
+            </div>
+
+            <div class="summary-card overdue">
+                <div class="summary-label">Overdue</div>
+                <div class="summary-value">$0.00</div>
+                <div class="summary-subtitle">All bills on time!</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Status:</span>
+                <div class="filter-tabs">
+                    <button class="filter-tab active">All</button>
+                    <button class="filter-tab">Paid</button>
+                    <button class="filter-tab">Due</button>
+                    <button class="filter-tab">Overdue</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Utility:</span>
+                <div class="filter-tabs">
+                    <button class="filter-tab active">All</button>
+                    <button class="filter-tab">Electric</button>
+                    <button class="filter-tab">Gas</button>
+                    <button class="filter-tab">Water</button>
+                </div>
+            </div>
+
+            <input type="text" class="search-box" placeholder="Search bills...">
+        </div>
+
+        <div class="bills-grid">
+            <div class="bill-card electric">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">⚡</div>
+                        <div class="bill-type-info">
+                            <h3>Electricity</h3>
+                            <p>December 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status due">Due Soon</div>
+                </div>
+
+                <div class="bill-amount">$187.43</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">845 kWh</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Due Date</div>
+                        <div class="bill-detail-value">Dec 28</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$0.22/kWh</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #f56565;">↑ 23%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-primary">Mark as Paid</button>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+            </div>
+
+            <div class="bill-card water">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">💧</div>
+                        <div class="bill-type-info">
+                            <h3>Water</h3>
+                            <p>December 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status due">Due Soon</div>
+                </div>
+
+                <div class="bill-amount">$68.22</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">5,200 gal</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Due Date</div>
+                        <div class="bill-detail-value">Dec 30</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$0.013/gal</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #48bb78;">↓ 5%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-primary">Mark as Paid</button>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+            </div>
+
+            <div class="bill-card gas">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">🔥</div>
+                        <div class="bill-type-info">
+                            <h3>Natural Gas</h3>
+                            <p>December 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status paid">Paid</div>
+                </div>
+
+                <div class="bill-amount">$92.15</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">42 therms</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Paid Date</div>
+                        <div class="bill-detail-value">Dec 20</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$2.19/therm</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #48bb78;">↓ 8%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-secondary" style="flex: initial;">View Details</button>
+                    <button class="btn btn-secondary" style="flex: initial;">Download</button>
+                </div>
+            </div>
+
+            <div class="bill-card electric">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">⚡</div>
+                        <div class="bill-type-info">
+                            <h3>Electricity</h3>
+                            <p>November 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status paid">Paid</div>
+                </div>
+
+                <div class="bill-amount">$152.48</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">687 kWh</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Paid Date</div>
+                        <div class="bill-detail-value">Nov 25</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$0.22/kWh</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #f56565;">↑ 12%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-secondary" style="flex: initial;">View Details</button>
+                    <button class="btn btn-secondary" style="flex: initial;">Download</button>
+                </div>
+            </div>
+
+            <div class="bill-card gas">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">🔥</div>
+                        <div class="bill-type-info">
+                            <h3>Natural Gas</h3>
+                            <p>November 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status paid">Paid</div>
+                </div>
+
+                <div class="bill-amount">$83.45</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">38 therms</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Paid Date</div>
+                        <div class="bill-detail-value">Nov 22</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$2.19/therm</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #f56565;">↑ 35%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-secondary" style="flex: initial;">View Details</button>
+                    <button class="btn btn-secondary" style="flex: initial;">Download</button>
+                </div>
+            </div>
+
+            <div class="bill-card water">
+                <div class="bill-header">
+                    <div class="bill-type">
+                        <div class="bill-icon">💧</div>
+                        <div class="bill-type-info">
+                            <h3>Water</h3>
+                            <p>November 2025</p>
+                        </div>
+                    </div>
+                    <div class="bill-status paid">Paid</div>
+                </div>
+
+                <div class="bill-amount">$71.85</div>
+
+                <div class="bill-details">
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Usage</div>
+                        <div class="bill-detail-value">5,500 gal</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Paid Date</div>
+                        <div class="bill-detail-value">Nov 28</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Rate</div>
+                        <div class="bill-detail-value">$0.013/gal</div>
+                    </div>
+                    <div class="bill-detail">
+                        <div class="bill-detail-label">Change</div>
+                        <div class="bill-detail-value" style="color: #f56565;">↑ 2%</div>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button class="btn btn-secondary" style="flex: initial;">View Details</button>
+                    <button class="btn btn-secondary" style="flex: initial;">Download</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="upcoming-section">
+            <h2>Upcoming Bills</h2>
+
+            <div class="upcoming-item">
+                <div class="upcoming-info">
+                    <div class="upcoming-date">
+                        <div class="upcoming-date-day">28</div>
+                        <div class="upcoming-date-month">DEC</div>
+                    </div>
+                    <div class="upcoming-details">
+                        <h4>Electric Bill Due</h4>
+                        <p>Pacific Power • December 2025</p>
+                    </div>
+                </div>
+                <div class="upcoming-amount">$187.43</div>
+            </div>
+
+            <div class="upcoming-item">
+                <div class="upcoming-info">
+                    <div class="upcoming-date">
+                        <div class="upcoming-date-day">30</div>
+                        <div class="upcoming-date-month">DEC</div>
+                    </div>
+                    <div class="upcoming-details">
+                        <h4>Water Bill Due</h4>
+                        <p>City Water Services • December 2025</p>
+                    </div>
+                </div>
+                <div class="upcoming-amount">$68.22</div>
+            </div>
+
+            <div class="upcoming-item" style="opacity: 0.6;">
+                <div class="upcoming-info">
+                    <div class="upcoming-date">
+                        <div class="upcoming-date-day">18</div>
+                        <div class="upcoming-date-month">JAN</div>
+                    </div>
+                    <div class="upcoming-details">
+                        <h4>Electric Bill Estimated</h4>
+                        <p>Pacific Power • January 2026</p>
+                    </div>
+                </div>
+                <div class="upcoming-amount">~$175.00</div>
+            </div>
+
+            <div class="upcoming-item" style="opacity: 0.6;">
+                <div class="upcoming-info">
+                    <div class="upcoming-date">
+                        <div class="upcoming-date-day">22</div>
+                        <div class="upcoming-date-month">JAN</div>
+                    </div>
+                    <div class="upcoming-details">
+                        <h4>Gas Bill Estimated</h4>
+                        <p>Northwest Natural • January 2026</p>
+                    </div>
+                </div>
+                <div class="upcoming-amount">~$95.00</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

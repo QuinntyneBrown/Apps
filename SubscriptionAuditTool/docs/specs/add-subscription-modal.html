@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subscription - SubscriptionAuditTool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 2px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-size: 18px;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .quick-select {
+            margin-bottom: 32px;
+        }
+
+        .quick-select-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .service-option {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .service-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .service-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            margin: 0 auto 8px;
+            font-size: 20px;
+        }
+
+        .service-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .divider {
+            height: 2px;
+            background: #f3f4f6;
+            margin: 32px 0;
+            position: relative;
+        }
+
+        .divider-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 0 16px;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .modal-footer {
+            padding: 24px 32px;
+            border-top: 2px solid #f3f4f6;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-select-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Subscription</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="quick-select">
+                    <div class="quick-select-label">Popular Services</div>
+                    <div class="quick-select-grid">
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #E50914;">N</div>
+                            <div class="service-name">Netflix</div>
+                        </div>
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #1DB954;">S</div>
+                            <div class="service-name">Spotify</div>
+                        </div>
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #FF0000;">▶</div>
+                            <div class="service-name">YouTube</div>
+                        </div>
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #FF2BC2;">A</div>
+                            <div class="service-name">Adobe</div>
+                        </div>
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #FF9900;">A</div>
+                            <div class="service-name">Amazon</div>
+                        </div>
+                        <div class="service-option">
+                            <div class="service-icon" style="background: #0066FF;">D</div>
+                            <div class="service-name">Dropbox</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <span class="divider-text">OR ENTER MANUALLY</span>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <label class="form-label">
+                            Service Name <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" placeholder="e.g., Netflix, Spotify, Adobe Creative Cloud">
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            Plan/Tier
+                        </label>
+                        <input type="text" class="form-input" placeholder="e.g., Premium, Pro, Family">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <label class="form-label">
+                                Price <span class="required">*</span>
+                            </label>
+                            <input type="number" class="form-input" placeholder="0.00" step="0.01">
+                        </div>
+
+                        <div class="form-section">
+                            <label class="form-label">
+                                Billing Frequency <span class="required">*</span>
+                            </label>
+                            <select class="form-select">
+                                <option>Monthly</option>
+                                <option>Yearly</option>
+                                <option>Quarterly</option>
+                                <option>Weekly</option>
+                                <option>Custom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            Category <span class="required">*</span>
+                        </label>
+                        <select class="form-select">
+                            <option>Select a category</option>
+                            <option>Entertainment</option>
+                            <option>Software</option>
+                            <option>Music</option>
+                            <option>Storage</option>
+                            <option>Communication</option>
+                            <option>Productivity</option>
+                            <option>Education</option>
+                            <option>Gaming</option>
+                            <option>Health & Fitness</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <label class="form-label">
+                                Start Date <span class="required">*</span>
+                            </label>
+                            <input type="date" class="form-input" value="2025-12-29">
+                        </div>
+
+                        <div class="form-section">
+                            <label class="form-label">
+                                Next Billing Date <span class="required">*</span>
+                            </label>
+                            <input type="date" class="form-input" value="2026-01-29">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            Payment Method
+                        </label>
+                        <select class="form-select">
+                            <option>Select payment method</option>
+                            <option>💳 Visa ending in 1234</option>
+                            <option>💳 Mastercard ending in 5678</option>
+                            <option>💳 Amex ending in 9012</option>
+                            <option>🏦 Bank Account</option>
+                            <option>📱 PayPal</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            Reminder Settings
+                        </label>
+                        <select class="form-select">
+                            <option>7 days before renewal</option>
+                            <option>3 days before renewal</option>
+                            <option>1 day before renewal</option>
+                            <option>14 days before renewal</option>
+                            <option>30 days before renewal</option>
+                            <option>No reminder</option>
+                        </select>
+                        <div class="help-text">When do you want to be notified about renewal?</div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="trial" class="checkbox">
+                            <label for="trial" class="checkbox-label">This is a free trial</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="auto-renew" class="checkbox" checked>
+                            <label for="auto-renew" class="checkbox-label">Auto-renewal enabled</label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            Notes
+                        </label>
+                        <textarea class="form-input" rows="3" placeholder="Add any additional notes about this subscription..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Add Subscription</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

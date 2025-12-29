@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations - Meeting Notes & Action Item Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.125rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 1rem 0;
+            font-weight: 500;
+            color: #718096;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #4c51bf;
+            border-bottom-color: #4c51bf;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .integration-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .integration-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .integration-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .integration-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .integration-icon.google { background: #fef5e7; }
+        .integration-icon.outlook { background: #ebf8ff; }
+        .integration-icon.zoom { background: #ebf8ff; }
+        .integration-icon.teams { background: #f0f4ff; }
+        .integration-icon.meet { background: #fef5e7; }
+        .integration-icon.slack { background: #fef5e7; }
+        .integration-icon.jira { background: #ebf8ff; }
+        .integration-icon.asana { background: #fff5f7; }
+        .integration-icon.trello { background: #ebf8ff; }
+        .integration-icon.zapier { background: #fff5f7; }
+
+        .integration-info {
+            flex: 1;
+        }
+
+        .integration-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .integration-category {
+            font-size: 0.75rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .integration-description {
+            color: #4a5568;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .integration-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-indicator.connected {
+            background: #48bb78;
+        }
+
+        .status-indicator.disconnected {
+            background: #cbd5e0;
+        }
+
+        .integration-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-connect {
+            flex: 1;
+            background: #4c51bf;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-connect:hover {
+            background: #434190;
+        }
+
+        .btn-connected {
+            flex: 1;
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-settings {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .connected-info {
+            background: #f7fafc;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .connected-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .connected-details {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .settings-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .setting-description {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .toggle {
+            width: 48px;
+            height: 28px;
+            background: #cbd5e0;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #48bb78;
+        }
+
+        .toggle-handle {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 12px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active .toggle-handle {
+            transform: translateX(20px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.recommended {
+            background: #fef5e7;
+            color: #c05621;
+        }
+
+        .badge.new {
+            background: #ebf8ff;
+            color: #2c5282;
+        }
+
+        .badge.premium {
+            background: #faf5ff;
+            color: #6b46c1;
+        }
+
+        .alert {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #c53030;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-text {
+            font-size: 0.875rem;
+            color: #742a2a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .webhook-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: monospace;
+            margin-top: 0.5rem;
+        }
+
+        .api-key-display {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .api-key-text {
+            font-family: monospace;
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+
+        .copy-btn {
+            background: #4c51bf;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📝 MeetingTracker</div>
+        <div class="header-actions">
+            <button class="btn btn-secondary">🔍 Search</button>
+            <button class="btn btn-primary">+ New Meeting</button>
+            <div class="user-avatar">RL</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Integrations</h1>
+            <p class="page-subtitle">Connect MeetingTracker with your favorite tools and services</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Active Integrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">248</div>
+                <div class="stat-label">Meetings Synced</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Tasks Created</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Notifications Sent</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active">All Integrations</div>
+            <div class="tab">Calendar & Scheduling</div>
+            <div class="tab">Video Conferencing</div>
+            <div class="tab">Project Management</div>
+            <div class="tab">Communication</div>
+            <div class="tab">API & Webhooks</div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📅 Calendar & Scheduling</h2>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon google">📅</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Google Calendar</div>
+                            <div class="integration-category">Calendar</div>
+                        </div>
+                        <span class="badge recommended">Recommended</span>
+                    </div>
+                    <p class="integration-description">
+                        Automatically sync your meetings with Google Calendar. Create calendar events, send invites, and update attendees.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">Connected as rachel.lee@company.com • Last synced 5 minutes ago</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon outlook">📧</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Outlook Calendar</div>
+                            <div class="integration-category">Calendar</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Integrate with Microsoft Outlook to sync meetings, manage calendar events, and send meeting invitations.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator disconnected"></div>
+                        <span>Not connected</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connect">Connect Outlook</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon google">🍎</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Apple Calendar</div>
+                            <div class="integration-category">Calendar</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Sync meetings with Apple Calendar via CalDAV. Perfect for macOS and iOS users.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator disconnected"></div>
+                        <span>Not connected</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connect">Connect Apple Calendar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">🎥 Video Conferencing</h2>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon zoom">📹</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Zoom</div>
+                            <div class="integration-category">Video Conferencing</div>
+                        </div>
+                        <span class="badge recommended">Recommended</span>
+                    </div>
+                    <p class="integration-description">
+                        Automatically generate Zoom meeting links and add them to your meeting invitations.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">24 Zoom meetings created this month</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon teams">💬</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Microsoft Teams</div>
+                            <div class="integration-category">Video Conferencing</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Create Teams meetings with a single click and sync meeting notes to Teams channels.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">18 Teams meetings created this month</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon meet">📞</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Google Meet</div>
+                            <div class="integration-category">Video Conferencing</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Automatically add Google Meet links to meetings and start video calls with one click.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">Linked with Google Calendar integration</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📋 Project Management</h2>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon jira">🎯</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Jira</div>
+                            <div class="integration-category">Project Management</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Convert action items to Jira tickets and link meetings to existing issues and projects.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">Connected to workspace: company.atlassian.net • 23 issues created</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon asana">✓</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Asana</div>
+                            <div class="integration-category">Project Management</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Create Asana tasks from action items and sync task status back to MeetingTracker.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator disconnected"></div>
+                        <span>Not connected</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connect">Connect Asana</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon trello">📌</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Trello</div>
+                            <div class="integration-category">Project Management</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Add action items as Trello cards to your boards and track progress in real-time.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator disconnected"></div>
+                        <span>Not connected</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connect">Connect Trello</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">💬 Communication & Notifications</h2>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon slack">#</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Slack</div>
+                            <div class="integration-category">Team Communication</div>
+                        </div>
+                        <span class="badge recommended">Recommended</span>
+                    </div>
+                    <p class="integration-description">
+                        Send meeting summaries and action item reminders to Slack channels. Get notified about upcoming meetings.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Connected</div>
+                        <div class="connected-details">Connected to workspace: company.slack.com • Posting to #general</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Connected</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon teams">📧</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Email Notifications</div>
+                            <div class="integration-category">Communication</div>
+                        </div>
+                    </div>
+                    <p class="integration-description">
+                        Customize email notifications for meeting reminders, action item updates, and team mentions.
+                    </p>
+                    <div class="connected-info">
+                        <div class="connected-title">✓ Active</div>
+                        <div class="connected-details">Sending to rachel.lee@company.com</div>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connected">✓ Active</button>
+                        <button class="btn-settings">⚙️ Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">🔧 Automation & Advanced</h2>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon zapier">⚡</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Zapier</div>
+                            <div class="integration-category">Automation</div>
+                        </div>
+                        <span class="badge premium">Premium</span>
+                    </div>
+                    <p class="integration-description">
+                        Connect MeetingTracker to 5,000+ apps via Zapier. Create custom workflows and automations.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator disconnected"></div>
+                        <span>Not connected</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-connect">Connect Zapier</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon trello">🔗</div>
+                        <div class="integration-info">
+                            <div class="integration-name">Webhooks</div>
+                            <div class="integration-category">Developer API</div>
+                        </div>
+                        <span class="badge premium">Premium</span>
+                    </div>
+                    <p class="integration-description">
+                        Set up custom webhooks to receive real-time notifications when meetings are created, updated, or completed.
+                    </p>
+                    <div class="integration-status">
+                        <div class="status-indicator connected"></div>
+                        <span>2 webhooks configured</span>
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-settings" style="flex: 1;">Manage Webhooks</button>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <div class="integration-icon purple">🔑</div>
+                        <div class="integration-info">
+                            <div class="integration-name">API Access</div>
+                            <div class="integration-category">Developer API</div>
+                        </div>
+                        <span class="badge premium">Premium</span>
+                    </div>
+                    <p class="integration-description">
+                        Use the MeetingTracker REST API to build custom integrations and automate workflows programmatically.
+                    </p>
+                    <div class="api-key-display">
+                        <span class="api-key-text">mt_sk_live_••••••••••••••••••••4a8f</span>
+                        <button class="copy-btn">Copy Key</button>
+                    </div>
+                    <div class="integration-actions" style="margin-top: 1rem;">
+                        <button class="btn-settings" style="flex: 1;">📖 API Documentation</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Notification Settings</h3>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Meeting Reminders</div>
+                    <div class="setting-description">Send notifications 1 hour and 1 day before scheduled meetings</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Action Item Updates</div>
+                    <div class="setting-description">Get notified when action items are assigned to you or marked complete</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Daily Digest</div>
+                    <div class="setting-description">Receive a daily summary of pending action items and upcoming meetings</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">@Mentions</div>
+                    <div class="setting-description">Get notified when someone mentions you in meeting notes or comments</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Meeting Summaries</div>
+                    <div class="setting-description">Automatically send meeting summaries to participants after meetings end</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Overdue Alerts</div>
+                    <div class="setting-description">Receive escalation notifications for overdue action items</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Weekly Team Report</div>
+                    <div class="setting-description">Send a weekly summary of team meeting activity and completion rates</div>
+                </div>
+                <div class="toggle">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Calendar Sync</div>
+                    <div class="setting-description">Automatically sync all meetings to your connected calendars</div>
+                </div>
+                <div class="toggle active">
+                    <div class="toggle-handle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

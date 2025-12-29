@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Integration - Home Gym Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            color: #48bb78;
+            margin-top: 4px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-action {
+            color: #667eea;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .workout-item {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .workout-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+
+        .workout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .workout-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 6px;
+        }
+
+        .workout-info p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .workout-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .workout-badge.cardio {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .workout-badge.strength {
+            background: #fed7e2;
+            color: #702459;
+        }
+
+        .workout-badge.hiit {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .equipment-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .equipment-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .workout-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .workout-stat h4 {
+            font-size: 11px;
+            color: #718096;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .workout-stat p {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .equipment-usage-chart {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .usage-item {
+            margin-bottom: 20px;
+        }
+
+        .usage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .usage-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .usage-value {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .usage-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            border-radius: 6px;
+        }
+
+        .recent-workout {
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .recent-header h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .recent-date {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .recent-equipment {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .equipment-chip {
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .recent-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .heatmap-day {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: #e2e8f0;
+        }
+
+        .heatmap-day.low {
+            background: #bee3f8;
+        }
+
+        .heatmap-day.medium {
+            background: #667eea;
+        }
+
+        .heatmap-day.high {
+            background: #764ba2;
+        }
+
+        .recommendations {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .recommendations h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .recommendation-item {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-item h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .recommendation-item p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>💪 Workout Integration</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📊 Analytics</button>
+                <button class="btn btn-primary">+ Log Workout</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">248</div>
+                <div class="stat-label">Total Hours (30d)</div>
+                <div class="stat-trend">↑ 12% vs last month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Workouts Logged</div>
+                <div class="stat-trend">↑ 5 more than last month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Equipment Used</div>
+                <div class="stat-trend">All equipment active</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value">5.9</div>
+                <div class="stat-label">Avg Hours/Day</div>
+                <div class="stat-trend">Above target (5.0)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value">89%</div>
+                <div class="stat-label">Consistency Rate</div>
+                <div class="stat-trend">Excellent streak!</div>
+            </div>
+        </div>
+
+        <div class="equipment-usage-chart">
+            <div class="card-header">
+                <h2 class="card-title">Equipment Usage This Month</h2>
+                <span class="card-action">View Details →</span>
+            </div>
+
+            <div class="usage-item">
+                <div class="usage-header">
+                    <div class="usage-name">
+                        <span>🚴</span>
+                        <span>Peloton Bike+</span>
+                    </div>
+                    <div class="usage-value">89 hours</div>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-fill" style="width: 89%;"></div>
+                </div>
+            </div>
+
+            <div class="usage-item">
+                <div class="usage-header">
+                    <div class="usage-name">
+                        <span>🔲</span>
+                        <span>Rogue R-4 Power Rack</span>
+                    </div>
+                    <div class="usage-value">67 hours</div>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-fill" style="width: 67%;"></div>
+                </div>
+            </div>
+
+            <div class="usage-item">
+                <div class="usage-header">
+                    <div class="usage-name">
+                        <span>🏃</span>
+                        <span>NordicTrack Treadmill</span>
+                    </div>
+                    <div class="usage-value">52 hours</div>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-fill" style="width: 52%;"></div>
+                </div>
+            </div>
+
+            <div class="usage-item">
+                <div class="usage-header">
+                    <div class="usage-name">
+                        <span>💪</span>
+                        <span>Bowflex Dumbbells</span>
+                    </div>
+                    <div class="usage-value">40 hours</div>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-fill" style="width: 40%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Workout Templates</h2>
+                    <span class="card-action">Create Template →</span>
+                </div>
+
+                <div class="workout-item">
+                    <div class="workout-header">
+                        <div class="workout-info">
+                            <h3>Upper Body Strength</h3>
+                            <p>60 min • Used 8 times this month</p>
+                        </div>
+                        <span class="workout-badge strength">Strength</span>
+                    </div>
+
+                    <div class="equipment-tags">
+                        <div class="equipment-tag">
+                            <span>🔲</span>
+                            <span>Power Rack</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🪑</span>
+                            <span>Adjustable Bench</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>💪</span>
+                            <span>Dumbbells</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🏋️</span>
+                            <span>Olympic Barbell</span>
+                        </div>
+                    </div>
+
+                    <div class="workout-stats">
+                        <div class="workout-stat">
+                            <h4>Last Used</h4>
+                            <p>Dec 27</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Uses</h4>
+                            <p>34 times</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Avg Duration</h4>
+                            <p>58 min</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Hours</h4>
+                            <p>32.7 hrs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workout-item">
+                    <div class="workout-header">
+                        <div class="workout-info">
+                            <h3>Cardio Endurance</h3>
+                            <p>45 min • Used 12 times this month</p>
+                        </div>
+                        <span class="workout-badge cardio">Cardio</span>
+                    </div>
+
+                    <div class="equipment-tags">
+                        <div class="equipment-tag">
+                            <span>🚴</span>
+                            <span>Peloton Bike</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🏃</span>
+                            <span>Treadmill</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🚣</span>
+                            <span>Rowing Machine</span>
+                        </div>
+                    </div>
+
+                    <div class="workout-stats">
+                        <div class="workout-stat">
+                            <h4>Last Used</h4>
+                            <p>Dec 28</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Uses</h4>
+                            <p>56 times</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Avg Duration</h4>
+                            <p>42 min</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Hours</h4>
+                            <p>39.2 hrs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workout-item">
+                    <div class="workout-header">
+                        <div class="workout-info">
+                            <h3>Full Body HIIT</h3>
+                            <p>30 min • Used 6 times this month</p>
+                        </div>
+                        <span class="workout-badge hiit">HIIT</span>
+                    </div>
+
+                    <div class="equipment-tags">
+                        <div class="equipment-tag">
+                            <span>⚖️</span>
+                            <span>Kettlebells</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>💪</span>
+                            <span>Dumbbells</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🪑</span>
+                            <span>Bench</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>📏</span>
+                            <span>Pull-Up Bar</span>
+                        </div>
+                    </div>
+
+                    <div class="workout-stats">
+                        <div class="workout-stat">
+                            <h4>Last Used</h4>
+                            <p>Dec 26</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Uses</h4>
+                            <p>22 times</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Avg Duration</h4>
+                            <p>28 min</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Hours</h4>
+                            <p>10.3 hrs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workout-item">
+                    <div class="workout-header">
+                        <div class="workout-info">
+                            <h3>Lower Body Power</h3>
+                            <p>50 min • Used 5 times this month</p>
+                        </div>
+                        <span class="workout-badge strength">Strength</span>
+                    </div>
+
+                    <div class="equipment-tags">
+                        <div class="equipment-tag">
+                            <span>🔲</span>
+                            <span>Power Rack</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>🏋️</span>
+                            <span>Olympic Barbell</span>
+                        </div>
+                        <div class="equipment-tag">
+                            <span>💪</span>
+                            <span>Dumbbells</span>
+                        </div>
+                    </div>
+
+                    <div class="workout-stats">
+                        <div class="workout-stat">
+                            <h4>Last Used</h4>
+                            <p>Dec 24</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Uses</h4>
+                            <p>19 times</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Avg Duration</h4>
+                            <p>52 min</p>
+                        </div>
+                        <div class="workout-stat">
+                            <h4>Total Hours</h4>
+                            <p>16.5 hrs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Workouts</h2>
+                        <span class="card-action">View All →</span>
+                    </div>
+
+                    <div class="recent-workout">
+                        <div class="recent-header">
+                            <h4>Upper Body Strength</h4>
+                            <span class="recent-date">Dec 28, 2025</span>
+                        </div>
+                        <div class="recent-equipment">
+                            <span class="equipment-chip">🔲 Power Rack</span>
+                            <span class="equipment-chip">🪑 Bench</span>
+                            <span class="equipment-chip">💪 Dumbbells</span>
+                        </div>
+                        <div class="recent-stats">
+                            <span>⏱️ 62 min</span>
+                            <span>🔥 485 cal</span>
+                        </div>
+                    </div>
+
+                    <div class="recent-workout">
+                        <div class="recent-header">
+                            <h4>Cardio Endurance</h4>
+                            <span class="recent-date">Dec 27, 2025</span>
+                        </div>
+                        <div class="recent-equipment">
+                            <span class="equipment-chip">🚴 Peloton</span>
+                        </div>
+                        <div class="recent-stats">
+                            <span>⏱️ 45 min</span>
+                            <span>🔥 620 cal</span>
+                        </div>
+                    </div>
+
+                    <div class="recent-workout">
+                        <div class="recent-header">
+                            <h4>Full Body HIIT</h4>
+                            <span class="recent-date">Dec 26, 2025</span>
+                        </div>
+                        <div class="recent-equipment">
+                            <span class="equipment-chip">⚖️ Kettlebells</span>
+                            <span class="equipment-chip">💪 Dumbbells</span>
+                        </div>
+                        <div class="recent-stats">
+                            <span>⏱️ 30 min</span>
+                            <span>🔥 410 cal</span>
+                        </div>
+                    </div>
+
+                    <div class="recent-workout">
+                        <div class="recent-header">
+                            <h4>Morning Run</h4>
+                            <span class="recent-date">Dec 25, 2025</span>
+                        </div>
+                        <div class="recent-equipment">
+                            <span class="equipment-chip">🏃 Treadmill</span>
+                        </div>
+                        <div class="recent-stats">
+                            <span>⏱️ 35 min</span>
+                            <span>🔥 390 cal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendations" style="margin-top: 24px;">
+                    <h3>💡 Smart Recommendations</h3>
+
+                    <div class="recommendation-item">
+                        <h4>🔧 Maintenance Alert</h4>
+                        <p>Peloton Bike has 89hrs this month. Schedule maintenance soon to maintain performance.</p>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <h4>📊 Usage Balance</h4>
+                        <p>Consider more lower body workouts. Upper body equipment used 2x more this month.</p>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <h4>⚖️ Underutilized Equipment</h4>
+                        <p>Rowing machine only used 8 hours this month. Great for full-body cardio!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Weekly Activity Heatmap</h2>
+                    <span class="card-action">View Monthly →</span>
+                </div>
+                <p style="font-size: 13px; color: #718096; margin-bottom: 12px;">Last 28 days • Darker = More usage</p>
+                <div class="heatmap">
+                    <div class="heatmap-day"></div>
+                    <div class="heatmap-day low"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day low"></div>
+                    <div class="heatmap-day"></div>
+
+                    <div class="heatmap-day low"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day low"></div>
+                    <div class="heatmap-day medium"></div>
+
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day low"></div>
+
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day high"></div>
+                    <div class="heatmap-day medium"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Equipment Performance</h2>
+                    <span class="card-action">Details →</span>
+                </div>
+                <p style="font-size: 13px; color: #718096; margin-bottom: 16px;">Most reliable equipment based on usage vs maintenance</p>
+
+                <div style="padding: 16px; background: #f0fff4; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #1a202c; margin-bottom: 4px;">🚣 Rowing Machine</div>
+                            <div style="font-size: 13px; color: #718096;">312hrs • 0 issues • Perfect</div>
+                        </div>
+                        <div style="font-size: 24px; color: #48bb78;">★</div>
+                    </div>
+                </div>
+
+                <div style="padding: 16px; background: #f0fff4; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #1a202c; margin-bottom: 4px;">🔲 Power Rack</div>
+                            <div style="font-size: 13px; color: #718096;">245hrs • 0 issues • Excellent</div>
+                        </div>
+                        <div style="font-size: 24px; color: #48bb78;">★</div>
+                    </div>
+                </div>
+
+                <div style="padding: 16px; background: #fffaf0; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #1a202c; margin-bottom: 4px;">🏃 Treadmill</div>
+                            <div style="font-size: 13px; color: #718096;">156hrs • 1 maintenance • Good</div>
+                        </div>
+                        <div style="font-size: 24px; color: #ed8936;">⚠️</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

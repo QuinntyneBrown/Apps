@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spending Alerts - HouseholdBudgetManager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdf;
+        }
+
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '3';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .breadcrumb a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .page-title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+
+        .alert-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .summary-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .icon-critical {
+            background: #ffebee;
+            color: #e74c3c;
+        }
+
+        .icon-warning {
+            background: #fff3e0;
+            color: #f39c12;
+        }
+
+        .icon-info {
+            background: #e3f2fd;
+            color: #3498db;
+        }
+
+        .summary-content h3 {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .filter-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid #ecf0f1;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .tab:hover:not(.active) {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .alerts-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .alert-card {
+            padding: 1.5rem;
+            border-left: 4px solid;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .alert-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .alert-critical {
+            border-color: #e74c3c;
+            background: linear-gradient(90deg, #ffebee 0%, white 100%);
+        }
+
+        .alert-warning {
+            border-color: #f39c12;
+            background: linear-gradient(90deg, #fff9f0 0%, white 100%);
+        }
+
+        .alert-info {
+            border-color: #3498db;
+            background: linear-gradient(90deg, #e3f2fd 0%, white 100%);
+        }
+
+        .alert-success {
+            border-color: #27ae60;
+            background: linear-gradient(90deg, #f0fff4 0%, white 100%);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .alert-title-section {
+            flex: 1;
+        }
+
+        .alert-type {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-critical { color: #e74c3c; }
+        .type-warning { color: #f39c12; }
+        .type-info { color: #3498db; }
+        .type-success { color: #27ae60; }
+
+        .alert-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-timestamp {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .alert-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            margin-bottom: 1rem;
+        }
+
+        .alert-description {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .alert-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid #ecf0f1;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #7f8c8d;
+            border: 1px solid #bdc3c7;
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+            border-color: #95a5a6;
+        }
+
+        .progress-visual {
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        .progress-critical { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .progress-warning { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .progress-success { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .empty-description {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .alert-details {
+                grid-template-columns: 1fr;
+            }
+
+            .alert-actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">💰 HouseholdBudget</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary notification-badge">🔔</button>
+                <button class="btn btn-secondary">← Dashboard</button>
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="#">Dashboard</a>
+                <span>/</span>
+                <span>Alerts</span>
+            </div>
+            <div class="page-title-section">
+                <h1 class="page-title">Spending Alerts & Notifications</h1>
+            </div>
+        </div>
+
+        <div class="alert-summary">
+            <div class="summary-card">
+                <div class="summary-icon icon-critical">🚨</div>
+                <div class="summary-content">
+                    <h3>2</h3>
+                    <p class="summary-label">Critical Alerts</p>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon icon-warning">⚠️</div>
+                <div class="summary-content">
+                    <h3>3</h3>
+                    <p class="summary-label">Warnings</p>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon icon-info">ℹ️</div>
+                <div class="summary-content">
+                    <h3>5</h3>
+                    <p class="summary-label">Notifications</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab active">All Alerts (10)</button>
+            <button class="tab">Critical (2)</button>
+            <button class="tab">Warnings (3)</button>
+            <button class="tab">Notifications (5)</button>
+            <button class="tab">Resolved (15)</button>
+        </div>
+
+        <div class="alerts-section">
+            <div class="section-header">
+                <h2 class="section-title">Active Alerts</h2>
+                <button class="btn btn-secondary">Mark All as Read</button>
+            </div>
+
+            <div class="alert-card alert-critical">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-critical">⚠️ CRITICAL</div>
+                        <h3 class="alert-title">Groceries Budget Exceeded</h3>
+                        <p class="alert-timestamp">🕐 2 hours ago • December 19, 2025</p>
+                    </div>
+                    <div class="alert-icon">🛒</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        Your grocery spending has exceeded the monthly budget limit. You've spent <strong>$685</strong> out of a <strong>$600</strong> budget, resulting in an overage of <strong>$85</strong> (114% of budget). Consider reviewing recent purchases and adjusting spending for the remainder of the month.
+                    </p>
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-critical" style="width: 100%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>$685 spent</span>
+                            <span>114% of $600 budget</span>
+                        </div>
+                    </div>
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Budgeted</div>
+                            <div class="detail-value">$600</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Spent</div>
+                            <div class="detail-value" style="color: #e74c3c;">$685</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Over Budget</div>
+                            <div class="detail-value" style="color: #e74c3c;">$85</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Days Remaining</div>
+                            <div class="detail-value">12</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-primary">View Category Details</button>
+                    <button class="action-btn btn-outline">Adjust Budget</button>
+                    <button class="action-btn btn-outline">Dismiss</button>
+                </div>
+            </div>
+
+            <div class="alert-card alert-critical">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-critical">⚠️ CRITICAL</div>
+                        <h3 class="alert-title">Dining Budget Exceeded</h3>
+                        <p class="alert-timestamp">🕐 5 hours ago • December 19, 2025</p>
+                    </div>
+                    <div class="alert-icon">🍽️</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        Your dining and restaurant expenses have surpassed the monthly allocation. Current spending: <strong>$425</strong> / Budget: <strong>$400</strong>. You're <strong>$25 over budget</strong> (106%).
+                    </p>
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-critical" style="width: 100%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>$425 spent</span>
+                            <span>106% of $400 budget</span>
+                        </div>
+                    </div>
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Budgeted</div>
+                            <div class="detail-value">$400</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Spent</div>
+                            <div class="detail-value" style="color: #e74c3c;">$425</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Over Budget</div>
+                            <div class="detail-value" style="color: #e74c3c;">$25</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Transactions</div>
+                            <div class="detail-value">18</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-primary">View Expenses</button>
+                    <button class="action-btn btn-outline">Adjust Budget</button>
+                    <button class="action-btn btn-outline">Dismiss</button>
+                </div>
+            </div>
+
+            <div class="alert-card alert-warning">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-warning">⚠️ WARNING</div>
+                        <h3 class="alert-title">Entertainment Budget Near Limit</h3>
+                        <p class="alert-timestamp">🕐 1 day ago • December 18, 2025</p>
+                    </div>
+                    <div class="alert-icon">🎬</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        You're approaching your entertainment budget limit. You've used <strong>78%</strong> of your $300 budget with <strong>12 days</strong> remaining in the period. Only <strong>$65</strong> left for entertainment spending.
+                    </p>
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-warning" style="width: 78%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>$235 spent</span>
+                            <span>78% of $300 budget</span>
+                        </div>
+                    </div>
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Remaining</div>
+                            <div class="detail-value" style="color: #f39c12;">$65</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Daily Average</div>
+                            <div class="detail-value">$12.37</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Recommended Daily</div>
+                            <div class="detail-value">$5.42</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-primary">View Details</button>
+                    <button class="action-btn btn-outline">Dismiss</button>
+                </div>
+            </div>
+
+            <div class="alert-card alert-warning">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-warning">⚠️ WARNING</div>
+                        <h3 class="alert-title">Housing Budget at 80% Threshold</h3>
+                        <p class="alert-timestamp">🕐 2 days ago • December 17, 2025</p>
+                    </div>
+                    <div class="alert-icon">🏠</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        Your housing and utilities spending has reached the 80% warning threshold. Current: <strong>$1,200</strong> / Budget: <strong>$1,500</strong>. You have <strong>$300 remaining</strong> for the rest of the month.
+                    </p>
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-warning" style="width: 80%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>$1,200 spent</span>
+                            <span>80% of $1,500 budget</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-primary">View Category</button>
+                    <button class="action-btn btn-outline">Dismiss</button>
+                </div>
+            </div>
+
+            <div class="alert-card alert-info">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-info">ℹ️ INFO</div>
+                        <h3 class="alert-title">New Expense Requires Approval</h3>
+                        <p class="alert-timestamp">🕐 3 hours ago • December 19, 2025</p>
+                    </div>
+                    <div class="alert-icon">📝</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        <strong>Jane Doe</strong> added a new expense of <strong>$145.67</strong> at <strong>Target</strong> (Groceries) that requires your approval.
+                    </p>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-primary">Review & Approve</button>
+                    <button class="action-btn btn-outline">Reject</button>
+                </div>
+            </div>
+
+            <div class="alert-card alert-success">
+                <div class="alert-header">
+                    <div class="alert-title-section">
+                        <div class="alert-type type-success">✅ SUCCESS</div>
+                        <h3 class="alert-title">Great Job! Shopping Budget On Track</h3>
+                        <p class="alert-timestamp">🕐 1 day ago • December 18, 2025</p>
+                    </div>
+                    <div class="alert-icon">🎉</div>
+                </div>
+                <div class="alert-content">
+                    <p class="alert-description">
+                        You're managing your shopping budget well! You've spent only <strong>50%</strong> ($200 of $400) with good pacing for the rest of the month. Keep up the great work!
+                    </p>
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-success" style="width: 50%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>$200 spent</span>
+                            <span>50% of $400 budget</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="action-btn btn-outline">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

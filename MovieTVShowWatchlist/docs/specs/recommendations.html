@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations - Movie & TV Show Watchlist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .insights-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .insights-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .insight-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .insight-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+
+        .insight-trend {
+            font-size: 12px;
+            color: rgba(16, 185, 129, 0.9);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .view-all:hover {
+            color: #764ba2;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .poster {
+            width: 100%;
+            height: 380px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            position: relative;
+        }
+
+        .match-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .source-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-ai {
+            background: rgba(147, 51, 234, 0.9);
+        }
+
+        .badge-friend {
+            background: rgba(59, 130, 246, 0.9);
+        }
+
+        .badge-critic {
+            background: rgba(234, 179, 8, 0.9);
+        }
+
+        .badge-trending {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 12px;
+        }
+
+        .match-reason {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-dismiss {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-dismiss:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .genre-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .genre-tag {
+            padding: 4px 10px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .friend-recommendation {
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .friend-recommendation:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .friend-poster {
+            width: 100px;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+        }
+
+        .friend-content {
+            flex: 1;
+        }
+
+        .friend-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .friend-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .friend-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .friend-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .friend-meta {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .friend-message {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .trending-card {
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .trending-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .trending-rank {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .trending-poster {
+            width: 80px;
+            height: 115px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+        }
+
+        .trending-info {
+            flex: 1;
+        }
+
+        .trending-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .trending-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🎬 WatchTracker</div>
+        </header>
+
+        <div class="page-header">
+            <h1 class="page-title">Personalized Recommendations</h1>
+            <p class="page-subtitle">Discover your next favorite movie or show</p>
+        </div>
+
+        <div class="insights-panel">
+            <h3 class="insights-title">Your Viewing Insights</h3>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-label">Top Genre</div>
+                    <div class="insight-value">Drama</div>
+                    <div class="insight-trend">↑ 42% of your viewing</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-label">Favorite Era</div>
+                    <div class="insight-value">2020-2024</div>
+                    <div class="insight-trend">↑ 68% recent releases</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-label">Preferred Length</div>
+                    <div class="insight-value">Series (8-10 eps)</div>
+                    <div class="insight-trend">↑ Mini-series lover</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-label">Match Score</div>
+                    <div class="insight-value">92% Accuracy</div>
+                    <div class="insight-trend">↑ Based on 142 ratings</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🎯 Highly Matched For You</h2>
+                    <p class="section-description">Based on your viewing history and ratings</p>
+                </div>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+            <div class="recommendations-grid">
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🚀
+                        <div class="match-badge">97% Match</div>
+                        <div class="source-badge badge-ai">AI Pick</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Severance</div>
+                        <div class="card-meta">
+                            <span>2022</span>
+                            <span>•</span>
+                            <span>Drama, Mystery, Sci-Fi</span>
+                        </div>
+                        <div class="match-reason">
+                            ✨ Similar to: The Last of Us, For All Mankind • Mind-bending storytelling you love
+                        </div>
+                        <div class="genre-tags">
+                            <span class="genre-tag">Sci-Fi</span>
+                            <span class="genre-tag">Mysterious</span>
+                            <span class="genre-tag">Mind-bending</span>
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🎭
+                        <div class="match-badge">95% Match</div>
+                        <div class="source-badge badge-ai">AI Pick</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Succession</div>
+                        <div class="card-meta">
+                            <span>2018-2023</span>
+                            <span>•</span>
+                            <span>Drama, Comedy</span>
+                        </div>
+                        <div class="match-reason">
+                            ✨ Matches your love for character-driven dramas like The Bear
+                        </div>
+                        <div class="genre-tags">
+                            <span class="genre-tag">Drama</span>
+                            <span class="genre-tag">Dark Comedy</span>
+                            <span class="genre-tag">Character Study</span>
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🌌
+                        <div class="match-badge">93% Match</div>
+                        <div class="source-badge badge-ai">AI Pick</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Three Body Problem</div>
+                        <div class="card-meta">
+                            <span>2024</span>
+                            <span>•</span>
+                            <span>Drama, Mystery, Sci-Fi</span>
+                        </div>
+                        <div class="match-reason">
+                            ✨ Epic sci-fi like For All Mankind • Complex storytelling
+                        </div>
+                        <div class="genre-tags">
+                            <span class="genre-tag">Sci-Fi</span>
+                            <span class="genre-tag">Epic</span>
+                            <span class="genre-tag">Complex</span>
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🏔️
+                        <div class="match-badge">91% Match</div>
+                        <div class="source-badge badge-ai">AI Pick</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Station Eleven</div>
+                        <div class="card-meta">
+                            <span>2021</span>
+                            <span>•</span>
+                            <span>Drama, Sci-Fi</span>
+                        </div>
+                        <div class="match-reason">
+                            ✨ Post-apocalyptic like The Last of Us • Emotional depth
+                        </div>
+                        <div class="genre-tags">
+                            <span class="genre-tag">Post-Apocalyptic</span>
+                            <span class="genre-tag">Emotional</span>
+                            <span class="genre-tag">Hopeful</span>
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">👥 Friend Recommendations</h2>
+                    <p class="section-description">Titles your friends think you'll love</p>
+                </div>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-poster">🧛</div>
+                <div class="friend-content">
+                    <div class="friend-header">
+                        <div class="friend-avatar">👤</div>
+                        <span class="friend-name">Sarah Johnson</span>
+                        <span style="color: rgba(255,255,255,0.5); font-size: 12px;">• 2 days ago</span>
+                    </div>
+                    <div class="friend-title">Interview with the Vampire</div>
+                    <div class="friend-meta">2022 • Drama, Fantasy, Horror • 2 Seasons</div>
+                    <div class="friend-message">
+                        "You HAVE to watch this! The performances are incredible and the gothic atmosphere is stunning.
+                        Since you loved The Last of Us, I think you'll appreciate the character development here."
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                        <button class="btn-small btn-dismiss">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-poster">🎨</div>
+                <div class="friend-content">
+                    <div class="friend-header">
+                        <div class="friend-avatar">👤</div>
+                        <span class="friend-name">Mike Chen</span>
+                        <span style="color: rgba(255,255,255,0.5); font-size: 12px;">• 5 days ago</span>
+                    </div>
+                    <div class="friend-title">Past Lives</div>
+                    <div class="friend-meta">2023 • Drama, Romance • 1h 46min</div>
+                    <div class="friend-message">
+                        "This movie wrecked me in the best way. Beautiful, understated, and emotionally powerful.
+                        Perfect for a quiet evening."
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                        <button class="btn-small btn-dismiss">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-poster">🎬</div>
+                <div class="friend-content">
+                    <div class="friend-header">
+                        <div class="friend-avatar">👤</div>
+                        <span class="friend-name">Emma Wilson</span>
+                        <span style="color: rgba(255,255,255,0.5); font-size: 12px;">• 1 week ago</span>
+                    </div>
+                    <div class="friend-title">The Holdovers</div>
+                    <div class="friend-meta">2023 • Comedy, Drama • 2h 13min</div>
+                    <div class="friend-message">
+                        "Paul Giamatti gives an Oscar-worthy performance. Warm, funny, and surprisingly moving.
+                        Reminded me why I love character-driven stories."
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                        <button class="btn-small btn-dismiss">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🔥 Trending Now</h2>
+                    <p class="section-description">What everyone's watching this week</p>
+                </div>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+
+            <div class="trending-card">
+                <div class="trending-rank">#1</div>
+                <div class="trending-poster">🤖</div>
+                <div class="trending-info">
+                    <div class="trending-title">The Penguin</div>
+                    <div class="card-meta">
+                        <span>2024</span>
+                        <span>•</span>
+                        <span>Crime, Drama</span>
+                        <span>•</span>
+                        <span>HBO Max</span>
+                    </div>
+                    <div class="match-reason">
+                        Batman universe spin-off • Colin Farrell's transformative performance
+                    </div>
+                    <div class="trending-stats">
+                        <span>📈 +2,847 watchers this week</span>
+                        <span>•</span>
+                        <span>⭐ 8.9/10 average</span>
+                    </div>
+                    <div class="card-actions" style="margin-top: 12px;">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trending-card">
+                <div class="trending-rank">#2</div>
+                <div class="trending-poster">🌊</div>
+                <div class="trending-info">
+                    <div class="trending-title">Shōgun</div>
+                    <div class="card-meta">
+                        <span>2024</span>
+                        <span>•</span>
+                        <span>Drama, History</span>
+                        <span>•</span>
+                        <span>FX/Hulu</span>
+                    </div>
+                    <div class="match-reason">
+                        Epic historical drama • Stunning cinematography and performances
+                    </div>
+                    <div class="trending-stats">
+                        <span>📈 +2,134 watchers this week</span>
+                        <span>•</span>
+                        <span>⭐ 9.1/10 average</span>
+                    </div>
+                    <div class="card-actions" style="margin-top: 12px;">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trending-card">
+                <div class="trending-rank">#3</div>
+                <div class="trending-poster">🎮</div>
+                <div class="trending-info">
+                    <div class="trending-title">Fallout</div>
+                    <div class="card-meta">
+                        <span>2024</span>
+                        <span>•</span>
+                        <span>Action, Adventure, Sci-Fi</span>
+                        <span>•</span>
+                        <span>Prime Video</span>
+                    </div>
+                    <div class="match-reason">
+                        Post-apocalyptic video game adaptation • Dark humor meets serious themes
+                    </div>
+                    <div class="trending-stats">
+                        <span>📈 +1,923 watchers this week</span>
+                        <span>•</span>
+                        <span>⭐ 8.5/10 average</span>
+                    </div>
+                    <div class="card-actions" style="margin-top: 12px;">
+                        <button class="btn-small btn-add">+ Add to Watchlist</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🏆 Critic's Picks</h2>
+                    <p class="section-description">Highly acclaimed titles you haven't seen</p>
+                </div>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+            <div class="recommendations-grid">
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🏙️
+                        <div class="source-badge badge-critic">98% RT</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">The Zone of Interest</div>
+                        <div class="card-meta">
+                            <span>2023</span>
+                            <span>•</span>
+                            <span>Drama, History, War</span>
+                        </div>
+                        <div class="match-reason">
+                            🏆 Best Sound Oscar Winner • Unique perspective on difficult history
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🎹
+                        <div class="source-badge badge-critic">96% RT</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Tár</div>
+                        <div class="card-meta">
+                            <span>2022</span>
+                            <span>•</span>
+                            <span>Drama, Music</span>
+                        </div>
+                        <div class="match-reason">
+                            🏆 Cate Blanchett's powerhouse performance • Complex character study
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🍜
+                        <div class="source-badge badge-critic">100% RT</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Beef</div>
+                        <div class="card-meta">
+                            <span>2023</span>
+                            <span>•</span>
+                            <span>Comedy, Drama</span>
+                        </div>
+                        <div class="match-reason">
+                            🏆 Emmy Winner • Dark comedy about road rage spiraling out of control
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="poster">
+                        🎨
+                        <div class="source-badge badge-critic">95% RT</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Anatomy of a Fall</div>
+                        <div class="card-meta">
+                            <span>2023</span>
+                            <span>•</span>
+                            <span>Crime, Drama, Thriller</span>
+                        </div>
+                        <div class="match-reason">
+                            🏆 Palme d'Or Winner • Gripping courtroom drama with layers
+                        </div>
+                        <div class="card-actions" style="margin-top: 12px;">
+                            <button class="btn-small btn-add">+ Add to Watchlist</button>
+                            <button class="btn-small btn-dismiss">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

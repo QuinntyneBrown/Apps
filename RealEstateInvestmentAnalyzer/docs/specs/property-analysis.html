@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Analysis - Real Estate Investment Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2b6cb0;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-items a {
+            display: block;
+            padding: 1rem 0;
+            color: #4a5568;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-items a.active {
+            color: #2b6cb0;
+            border-bottom-color: #2b6cb0;
+        }
+
+        .nav-items a:hover {
+            color: #2b6cb0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .breadcrumb a {
+            color: #2b6cb0;
+            text-decoration: none;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .property-title-section h1 {
+            font-size: 2rem;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .property-address {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2b6cb0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .key-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .metric-value.positive {
+            color: #38a169;
+        }
+
+        .metric-value.warning {
+            color: #dd6b20;
+        }
+
+        .metric-subtitle {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .cash-flow-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cash-flow-table th {
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4a5568;
+            padding: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .cash-flow-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .cash-flow-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cash-flow-table .category {
+            font-weight: 500;
+            color: #1a202c;
+        }
+
+        .cash-flow-table .amount {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .cash-flow-table .income {
+            color: #38a169;
+        }
+
+        .cash-flow-table .expense {
+            color: #e53e3e;
+        }
+
+        .cash-flow-table .total {
+            background: #f7fafc;
+            font-weight: 700;
+        }
+
+        .chart-placeholder {
+            height: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .projection-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100%;
+            width: 100%;
+            padding: 2rem;
+            gap: 0.5rem;
+        }
+
+        .projection-bar {
+            flex: 1;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .projection-bar:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .roi-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .roi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+
+        .roi-item-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .roi-item-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .roi-item-value.excellent {
+            color: #38a169;
+        }
+
+        .roi-item-value.good {
+            color: #3182ce;
+        }
+
+        .roi-item-value.fair {
+            color: #dd6b20;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.938rem;
+            font-weight: 500;
+            color: #718096;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #2b6cb0;
+            border-bottom-color: #2b6cb0;
+        }
+
+        .appreciation-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+
+        .year-projection {
+            text-align: center;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+
+        .year-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .year-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .year-change {
+            font-size: 0.813rem;
+            color: #38a169;
+            margin-top: 0.25rem;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            color: #22543d;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            border: 1px solid #fbd38d;
+            color: #7c2d12;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-content p {
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🏢 Real Estate Analyzer</div>
+        <div class="user-menu">
+            <button class="btn btn-primary">+ Add Property</button>
+            <div>John Investor</div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <ul class="nav-items">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Properties</a></li>
+            <li><a href="#" class="active">Analysis</a></li>
+            <li><a href="#">Income</a></li>
+            <li><a href="#">Expenses</a></li>
+            <li><a href="#">Financing</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">Properties</a>
+            <span>/</span>
+            <span>Maple Street Duplex</span>
+            <span>/</span>
+            <span>Analysis</span>
+        </div>
+
+        <div class="page-header">
+            <div class="property-title-section">
+                <h1>Maple Street Duplex - Investment Analysis</h1>
+                <p class="property-address">1247 Maple Street, Austin, TX 78704</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📊 Export Report</button>
+                <button class="btn btn-secondary">⚙️ Edit Property</button>
+            </div>
+        </div>
+
+        <div class="alert alert-success">
+            <div class="alert-icon">✓</div>
+            <div class="alert-content">
+                <h4>Strong Investment Performance</h4>
+                <p>This property exceeds target ROI by 4.2% and maintains positive cash flow with excellent cap rate.</p>
+            </div>
+        </div>
+
+        <div class="key-metrics">
+            <div class="metric-card">
+                <div class="metric-label">Cash-on-Cash Return</div>
+                <div class="metric-value positive">16.2%</div>
+                <div class="metric-subtitle">Excellent performance</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Cap Rate</div>
+                <div class="metric-value positive">8.4%</div>
+                <div class="metric-subtitle">Above market average</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Monthly Cash Flow</div>
+                <div class="metric-value positive">$1,245</div>
+                <div class="metric-subtitle">After all expenses</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">NOI (Annual)</div>
+                <div class="metric-value">$32,340</div>
+                <div class="metric-subtitle">Net Operating Income</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Total ROI (5-Year)</div>
+                <div class="metric-value positive">84.7%</div>
+                <div class="metric-subtitle">Including appreciation</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">DSCR</div>
+                <div class="metric-value positive">1.89</div>
+                <div class="metric-subtitle">Debt Service Coverage</div>
+            </div>
+        </div>
+
+        <div class="analysis-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Monthly Cash Flow Analysis</h3>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+                <div class="card-body">
+                    <table class="cash-flow-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="category">Gross Rental Income</td>
+                                <td class="amount income">$3,200</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal; color: #718096;">Vacancy Loss (5%)</td>
+                                <td class="amount expense">-$160</td>
+                            </tr>
+                            <tr class="total">
+                                <td class="category">Effective Gross Income</td>
+                                <td class="amount">$3,040</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding-top: 1rem; font-weight: 600; color: #4a5568;">Operating Expenses</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal;">Property Tax</td>
+                                <td class="amount expense">-$375</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal;">Insurance</td>
+                                <td class="amount expense">-$100</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal;">Property Management (8%)</td>
+                                <td class="amount expense">-$256</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal;">Maintenance Reserve</td>
+                                <td class="amount expense">-$200</td>
+                            </tr>
+                            <tr>
+                                <td class="category" style="padding-left: 1.5rem; font-weight: normal;">Utilities</td>
+                                <td class="amount expense">-$0</td>
+                            </tr>
+                            <tr class="total">
+                                <td class="category">Total Operating Expenses</td>
+                                <td class="amount expense">-$931</td>
+                            </tr>
+                            <tr class="total">
+                                <td class="category">Net Operating Income (NOI)</td>
+                                <td class="amount">$2,109</td>
+                            </tr>
+                            <tr>
+                                <td class="category">Mortgage Payment (P&I)</td>
+                                <td class="amount expense">-$1,698</td>
+                            </tr>
+                            <tr class="total" style="background: #edf2f7;">
+                                <td class="category" style="font-size: 1.125rem;">Monthly Cash Flow</td>
+                                <td class="amount income" style="font-size: 1.125rem;">$411</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">ROI Metrics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="roi-breakdown">
+                        <div class="roi-item">
+                            <span class="roi-item-label">Cash-on-Cash</span>
+                            <span class="roi-item-value excellent">16.2%</span>
+                        </div>
+                        <div class="roi-item">
+                            <span class="roi-item-label">Cap Rate</span>
+                            <span class="roi-item-value excellent">8.4%</span>
+                        </div>
+                        <div class="roi-item">
+                            <span class="roi-item-label">GRM</span>
+                            <span class="roi-item-value good">10.0</span>
+                        </div>
+                        <div class="roi-item">
+                            <span class="roi-item-label">DSCR</span>
+                            <span class="roi-item-value excellent">1.89</span>
+                        </div>
+                        <div class="roi-item">
+                            <span class="roi-item-label">IRR (10-Year)</span>
+                            <span class="roi-item-value excellent">18.3%</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                        <h4 style="font-size: 0.938rem; color: #4a5568; margin-bottom: 1rem;">Total Investment</h4>
+                        <table style="width: 100%; font-size: 0.875rem;">
+                            <tr>
+                                <td style="padding: 0.25rem 0; color: #718096;">Down Payment</td>
+                                <td style="text-align: right; font-weight: 600;">$77,000</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.25rem 0; color: #718096;">Closing Costs</td>
+                                <td style="text-align: right; font-weight: 600;">$8,500</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.25rem 0; color: #718096;">Renovations</td>
+                                <td style="text-align: right; font-weight: 600;">$15,000</td>
+                            </tr>
+                            <tr style="border-top: 2px solid #e2e8f0;">
+                                <td style="padding: 0.5rem 0; font-weight: 700;">Total Cash Invested</td>
+                                <td style="text-align: right; font-weight: 700; font-size: 1.125rem;">$100,500</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <div class="card-header">
+                <h3 class="card-title">5-Year Cash Flow Projection</h3>
+                <button class="btn btn-secondary">Adjust Assumptions</button>
+            </div>
+            <div class="card-body">
+                <div class="chart-placeholder">
+                    <div class="projection-chart">
+                        <div class="projection-bar" style="height: 75%;"></div>
+                        <div class="projection-bar" style="height: 78%;"></div>
+                        <div class="projection-bar" style="height: 82%;"></div>
+                        <div class="projection-bar" style="height: 86%;"></div>
+                        <div class="projection-bar" style="height: 90%;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <div class="tabs">
+                        <button class="tab active">Cash Flow</button>
+                        <button class="tab">Appreciation</button>
+                        <button class="tab">Equity Growth</button>
+                    </div>
+
+                    <table class="cash-flow-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th style="text-align: right;">Annual Income</th>
+                                <th style="text-align: right;">Operating Expenses</th>
+                                <th style="text-align: right;">Debt Service</th>
+                                <th style="text-align: right;">Cash Flow</th>
+                                <th style="text-align: right;">Property Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="category">Year 1</td>
+                                <td class="amount">$36,480</td>
+                                <td class="amount">$11,172</td>
+                                <td class="amount">$20,376</td>
+                                <td class="amount income">$4,932</td>
+                                <td class="amount">$385,000</td>
+                            </tr>
+                            <tr>
+                                <td class="category">Year 2</td>
+                                <td class="amount">$37,854</td>
+                                <td class="amount">$11,507</td>
+                                <td class="amount">$20,376</td>
+                                <td class="amount income">$5,971</td>
+                                <td class="amount">$400,400</td>
+                            </tr>
+                            <tr>
+                                <td class="category">Year 3</td>
+                                <td class="amount">$39,285</td>
+                                <td class="amount">$11,852</td>
+                                <td class="amount">$20,376</td>
+                                <td class="amount income">$7,057</td>
+                                <td class="amount">$416,416</td>
+                            </tr>
+                            <tr>
+                                <td class="category">Year 4</td>
+                                <td class="amount">$40,776</td>
+                                <td class="amount">$12,208</td>
+                                <td class="amount">$20,376</td>
+                                <td class="amount income">$8,192</td>
+                                <td class="amount">$433,073</td>
+                            </tr>
+                            <tr>
+                                <td class="category">Year 5</td>
+                                <td class="amount">$42,325</td>
+                                <td class="amount">$12,574</td>
+                                <td class="amount">$20,376</td>
+                                <td class="amount income">$9,375</td>
+                                <td class="amount">$450,396</td>
+                            </tr>
+                            <tr class="total">
+                                <td class="category">5-Year Total</td>
+                                <td class="amount">$196,720</td>
+                                <td class="amount">$59,313</td>
+                                <td class="amount">$101,880</td>
+                                <td class="amount income">$35,527</td>
+                                <td class="amount">+$65,396</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f7fafc; border-radius: 6px;">
+                        <p style="font-size: 0.875rem; color: #4a5568;">
+                            <strong>Assumptions:</strong> 3.5% annual rent increase, 3% expense inflation, 4% annual appreciation
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Market Appreciation Projection</h3>
+                </div>
+                <div class="card-body">
+                    <div class="appreciation-grid">
+                        <div class="year-projection">
+                            <div class="year-label">Current</div>
+                            <div class="year-value">$385K</div>
+                            <div class="year-change">Baseline</div>
+                        </div>
+                        <div class="year-projection">
+                            <div class="year-label">Year 1</div>
+                            <div class="year-value">$400K</div>
+                            <div class="year-change">+4.0%</div>
+                        </div>
+                        <div class="year-projection">
+                            <div class="year-label">Year 3</div>
+                            <div class="year-value">$433K</div>
+                            <div class="year-change">+12.5%</div>
+                        </div>
+                        <div class="year-projection">
+                            <div class="year-label">Year 5</div>
+                            <div class="year-value">$468K</div>
+                            <div class="year-change">+21.6%</div>
+                        </div>
+                        <div class="year-projection">
+                            <div class="year-label">Year 10</div>
+                            <div class="year-value">$569K</div>
+                            <div class="year-change">+47.8%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

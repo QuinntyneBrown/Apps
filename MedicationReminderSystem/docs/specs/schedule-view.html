@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Schedule - MedicationReminderSystem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 14px;
+            align-items: center;
+        }
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 10px;
+        }
+        .toggle-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+        .toggle-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .week-navigation {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .week-display {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .day-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .day-card:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .day-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .day-name {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+        .day-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .day-doses {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .day-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin: 8px auto 0;
+        }
+        .indicator-perfect {
+            background: #10b981;
+        }
+        .indicator-partial {
+            background: #f59e0b;
+        }
+        .indicator-missed {
+            background: #ef4444;
+        }
+        .timeline {
+            position: relative;
+        }
+        .time-block {
+            margin-bottom: 32px;
+        }
+        .time-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .time-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        .medications-list {
+            display: grid;
+            gap: 12px;
+            padding-left: 52px;
+        }
+        .medication-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+        .medication-item:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .medication-item.taken {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        .medication-item.missed {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        .med-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .medication-item.taken .med-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+            position: relative;
+        }
+        .medication-item.taken .med-checkbox::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .med-info {
+            flex: 1;
+        }
+        .med-name {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .med-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .med-time {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+        .medication-item.taken .med-time {
+            color: #059669;
+        }
+        .medication-item.missed .med-time {
+            color: #dc2626;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .legend {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="logo">
+                    <div class="logo-icon">💊</div>
+                    <span>MedicationReminder</span>
+                </div>
+                <div class="breadcrumb" style="margin-top: 8px;">
+                    <a href="#">Dashboard</a>
+                    <span>›</span>
+                    <span>Schedule</span>
+                </div>
+            </div>
+            <div class="view-toggle">
+                <button class="toggle-btn">Daily</button>
+                <button class="toggle-btn active">Weekly</button>
+                <button class="toggle-btn">Monthly</button>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">Weekly Medication Schedule</div>
+                    <div class="card-subtitle">Dec 23 - Dec 29, 2025</div>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Total Doses This Week</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="stat-value">39</div>
+                    <div class="stat-label">Doses Taken</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Doses Delayed</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">Doses Missed</div>
+                </div>
+            </div>
+
+            <!-- Week Navigation -->
+            <div class="week-navigation">
+                <button class="nav-btn">‹</button>
+                <div class="week-display">Week of December 23 - 29, 2025</div>
+                <button class="nav-btn">›</button>
+            </div>
+
+            <!-- Days Grid -->
+            <div class="days-grid">
+                <div class="day-card">
+                    <div class="day-name">MON</div>
+                    <div class="day-number">23</div>
+                    <div class="day-doses">6/6 doses</div>
+                    <div class="day-indicator indicator-perfect"></div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">TUE</div>
+                    <div class="day-number">24</div>
+                    <div class="day-doses">6/6 doses</div>
+                    <div class="day-indicator indicator-perfect"></div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">WED</div>
+                    <div class="day-number">25</div>
+                    <div class="day-doses">6/6 doses</div>
+                    <div class="day-indicator indicator-perfect"></div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">THU</div>
+                    <div class="day-number">26</div>
+                    <div class="day-doses">6/6 doses</div>
+                    <div class="day-indicator indicator-perfect"></div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">FRI</div>
+                    <div class="day-number">27</div>
+                    <div class="day-doses">5/6 doses</div>
+                    <div class="day-indicator indicator-partial"></div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">SAT</div>
+                    <div class="day-number">28</div>
+                    <div class="day-doses">5/6 doses</div>
+                    <div class="day-indicator indicator-missed"></div>
+                </div>
+                <div class="day-card active">
+                    <div class="day-name">SUN</div>
+                    <div class="day-number">29</div>
+                    <div class="day-doses">5/6 doses</div>
+                    <div class="day-indicator"></div>
+                </div>
+            </div>
+
+            <!-- Timeline for Today (Sunday, Dec 29) -->
+            <div class="timeline">
+                <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 24px;">
+                    Sunday, December 29, 2025 - Today's Schedule
+                </h3>
+
+                <!-- Morning -->
+                <div class="time-block">
+                    <div class="time-header">
+                        <div class="time-icon">🌅</div>
+                        <span>Morning (8:00 AM)</span>
+                    </div>
+                    <div class="medications-list">
+                        <div class="medication-item taken">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Lisinopril 10mg</div>
+                                <div class="med-details">1 tablet • With or without food</div>
+                            </div>
+                            <div class="med-time">Taken at 8:05 AM</div>
+                        </div>
+                        <div class="medication-item taken">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Metformin 500mg</div>
+                                <div class="med-details">1 tablet • With breakfast</div>
+                            </div>
+                            <div class="med-time">Taken at 8:05 AM</div>
+                        </div>
+                        <div class="medication-item taken">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Vitamin D3 2000 IU</div>
+                                <div class="med-details">1 softgel • With breakfast</div>
+                            </div>
+                            <div class="med-time">Taken at 8:10 AM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Afternoon -->
+                <div class="time-block">
+                    <div class="time-header">
+                        <div class="time-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">☀️</div>
+                        <span>Afternoon (12:00 PM)</span>
+                    </div>
+                    <div class="medications-list">
+                        <div class="medication-item taken">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Atorvastatin 20mg</div>
+                                <div class="med-details">1 tablet • With lunch</div>
+                            </div>
+                            <div class="med-time">Taken at 12:10 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evening -->
+                <div class="time-block">
+                    <div class="time-header">
+                        <div class="time-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">🌆</div>
+                        <span>Evening (6:00 PM)</span>
+                    </div>
+                    <div class="medications-list">
+                        <div class="medication-item">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Metformin 500mg</div>
+                                <div class="med-details">1 tablet • With dinner</div>
+                            </div>
+                            <div class="med-time">⏰ In 2 hours</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Night -->
+                <div class="time-block">
+                    <div class="time-header">
+                        <div class="time-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">🌙</div>
+                        <span>Night (8:00 PM - 10:00 PM)</span>
+                    </div>
+                    <div class="medications-list">
+                        <div class="medication-item">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Lisinopril 10mg</div>
+                                <div class="med-details">1 tablet • Without food</div>
+                            </div>
+                            <div class="med-time">Scheduled 8:00 PM</div>
+                        </div>
+                        <div class="medication-item">
+                            <div class="med-checkbox"></div>
+                            <div class="med-info">
+                                <div class="med-name">Omeprazole 20mg</div>
+                                <div class="med-details">1 capsule • Before bed</div>
+                            </div>
+                            <div class="med-time">Scheduled 10:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot indicator-perfect"></div>
+                    <span>Perfect adherence</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot indicator-partial"></div>
+                    <span>Partial adherence</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot indicator-missed"></div>
+                    <span>Missed doses</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

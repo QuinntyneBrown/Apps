@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes & Highlights - Book Reading Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .tabs {
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stats-bar {
+            background: white;
+            padding: 20px 32px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+        }
+
+        .section {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .highlight-card {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 4px solid #fbbf24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .highlight-card:hover {
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+            transform: translateX(4px);
+        }
+
+        .highlight-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #1a202c;
+            font-style: italic;
+            margin-bottom: 16px;
+            quotes: """ """ "'" "'";
+        }
+
+        .highlight-text::before {
+            content: open-quote;
+            font-size: 24px;
+            color: #fbbf24;
+        }
+
+        .highlight-text::after {
+            content: close-quote;
+            font-size: 24px;
+            color: #fbbf24;
+        }
+
+        .highlight-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .book-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .book-cover-small {
+            width: 40px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .book-details {
+            flex: 1;
+        }
+
+        .book-title-small {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .highlight-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .note-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 4px solid #48bb78;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .note-card:hover {
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+            transform: translateX(4px);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .note-type {
+            padding: 4px 10px;
+            background: #48bb78;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .note-type.analysis {
+            background: #667eea;
+        }
+
+        .note-type.question {
+            background: #ed8936;
+        }
+
+        .note-type.connection {
+            background: #9f7aea;
+        }
+
+        .note-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .category-chip {
+            padding: 8px 16px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .category-chip:hover {
+            border-color: #667eea;
+        }
+
+        .sidebar-section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .recent-book-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .recent-book-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-book-item:hover {
+            background: #f7fafc;
+            margin: 0 -12px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .recent-book-cover {
+            width: 40px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .recent-book-info {
+            flex: 1;
+        }
+
+        .recent-book-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .recent-book-count {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .export-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tag-cloud {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag-item {
+            padding: 6px 12px;
+            background: #edf2f7;
+            color: #4a5568;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tag-item:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💡 Notes & Highlights</h1>
+            <div class="search-filter-bar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search highlights, notes, quotes...">
+                </div>
+                <select class="filter-select">
+                    <option>All Books</option>
+                    <option>The Midnight Library</option>
+                    <option>Atomic Habits</option>
+                    <option>Project Hail Mary</option>
+                </select>
+                <select class="filter-select">
+                    <option>Sort: Recent</option>
+                    <option>Sort: Oldest</option>
+                    <option>Sort: By Book</option>
+                    <option>Sort: By Page</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">All (152)</button>
+            <button class="tab">Highlights (89)</button>
+            <button class="tab">Notes (63)</button>
+            <button class="tab">Favorites (24)</button>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">152</div>
+                <div class="stat-label">Total Items</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">89</div>
+                <div class="stat-label">Highlights</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">63</div>
+                <div class="stat-label">Notes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Favorites</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="section">
+                <h2 class="section-title">Recent Highlights & Notes</h2>
+
+                <div class="category-filter">
+                    <div class="category-chip active">All</div>
+                    <div class="category-chip">Wisdom</div>
+                    <div class="category-chip">Inspiration</div>
+                    <div class="category-chip">Analysis</div>
+                    <div class="category-chip">Questions</div>
+                    <div class="category-chip">Connections</div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        Never underestimate the big importance of small things.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">The Midnight Library</div>
+                                <div class="page-info">Page 142 • Nov 24, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-header">
+                        <span class="note-type analysis">Analysis</span>
+                    </div>
+                    <div class="note-text">
+                        This concept of infinite possibilities is fascinating. Reminds me of the multiverse theory in quantum physics. The library is such a beautiful metaphor for choice and regret. Each book represents a life path not taken - makes me reflect on my own decisions.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">The Midnight Library</div>
+                                <div class="page-info">Page 45 • Nov 20, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        You don't have to understand life. You just have to live it.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">The Midnight Library</div>
+                                <div class="page-info">Page 187 • Nov 26, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        You do not rise to the level of your goals. You fall to the level of your systems.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Atomic Habits</div>
+                                <div class="page-info">Page 27 • Nov 12, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-header">
+                        <span class="note-type question">Question</span>
+                    </div>
+                    <div class="note-text">
+                        How can I apply this systems thinking to my own life? Need to think about what small habits I can build that compound over time. Maybe start with reading 20 pages every morning?
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Atomic Habits</div>
+                                <div class="page-info">Page 30 • Nov 12, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        Every action you take is a vote for the type of person you wish to become.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Atomic Habits</div>
+                                <div class="page-info">Page 38 • Nov 13, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-header">
+                        <span class="note-type connection">Connection</span>
+                    </div>
+                    <div class="note-text">
+                        This connects beautifully with what I read in "The Power of Now" about being present. Both books emphasize the importance of small, consistent actions in the present moment rather than fixating on distant future goals.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Atomic Habits</div>
+                                <div class="page-info">Page 45 • Nov 14, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        Between life and death there is a library, and within that library, the shelves go on forever. Every book provides a chance to try another life you could have lived.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">The Midnight Library</div>
+                                <div class="page-info">Page 3 • Nov 18, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-text">
+                        The only way to make sense out of change is to plunge into it, move with it, and join the dance.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Project Hail Mary</div>
+                                <div class="page-info">Page 67 • Nov 26, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">⭐ Favorite</button>
+                            <button class="action-btn">🔗 Share</button>
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <div class="note-header">
+                        <span class="note-type analysis">Analysis</span>
+                    </div>
+                    <div class="note-text">
+                        The science in this book is incredibly well-researched. Weir's attention to detail makes the impossible feel plausible. The protagonist's problem-solving approach is inspiring - breaking down huge problems into manageable pieces.
+                    </div>
+                    <div class="highlight-meta">
+                        <div class="book-info">
+                            <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=80&h=120&fit=crop" alt="Book" class="book-cover-small">
+                            <div class="book-details">
+                                <div class="book-title-small">Project Hail Mary</div>
+                                <div class="page-info">Page 89 • Nov 27, 2025</div>
+                            </div>
+                        </div>
+                        <div class="highlight-actions">
+                            <button class="action-btn">✏️ Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">📚 Books with Most Notes</h3>
+                    <div class="recent-book-item">
+                        <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=80&h=120&fit=crop" alt="Book" class="recent-book-cover">
+                        <div class="recent-book-info">
+                            <div class="recent-book-title">Atomic Habits</div>
+                            <div class="recent-book-count">28 items</div>
+                        </div>
+                    </div>
+                    <div class="recent-book-item">
+                        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=80&h=120&fit=crop" alt="Book" class="recent-book-cover">
+                        <div class="recent-book-info">
+                            <div class="recent-book-title">The Midnight Library</div>
+                            <div class="recent-book-count">24 items</div>
+                        </div>
+                    </div>
+                    <div class="recent-book-item">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=80&h=120&fit=crop" alt="Book" class="recent-book-cover">
+                        <div class="recent-book-info">
+                            <div class="recent-book-title">Educated</div>
+                            <div class="recent-book-count">19 items</div>
+                        </div>
+                    </div>
+                    <div class="recent-book-item">
+                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=80&h=120&fit=crop" alt="Book" class="recent-book-cover">
+                        <div class="recent-book-info">
+                            <div class="recent-book-title">Project Hail Mary</div>
+                            <div class="recent-book-count">15 items</div>
+                        </div>
+                    </div>
+                    <div class="recent-book-item">
+                        <img src="https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=80&h=120&fit=crop" alt="Book" class="recent-book-cover">
+                        <div class="recent-book-info">
+                            <div class="recent-book-title">Sapiens</div>
+                            <div class="recent-book-count">12 items</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">🏷️ Popular Tags</h3>
+                    <div class="tag-cloud">
+                        <div class="tag-item">Wisdom</div>
+                        <div class="tag-item">Inspiration</div>
+                        <div class="tag-item">Philosophy</div>
+                        <div class="tag-item">Science</div>
+                        <div class="tag-item">Personal Growth</div>
+                        <div class="tag-item">Productivity</div>
+                        <div class="tag-item">Life Lessons</div>
+                        <div class="tag-item">Motivation</div>
+                        <div class="tag-item">Creativity</div>
+                        <div class="tag-item">Leadership</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">📤 Export Options</h3>
+                    <button class="export-btn">📄 Export to PDF</button>
+                    <button class="export-btn">📝 Export to Markdown</button>
+                    <button class="export-btn">📊 Export to CSV</button>
+                    <button class="export-btn">📧 Email Collection</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">💡 Quick Stats</h3>
+                    <div class="stat-item" style="margin-bottom: 16px;">
+                        <div class="stat-value" style="font-size: 24px;">5.2</div>
+                        <div class="stat-label">Avg notes per book</div>
+                    </div>
+                    <div class="stat-item" style="margin-bottom: 16px;">
+                        <div class="stat-value" style="font-size: 24px;">34</div>
+                        <div class="stat-label">Books with notes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="font-size: 24px;">This Week</div>
+                        <div class="stat-label">Last activity</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

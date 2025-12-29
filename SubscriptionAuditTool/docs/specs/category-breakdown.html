@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Breakdown - SubscriptionAuditTool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-container {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .pie-chart {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #E50914 0deg 119deg,
+                #FF2BC2 119deg 238deg,
+                #1DB954 238deg 263deg,
+                #00A4EF 263deg 328deg,
+                #5865F2 328deg 360deg
+            );
+            position: relative;
+        }
+
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1;
+        }
+
+        .chart-total {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .chart-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+
+        .legend-info {
+            flex: 1;
+        }
+
+        .legend-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .legend-count {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .legend-amount {
+            text-align: right;
+        }
+
+        .legend-value {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 18px;
+        }
+
+        .legend-percentage {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .category-section {
+            margin-bottom: 32px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--category-color) 0%, var(--category-color-dark) 100%);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-icon {
+            font-size: 32px;
+        }
+
+        .category-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-name {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .category-meta {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .category-stats {
+            text-align: right;
+        }
+
+        .category-total {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .category-monthly {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .subscriptions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .subscription-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .subscription-card:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .subscription-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .subscription-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 20px;
+        }
+
+        .subscription-details {
+            flex: 1;
+        }
+
+        .subscription-name {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .subscription-plan {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .subscription-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .subscription-price {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 20px;
+        }
+
+        .subscription-frequency {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .subscription-renewal {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: right;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid;
+        }
+
+        .insight-card.success {
+            background: #dcfce7;
+            border-left-color: #10b981;
+        }
+
+        .insight-card.warning {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+
+        .insight-card.info {
+            background: #dbeafe;
+            border-left-color: #3b82f6;
+        }
+
+        .insight-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .insight-title {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .insight-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 1024px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .subscriptions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">💰 SubscriptionAuditTool</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Dashboard</button>
+                <button class="btn btn-primary">+ Add Subscription</button>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="page-header">
+                <h1 class="page-title">Spending by Category</h1>
+            </div>
+            <div class="page-subtitle">Understand where your subscription money goes</div>
+
+            <div class="overview-grid">
+                <div class="chart-container">
+                    <div class="pie-chart">
+                        <div class="chart-center">
+                            <div class="chart-total">$147.94</div>
+                            <div class="chart-label">Total Monthly</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #E50914;"></div>
+                        <div class="legend-info">
+                            <div class="legend-name">Entertainment</div>
+                            <div class="legend-count">4 subscriptions</div>
+                        </div>
+                        <div class="legend-amount">
+                            <div class="legend-value">$48.97</div>
+                            <div class="legend-percentage">33%</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FF2BC2;"></div>
+                        <div class="legend-info">
+                            <div class="legend-name">Software</div>
+                            <div class="legend-count">2 subscriptions</div>
+                        </div>
+                        <div class="legend-amount">
+                            <div class="legend-value">$52.99</div>
+                            <div class="legend-percentage">36%</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #1DB954;"></div>
+                        <div class="legend-info">
+                            <div class="legend-name">Music</div>
+                            <div class="legend-count">1 subscription</div>
+                        </div>
+                        <div class="legend-amount">
+                            <div class="legend-value">$9.99</div>
+                            <div class="legend-percentage">7%</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00A4EF;"></div>
+                        <div class="legend-info">
+                            <div class="legend-name">Productivity</div>
+                            <div class="legend-count">3 subscriptions</div>
+                        </div>
+                        <div class="legend-amount">
+                            <div class="legend-value">$26.99</div>
+                            <div class="legend-percentage">18%</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #5865F2;"></div>
+                        <div class="legend-info">
+                            <div class="legend-name">Communication</div>
+                            <div class="legend-count">2 subscriptions</div>
+                        </div>
+                        <div class="legend-amount">
+                            <div class="legend-value">$17.99</div>
+                            <div class="legend-percentage">12%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-grid">
+                <div class="insight-card warning">
+                    <div class="insight-icon">💰</div>
+                    <div class="insight-title">Highest Category</div>
+                    <div class="insight-description">
+                        Software is your largest expense at $52.99/month (36% of total spending)
+                    </div>
+                </div>
+
+                <div class="insight-card success">
+                    <div class="insight-icon">📊</div>
+                    <div class="insight-title">Well Balanced</div>
+                    <div class="insight-description">
+                        Your spending is distributed across 5 categories with no extreme outliers
+                    </div>
+                </div>
+
+                <div class="insight-card info">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-title">Category Growth</div>
+                    <div class="insight-description">
+                        Entertainment spending increased 15% over the past 3 months
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entertainment Category -->
+        <div class="card">
+            <div class="category-section">
+                <div class="category-header" style="--category-color: #E50914; --category-color-dark: #B20710;">
+                    <div class="category-title-group">
+                        <div class="category-icon">🎬</div>
+                        <div class="category-info">
+                            <div class="category-name">Entertainment</div>
+                            <div class="category-meta">4 active subscriptions</div>
+                        </div>
+                    </div>
+                    <div class="category-stats">
+                        <div class="category-total">$48.97</div>
+                        <div class="category-monthly">per month</div>
+                    </div>
+                </div>
+
+                <div class="subscriptions-grid">
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #E50914;">N</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Netflix</div>
+                                <div class="subscription-plan">Premium Plan (4K)</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$19.99</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 5
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #FF0000;">▶</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">YouTube Premium</div>
+                                <div class="subscription-plan">Individual</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$13.99</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 15
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #FF9900;">A</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Amazon Prime</div>
+                                <div class="subscription-plan">Monthly</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$14.99</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 10
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #146EB4;">D+</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Disney+</div>
+                                <div class="subscription-plan">Standard (No Ads)</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$0.00</div>
+                                <div class="subscription-frequency">Included with Verizon</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Bundle
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Software Category -->
+        <div class="card">
+            <div class="category-section">
+                <div class="category-header" style="--category-color: #FF2BC2; --category-color-dark: #CC2299;">
+                    <div class="category-title-group">
+                        <div class="category-icon">💻</div>
+                        <div class="category-info">
+                            <div class="category-name">Software</div>
+                            <div class="category-meta">2 active subscriptions</div>
+                        </div>
+                    </div>
+                    <div class="category-stats">
+                        <div class="category-total">$52.99</div>
+                        <div class="category-monthly">per month</div>
+                    </div>
+                </div>
+
+                <div class="subscriptions-grid">
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #FF2BC2;">A</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Adobe Creative Cloud</div>
+                                <div class="subscription-plan">All Apps</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$52.99</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 3
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #00C4CC;">C</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Canva Pro</div>
+                                <div class="subscription-plan">Free Trial</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$0.00</div>
+                                <div class="subscription-frequency">Trial (ends Jan 8)</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Then $12.99/mo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productivity Category -->
+        <div class="card">
+            <div class="category-section">
+                <div class="category-header" style="--category-color: #00A4EF; --category-color-dark: #0078D4;">
+                    <div class="category-title-group">
+                        <div class="category-icon">⚡</div>
+                        <div class="category-info">
+                            <div class="category-name">Productivity</div>
+                            <div class="category-meta">3 active subscriptions</div>
+                        </div>
+                    </div>
+                    <div class="category-stats">
+                        <div class="category-total">$26.99</div>
+                        <div class="category-monthly">per month</div>
+                    </div>
+                </div>
+
+                <div class="subscriptions-grid">
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #00A4EF;">M</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Microsoft 365</div>
+                                <div class="subscription-plan">Personal</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$6.99</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 25
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #FF6154;">G</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Grammarly</div>
+                                <div class="subscription-plan">Premium</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$12.00</div>
+                                <div class="subscription-frequency">Monthly</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Renews Jan 12
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-icon" style="background: #F57C00;">N</div>
+                            <div class="subscription-details">
+                                <div class="subscription-name">Notion</div>
+                                <div class="subscription-plan">Plus Trial</div>
+                            </div>
+                        </div>
+                        <div class="subscription-footer">
+                            <div>
+                                <div class="subscription-price">$0.00</div>
+                                <div class="subscription-frequency">Trial (ends Jan 14)</div>
+                            </div>
+                            <div class="subscription-renewal">
+                                Then $10.00/mo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

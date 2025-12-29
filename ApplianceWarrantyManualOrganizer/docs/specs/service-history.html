@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History - Appliance Warranty & Manual Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .btn-add {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card:nth-child(1) .stat-icon {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+        .stat-card:nth-child(2) .stat-icon {
+            background: #f3e5f5;
+            color: #9c27b0;
+        }
+
+        .stat-card:nth-child(3) .stat-icon {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .stat-card:nth-child(4) .stat-icon {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.625rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        .timeline-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.625rem;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #e9ecef;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -2.125rem;
+            top: 0.5rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #667eea;
+            box-shadow: 0 0 0 4px white, 0 0 0 6px #e9ecef;
+            z-index: 1;
+        }
+
+        .timeline-dot.completed {
+            border-color: #4caf50;
+        }
+
+        .timeline-dot.warranty {
+            border-color: #ff9800;
+        }
+
+        .service-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .service-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .service-date {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .service-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .service-badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .service-badge.warranty {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .service-badge.scheduled {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .service-appliance {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+
+        .service-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: #6c757d;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .service-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #ffc107;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        .provider-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .provider-item:hover {
+            background: #e9ecef;
+        }
+
+        .provider-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .provider-info {
+            flex: 1;
+        }
+
+        .provider-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .provider-stats {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .provider-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+
+        .cost-chart {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 0.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .cost-label {
+            color: #6c757d;
+        }
+
+        .cost-value {
+            font-weight: 600;
+        }
+
+        .upcoming-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upcoming-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .upcoming-date {
+            font-size: 0.8rem;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-desc {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>Service History</h1>
+                <p>Track all repairs, maintenance, and service calls for your appliances</p>
+            </div>
+            <button class="btn-add">
+                <span>➕</span>
+                <span>Log Service Call</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🔧</div>
+                <div class="stat-value">18</div>
+                <div class="stat-label">Total Service Calls</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value">$1,847</div>
+                <div class="stat-label">Total Service Cost</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <div class="stat-value">6</div>
+                <div class="stat-label">Warranty Claims</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-value">4.6</div>
+                <div class="stat-label">Avg Provider Rating</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <select class="filter-select">
+                <option>All Appliances</option>
+                <option>Samsung Refrigerator</option>
+                <option>LG Washer</option>
+                <option>Bosch Oven</option>
+                <option>KitchenAid Dishwasher</option>
+                <option>Carrier HVAC</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Service Types</option>
+                <option>Repair</option>
+                <option>Maintenance</option>
+                <option>Installation</option>
+                <option>Inspection</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Time</option>
+                <option>Last 30 Days</option>
+                <option>Last 3 Months</option>
+                <option>Last 6 Months</option>
+                <option>Last Year</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Providers</option>
+                <option>Cool Breeze HVAC</option>
+                <option>Self-Maintenance</option>
+                <option>Best Buy Installation</option>
+            </select>
+        </div>
+
+        <div class="content-grid">
+            <!-- Timeline -->
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <h2>Service Timeline</h2>
+                    <span style="color: #6c757d; font-size: 0.9rem;">18 total records</span>
+                </div>
+
+                <div class="timeline">
+                    <!-- Recent Service -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">December 1, 2024</div>
+                                <span class="service-badge completed">Completed</span>
+                            </div>
+                            <h3 class="service-title">6-Month Checkup & Filter Replacement</h3>
+                            <div class="service-appliance">
+                                <span>❄️</span>
+                                <span>Samsung RF28R7351SR • Refrigerator</span>
+                            </div>
+                            <p class="service-description">
+                                Routine maintenance performed. Replaced water filter with genuine Samsung part.
+                                Cleaned condenser coils. Ice maker calibrated and deep cleaned. All systems
+                                tested and operating within normal parameters.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Self-Maintenance</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">$45.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Parts Cost</span>
+                                    <span class="meta-value">$45.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Labor Cost</span>
+                                    <span class="meta-value">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HVAC Annual Inspection -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">November 10, 2024</div>
+                                <span class="service-badge completed">Completed</span>
+                            </div>
+                            <h3 class="service-title">Annual HVAC Inspection</h3>
+                            <div class="service-appliance">
+                                <span>❄️</span>
+                                <span>Carrier 59MN7 • HVAC System</span>
+                            </div>
+                            <p class="service-description">
+                                Complete system inspection and tune-up. Checked refrigerant levels, cleaned
+                                evaporator and condenser coils, replaced air filter, tested thermostat calibration.
+                                System efficiency at 96%. Recommended minor ductwork sealing for optimal performance.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Cool Breeze HVAC Services</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">$185.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Rating</span>
+                                    <div class="service-rating">
+                                        <span>⭐⭐⭐⭐⭐</span>
+                                        <span style="color: #2c3e50; font-weight: 600;">5.0</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Warranty Claim</span>
+                                    <span class="meta-value">No</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dishwasher Repair -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot warranty"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">September 22, 2024</div>
+                                <span class="service-badge warranty">Warranty Claim</span>
+                            </div>
+                            <h3 class="service-title">Spray Arm Replacement</h3>
+                            <div class="service-appliance">
+                                <span>🍽️</span>
+                                <span>KitchenAid KDTM404KPS • Dishwasher</span>
+                            </div>
+                            <p class="service-description">
+                                Lower spray arm stopped rotating properly. Diagnosed bearing failure in spray arm
+                                assembly. Replaced complete lower spray arm unit under warranty. Tested all wash
+                                cycles. Issue resolved. Clean cycle performance verified.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Appliance Masters</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">$0.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Rating</span>
+                                    <div class="service-rating">
+                                        <span>⭐⭐⭐⭐</span>
+                                        <span style="color: #2c3e50; font-weight: 600;">4.0</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Warranty Claim</span>
+                                    <span class="meta-value">Yes - Covered</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Water Heater Flush -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">August 15, 2024</div>
+                                <span class="service-badge completed">Completed</span>
+                            </div>
+                            <h3 class="service-title">Water Heater Flush & Anode Inspection</h3>
+                            <div class="service-appliance">
+                                <span>💧</span>
+                                <span>Rheem XE50T10HD50U0 • Water Heater</span>
+                            </div>
+                            <p class="service-description">
+                                Annual maintenance service. Drained and flushed tank to remove sediment buildup.
+                                Inspected anode rod - 60% remaining, good condition. Tested pressure relief valve.
+                                Checked for leaks. Temperature setting verified at 120°F.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Self-Maintenance</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">$0.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Parts Cost</span>
+                                    <span class="meta-value">$0.00</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Labor Cost</span>
+                                    <span class="meta-value">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Washer Installation -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">November 20, 2023</div>
+                                <span class="service-badge completed">Completed</span>
+                            </div>
+                            <h3 class="service-title">Professional Installation</h3>
+                            <div class="service-appliance">
+                                <span>🌀</span>
+                                <span>LG WM9000HVA • Washer</span>
+                            </div>
+                            <p class="service-description">
+                                Delivered and installed new front-load washer. Connected water supply lines,
+                                drain hose, and electrical. Leveled unit and tested all cycles. Demonstrated
+                                features and smart connectivity setup.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Best Buy Installation</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">Included</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Rating</span>
+                                    <div class="service-rating">
+                                        <span>⭐⭐⭐⭐⭐</span>
+                                        <span style="color: #2c3e50; font-weight: 600;">5.0</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Warranty Claim</span>
+                                    <span class="meta-value">No</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refrigerator Installation -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-date">June 15, 2024</div>
+                                <span class="service-badge completed">Completed</span>
+                            </div>
+                            <h3 class="service-title">Initial Installation & Setup</h3>
+                            <div class="service-appliance">
+                                <span>❄️</span>
+                                <span>Samsung RF28R7351SR • Refrigerator</span>
+                            </div>
+                            <p class="service-description">
+                                Delivered, unboxed, and installed new refrigerator. Connected water line for
+                                ice maker and water dispenser. Leveled unit and adjusted door alignment.
+                                Tested all features. Set up WiFi connectivity and SmartThings integration.
+                            </p>
+                            <div class="service-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Provider</span>
+                                    <span class="meta-value">Best Buy Installation</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Cost</span>
+                                    <span class="meta-value">Included</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Rating</span>
+                                    <div class="service-rating">
+                                        <span>⭐⭐⭐⭐⭐</span>
+                                        <span style="color: #2c3e50; font-weight: 600;">5.0</span>
+                                    </div>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Warranty Claim</span>
+                                    <span class="meta-value">No</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Service Providers -->
+                <div class="card">
+                    <h3>Service Providers</h3>
+
+                    <div class="provider-item">
+                        <div class="provider-avatar">CB</div>
+                        <div class="provider-info">
+                            <h4>Cool Breeze HVAC</h4>
+                            <div class="provider-stats">4 services</div>
+                        </div>
+                        <div class="provider-rating">
+                            <span>⭐</span>
+                            <span>4.8</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-item">
+                        <div class="provider-avatar">AM</div>
+                        <div class="provider-info">
+                            <h4>Appliance Masters</h4>
+                            <div class="provider-stats">3 services</div>
+                        </div>
+                        <div class="provider-rating">
+                            <span>⭐</span>
+                            <span>4.3</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-item">
+                        <div class="provider-avatar">BB</div>
+                        <div class="provider-info">
+                            <h4>Best Buy Installation</h4>
+                            <div class="provider-stats">5 services</div>
+                        </div>
+                        <div class="provider-rating">
+                            <span>⭐</span>
+                            <span>5.0</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-item">
+                        <div class="provider-avatar">SM</div>
+                        <div class="provider-info">
+                            <h4>Self-Maintenance</h4>
+                            <div class="provider-stats">6 services</div>
+                        </div>
+                        <div class="provider-rating">
+                            <span>⭐</span>
+                            <span>N/A</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Summary -->
+                <div class="card">
+                    <h3>Cost Summary (2024)</h3>
+                    <div class="cost-chart">
+                        <div class="cost-item">
+                            <span class="cost-label">Labor</span>
+                            <span class="cost-value">$892.00</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Parts</span>
+                            <span class="cost-value">$487.00</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Warranty Claims</span>
+                            <span class="cost-value">$468.00</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Total Spent</span>
+                            <span class="cost-value">$1,379.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Service -->
+                <div class="card">
+                    <h3>Upcoming Service</h3>
+                    <div class="upcoming-list">
+                        <div class="upcoming-item">
+                            <div class="upcoming-date">December 15, 2024</div>
+                            <div class="upcoming-title">HVAC Annual Inspection</div>
+                            <div class="upcoming-desc">Carrier 59MN7 • Cool Breeze HVAC</div>
+                        </div>
+
+                        <div class="upcoming-item">
+                            <div class="upcoming-date">December 22, 2024</div>
+                            <div class="upcoming-title">Water Heater Flush</div>
+                            <div class="upcoming-desc">Rheem Water Heater • Self-Maintenance</div>
+                        </div>
+
+                        <div class="upcoming-item">
+                            <div class="upcoming-date">January 5, 2025</div>
+                            <div class="upcoming-title">Filter Replacement</div>
+                            <div class="upcoming-desc">Samsung Refrigerator • Self-Maintenance</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

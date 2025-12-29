@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax-Loss Harvesting - Investment Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .info-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .info-content h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .info-content p {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .metric-subtext {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .opportunities-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .opportunities-table thead {
+            background: #f7fafc;
+        }
+
+        .opportunities-table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .opportunities-table td {
+            padding: 18px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .opportunities-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .opportunities-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .stock-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stock-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #db2c3e 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .stock-info {
+            flex: 1;
+        }
+
+        .stock-symbol {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 15px;
+        }
+
+        .stock-name {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .loss-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            background: #ffeaea;
+            color: #db2c3e;
+        }
+
+        .tax-savings-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            background: #d4f8e8;
+            color: #0f9960;
+        }
+
+        .replacement-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .replacement-symbol {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .replacement-similarity {
+            font-size: 11px;
+            color: #718096;
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .action-btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 32px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -40px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: -32px;
+            top: 16px;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-content {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 6px;
+        }
+
+        .timeline-description {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .wash-sale-warning {
+            background: #fff4e6;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .wash-sale-warning .icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .wash-sale-warning .content {
+            flex: 1;
+        }
+
+        .wash-sale-warning .title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 4px;
+        }
+
+        .wash-sale-warning .description {
+            font-size: 12px;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .info-list {
+            list-style: none;
+        }
+
+        .info-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+
+        .info-list .icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-list .text {
+            flex: 1;
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>💰 Tax-Loss Harvesting</h1>
+                    <div class="header-subtitle">Optimize your tax liability by strategically selling underperforming assets</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📖 Learn More</button>
+                    <button class="btn btn-primary">⚙️ Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-banner">
+            <div class="info-icon">💡</div>
+            <div class="info-content">
+                <h3>What is Tax-Loss Harvesting?</h3>
+                <p>
+                    Tax-loss harvesting is a strategy where you sell investments at a loss to offset capital gains and reduce your tax liability.
+                    You can then reinvest in a similar (but not identical) asset to maintain your portfolio allocation while harvesting the tax benefit.
+                    We automatically identify opportunities and suggest replacement securities to help you maximize tax savings while avoiding wash sales.
+                </p>
+            </div>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-label">Total Unrealized Losses</div>
+                <div class="metric-value" style="color: #db2c3e;">-$11,721.00</div>
+                <div class="metric-subtext">Across 8 positions</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Potential Tax Savings</div>
+                <div class="metric-value" style="color: #0f9960;">+$2,815.04</div>
+                <div class="metric-subtext">Assuming 24% tax rate</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Capital Gains to Offset</div>
+                <div class="metric-value">$34,892.00</div>
+                <div class="metric-subtext">From realized gains YTD</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Opportunities Found</div>
+                <div class="metric-value">8</div>
+                <div class="metric-subtext">In taxable accounts</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Harvesting Opportunities</h2>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary">Filter: All Accounts</button>
+                    <button class="btn btn-secondary">Sort: By Loss Amount</button>
+                </div>
+            </div>
+
+            <table class="opportunities-table">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Shares</th>
+                        <th>Cost Basis</th>
+                        <th>Current Value</th>
+                        <th>Unrealized Loss</th>
+                        <th>Tax Savings (24%)</th>
+                        <th>Suggested Replacement</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">T</div>
+                                <div class="stock-info">
+                                    <div class="stock-symbol">TSLA</div>
+                                    <div class="stock-name">Tesla, Inc.</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>168</td>
+                        <td>$47,320.00</td>
+                        <td>$41,748.00</td>
+                        <td><span class="loss-badge">-$5,572.00</span></td>
+                        <td><span class="tax-savings-badge">+$1,337.28</span></td>
+                        <td>
+                            <div class="replacement-cell">
+                                <span class="replacement-symbol">F</span>
+                                <span class="replacement-similarity">87% similar</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn action-btn-primary">Execute</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">D</div>
+                                <div class="stock-info">
+                                    <div class="stock-symbol">DIS</div>
+                                    <div class="stock-name">The Walt Disney Company</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>325</td>
+                        <td>$32,500.00</td>
+                        <td>$29,649.75</td>
+                        <td><span class="loss-badge">-$2,850.25</span></td>
+                        <td><span class="tax-savings-badge">+$684.06</span></td>
+                        <td>
+                            <div class="replacement-cell">
+                                <span class="replacement-symbol">CMCSA</span>
+                                <span class="replacement-similarity">82% similar</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn action-btn-primary">Execute</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">P</div>
+                                <div class="stock-info">
+                                    <div class="stock-symbol">PYPL</div>
+                                    <div class="stock-name">PayPal Holdings Inc.</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>156</td>
+                        <td>$12,480.00</td>
+                        <td>$11,700.48</td>
+                        <td><span class="loss-badge">-$779.52</span></td>
+                        <td><span class="tax-savings-badge">+$187.09</span></td>
+                        <td>
+                            <div class="replacement-cell">
+                                <span class="replacement-symbol">SQ</span>
+                                <span class="replacement-similarity">85% similar</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn action-btn-primary">Execute</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">I</div>
+                                <div class="stock-info">
+                                    <div class="stock-symbol">INTC</div>
+                                    <div class="stock-name">Intel Corporation</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>428</td>
+                        <td>$21,400.00</td>
+                        <td>$20,353.12</td>
+                        <td><span class="loss-badge">-$1,046.88</span></td>
+                        <td><span class="tax-savings-badge">+$251.25</span></td>
+                        <td>
+                            <div class="replacement-cell">
+                                <span class="replacement-symbol">AMD</span>
+                                <span class="replacement-similarity">79% similar</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn action-btn-primary">Execute</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">B</div>
+                                <div class="stock-info">
+                                    <div class="stock-symbol">BA</div>
+                                    <div class="stock-name">Boeing Company</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>78</td>
+                        <td>$16,770.00</td>
+                        <td>$16,246.44</td>
+                        <td><span class="loss-badge">-$523.56</span></td>
+                        <td><span class="tax-savings-badge">+$125.65</span></td>
+                        <td>
+                            <div class="replacement-cell">
+                                <span class="replacement-symbol">LMT</span>
+                                <span class="replacement-similarity">81% similar</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn action-btn-primary">Execute</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="wash-sale-warning">
+                <div class="icon">⚠️</div>
+                <div class="content">
+                    <div class="title">Wash Sale Rule Protection</div>
+                    <div class="description">
+                        All suggested replacements are checked to avoid wash sale violations. The IRS wash sale rule prevents you from
+                        claiming a loss if you buy a "substantially identical" security within 30 days before or after the sale. Our
+                        recommendations use correlation analysis to suggest similar but not identical securities.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="two-col-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">How to Execute</h2>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">1. Select Opportunities</div>
+                            <div class="timeline-description">
+                                Review the opportunities table and select positions you want to harvest. Consider your overall
+                                tax situation and capital gains for the year.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">2. Sell Losing Position</div>
+                            <div class="timeline-description">
+                                Execute the sale of the underperforming security. The realized loss will offset your capital
+                                gains and reduce taxable income.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">3. Buy Replacement (Optional)</div>
+                            <div class="timeline-description">
+                                Immediately purchase the suggested replacement security to maintain your portfolio allocation
+                                and market exposure while avoiding wash sale rules.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">4. Document for Taxes</div>
+                            <div class="timeline-description">
+                                We'll track all transactions and generate Form 8949 documentation for your tax filing. Your
+                                tax savings will be realized when you file your return.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Important Considerations</h2>
+                </div>
+
+                <ul class="info-list">
+                    <li>
+                        <span class="icon">📅</span>
+                        <span class="text">
+                            <strong>Timing Matters:</strong> Tax-loss harvesting is most effective before year-end to
+                            offset current year gains.
+                        </span>
+                    </li>
+                    <li>
+                        <span class="icon">🔄</span>
+                        <span class="text">
+                            <strong>Wash Sale Rule:</strong> Wait 31 days before repurchasing the same security to
+                            ensure the loss is deductible.
+                        </span>
+                    </li>
+                    <li>
+                        <span class="icon">🎯</span>
+                        <span class="text">
+                            <strong>Taxable Accounts Only:</strong> Tax-loss harvesting only applies to taxable brokerage
+                            accounts, not IRAs or 401(k)s.
+                        </span>
+                    </li>
+                    <li>
+                        <span class="icon">💵</span>
+                        <span class="text">
+                            <strong>$3,000 Limit:</strong> If losses exceed gains, you can deduct up to $3,000 against
+                            ordinary income per year.
+                        </span>
+                    </li>
+                    <li>
+                        <span class="icon">📊</span>
+                        <span class="text">
+                            <strong>Carryforward:</strong> Unused losses can be carried forward to future tax years
+                            indefinitely.
+                        </span>
+                    </li>
+                </ul>
+
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-secondary" style="width: 100%;">📥 Download Tax Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

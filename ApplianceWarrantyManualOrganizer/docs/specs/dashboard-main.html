@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Appliance Warranty & Manual Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.appliances .icon {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+        .stat-card.warranties .icon {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .stat-card.service .icon {
+            background: #fce4ec;
+            color: #e91e63;
+        }
+
+        .stat-card.maintenance .icon {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card p {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .appliance-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+
+        .appliance-item:hover {
+            background: #e9ecef;
+        }
+
+        .appliance-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .appliance-info {
+            flex: 1;
+        }
+
+        .appliance-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .appliance-info p {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .appliance-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.expiring {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border-left: 4px solid;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-item.warning {
+            background: #fff9f0;
+            border-color: #ff9800;
+        }
+
+        .alert-item.danger {
+            background: #fff5f5;
+            border-color: #e91e63;
+        }
+
+        .alert-item.info {
+            background: #f0f7ff;
+            border-color: #2196f3;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-content p {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .service-item {
+            display: flex;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .service-item:last-child {
+            border-bottom: none;
+        }
+
+        .service-date {
+            width: 70px;
+            text-align: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .service-date .day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .service-date .month {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .service-details {
+            flex: 1;
+        }
+
+        .service-details h5 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .service-details p {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .quick-action {
+            padding: 1rem;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            text-align: center;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .quick-action:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dashboard</h1>
+        <p>Welcome back! Here's your appliance overview</p>
+    </div>
+
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card appliances">
+                <div class="icon">🏠</div>
+                <h3>12</h3>
+                <p>Total Appliances</p>
+            </div>
+
+            <div class="stat-card warranties">
+                <div class="icon">📋</div>
+                <h3>8</h3>
+                <p>Active Warranties</p>
+            </div>
+
+            <div class="stat-card service">
+                <div class="icon">🔧</div>
+                <h3>3</h3>
+                <p>Service Due</p>
+            </div>
+
+            <div class="stat-card maintenance">
+                <div class="icon">✓</div>
+                <h3>5</h3>
+                <p>Maintenance Tasks</p>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- Recent Appliances -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recent Appliances</h2>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+
+                <div class="appliance-item">
+                    <div class="appliance-icon">❄️</div>
+                    <div class="appliance-info">
+                        <h4>Samsung RF28R7351SR</h4>
+                        <p>French Door Refrigerator • Kitchen</p>
+                    </div>
+                    <div class="appliance-status">
+                        <span class="badge active">Active</span>
+                        <small style="color: #6c757d; font-size: 0.8rem;">Warranty: 18 months left</small>
+                    </div>
+                </div>
+
+                <div class="appliance-item">
+                    <div class="appliance-icon">🌀</div>
+                    <div class="appliance-info">
+                        <h4>LG WM9000HVA</h4>
+                        <p>Front Load Washer • Laundry Room</p>
+                    </div>
+                    <div class="appliance-status">
+                        <span class="badge expiring">Expiring Soon</span>
+                        <small style="color: #6c757d; font-size: 0.8rem;">Warranty: 45 days left</small>
+                    </div>
+                </div>
+
+                <div class="appliance-item">
+                    <div class="appliance-icon">🔥</div>
+                    <div class="appliance-info">
+                        <h4>Bosch 800 Series HBL8451UC</h4>
+                        <p>Electric Wall Oven • Kitchen</p>
+                    </div>
+                    <div class="appliance-status">
+                        <span class="badge active">Active</span>
+                        <small style="color: #6c757d; font-size: 0.8rem;">Warranty: 2 years left</small>
+                    </div>
+                </div>
+
+                <div class="appliance-item">
+                    <div class="appliance-icon">🍽️</div>
+                    <div class="appliance-info">
+                        <h4>KitchenAid KDTM404KPS</h4>
+                        <p>Dishwasher • Kitchen</p>
+                    </div>
+                    <div class="appliance-status">
+                        <span class="badge expired">Expired</span>
+                        <small style="color: #6c757d; font-size: 0.8rem;">Warranty: Expired 3 months ago</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts & Notifications -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Alerts & Notifications</h2>
+                </div>
+
+                <div class="alert-item danger">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <h5>Warranty Expiring</h5>
+                        <p>LG Washer warranty expires in 45 days</p>
+                    </div>
+                </div>
+
+                <div class="alert-item warning">
+                    <div class="alert-icon">🔔</div>
+                    <div class="alert-content">
+                        <h5>Maintenance Due</h5>
+                        <p>Refrigerator filter replacement overdue by 5 days</p>
+                    </div>
+                </div>
+
+                <div class="alert-item info">
+                    <div class="alert-icon">📅</div>
+                    <div class="alert-content">
+                        <h5>Service Scheduled</h5>
+                        <p>HVAC annual inspection on Dec 15, 2025</p>
+                    </div>
+                </div>
+
+                <div class="alert-item warning">
+                    <div class="alert-icon">🔧</div>
+                    <div class="alert-content">
+                        <h5>Maintenance Reminder</h5>
+                        <p>Dishwasher cleaning due in 3 days</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <a href="#" class="quick-action">+ Add Appliance</a>
+                    <a href="#" class="quick-action">📄 Upload Manual</a>
+                    <a href="#" class="quick-action">🔧 Log Service</a>
+                    <a href="#" class="quick-action">⏰ Set Reminder</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Service -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Upcoming Service & Maintenance</h2>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+
+            <div class="service-item">
+                <div class="service-date">
+                    <div class="day">15</div>
+                    <div class="month">DEC</div>
+                </div>
+                <div class="service-details">
+                    <h5>HVAC System Annual Inspection</h5>
+                    <p>Carrier 59MN7 • Basement • Cool Breeze HVAC Services</p>
+                </div>
+            </div>
+
+            <div class="service-item">
+                <div class="service-date">
+                    <div class="day">22</div>
+                    <div class="month">DEC</div>
+                </div>
+                <div class="service-details">
+                    <h5>Water Heater Flush & Inspection</h5>
+                    <p>Rheem XE50T10HD50U0 • Garage • Self-Maintenance</p>
+                </div>
+            </div>
+
+            <div class="service-item">
+                <div class="service-date">
+                    <div class="day">05</div>
+                    <div class="month">JAN</div>
+                </div>
+                <div class="service-details">
+                    <h5>Refrigerator Filter Replacement</h5>
+                    <p>Samsung RF28R7351SR • Kitchen • Self-Maintenance</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancellation Reminders - SubscriptionAuditTool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .reminder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .reminder-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .reminder-card:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .reminder-card.urgent {
+            border-left: 4px solid #ef4444;
+        }
+
+        .reminder-card.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .reminder-card.info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .reminder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .reminder-service {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 20px;
+        }
+
+        .service-details {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .service-plan {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .reminder-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-urgent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .reminder-body {
+            margin-bottom: 16px;
+        }
+
+        .reminder-message {
+            color: #374151;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .reminder-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .reminder-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .action-btn.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn.danger:hover {
+            background: #dc2626;
+        }
+
+        .action-btn.secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .action-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .empty-description {
+            color: #6b7280;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .setting-description {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .toggle {
+            width: 48px;
+            height: 28px;
+            background: #d1d5db;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle-thumb {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        .toggle.active .toggle-thumb {
+            left: 22px;
+        }
+
+        .notification-channels {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .channel-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .channel-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">💰 SubscriptionAuditTool</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Dashboard</button>
+                <button class="btn btn-primary">Settings</button>
+            </div>
+        </header>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="page-header">
+                    <h1 class="page-title">Reminders & Notifications</h1>
+                </div>
+                <div class="page-subtitle">Manage renewal reminders and cancellation deadlines</div>
+
+                <div class="tabs">
+                    <button class="tab active">Upcoming (5)</button>
+                    <button class="tab">Sent (12)</button>
+                    <button class="tab">Dismissed (3)</button>
+                </div>
+
+                <div class="reminder-list">
+                    <div class="reminder-card urgent">
+                        <div class="reminder-header">
+                            <div class="reminder-service">
+                                <div class="service-icon" style="background: #00C4CC;">C</div>
+                                <div class="service-details">
+                                    <div class="service-name">Canva Pro</div>
+                                    <div class="service-plan">Free Trial</div>
+                                </div>
+                            </div>
+                            <div class="reminder-badge badge-urgent">Trial Ending</div>
+                        </div>
+                        <div class="reminder-body">
+                            <div class="reminder-message">
+                                🚨 Your free trial ends in 3 days. Cancel before Jan 8 to avoid being charged $12.99/month.
+                            </div>
+                            <div class="reminder-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Trial Ends</div>
+                                    <div class="detail-value">Jan 8, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Cancellation Deadline</div>
+                                    <div class="detail-value">Jan 7, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Will Be Charged</div>
+                                    <div class="detail-value">$12.99/month</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn danger">Cancel Subscription</button>
+                            <button class="action-btn primary">Keep & Pay</button>
+                            <button class="action-btn secondary">Remind Later</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-card urgent">
+                        <div class="reminder-header">
+                            <div class="reminder-service">
+                                <div class="service-icon" style="background: #F57C00;">N</div>
+                                <div class="service-details">
+                                    <div class="service-name">Notion Plus</div>
+                                    <div class="service-plan">Free Trial</div>
+                                </div>
+                            </div>
+                            <div class="reminder-badge badge-urgent">Trial Ending</div>
+                        </div>
+                        <div class="reminder-body">
+                            <div class="reminder-message">
+                                🚨 Your free trial ends in 5 days. Cancel before Jan 14 to avoid being charged $10.00/month.
+                            </div>
+                            <div class="reminder-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Trial Ends</div>
+                                    <div class="detail-value">Jan 14, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Cancellation Deadline</div>
+                                    <div class="detail-value">Jan 13, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Will Be Charged</div>
+                                    <div class="detail-value">$10.00/month</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn danger">Cancel Subscription</button>
+                            <button class="action-btn primary">Keep & Pay</button>
+                            <button class="action-btn secondary">Remind Later</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-card warning">
+                        <div class="reminder-header">
+                            <div class="reminder-service">
+                                <div class="service-icon" style="background: #1DB954;">S</div>
+                                <div class="service-details">
+                                    <div class="service-name">Spotify Premium</div>
+                                    <div class="service-plan">Individual Plan</div>
+                                </div>
+                            </div>
+                            <div class="reminder-badge badge-warning">Renewing Soon</div>
+                        </div>
+                        <div class="reminder-body">
+                            <div class="reminder-message">
+                                ⚠️ This subscription will renew in 4 days for $9.99.
+                            </div>
+                            <div class="reminder-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Renewal Date</div>
+                                    <div class="detail-value">Jan 2, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Amount</div>
+                                    <div class="detail-value">$9.99</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Payment Method</div>
+                                    <div class="detail-value">Visa •••• 1234</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">Keep Subscription</button>
+                            <button class="action-btn secondary">Edit</button>
+                            <button class="action-btn secondary">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-card warning">
+                        <div class="reminder-header">
+                            <div class="reminder-service">
+                                <div class="service-icon" style="background: #FF2BC2;">A</div>
+                                <div class="service-details">
+                                    <div class="service-name">Adobe Creative Cloud</div>
+                                    <div class="service-plan">All Apps</div>
+                                </div>
+                            </div>
+                            <div class="reminder-badge badge-warning">Renewing Soon</div>
+                        </div>
+                        <div class="reminder-body">
+                            <div class="reminder-message">
+                                ⚠️ This subscription will renew in 5 days for $52.99. This is your highest monthly expense.
+                            </div>
+                            <div class="reminder-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Renewal Date</div>
+                                    <div class="detail-value">Jan 3, 2026</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Amount</div>
+                                    <div class="detail-value">$52.99</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Payment Method</div>
+                                    <div class="detail-value">Amex •••• 9012</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">Keep Subscription</button>
+                            <button class="action-btn secondary">Edit</button>
+                            <button class="action-btn secondary">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-card info">
+                        <div class="reminder-header">
+                            <div class="reminder-service">
+                                <div class="service-icon" style="background: #E50914;">N</div>
+                                <div class="service-details">
+                                    <div class="service-name">Netflix Premium</div>
+                                    <div class="service-plan">4K Family Plan</div>
+                                </div>
+                            </div>
+                            <div class="reminder-badge badge-info">Price Increase</div>
+                        </div>
+                        <div class="reminder-body">
+                            <div class="reminder-message">
+                                ℹ️ Netflix increased their price from $17.99 to $19.99/month. Next charge on Jan 5.
+                            </div>
+                            <div class="reminder-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Old Price</div>
+                                    <div class="detail-value">$17.99</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">New Price</div>
+                                    <div class="detail-value">$19.99</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Increase</div>
+                                    <div class="detail-value" style="color: #ef4444;">+$2.00 (11%)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">Accept Increase</button>
+                            <button class="action-btn danger">Cancel</button>
+                            <button class="action-btn secondary">Find Alternative</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2 class="settings-title">Reminder Settings</h2>
+
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-label">Enable Reminders</div>
+                                <div class="setting-description">Get notified about upcoming renewals</div>
+                            </div>
+                            <div class="toggle active">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-label">Trial Ending Alerts</div>
+                                <div class="setting-description">Notify before free trials convert to paid</div>
+                            </div>
+                            <div class="toggle active">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-label">Price Change Alerts</div>
+                                <div class="setting-description">Notify when subscription prices increase</div>
+                            </div>
+                            <div class="toggle active">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-label">Unused Subscription Detection</div>
+                                <div class="setting-description">Alert when you haven't used a service</div>
+                            </div>
+                            <div class="toggle">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Default Reminder Time</div>
+                        <select class="action-btn secondary" style="width: 100%; text-align: left;">
+                            <option>7 days before renewal</option>
+                            <option>3 days before renewal</option>
+                            <option>1 day before renewal</option>
+                            <option>14 days before renewal</option>
+                            <option>30 days before renewal</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Notification Channels</div>
+                        <div class="notification-channels">
+                            <button class="channel-btn active">📧 Email</button>
+                            <button class="channel-btn active">📱 Push</button>
+                            <button class="channel-btn">💬 SMS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <h2 class="settings-title">Quick Stats</h2>
+
+                    <div class="detail-item" style="margin-bottom: 16px;">
+                        <div class="detail-label">Reminders Sent (30 days)</div>
+                        <div class="detail-value" style="font-size: 24px;">12</div>
+                    </div>
+
+                    <div class="detail-item" style="margin-bottom: 16px;">
+                        <div class="detail-label">Cancellations Prevented</div>
+                        <div class="detail-value" style="font-size: 24px;">3</div>
+                    </div>
+
+                    <div class="detail-item" style="margin-bottom: 16px;">
+                        <div class="detail-label">Trials Caught</div>
+                        <div class="detail-value" style="font-size: 24px;">2</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Money Saved</div>
+                        <div class="detail-value" style="font-size: 24px; color: #10b981;">$89.97</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

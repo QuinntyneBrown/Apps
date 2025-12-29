@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Skill Development Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .streak-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            color: #1a202c;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .skill-item {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .skill-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .skill-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .skill-level {
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .skill-level.beginner {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .skill-level.intermediate {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .skill-level.advanced {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .skill-level.expert {
+            background: #e9d5ff;
+            color: #6b21a8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .course-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .course-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .course-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .course-info {
+            flex: 1;
+        }
+
+        .course-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .course-platform {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .goal-item {
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .goal-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .goal-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .goal-deadline {
+            font-size: 13px;
+            color: #ef4444;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .goal-deadline.upcoming {
+            color: #f59e0b;
+        }
+
+        .goal-deadline.far {
+            color: #10b981;
+        }
+
+        .bottom-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .achievement-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #fef3c7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .achievement-badge:last-child {
+            margin-bottom: 0;
+        }
+
+        .badge-icon {
+            width: 40px;
+            height: 40px;
+            background: #fbbf24;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .badge-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .badge-info p {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="logo">SD</div>
+                Skill Development Tracker
+            </h1>
+            <div class="user-info">
+                <div class="streak-badge">🔥 15 Day Streak</div>
+                <div class="avatar">JD</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Active Skills</h3>
+                <div class="stat-value">12</div>
+                <div class="stat-change">+3 this month</div>
+            </div>
+            <div class="stat-card">
+                <h3>Learning Hours</h3>
+                <div class="stat-value">87.5</div>
+                <div class="stat-change">+12.5 this week</div>
+            </div>
+            <div class="stat-card">
+                <h3>Courses Completed</h3>
+                <div class="stat-value">8</div>
+                <div class="stat-change">+2 this month</div>
+            </div>
+            <div class="stat-card">
+                <h3>Certifications</h3>
+                <div class="stat-value">3</div>
+                <div class="stat-change">1 in progress</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Skills in Progress</h2>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">React.js Development</span>
+                        <span class="skill-level intermediate">Intermediate</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 68%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>68% to Advanced</span>
+                        <span>34 hours logged</span>
+                    </div>
+                </div>
+
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">AWS Cloud Architecture</span>
+                        <span class="skill-level beginner">Beginner</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 42%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>42% to Intermediate</span>
+                        <span>18 hours logged</span>
+                    </div>
+                </div>
+
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">Machine Learning</span>
+                        <span class="skill-level beginner">Beginner</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 28%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>28% to Intermediate</span>
+                        <span>12 hours logged</span>
+                    </div>
+                </div>
+
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">TypeScript</span>
+                        <span class="skill-level advanced">Advanced</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 85%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>85% to Expert</span>
+                        <span>52 hours logged</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h2>Active Courses</h2>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+
+                    <div class="course-item">
+                        <div class="course-icon">UD</div>
+                        <div class="course-info">
+                            <div class="course-title">Advanced React Patterns</div>
+                            <div class="course-platform">Udemy</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span>65% complete</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-item">
+                        <div class="course-icon">CU</div>
+                        <div class="course-info">
+                            <div class="course-title">AWS Solutions Architect</div>
+                            <div class="course-platform">Coursera</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 38%"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span>38% complete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Upcoming Goals</h2>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-title">Complete AWS Certification</div>
+                        <div class="goal-deadline">Due in 15 days</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 72%"></div>
+                        </div>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-title">Master React Hooks</div>
+                        <div class="goal-deadline upcoming">Due in 30 days</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 55%"></div>
+                        </div>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-title">Learn TypeScript Generics</div>
+                        <div class="goal-deadline far">Due in 60 days</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Learning Hours This Month</h2>
+                </div>
+                <div class="chart-placeholder">
+                    📊 Learning hours trend chart
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recent Achievements</h2>
+                </div>
+                <div class="achievement-badge">
+                    <div class="badge-icon">🏆</div>
+                    <div class="badge-info">
+                        <h4>Course Completed</h4>
+                        <p>Finished "JavaScript Advanced Concepts"</p>
+                    </div>
+                </div>
+                <div class="achievement-badge">
+                    <div class="badge-icon">🎯</div>
+                    <div class="badge-info">
+                        <h4>Milestone Reached</h4>
+                        <p>50 hours of React development</p>
+                    </div>
+                </div>
+                <div class="achievement-badge">
+                    <div class="badge-icon">⭐</div>
+                    <div class="badge-info">
+                        <h4>15-Day Streak</h4>
+                        <p>Consistent learning for 15 days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Event - Family Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 16px 16px 0 0;
+        }
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .modal-body {
+            padding: 32px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .required {
+            color: #dc2626;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .event-type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .event-type-card {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .event-type-card:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .event-type-card.selected {
+            border-color: #667eea;
+            background: #eff6ff;
+        }
+        .event-type-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .event-type-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .attendees-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .attendee-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .attendee-checkbox:hover {
+            background: #f9fafb;
+        }
+        .attendee-checkbox.selected {
+            border-color: #667eea;
+            background: #eff6ff;
+        }
+        .attendee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .attendee-info {
+            flex: 1;
+        }
+        .attendee-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+        }
+        .attendee-role {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        .attendee-checkbox.selected .checkbox-custom {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        .recurring-options {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #d1d5db;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .switch.active {
+            background: #667eea;
+        }
+        .switch-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .switch.active .switch-knob {
+            left: 26px;
+        }
+        .reminder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .reminder-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .modal-footer {
+            padding: 24px 32px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+        .conflict-warning {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: start;
+        }
+        .warning-icon {
+            font-size: 24px;
+        }
+        .warning-content {
+            flex: 1;
+        }
+        .warning-title {
+            font-weight: 600;
+            color: #dc2626;
+            margin-bottom: 4px;
+        }
+        .warning-text {
+            font-size: 13px;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📅 Create New Event</h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="conflict-warning">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <div class="warning-title">Scheduling Conflict Detected</div>
+                        <div class="warning-text">
+                            Liam has a conflicting event "School Day" from 9:00 AM - 3:30 PM on this day.
+                            Consider adjusting the time or removing Liam from this event.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Event Title <span class="required">*</span></label>
+                    <input type="text" class="form-input" value="Soccer Practice" placeholder="Enter event title">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Event Type <span class="required">*</span></label>
+                    <div class="event-type-grid">
+                        <div class="event-type-card">
+                            <div class="event-type-icon">📅</div>
+                            <div class="event-type-name">Appointment</div>
+                        </div>
+                        <div class="event-type-card">
+                            <div class="event-type-icon">🍽️</div>
+                            <div class="event-type-name">Family Dinner</div>
+                        </div>
+                        <div class="event-type-card selected">
+                            <div class="event-type-icon">⚽</div>
+                            <div class="event-type-name">Sports</div>
+                        </div>
+                        <div class="event-type-card">
+                            <div class="event-type-icon">🏫</div>
+                            <div class="event-type-name">School</div>
+                        </div>
+                        <div class="event-type-card">
+                            <div class="event-type-icon">✈️</div>
+                            <div class="event-type-name">Vacation</div>
+                        </div>
+                        <div class="event-type-card">
+                            <div class="event-type-icon">🎉</div>
+                            <div class="event-type-name">Celebration</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Start Date & Time <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2025-12-29T16:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date & Time <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2025-12-29T17:30">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" value="Community Sports Complex - Field 3" placeholder="Add location">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input form-textarea" placeholder="Add event description">Weekly soccer practice for the team. Remember to bring water bottle and shin guards.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Attendees <span class="required">*</span></label>
+                    <div class="attendees-list">
+                        <div class="attendee-checkbox">
+                            <div class="attendee-avatar" style="background: #ef4444;">MJ</div>
+                            <div class="attendee-info">
+                                <div class="attendee-name">Mom (Jennifer)</div>
+                                <div class="attendee-role">Family Admin</div>
+                            </div>
+                            <div class="checkbox-custom"></div>
+                        </div>
+                        <div class="attendee-checkbox selected">
+                            <div class="attendee-avatar" style="background: #3b82f6;">DJ</div>
+                            <div class="attendee-info">
+                                <div class="attendee-name">Dad (John)</div>
+                                <div class="attendee-role">Family Admin</div>
+                            </div>
+                            <div class="checkbox-custom">✓</div>
+                        </div>
+                        <div class="attendee-checkbox selected">
+                            <div class="attendee-avatar" style="background: #10b981;">ES</div>
+                            <div class="attendee-info">
+                                <div class="attendee-name">Emma (14)</div>
+                                <div class="attendee-role">Member</div>
+                            </div>
+                            <div class="checkbox-custom">✓</div>
+                        </div>
+                        <div class="attendee-checkbox">
+                            <div class="attendee-avatar" style="background: #f59e0b;">LW</div>
+                            <div class="attendee-info">
+                                <div class="attendee-name">Liam (11)</div>
+                                <div class="attendee-role">Member</div>
+                            </div>
+                            <div class="checkbox-custom"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                        <label class="form-label" style="margin: 0;">Recurring Event</label>
+                    </div>
+
+                    <div class="recurring-options">
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">Repeat Pattern</label>
+                                <select class="form-input">
+                                    <option>Daily</option>
+                                    <option selected>Weekly</option>
+                                    <option>Monthly</option>
+                                    <option>Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">Repeat Every</label>
+                                <select class="form-input">
+                                    <option selected>1 week</option>
+                                    <option>2 weeks</option>
+                                    <option>3 weeks</option>
+                                    <option>4 weeks</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">End Repeat</label>
+                            <input type="date" class="form-input" value="2026-06-30">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Reminders</label>
+                    <div class="reminder-list">
+                        <div class="reminder-item">
+                            <input type="checkbox" checked>
+                            <span>1 day before (Dec 28 at 4:00 PM)</span>
+                        </div>
+                        <div class="reminder-item">
+                            <input type="checkbox" checked>
+                            <span>1 hour before (Dec 29 at 3:00 PM)</span>
+                        </div>
+                        <div class="reminder-item">
+                            <input type="checkbox" checked>
+                            <span>15 minutes before (Dec 29 at 3:45 PM)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-secondary">Save as Draft</button>
+                <button class="btn btn-primary">Create Event</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

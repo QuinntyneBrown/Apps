@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Photography Session Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(30, 30, 46, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #b0b0c0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+
+        .welcome-section h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-icon.green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-icon.orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        .stat-label {
+            color: #b0b0c0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            color: #43e97b;
+        }
+
+        .stat-change.negative {
+            color: #fa709a;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .session-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .session-meta {
+            color: #b0b0c0;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .session-stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.success { background: rgba(67, 233, 123, 0.2); color: #43e97b; }
+        .badge.warning { background: rgba(254, 225, 64, 0.2); color: #fee140; }
+        .badge.info { background: rgba(79, 172, 254, 0.2); color: #4facfe; }
+
+        .equipment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .equipment-name {
+            font-weight: 600;
+        }
+
+        .equipment-usage {
+            color: #b0b0c0;
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .action-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .action-desc {
+            font-size: 0.85rem;
+            color: #b0b0c0;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            📸 Photography Session Logger
+        </div>
+        <nav class="nav">
+            <a href="#" class="active">Dashboard</a>
+            <a href="#">Sessions</a>
+            <a href="#">Equipment</a>
+            <a href="#">Portfolio</a>
+            <a href="#">Analytics</a>
+        </nav>
+        <div class="user-menu">
+            <div class="user-avatar">MJ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h1>Welcome back, Michael!</h1>
+            <p>You have 3 upcoming sessions this week and 156 photos to review.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-label">Total Sessions</div>
+                        <div class="stat-value">247</div>
+                        <div class="stat-change">+12% this month</div>
+                    </div>
+                    <div class="stat-icon purple">📷</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-label">Photos Captured</div>
+                        <div class="stat-value">34.2K</div>
+                        <div class="stat-change">+2,148 this week</div>
+                    </div>
+                    <div class="stat-icon blue">🖼️</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-label">Revenue</div>
+                        <div class="stat-value">$18.5K</div>
+                        <div class="stat-change">+8% vs last month</div>
+                    </div>
+                    <div class="stat-icon green">💰</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-label">Equipment Items</div>
+                        <div class="stat-value">24</div>
+                        <div class="stat-change">2 need maintenance</div>
+                    </div>
+                    <div class="stat-icon orange">🎒</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Sessions</h2>
+                    <button class="btn btn-primary">+ New Session</button>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-thumbnail">🌅</div>
+                    <div class="session-info">
+                        <div class="session-title">Golden Hour Portraits - Sarah Chen</div>
+                        <div class="session-meta">
+                            <span>📅 Dec 28, 2025</span>
+                            <span>📍 Riverside Park</span>
+                            <span>⏱️ 2.5 hours</span>
+                        </div>
+                    </div>
+                    <div class="session-stats">
+                        <span class="badge success">Completed</span>
+                        <span style="color: #b0b0c0;">247 shots</span>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-thumbnail">💍</div>
+                    <div class="session-info">
+                        <div class="session-title">Wedding - Johnson & Martinez</div>
+                        <div class="session-meta">
+                            <span>📅 Dec 26, 2025</span>
+                            <span>📍 Grand Hotel Ballroom</span>
+                            <span>⏱️ 8 hours</span>
+                        </div>
+                    </div>
+                    <div class="session-stats">
+                        <span class="badge warning">Editing</span>
+                        <span style="color: #b0b0c0;">1,842 shots</span>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-thumbnail">🏢</div>
+                    <div class="session-info">
+                        <div class="session-title">Corporate Headshots - TechCorp Inc</div>
+                        <div class="session-meta">
+                            <span>📅 Dec 24, 2025</span>
+                            <span>📍 Downtown Office</span>
+                            <span>⏱️ 4 hours</span>
+                        </div>
+                    </div>
+                    <div class="session-stats">
+                        <span class="badge success">Delivered</span>
+                        <span style="color: #b0b0c0;">89 shots</span>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-thumbnail">🌆</div>
+                    <div class="session-info">
+                        <div class="session-title">Urban Architecture Collection</div>
+                        <div class="session-meta">
+                            <span>📅 Dec 22, 2025</span>
+                            <span>📍 Downtown Financial District</span>
+                            <span>⏱️ 3 hours</span>
+                        </div>
+                    </div>
+                    <div class="session-stats">
+                        <span class="badge info">Portfolio</span>
+                        <span style="color: #b0b0c0;">124 shots</span>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-thumbnail">👶</div>
+                    <div class="session-info">
+                        <div class="session-title">Newborn Session - Baby Emma</div>
+                        <div class="session-meta">
+                            <span>📅 Dec 20, 2025</span>
+                            <span>📍 Home Studio</span>
+                            <span>⏱️ 2 hours</span>
+                        </div>
+                    </div>
+                    <div class="session-stats">
+                        <span class="badge success">Delivered</span>
+                        <span style="color: #b0b0c0;">156 shots</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Equipment Usage</h2>
+                        <button class="btn btn-secondary">View All</button>
+                    </div>
+
+                    <div class="equipment-item">
+                        <div>
+                            <div class="equipment-name">Sony A7R V</div>
+                            <div class="equipment-usage">87 sessions • 12,458 shots</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-item">
+                        <div>
+                            <div class="equipment-name">Canon 5D Mark IV</div>
+                            <div class="equipment-usage">64 sessions • 8,942 shots</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 64%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-item">
+                        <div>
+                            <div class="equipment-name">Sony 24-70mm f/2.8 GM</div>
+                            <div class="equipment-usage">124 sessions • 18,765 shots</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-item">
+                        <div>
+                            <div class="equipment-name">Canon 70-200mm f/2.8L</div>
+                            <div class="equipment-usage">42 sessions • 5,234 shots</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Actions</h2>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="action-card">
+                            <div class="action-icon">📋</div>
+                            <div class="action-title">Plan Session</div>
+                            <div class="action-desc">Schedule new shoot</div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon">📊</div>
+                            <div class="action-title">Analytics</div>
+                            <div class="action-desc">View performance</div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon">🎨</div>
+                            <div class="action-title">Portfolio</div>
+                            <div class="action-desc">Curate photos</div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon">⚙️</div>
+                            <div class="action-title">Settings</div>
+                            <div class="action-desc">Manage presets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

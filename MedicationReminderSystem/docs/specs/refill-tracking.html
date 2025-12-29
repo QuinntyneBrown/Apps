@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refill Tracking - MedicationReminderSystem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 14px;
+            align-items: center;
+        }
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .alert-critical {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .alert-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+        .alert-content {
+            flex: 1;
+        }
+        .alert-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        .alert-critical .alert-title {
+            color: #991b1b;
+        }
+        .alert-warning .alert-title {
+            color: #92400e;
+        }
+        .alert-info .alert-title {
+            color: #1e40af;
+        }
+        .alert-detail {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .alert-critical .alert-detail {
+            color: #7f1d1d;
+        }
+        .alert-warning .alert-detail {
+            color: #78350f;
+        }
+        .alert-info .alert-detail {
+            color: #1e3a8a;
+        }
+        .alert-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .alert-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 24px;
+        }
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .refill-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .refill-item:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .refill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .refill-medication {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .refill-dosage {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-ready {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-ordered {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .status-processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .refill-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .detail-item {
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transition: width 0.3s;
+        }
+        .progress-fill.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .progress-fill.good {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .pharmacy-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .pharmacy-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .pharmacy-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pharmacy-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 12px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background: #e5e7eb;
+        }
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .timeline-content {
+            font-size: 14px;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="logo">
+                    <div class="logo-icon">💊</div>
+                    <span>MedicationReminder</span>
+                </div>
+                <div class="breadcrumb" style="margin-top: 8px;">
+                    <a href="#">Dashboard</a>
+                    <span>›</span>
+                    <span>Refill Tracking</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Alerts Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Refill Alerts</div>
+                            <div class="card-subtitle">2 medications need attention</div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Alert -->
+                    <div class="alert-critical">
+                        <div class="alert-icon">🚨</div>
+                        <div class="alert-content">
+                            <div class="alert-title">CRITICAL: Lisinopril 10mg</div>
+                            <div class="alert-detail">Only 2 days of supply remaining</div>
+                            <div class="alert-meta">
+                                <span>📅 Runs out: Dec 31, 2025</span>
+                                <span>🏪 CVS Pharmacy</span>
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="btn btn-primary">Order Now</button>
+                        </div>
+                    </div>
+
+                    <!-- Warning Alert -->
+                    <div class="alert-warning">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <div class="alert-title">Low Supply: Metformin 500mg</div>
+                            <div class="alert-detail">5 days of supply remaining</div>
+                            <div class="alert-meta">
+                                <span>📅 Runs out: Jan 3, 2026</span>
+                                <span>🏪 CVS Pharmacy</span>
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="btn btn-primary">Order Refill</button>
+                        </div>
+                    </div>
+
+                    <!-- Info Alert -->
+                    <div class="alert-info">
+                        <div class="alert-icon">ℹ️</div>
+                        <div class="alert-content">
+                            <div class="alert-title">Refill Ready: Atorvastatin 20mg</div>
+                            <div class="alert-detail">Your prescription is ready for pickup</div>
+                            <div class="alert-meta">
+                                <span>📅 Ordered: Dec 27, 2025</span>
+                                <span>🏪 CVS Pharmacy - 123 Main St</span>
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="btn btn-primary">Mark as Picked Up</button>
+                            <button class="btn btn-secondary">Get Directions</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Medications Card -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title">All Medications</div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active">All (5)</button>
+                        <button class="tab">Need Refill (2)</button>
+                        <button class="tab">Ready (1)</button>
+                        <button class="tab">Good Supply (2)</button>
+                    </div>
+
+                    <!-- Refill Items -->
+                    <div class="refill-item">
+                        <div class="refill-header">
+                            <div>
+                                <div class="refill-medication">Lisinopril 10mg</div>
+                                <div class="refill-dosage">Tablet • 2x daily</div>
+                            </div>
+                            <span class="status-badge" style="background: #fee2e2; color: #991b1b;">Critical</span>
+                        </div>
+                        <div class="refill-details">
+                            <div class="detail-item">📦 4 pills remaining</div>
+                            <div class="detail-item">⏰ 2 days supply</div>
+                            <div class="detail-item">📅 Runs out: Dec 31</div>
+                            <div class="detail-item">🏪 CVS Pharmacy</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 7%;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn btn-primary">Order Refill</button>
+                            <button class="btn btn-secondary">Update Supply</button>
+                        </div>
+                    </div>
+
+                    <div class="refill-item">
+                        <div class="refill-header">
+                            <div>
+                                <div class="refill-medication">Metformin 500mg</div>
+                                <div class="refill-dosage">Tablet • 2x daily</div>
+                            </div>
+                            <span class="status-badge status-processing">Low Supply</span>
+                        </div>
+                        <div class="refill-details">
+                            <div class="detail-item">📦 10 pills remaining</div>
+                            <div class="detail-item">⏰ 5 days supply</div>
+                            <div class="detail-item">📅 Runs out: Jan 3</div>
+                            <div class="detail-item">🏪 CVS Pharmacy</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill warning" style="width: 17%;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn btn-primary">Order Refill</button>
+                            <button class="btn btn-secondary">Update Supply</button>
+                        </div>
+                    </div>
+
+                    <div class="refill-item">
+                        <div class="refill-header">
+                            <div>
+                                <div class="refill-medication">Atorvastatin 20mg</div>
+                                <div class="refill-dosage">Tablet • 1x daily</div>
+                            </div>
+                            <span class="status-badge status-ready">Ready for Pickup</span>
+                        </div>
+                        <div class="refill-details">
+                            <div class="detail-item">📦 45 pills remaining</div>
+                            <div class="detail-item">⏰ 45 days supply</div>
+                            <div class="detail-item">📅 Ordered: Dec 27</div>
+                            <div class="detail-item">🏪 CVS Pharmacy - 123 Main St</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill good" style="width: 100%;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn btn-primary">Mark as Picked Up</button>
+                            <button class="btn btn-secondary">Get Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="refill-item">
+                        <div class="refill-header">
+                            <div>
+                                <div class="refill-medication">Omeprazole 20mg</div>
+                                <div class="refill-dosage">Capsule • 1x daily</div>
+                            </div>
+                            <span class="status-badge" style="background: #d1fae5; color: #065f46;">Good Supply</span>
+                        </div>
+                        <div class="refill-details">
+                            <div class="detail-item">📦 28 pills remaining</div>
+                            <div class="detail-item">⏰ 28 days supply</div>
+                            <div class="detail-item">📅 Refill by: Jan 21</div>
+                            <div class="detail-item">🏪 CVS Pharmacy</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill good" style="width: 93%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="refill-item">
+                        <div class="refill-header">
+                            <div>
+                                <div class="refill-medication">Vitamin D3 2000 IU</div>
+                                <div class="refill-dosage">Softgel • 1x daily</div>
+                            </div>
+                            <span class="status-badge" style="background: #d1fae5; color: #065f46;">Good Supply</span>
+                        </div>
+                        <div class="refill-details">
+                            <div class="detail-item">📦 60 pills remaining</div>
+                            <div class="detail-item">⏰ 60 days supply</div>
+                            <div class="detail-item">📅 Refill by: Feb 22</div>
+                            <div class="detail-item">🏪 OTC (No Prescription)</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill good" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Stats -->
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">Refill Summary</div>
+                    <div class="stats-grid">
+                        <div class="stat-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                            <div class="stat-value">2</div>
+                            <div class="stat-label">Need Refills</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <div class="stat-value">1</div>
+                            <div class="stat-label">Ready to Pick Up</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">In Progress</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="stat-value">$127</div>
+                            <div class="stat-label">Est. Monthly Cost</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pharmacy Info -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title">My Pharmacies</div>
+                        <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">+ Add</button>
+                    </div>
+
+                    <div class="pharmacy-card">
+                        <div class="pharmacy-name">CVS Pharmacy</div>
+                        <div class="pharmacy-info">📍 123 Main Street, Boston, MA 02101</div>
+                        <div class="pharmacy-info">📞 (617) 555-0123</div>
+                        <div class="pharmacy-info">⏰ Mon-Fri: 8am-9pm, Sat-Sun: 9am-6pm</div>
+                        <div class="pharmacy-actions">
+                            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Call</button>
+                            <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="pharmacy-card">
+                        <div class="pharmacy-name">Walgreens</div>
+                        <div class="pharmacy-info">📍 456 Oak Avenue, Boston, MA 02102</div>
+                        <div class="pharmacy-info">📞 (617) 555-0456</div>
+                        <div class="pharmacy-info">⏰ Open 24 hours</div>
+                        <div class="pharmacy-actions">
+                            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Call</button>
+                            <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Directions</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title" style="margin-bottom: 20px;">Recent Activity</div>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Dec 27, 2025</div>
+                            <div class="timeline-content">
+                                <strong>Refill Ordered</strong><br>
+                                Atorvastatin 20mg - Ready for pickup
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Dec 24, 2025</div>
+                            <div class="timeline-content">
+                                <strong>Picked Up</strong><br>
+                                Omeprazole 20mg - 30 day supply
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Dec 20, 2025</div>
+                            <div class="timeline-content">
+                                <strong>Refill Alert Sent</strong><br>
+                                Lisinopril 10mg - Low supply warning
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Dec 15, 2025</div>
+                            <div class="timeline-content">
+                                <strong>Picked Up</strong><br>
+                                Metformin 500mg - 30 day supply
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

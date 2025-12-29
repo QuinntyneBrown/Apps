@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adherence History - MedicationReminderSystem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 14px;
+            align-items: center;
+        }
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .stat-trend {
+            font-size: 13px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        .trend-up {
+            color: #10b981;
+        }
+        .trend-down {
+            color: #ef4444;
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .time-range-selector {
+            display: flex;
+            gap: 8px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 10px;
+        }
+        .time-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .time-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            height: 300px;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .chart-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .bar {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .bar:hover {
+            opacity: 0.8;
+        }
+        .bar.perfect {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .bar.good {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .bar.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .bar.poor {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .bar-label {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .calendar-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            padding: 8px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover {
+            transform: scale(1.1);
+        }
+        .day-perfect {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .day-good {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .day-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .day-missed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .day-empty {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+        .medication-adherence-list {
+            display: grid;
+            gap: 16px;
+        }
+        .med-adherence-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        .med-adherence-item:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .med-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .med-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1f2937;
+        }
+        .adherence-percentage {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .percentage-perfect {
+            color: #10b981;
+        }
+        .percentage-good {
+            color: #667eea;
+        }
+        .percentage-warning {
+            color: #f59e0b;
+        }
+        .percentage-poor {
+            color: #ef4444;
+        }
+        .progress-bar {
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .med-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .achievement-card {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .achievement-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .achievement-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .achievement-description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .milestone-list {
+            display: grid;
+            gap: 12px;
+        }
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .milestone-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .milestone-content {
+            flex: 1;
+        }
+        .milestone-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        .milestone-date {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="logo">
+                    <div class="logo-icon">💊</div>
+                    <span>MedicationReminder</span>
+                </div>
+                <div class="breadcrumb" style="margin-top: 8px;">
+                    <a href="#">Dashboard</a>
+                    <span>›</span>
+                    <span>Adherence History</span>
+                </div>
+            </div>
+            <button class="btn btn-primary">📊 Export Report</button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📈</div>
+                <div class="stat-value">94%</div>
+                <div class="stat-label">Overall Adherence</div>
+                <div class="stat-trend trend-up">↑ 3% vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🔥</div>
+                <div class="stat-value">28</div>
+                <div class="stat-label">Day Streak</div>
+                <div class="stat-trend trend-up">↑ Personal best!</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">✅</div>
+                <div class="stat-value">281</div>
+                <div class="stat-label">Doses Taken</div>
+                <div class="stat-trend" style="color: #6b7280;">Last 30 days</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">❌</div>
+                <div class="stat-value">18</div>
+                <div class="stat-label">Doses Missed</div>
+                <div class="stat-trend trend-up">↓ 5 vs last month</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Adherence Trend Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Adherence Trend</div>
+                            <div class="card-subtitle">Weekly adherence rates</div>
+                        </div>
+                        <div class="time-range-selector">
+                            <button class="time-btn">7 Days</button>
+                            <button class="time-btn active">30 Days</button>
+                            <button class="time-btn">90 Days</button>
+                            <button class="time-btn">1 Year</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-bar">
+                            <div class="bar perfect" style="height: 100%;"></div>
+                            <div class="bar-label">Week 1</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar perfect" style="height: 100%;"></div>
+                            <div class="bar-label">Week 2</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar good" style="height: 95%;"></div>
+                            <div class="bar-label">Week 3</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar good" style="height: 88%;"></div>
+                            <div class="bar-label">Week 4</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; gap: 24px; font-size: 13px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                            <span>95-100% (Perfect)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <span>80-94% (Good)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+                            <span>60-79% (Fair)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"></div>
+                            <span>&lt;60% (Poor)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title">December 2025</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn" style="padding: 8px 12px; background: #f3f4f6; color: #1f2937;">‹</button>
+                            <button class="btn" style="padding: 8px 12px; background: #f3f4f6; color: #1f2937;">›</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="calendar-header">SUN</div>
+                        <div class="calendar-header">MON</div>
+                        <div class="calendar-header">TUE</div>
+                        <div class="calendar-header">WED</div>
+                        <div class="calendar-header">THU</div>
+                        <div class="calendar-header">FRI</div>
+                        <div class="calendar-header">SAT</div>
+
+                        <div class="calendar-day day-perfect">1</div>
+                        <div class="calendar-day day-perfect">2</div>
+                        <div class="calendar-day day-perfect">3</div>
+                        <div class="calendar-day day-perfect">4</div>
+                        <div class="calendar-day day-perfect">5</div>
+                        <div class="calendar-day day-perfect">6</div>
+                        <div class="calendar-day day-perfect">7</div>
+
+                        <div class="calendar-day day-perfect">8</div>
+                        <div class="calendar-day day-perfect">9</div>
+                        <div class="calendar-day day-perfect">10</div>
+                        <div class="calendar-day day-perfect">11</div>
+                        <div class="calendar-day day-perfect">12</div>
+                        <div class="calendar-day day-perfect">13</div>
+                        <div class="calendar-day day-perfect">14</div>
+
+                        <div class="calendar-day day-perfect">15</div>
+                        <div class="calendar-day day-perfect">16</div>
+                        <div class="calendar-day day-perfect">17</div>
+                        <div class="calendar-day day-perfect">18</div>
+                        <div class="calendar-day day-perfect">19</div>
+                        <div class="calendar-day day-perfect">20</div>
+                        <div class="calendar-day day-perfect">21</div>
+
+                        <div class="calendar-day day-perfect">22</div>
+                        <div class="calendar-day day-perfect">23</div>
+                        <div class="calendar-day day-perfect">24</div>
+                        <div class="calendar-day day-perfect">25</div>
+                        <div class="calendar-day day-perfect">26</div>
+                        <div class="calendar-day day-partial">27</div>
+                        <div class="calendar-day day-partial">28</div>
+
+                        <div class="calendar-day day-good">29</div>
+                        <div class="calendar-day day-empty">30</div>
+                        <div class="calendar-day day-empty">31</div>
+                    </div>
+                </div>
+
+                <!-- Per-Medication Adherence -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Adherence by Medication</div>
+                            <div class="card-subtitle">Last 30 days</div>
+                        </div>
+                    </div>
+
+                    <div class="medication-adherence-list">
+                        <div class="med-adherence-item">
+                            <div class="med-header">
+                                <div class="med-name">Lisinopril 10mg</div>
+                                <div class="adherence-percentage percentage-perfect">97%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 97%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                            </div>
+                            <div class="med-stats">
+                                <div>✅ 58/60 taken</div>
+                                <div>❌ 2 missed</div>
+                                <div>🎯 2x daily</div>
+                            </div>
+                        </div>
+
+                        <div class="med-adherence-item">
+                            <div class="med-header">
+                                <div class="med-name">Metformin 500mg</div>
+                                <div class="adherence-percentage percentage-good">93%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 93%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            </div>
+                            <div class="med-stats">
+                                <div>✅ 56/60 taken</div>
+                                <div>❌ 4 missed</div>
+                                <div>🎯 2x daily</div>
+                            </div>
+                        </div>
+
+                        <div class="med-adherence-item">
+                            <div class="med-header">
+                                <div class="med-name">Atorvastatin 20mg</div>
+                                <div class="adherence-percentage percentage-perfect">100%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                            </div>
+                            <div class="med-stats">
+                                <div>✅ 30/30 taken</div>
+                                <div>❌ 0 missed</div>
+                                <div>🎯 1x daily</div>
+                            </div>
+                        </div>
+
+                        <div class="med-adherence-item">
+                            <div class="med-header">
+                                <div class="med-name">Omeprazole 20mg</div>
+                                <div class="adherence-percentage percentage-good">90%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            </div>
+                            <div class="med-stats">
+                                <div>✅ 27/30 taken</div>
+                                <div>❌ 3 missed</div>
+                                <div>🎯 1x daily</div>
+                            </div>
+                        </div>
+
+                        <div class="med-adherence-item">
+                            <div class="med-header">
+                                <div class="med-name">Vitamin D3 2000 IU</div>
+                                <div class="adherence-percentage percentage-perfect">100%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                            </div>
+                            <div class="med-stats">
+                                <div>✅ 30/30 taken</div>
+                                <div>❌ 0 missed</div>
+                                <div>🎯 1x daily</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Current Streak -->
+                <div class="achievement-card">
+                    <div class="achievement-icon">🔥</div>
+                    <div class="achievement-title">28 Day Streak!</div>
+                    <div class="achievement-description">Keep it up! You're on a roll!</div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Achievements</div>
+                    </div>
+
+                    <div class="milestone-list">
+                        <div class="milestone-item">
+                            <div class="milestone-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">🏆</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Perfect Month</div>
+                                <div class="milestone-date">100% adherence in December</div>
+                            </div>
+                        </div>
+
+                        <div class="milestone-item">
+                            <div class="milestone-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">⭐</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">30 Day Streak</div>
+                                <div class="milestone-date">Achieved Dec 1, 2025</div>
+                            </div>
+                        </div>
+
+                        <div class="milestone-item">
+                            <div class="milestone-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💎</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Consistency Champion</div>
+                                <div class="milestone-date">90%+ for 3 months</div>
+                            </div>
+                        </div>
+
+                        <div class="milestone-item">
+                            <div class="milestone-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">🎯</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Early Bird</div>
+                                <div class="milestone-date">100 on-time doses</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title">Insights</div>
+                    </div>
+
+                    <div style="display: grid; gap: 16px;">
+                        <div style="padding: 16px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+                            <div style="font-weight: 700; color: #065f46; margin-bottom: 4px;">Great Progress!</div>
+                            <div style="font-size: 14px; color: #047857;">Your adherence improved by 3% this month compared to last month.</div>
+                        </div>
+
+                        <div style="padding: 16px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="font-weight: 700; color: #92400e; margin-bottom: 4px;">Watch Your Evening Doses</div>
+                            <div style="font-size: 14px; color: #78350f;">You miss evening medications more often. Try setting an extra reminder.</div>
+                        </div>
+
+                        <div style="padding: 16px; background: #dbeafe; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <div style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">Perfect Timing</div>
+                            <div style="font-size: 14px; color: #1e3a8a;">85% of your doses are taken within 15 minutes of scheduled time.</div>
+                        </div>
+
+                        <div style="padding: 16px; background: #f3f4f6; border-radius: 8px; border-left: 4px solid #6b7280;">
+                            <div style="font-weight: 700; color: #374151; margin-bottom: 4px;">Weekend Pattern</div>
+                            <div style="font-size: 14px; color: #4b5563;">Adherence is slightly lower on weekends. Plan ahead for better results.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title">Goals</div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600; color: #1f2937;">Next Milestone: 50 Day Streak</span>
+                            <span style="font-weight: 700; color: #667eea;">22 days to go</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 56%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600; color: #1f2937;">Monthly Goal: 95% Adherence</span>
+                            <span style="font-weight: 700; color: #10b981;">94%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 94%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600; color: #1f2937;">Perfect Week Challenge</span>
+                            <span style="font-weight: 700; color: #10b981;">5/7 days</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 71%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

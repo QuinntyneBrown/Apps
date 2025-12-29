@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tracking - NutritionLabelScanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .date-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .date-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .current-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            padding: 0 16px;
+        }
+
+        .daily-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .summary-goal {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .summary-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .summary-bar-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .meal-section {
+            margin-bottom: 24px;
+        }
+
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .meal-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .meal-icon {
+            font-size: 28px;
+        }
+
+        .meal-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .meal-time {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .meal-calories {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f39c12;
+        }
+
+        .food-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-left: 52px;
+        }
+
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .food-item:hover {
+            background: #edf2f7;
+        }
+
+        .food-name {
+            font-size: 15px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .food-serving {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .food-cal {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .macro-chart {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 32px;
+        }
+
+        .chart-ring {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .chart-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .chart-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .macro-legend {
+            display: grid;
+            gap: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .legend-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-name {
+            font-size: 15px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .legend-values {
+            text-align: right;
+        }
+
+        .legend-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .legend-percent {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .nutrient-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .nutrient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nutrient-name {
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .nutrient-values {
+            text-align: right;
+        }
+
+        .nutrient-amount {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .nutrient-percent {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .nutrient-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .nutrient-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .water-tracker {
+            text-align: center;
+        }
+
+        .water-icon {
+            font-size: 80px;
+            margin-bottom: 16px;
+        }
+
+        .water-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3182ce;
+            margin-bottom: 8px;
+        }
+
+        .water-goal {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .water-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .water-btn {
+            padding: 10px 20px;
+            border: 2px solid #3182ce;
+            background: white;
+            color: #3182ce;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .water-btn:hover {
+            background: #3182ce;
+            color: white;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1 class="header-title">Daily Tracking</h1>
+                <div class="date-selector">
+                    <button class="date-btn">◀</button>
+                    <span class="current-date">Monday, December 29, 2025</span>
+                    <button class="date-btn">▶</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="daily-summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Calories</div>
+                    <div class="summary-value">1,450</div>
+                    <div class="summary-goal">of 2,000 goal</div>
+                    <div class="summary-bar">
+                        <div class="summary-bar-fill" style="width: 72.5%;"></div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Protein</div>
+                    <div class="summary-value">68g</div>
+                    <div class="summary-goal">of 150g goal</div>
+                    <div class="summary-bar">
+                        <div class="summary-bar-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Carbs</div>
+                    <div class="summary-value">185g</div>
+                    <div class="summary-goal">of 250g goal</div>
+                    <div class="summary-bar">
+                        <div class="summary-bar-fill" style="width: 74%;"></div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Fat</div>
+                    <div class="summary-value">42g</div>
+                    <div class="summary-goal">of 65g goal</div>
+                    <div class="summary-bar">
+                        <div class="summary-bar-fill" style="width: 64.6%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span>🍽️</span>
+                        Meals
+                    </h2>
+                    <button class="add-btn">+ Add Food</button>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-header">
+                        <div class="meal-info">
+                            <div class="meal-icon">🌅</div>
+                            <div>
+                                <div class="meal-name">Breakfast</div>
+                                <div class="meal-time">8:30 AM</div>
+                            </div>
+                        </div>
+                        <div class="meal-calories">560 cal</div>
+                    </div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Organic Whole Milk</div>
+                                <div class="food-serving">1 cup</div>
+                            </div>
+                            <div class="food-cal">150 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Whole Wheat Bread</div>
+                                <div class="food-serving">2 slices</div>
+                            </div>
+                            <div class="food-cal">220 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Natural Peanut Butter</div>
+                                <div class="food-serving">2 tbsp</div>
+                            </div>
+                            <div class="food-cal">190 cal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-header">
+                        <div class="meal-info">
+                            <div class="meal-icon">☀️</div>
+                            <div>
+                                <div class="meal-name">Lunch</div>
+                                <div class="meal-time">12:30 PM</div>
+                            </div>
+                        </div>
+                        <div class="meal-calories">535 cal</div>
+                    </div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Grilled Chicken Breast</div>
+                                <div class="food-serving">6 oz</div>
+                            </div>
+                            <div class="food-cal">248 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Brown Rice</div>
+                                <div class="food-serving">1 cup cooked</div>
+                            </div>
+                            <div class="food-cal">216 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Steamed Broccoli</div>
+                                <div class="food-serving">1 cup</div>
+                            </div>
+                            <div class="food-cal">55 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Olive Oil</div>
+                                <div class="food-serving">1 tsp</div>
+                            </div>
+                            <div class="food-cal">40 cal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-header">
+                        <div class="meal-info">
+                            <div class="meal-icon">🌙</div>
+                            <div>
+                                <div class="meal-name">Dinner</div>
+                                <div class="meal-time">Planned</div>
+                            </div>
+                        </div>
+                        <div class="meal-calories" style="color: #cbd5e0;">-- cal</div>
+                    </div>
+                    <div class="food-items">
+                        <div style="text-align: center; padding: 20px; color: #a0aec0; font-size: 14px;">
+                            No items added yet
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-header">
+                        <div class="meal-info">
+                            <div class="meal-icon">🍪</div>
+                            <div>
+                                <div class="meal-name">Snacks</div>
+                                <div class="meal-time">Various</div>
+                            </div>
+                        </div>
+                        <div class="meal-calories">355 cal</div>
+                    </div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Greek Yogurt</div>
+                                <div class="food-serving">1 container</div>
+                            </div>
+                            <div class="food-cal">140 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Almonds</div>
+                                <div class="food-serving">1 oz (23 nuts)</div>
+                            </div>
+                            <div class="food-cal">164 cal</div>
+                        </div>
+                        <div class="food-item">
+                            <div>
+                                <div class="food-name">Apple</div>
+                                <div class="food-serving">1 medium</div>
+                            </div>
+                            <div class="food-cal">95 cal</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span>📊</span>
+                            Macronutrients
+                        </h2>
+                    </div>
+                    <div class="macro-chart">
+                        <svg class="chart-ring" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#3182ce" stroke-width="12"
+                                    stroke-dasharray="75.4 251.2" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#38a169" stroke-width="12"
+                                    stroke-dasharray="94.2 251.2" stroke-dashoffset="-75.4" transform="rotate(-90 50 50)"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#e53e3e" stroke-width="12"
+                                    stroke-dasharray="53.4 251.2" stroke-dashoffset="-169.6" transform="rotate(-90 50 50)"/>
+                        </svg>
+                        <div class="chart-center">
+                            <div class="chart-value">1,450</div>
+                            <div class="chart-label">calories</div>
+                        </div>
+                    </div>
+                    <div class="macro-legend">
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <div class="legend-color" style="background: #3182ce;"></div>
+                                <div class="legend-name">Protein</div>
+                            </div>
+                            <div class="legend-values">
+                                <div class="legend-amount">68g</div>
+                                <div class="legend-percent">30% of total</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <div class="legend-color" style="background: #38a169;"></div>
+                                <div class="legend-name">Carbs</div>
+                            </div>
+                            <div class="legend-values">
+                                <div class="legend-amount">185g</div>
+                                <div class="legend-percent">50% of total</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <div class="legend-color" style="background: #e53e3e;"></div>
+                                <div class="legend-name">Fat</div>
+                            </div>
+                            <div class="legend-values">
+                                <div class="legend-amount">42g</div>
+                                <div class="legend-percent">20% of total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span>🧪</span>
+                            Micronutrients
+                        </h2>
+                    </div>
+                    <div class="nutrient-grid">
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Sodium</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">1,850mg</div>
+                                <div class="nutrient-percent">80% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 80%; background: #f39c12;"></div>
+                        </div>
+
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Fiber</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">18g</div>
+                                <div class="nutrient-percent">64% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 64%; background: #38a169;"></div>
+                        </div>
+
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Calcium</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">780mg</div>
+                                <div class="nutrient-percent">60% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 60%; background: #3182ce;"></div>
+                        </div>
+
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Iron</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">9.2mg</div>
+                                <div class="nutrient-percent">51% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 51%; background: #e53e3e;"></div>
+                        </div>
+
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Vitamin C</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">85mg</div>
+                                <div class="nutrient-percent">94% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 94%; background: #f39c12;"></div>
+                        </div>
+
+                        <div class="nutrient-item">
+                            <div class="nutrient-name">Vitamin A</div>
+                            <div class="nutrient-values">
+                                <div class="nutrient-amount">420mcg</div>
+                                <div class="nutrient-percent">47% DV</div>
+                            </div>
+                        </div>
+                        <div class="nutrient-bar">
+                            <div class="nutrient-bar-fill" style="width: 47%; background: #667eea;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span>💧</span>
+                            Water Intake
+                        </h2>
+                    </div>
+                    <div class="water-tracker">
+                        <div class="water-icon">💧</div>
+                        <div class="water-amount">1.8 L</div>
+                        <div class="water-goal">of 2.5 L goal (72%)</div>
+                        <div class="water-buttons">
+                            <button class="water-btn">+ 250ml</button>
+                            <button class="water-btn">+ 500ml</button>
+                            <button class="water-btn">+ 1L</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

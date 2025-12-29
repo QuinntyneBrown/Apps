@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follow Team - Sports Team Following Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #718096;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #edf2f7;
+            color: #1a202c;
+        }
+
+        .modal-content {
+            padding: 24px 32px;
+            overflow-y: auto;
+            max-height: calc(90vh - 180px);
+        }
+
+        .search-section {
+            margin-bottom: 32px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 16px 20px 16px 52px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #718096;
+        }
+
+        .filter-tab:hover {
+            border-color: #cbd5e0;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .teams-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .team-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .team-option:hover {
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .team-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .team-option-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 24px;
+            margin: 0 auto 12px;
+        }
+
+        .team-option-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .team-option-meta {
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .team-option.selected .checkmark {
+            display: flex;
+        }
+
+        .modal-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .selected-count {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 32px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .modal {
+                max-height: 95vh;
+            }
+
+            .modal-header, .modal-content, .modal-footer {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .teams-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .modal-footer {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .footer-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Follow Teams</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="modal-content">
+                <div class="search-section">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Search for teams, leagues, or cities...">
+                    </div>
+
+                    <div class="filter-tabs">
+                        <button class="filter-tab active">All Sports</button>
+                        <button class="filter-tab">🏀 NBA</button>
+                        <button class="filter-tab">🏈 NFL</button>
+                        <button class="filter-tab">⚾ MLB</button>
+                        <button class="filter-tab">🏒 NHL</button>
+                        <button class="filter-tab">⚽ MLS</button>
+                    </div>
+                </div>
+
+                <div class="teams-section">
+                    <h3 class="section-title">🏀 NBA Teams</h3>
+                    <div class="teams-grid">
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #c41e3a 0%, #fdb927 100%);">ATL</div>
+                            <div class="team-option-name">Atlanta Hawks</div>
+                            <div class="team-option-meta">Southeast</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);">BOS</div>
+                            <div class="team-option-name">Boston Celtics</div>
+                            <div class="team-option-meta">Atlantic</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #000000 0%, #ffffff 100%);">BKN</div>
+                            <div class="team-option-name">Brooklyn Nets</div>
+                            <div class="team-option-meta">Atlantic</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #1d8aca 0%, #ce1141 100%);">CHA</div>
+                            <div class="team-option-name">Charlotte Hornets</div>
+                            <div class="team-option-meta">Southeast</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);">CHI</div>
+                            <div class="team-option-name">Chicago Bulls</div>
+                            <div class="team-option-meta">Central</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #860038 0%, #fdbb30 100%);">CLE</div>
+                            <div class="team-option-name">Cleveland Cavaliers</div>
+                            <div class="team-option-meta">Central</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);">DAL</div>
+                            <div class="team-option-name">Dallas Mavericks</div>
+                            <div class="team-option-meta">Southwest</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #0e2240 0%, #fec524 100%);">DEN</div>
+                            <div class="team-option-name">Denver Nuggets</div>
+                            <div class="team-option-meta">Northwest</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #1d42ba 0%, #c8102e 100%);">DET</div>
+                            <div class="team-option-name">Detroit Pistons</div>
+                            <div class="team-option-meta">Central</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #1d428a 0%, #ffc72c 100%);">GSW</div>
+                            <div class="team-option-name">Golden State Warriors</div>
+                            <div class="team-option-meta">Pacific</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #9f1239 0%, #f43f5e 100%);">HOU</div>
+                            <div class="team-option-name">Houston Rockets</div>
+                            <div class="team-option-meta">Southwest</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #002d62 0%, #fdbb30 100%);">IND</div>
+                            <div class="team-option-name">Indiana Pacers</div>
+                            <div class="team-option-meta">Central</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #c8102e 0%, #1d428a 100%);">LAC</div>
+                            <div class="team-option-name">LA Clippers</div>
+                            <div class="team-option-meta">Pacific</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">LAL</div>
+                            <div class="team-option-name">Los Angeles Lakers</div>
+                            <div class="team-option-meta">Pacific</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #5d76a9 0%, #12173f 100%);">MEM</div>
+                            <div class="team-option-name">Memphis Grizzlies</div>
+                            <div class="team-option-meta">Southwest</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%);">MIA</div>
+                            <div class="team-option-name">Miami Heat</div>
+                            <div class="team-option-meta">Southeast</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #00471b 0%, #eee1c6 100%);">MIL</div>
+                            <div class="team-option-name">Milwaukee Bucks</div>
+                            <div class="team-option-meta">Central</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #0c2340 0%, #236192 100%);">MIN</div>
+                            <div class="team-option-name">Minnesota Timberwolves</div>
+                            <div class="team-option-meta">Northwest</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #002b5c 0%, #b4975a 100%);">NOP</div>
+                            <div class="team-option-name">New Orleans Pelicans</div>
+                            <div class="team-option-meta">Southwest</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">NYK</div>
+                            <div class="team-option-name">New York Knicks</div>
+                            <div class="team-option-meta">Atlantic</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #007ac1 0%, #ef3b24 100%);">OKC</div>
+                            <div class="team-option-name">Oklahoma City Thunder</div>
+                            <div class="team-option-meta">Northwest</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #006bb6 0%, #f58426 100%);">ORL</div>
+                            <div class="team-option-name">Orlando Magic</div>
+                            <div class="team-option-meta">Southeast</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #006bb6 0%, #ed174c 100%);">PHI</div>
+                            <div class="team-option-name">Philadelphia 76ers</div>
+                            <div class="team-option-meta">Atlantic</div>
+                        </div>
+
+                        <div class="team-option selected">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #581c87 0%, #a855f7 100%);">PHX</div>
+                            <div class="team-option-name">Phoenix Suns</div>
+                            <div class="team-option-meta">Pacific</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="teams-section">
+                    <h3 class="section-title">🏈 NFL Teams</h3>
+                    <div class="teams-grid">
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #a71930 0%, #000000 100%);">ARI</div>
+                            <div class="team-option-name">Arizona Cardinals</div>
+                            <div class="team-option-meta">NFC West</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #a71930 0%, #000000 100%);">ATL</div>
+                            <div class="team-option-name">Atlanta Falcons</div>
+                            <div class="team-option-meta">NFC South</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #241773 0%, #000000 100%);">BAL</div>
+                            <div class="team-option-name">Baltimore Ravens</div>
+                            <div class="team-option-meta">AFC North</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #00338d 0%, #c60c30 100%);">BUF</div>
+                            <div class="team-option-name">Buffalo Bills</div>
+                            <div class="team-option-meta">AFC East</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #0085ca 0%, #101820 100%);">CAR</div>
+                            <div class="team-option-name">Carolina Panthers</div>
+                            <div class="team-option-meta">NFC South</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #c83803 0%, #0b162a 100%);">CHI</div>
+                            <div class="team-option-name">Chicago Bears</div>
+                            <div class="team-option-meta">NFC North</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #fb4f14 0%, #000000 100%);">CIN</div>
+                            <div class="team-option-name">Cincinnati Bengals</div>
+                            <div class="team-option-meta">AFC North</div>
+                        </div>
+
+                        <div class="team-option">
+                            <div class="checkmark">✓</div>
+                            <div class="team-option-logo" style="background: linear-gradient(135deg, #311d00 0%, #ff3c00 100%);">CLE</div>
+                            <div class="team-option-name">Cleveland Browns</div>
+                            <div class="team-option-meta">AFC North</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="selected-count">8 teams selected</div>
+                <div class="footer-actions">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Follow Selected Teams</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkoutPlanBuilder - Progress Tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: #1a202c;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tabs {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-card:nth-child(2) .stat-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card:nth-child(3) .stat-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card:nth-child(4) .stat-icon {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .trend {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .trend.up {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .trend.down {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .time-range {
+            display: flex;
+            gap: 8px;
+        }
+
+        .time-btn {
+            padding: 6px 12px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-btn:hover {
+            background: white;
+        }
+
+        .time-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            min-height: 320px;
+            position: relative;
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            padding: 80px 20px;
+            color: #718096;
+        }
+
+        .chart-visual {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 250px;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: translateY(-4px);
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #718096;
+            white-space: nowrap;
+        }
+
+        .chart-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .exercise-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .pr-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pr-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pr-info h4 {
+            font-size: 15px;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .pr-info p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .pr-value {
+            text-align: right;
+        }
+
+        .pr-value .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .pr-value .date {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .body-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .metric-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .metric-change.positive {
+            color: #059669;
+        }
+
+        .metric-change.negative {
+            color: #dc2626;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .goal-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .goal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .goal-target {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .goal-status {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .goal-progress {
+            background: #e2e8f0;
+            border-radius: 8px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .goal-progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+
+        .goal-percentage {
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+
+        .achievement {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .achievement:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+        }
+
+        .achievement.unlocked {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+        }
+
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            filter: grayscale(1);
+            opacity: 0.5;
+        }
+
+        .achievement.unlocked .achievement-icon {
+            filter: grayscale(0);
+            opacity: 1;
+        }
+
+        .achievement-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">💪</div>
+                <h1>WorkoutPlanBuilder</h1>
+            </div>
+            <button class="btn btn-primary">← Back to Dashboard</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">Strength Progress</button>
+            <button class="tab">Body Measurements</button>
+            <button class="tab">Volume & Intensity</button>
+            <button class="tab">Goals</button>
+            <button class="tab">Achievements</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">💪</div>
+                    <span class="trend up">↑ 12%</span>
+                </div>
+                <div class="stat-value">547K</div>
+                <div class="stat-label">Total Volume (90 days)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🏆</div>
+                    <span class="trend up">↑ 8</span>
+                </div>
+                <div class="stat-value">23</div>
+                <div class="stat-label">Personal Records</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">📈</div>
+                    <span class="trend up">↑ 15%</span>
+                </div>
+                <div class="stat-value">89%</div>
+                <div class="stat-label">Workout Consistency</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🔥</div>
+                    <span class="trend up">↑ 3</span>
+                </div>
+                <div class="stat-value">14</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Strength Progression</h2>
+                    <div class="time-range">
+                        <button class="time-btn">1M</button>
+                        <button class="time-btn active">3M</button>
+                        <button class="time-btn">6M</button>
+                        <button class="time-btn">1Y</button>
+                        <button class="time-btn">All</button>
+                    </div>
+                </div>
+
+                <select class="exercise-select">
+                    <option selected>Bench Press</option>
+                    <option>Deadlift</option>
+                    <option>Squat</option>
+                    <option>Overhead Press</option>
+                    <option>Barbell Rows</option>
+                    <option>Pull-ups</option>
+                </select>
+
+                <div class="chart-container">
+                    <div class="chart-visual">
+                        <div class="chart-bar" style="height: 60%;">
+                            <span class="chart-value">245</span>
+                            <span class="chart-label">Jan</span>
+                        </div>
+                        <div class="chart-bar" style="height: 65%;">
+                            <span class="chart-value">255</span>
+                            <span class="chart-label">Feb</span>
+                        </div>
+                        <div class="chart-bar" style="height: 72%;">
+                            <span class="chart-value">265</span>
+                            <span class="chart-label">Mar</span>
+                        </div>
+                        <div class="chart-bar" style="height: 75%;">
+                            <span class="chart-value">270</span>
+                            <span class="chart-label">Apr</span>
+                        </div>
+                        <div class="chart-bar" style="height: 80%;">
+                            <span class="chart-value">275</span>
+                            <span class="chart-label">May</span>
+                        </div>
+                        <div class="chart-bar" style="height: 85%;">
+                            <span class="chart-value">280</span>
+                            <span class="chart-label">Jun</span>
+                        </div>
+                        <div class="chart-bar" style="height: 90%;">
+                            <span class="chart-value">285</span>
+                            <span class="chart-label">Jul</span>
+                        </div>
+                        <div class="chart-bar" style="height: 92%;">
+                            <span class="chart-value">290</span>
+                            <span class="chart-label">Aug</span>
+                        </div>
+                        <div class="chart-bar" style="height: 95%;">
+                            <span class="chart-value">295</span>
+                            <span class="chart-label">Sep</span>
+                        </div>
+                        <div class="chart-bar" style="height: 98%;">
+                            <span class="chart-value">300</span>
+                            <span class="chart-label">Oct</span>
+                        </div>
+                        <div class="chart-bar" style="height: 100%;">
+                            <span class="chart-value">305</span>
+                            <span class="chart-label">Nov</span>
+                        </div>
+                        <div class="chart-bar" style="height: 100%;">
+                            <span class="chart-value">315</span>
+                            <span class="chart-label">Dec</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; border-radius: 8px; margin-top: 20px;">
+                    <strong style="color: #166534;">💪 Great Progress!</strong>
+                    <p style="font-size: 14px; color: #166534; margin-top: 4px;">
+                        You've increased your Bench Press by 70 lbs (28.5%) over the last 12 months!
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h2>Recent PRs</h2>
+                    </div>
+
+                    <div class="pr-list">
+                        <div class="pr-item">
+                            <div class="pr-info">
+                                <h4>Bench Press</h4>
+                                <p>5 rep max</p>
+                            </div>
+                            <div class="pr-value">
+                                <div class="value">315 lbs</div>
+                                <div class="date">2 days ago</div>
+                            </div>
+                        </div>
+
+                        <div class="pr-item">
+                            <div class="pr-info">
+                                <h4>Deadlift</h4>
+                                <p>5 rep max</p>
+                            </div>
+                            <div class="pr-value">
+                                <div class="value">405 lbs</div>
+                                <div class="date">3 days ago</div>
+                            </div>
+                        </div>
+
+                        <div class="pr-item">
+                            <div class="pr-info">
+                                <h4>Squat</h4>
+                                <p>8 rep max</p>
+                            </div>
+                            <div class="pr-value">
+                                <div class="value">315 lbs</div>
+                                <div class="date">1 week ago</div>
+                            </div>
+                        </div>
+
+                        <div class="pr-item">
+                            <div class="pr-info">
+                                <h4>Pull-ups</h4>
+                                <p>Max weight</p>
+                            </div>
+                            <div class="pr-value">
+                                <div class="value">+45 lbs</div>
+                                <div class="date">1 week ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Body Metrics</h2>
+                    </div>
+
+                    <div class="body-metrics">
+                        <div class="metric-box">
+                            <div class="metric-label">Weight</div>
+                            <div class="metric-value">185 lbs</div>
+                            <div class="metric-change positive">↑ 3 lbs</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Body Fat</div>
+                            <div class="metric-value">14.2%</div>
+                            <div class="metric-change negative">↓ 1.3%</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Chest</div>
+                            <div class="metric-value">42"</div>
+                            <div class="metric-change positive">↑ 0.5"</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Waist</div>
+                            <div class="metric-value">32"</div>
+                            <div class="metric-change negative">↓ 1"</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                        Log New Measurement
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Active Goals</h2>
+                    <button class="btn btn-primary">+ New Goal</button>
+                </div>
+
+                <div class="goals-list">
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">Bench Press 3 Plates</div>
+                                <div class="goal-target">Target: 315 lbs × 1 rep</div>
+                            </div>
+                            <span class="goal-status">95% Complete</span>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-fill" style="width: 95%;"></div>
+                        </div>
+                        <div class="goal-percentage">300 lbs / 315 lbs</div>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">Deadlift 4 Plates</div>
+                                <div class="goal-target">Target: 405 lbs × 1 rep</div>
+                            </div>
+                            <span class="goal-status" style="background: #d1fae5; color: #065f46;">✓ Achieved</span>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <div class="goal-percentage">405 lbs / 405 lbs</div>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">20 Consecutive Pull-ups</div>
+                                <div class="goal-target">Target: 20 reps</div>
+                            </div>
+                            <span class="goal-status">70% Complete</span>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-fill" style="width: 70%;"></div>
+                        </div>
+                        <div class="goal-percentage">14 reps / 20 reps</div>
+                    </div>
+
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">Get to 12% Body Fat</div>
+                                <div class="goal-target">Target: 12.0%</div>
+                            </div>
+                            <span class="goal-status">84% Complete</span>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-fill" style="width: 84%;"></div>
+                        </div>
+                        <div class="goal-percentage">14.2% → 12.0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Achievements</h2>
+                </div>
+
+                <div class="achievements-grid">
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">🏆</div>
+                        <div class="achievement-name">First PR</div>
+                    </div>
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">🔥</div>
+                        <div class="achievement-name">7 Day Streak</div>
+                    </div>
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">💪</div>
+                        <div class="achievement-name">10 Workouts</div>
+                    </div>
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">📈</div>
+                        <div class="achievement-name">100K Volume</div>
+                    </div>
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">⚡</div>
+                        <div class="achievement-name">Early Bird</div>
+                    </div>
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-name">Goal Getter</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🌟</div>
+                        <div class="achievement-name">30 Day Streak</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">💎</div>
+                        <div class="achievement-name">100 Workouts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

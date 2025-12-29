@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Quality Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .streak-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-menu {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .sleep-score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .sleep-score {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#4ade80 0deg 306deg, #e5e7eb 306deg 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .score-value {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 56px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .score-status {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4ade80;
+            margin-bottom: 8px;
+        }
+
+        .score-date {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .stat-unit {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .recent-nights {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .night-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .night-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+
+        .night-date {
+            min-width: 80px;
+        }
+
+        .night-day {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .night-date-text {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .night-bar {
+            flex: 1;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .night-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .night-duration {
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .duration-hours {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .night-score {
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .score-excellent {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .score-good {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .score-fair {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .trends-section {
+            grid-column: 1 / -1;
+        }
+
+        .trend-chart {
+            margin-top: 24px;
+            height: 280px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .trend-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trend-column {
+            width: 100%;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .trend-column:hover {
+            opacity: 0.8;
+            transform: translateY(-4px);
+        }
+
+        .trend-label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #1a202c;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .insights-panel {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+
+        .insight-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #78350f;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-text {
+            color: #92400e;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌙 Sleep Quality Tracker</h1>
+            <div class="header-info">
+                <div class="streak-badge">
+                    🔥 7 Day Streak
+                </div>
+                <div class="user-menu">JD</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Last Night's Sleep</h2>
+                    <a href="#" class="view-all">View Details →</a>
+                </div>
+
+                <div class="sleep-score-container">
+                    <div class="sleep-score">
+                        <div class="score-circle">
+                            <div class="score-value">
+                                <div class="score-number">85</div>
+                                <div class="score-label">Sleep Score</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="score-status">Excellent Sleep</div>
+                    <div class="score-date">Sunday, Dec 28, 2025</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">TOTAL SLEEP</div>
+                        <div class="stat-value">7h 42m</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">SLEEP EFFICIENCY</div>
+                        <div class="stat-value">94<span class="stat-unit">%</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">DEEP SLEEP</div>
+                        <div class="stat-value">1h 45m</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">REM SLEEP</div>
+                        <div class="stat-value">2h 12m</div>
+                    </div>
+                </div>
+
+                <div class="insights-panel">
+                    <div class="insight-title">💡 Today's Insight</div>
+                    <div class="insight-text">
+                        Your sleep quality improved by 12% this week! Going to bed before 10:30 PM consistently
+                        correlates with better deep sleep. Keep up the excellent bedtime routine!
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Nights</h2>
+                    <a href="#" class="view-all">See All →</a>
+                </div>
+
+                <div class="recent-nights">
+                    <div class="night-item">
+                        <div class="night-date">
+                            <div class="night-day">Sunday</div>
+                            <div class="night-date-text">Dec 28</div>
+                        </div>
+                        <div class="night-bar">
+                            <div class="night-bar-fill" style="width: 85%; background: linear-gradient(90deg, #4ade80, #22c55e);"></div>
+                        </div>
+                        <div class="night-duration">
+                            <div class="duration-hours">7h 42m</div>
+                        </div>
+                        <div class="night-score">
+                            <span class="score-badge score-excellent">85</span>
+                        </div>
+                    </div>
+
+                    <div class="night-item">
+                        <div class="night-date">
+                            <div class="night-day">Saturday</div>
+                            <div class="night-date-text">Dec 27</div>
+                        </div>
+                        <div class="night-bar">
+                            <div class="night-bar-fill" style="width: 78%; background: linear-gradient(90deg, #4ade80, #22c55e);"></div>
+                        </div>
+                        <div class="night-duration">
+                            <div class="duration-hours">8h 15m</div>
+                        </div>
+                        <div class="night-score">
+                            <span class="score-badge score-excellent">78</span>
+                        </div>
+                    </div>
+
+                    <div class="night-item">
+                        <div class="night-date">
+                            <div class="night-day">Friday</div>
+                            <div class="night-date-text">Dec 26</div>
+                        </div>
+                        <div class="night-bar">
+                            <div class="night-bar-fill" style="width: 72%; background: linear-gradient(90deg, #60a5fa, #3b82f6);"></div>
+                        </div>
+                        <div class="night-duration">
+                            <div class="duration-hours">7h 20m</div>
+                        </div>
+                        <div class="night-score">
+                            <span class="score-badge score-good">72</span>
+                        </div>
+                    </div>
+
+                    <div class="night-item">
+                        <div class="night-date">
+                            <div class="night-day">Thursday</div>
+                            <div class="night-date-text">Dec 25</div>
+                        </div>
+                        <div class="night-bar">
+                            <div class="night-bar-fill" style="width: 68%; background: linear-gradient(90deg, #60a5fa, #3b82f6);"></div>
+                        </div>
+                        <div class="night-duration">
+                            <div class="duration-hours">6h 50m</div>
+                        </div>
+                        <div class="night-score">
+                            <span class="score-badge score-good">68</span>
+                        </div>
+                    </div>
+
+                    <div class="night-item">
+                        <div class="night-date">
+                            <div class="night-day">Wednesday</div>
+                            <div class="night-date-text">Dec 24</div>
+                        </div>
+                        <div class="night-bar">
+                            <div class="night-bar-fill" style="width: 55%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
+                        </div>
+                        <div class="night-duration">
+                            <div class="duration-hours">6h 10m</div>
+                        </div>
+                        <div class="night-score">
+                            <span class="score-badge score-fair">55</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card trends-section">
+                <div class="card-header">
+                    <h2 class="card-title">7-Day Sleep Trend</h2>
+                    <a href="#" class="view-all">View Analysis →</a>
+                </div>
+
+                <div class="trend-chart">
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 65%;"></div>
+                        <div class="trend-label">Mon</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 70%;"></div>
+                        <div class="trend-label">Tue</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 55%;"></div>
+                        <div class="trend-label">Wed</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 68%;"></div>
+                        <div class="trend-label">Thu</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 72%;"></div>
+                        <div class="trend-label">Fri</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 78%;"></div>
+                        <div class="trend-label">Sat</div>
+                    </div>
+                    <div class="trend-bar">
+                        <div class="trend-column" style="height: 85%;"></div>
+                        <div class="trend-label">Sun</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="action-btn primary">+ Log Sleep</button>
+                    <button class="action-btn">📊 View Analysis</button>
+                    <button class="action-btn">🎯 Update Goals</button>
+                    <button class="action-btn">💡 Get Insights</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

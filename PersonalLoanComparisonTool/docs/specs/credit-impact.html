@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Score Impact - Personal Loan Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            color: #64748b;
+            font-size: 16px;
+        }
+        .score-comparison {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .score-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+        .score-card.projected {
+            border: 2px solid #10b981;
+            background: #f0fdf4;
+        }
+        .score-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .score-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .score-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: conic-gradient(#10b981 0deg 267deg, #e2e8f0 267deg 360deg);
+        }
+        .score-circle.current {
+            background: conic-gradient(#f59e0b 0deg 267deg, #e2e8f0 267deg 360deg);
+        }
+        .score-circle.initial {
+            background: conic-gradient(#ef4444 0deg 234deg, #e2e8f0 234deg 360deg);
+        }
+        .score-inner {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .score-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .score-range {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .score-rating {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .score-change {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .score-change.positive {
+            color: #10b981;
+        }
+        .score-change.negative {
+            color: #ef4444;
+        }
+        .timeline-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 24px;
+        }
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: start;
+            margin-bottom: 32px;
+            position: relative;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-dot {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 48px;
+            bottom: -32px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+        .timeline-item:last-child .timeline-line {
+            display: none;
+        }
+        .timeline-content {
+            flex: 1;
+            margin-left: 20px;
+        }
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .timeline-time {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .timeline-description {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .timeline-score {
+            display: inline-block;
+            background: #f8fafc;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+        .factors-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        .factor-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .factor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        .factor-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .factor-weight {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .factor-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .factor-value {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .factor-value.after {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+        }
+        .factor-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .factor-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .impact-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .impact-indicator.positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .impact-indicator.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .impact-indicator.neutral {
+            background: #fef3c7;
+            color: #78350f;
+        }
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .info-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .info-text {
+            color: #1e40af;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .recommendations {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .recommendation-item {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .recommendation-item:last-child {
+            margin-bottom: 0;
+        }
+        .recommendation-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .recommendation-content {
+            flex: 1;
+        }
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .recommendation-text {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        @media (max-width: 1024px) {
+            .score-comparison {
+                grid-template-columns: 1fr;
+            }
+            .factors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💰 LoanCompare</div>
+            <a href="#" class="back-link">← Back to Dashboard</a>
+        </div>
+
+        <div class="page-header">
+            <h1 class="page-title">Credit Score Impact Analysis</h1>
+            <p class="page-subtitle">Understand how debt consolidation will affect your credit score over time</p>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title">📊 How We Calculate Impact</div>
+            <div class="info-text">
+                This analysis is based on standard credit scoring models (FICO & VantageScore). Actual results may vary based on your complete credit history. Short-term dips are normal and typically recover within 6-12 months.
+            </div>
+        </div>
+
+        <div class="score-comparison">
+            <div class="score-card">
+                <div class="score-label">Current Score</div>
+                <div class="score-circle current">
+                    <div class="score-inner">
+                        <div class="score-value">742</div>
+                        <div class="score-range">/850</div>
+                    </div>
+                </div>
+                <div class="score-rating">Good</div>
+                <div class="score-subtext" style="color: #64748b; font-size: 13px;">Your score today</div>
+            </div>
+
+            <div class="score-card">
+                <div class="score-label">Initial Impact</div>
+                <div class="score-circle initial">
+                    <div class="score-inner">
+                        <div class="score-value">715</div>
+                        <div class="score-range">/850</div>
+                    </div>
+                </div>
+                <div class="score-rating">Good</div>
+                <div class="score-change negative">▼ 27 points (3.6%)</div>
+            </div>
+
+            <div class="score-card projected">
+                <div class="score-badge">PROJECTED</div>
+                <div class="score-label">After 12 Months</div>
+                <div class="score-circle">
+                    <div class="score-inner">
+                        <div class="score-value">789</div>
+                        <div class="score-range">/850</div>
+                    </div>
+                </div>
+                <div class="score-rating">Excellent</div>
+                <div class="score-change positive">▲ 47 points (6.3%)</div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h2 class="section-title">Credit Score Recovery Timeline</h2>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot">1</div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Initial Application & Hard Inquiry</div>
+                        <div class="timeline-time">Day 1</div>
+                        <div class="timeline-description">
+                            The lender pulls your credit report. Hard inquiries typically reduce your score by 5-10 points temporarily.
+                        </div>
+                        <div class="timeline-score">Score: 737 <span style="color: #ef4444;">(▼5 points)</span></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">2</div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">New Account Added</div>
+                        <div class="timeline-time">Week 1-2</div>
+                        <div class="timeline-description">
+                            New loan appears on your credit report. Your average account age decreases slightly, causing a temporary score dip.
+                        </div>
+                        <div class="timeline-score">Score: 725 <span style="color: #ef4444;">(▼12 points)</span></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">3</div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Old Balances Paid Off</div>
+                        <div class="timeline-time">Month 1</div>
+                        <div class="timeline-description">
+                            Credit card balances report as $0. Your credit utilization drops from 63% to 0%, which is excellent. Small bounce back begins.
+                        </div>
+                        <div class="timeline-score">Score: 715 <span style="color: #ef4444;">(▼10 points)</span></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">4</div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">First Payment Posted</div>
+                        <div class="timeline-time">Month 2</div>
+                        <div class="timeline-description">
+                            Your on-time payment is reported. Payment history starts building positively on the new account.
+                        </div>
+                        <div class="timeline-score">Score: 735 <span style="color: #10b981;">(▲20 points)</span></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">5</div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Utilization Benefit Kicks In</div>
+                        <div class="timeline-time">Month 3-6</div>
+                        <div class="timeline-description">
+                            With credit cards at $0 balance and available credit intact, your utilization score component improves significantly. Consistent payments continue.
+                        </div>
+                        <div class="timeline-score">Score: 765 <span style="color: #10b981;">(▲30 points)</span></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">6</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Full Recovery & Beyond</div>
+                        <div class="timeline-time">Month 12</div>
+                        <div class="timeline-description">
+                            12 months of perfect payments. Low utilization fully recognized. Your score exceeds your starting point and reaches "Excellent" range.
+                        </div>
+                        <div class="timeline-score">Score: 789 <span style="color: #10b981;">(▲47 points from original)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h2 class="section-title">Impact on Credit Factors</h2>
+
+            <div class="factors-grid">
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Payment History</div>
+                        <div class="factor-weight">35% of score</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">100%</div>
+                        </div>
+                        <div class="factor-value after">
+                            <div class="factor-label">After (12 mo)</div>
+                            <div class="factor-number">100%</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator positive">
+                        ✓ Positive Impact: Continue making on-time payments
+                    </div>
+                </div>
+
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Credit Utilization</div>
+                        <div class="factor-weight">30% of score</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">63%</div>
+                        </div>
+                        <div class="factor-value after">
+                            <div class="factor-label">After</div>
+                            <div class="factor-number">0%</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator positive">
+                        ✓ Major Positive Impact: 63% reduction in utilization
+                    </div>
+                </div>
+
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Credit History Length</div>
+                        <div class="factor-weight">15% of score</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">8.2 yrs</div>
+                        </div>
+                        <div class="factor-value">
+                            <div class="factor-label">After</div>
+                            <div class="factor-number">6.8 yrs</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator negative">
+                        ⚠ Minor Negative Impact: Average age decreases with new account
+                    </div>
+                </div>
+
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Credit Mix</div>
+                        <div class="factor-weight">10% of score</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">Cards Only</div>
+                        </div>
+                        <div class="factor-value after">
+                            <div class="factor-label">After</div>
+                            <div class="factor-number">Mixed</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator positive">
+                        ✓ Positive Impact: Added installment loan diversity
+                    </div>
+                </div>
+
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Recent Inquiries</div>
+                        <div class="factor-weight">10% of score</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">0</div>
+                        </div>
+                        <div class="factor-value">
+                            <div class="factor-label">After</div>
+                            <div class="factor-number">1</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator neutral">
+                        ⚠ Minor Temporary Impact: Inquiry falls off in 12 months
+                    </div>
+                </div>
+
+                <div class="factor-card">
+                    <div class="factor-header">
+                        <div class="factor-title">Total Accounts</div>
+                        <div class="factor-weight">Part of mix</div>
+                    </div>
+                    <div class="factor-comparison">
+                        <div class="factor-value">
+                            <div class="factor-label">Before</div>
+                            <div class="factor-number">4</div>
+                        </div>
+                        <div class="factor-value after">
+                            <div class="factor-label">After</div>
+                            <div class="factor-number">5</div>
+                        </div>
+                    </div>
+                    <div class="impact-indicator positive">
+                        ✓ Positive Impact: More accounts, all in good standing
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h2 class="section-title">Recommendations to Maximize Your Score</h2>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon">💳</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-title">Keep Old Credit Cards Open</div>
+                    <div class="recommendation-text">
+                        Don't close your paid-off credit cards. Keeping them open with $0 balance maintains your available credit, keeps your utilization low, and preserves your credit history length.
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon">📅</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-title">Set Up Auto-Pay</div>
+                    <div class="recommendation-text">
+                        Never miss a payment on your new loan. Even one late payment can drop your score by 100+ points. Auto-pay ensures perfect payment history and may get you a 0.25% rate discount.
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon">🚫</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-title">Avoid New Credit Applications</div>
+                    <div class="recommendation-text">
+                        Wait 6-12 months before applying for new credit. Multiple inquiries can compound the score impact. Let your score recover fully first.
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon">📊</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-title">Monitor Your Credit Monthly</div>
+                    <div class="recommendation-text">
+                        Use free credit monitoring services to track your recovery progress. Watch for errors on your report and dispute them immediately. Most see improvement within 3-4 months.
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon">💰</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-title">Use Cards Occasionally</div>
+                    <div class="recommendation-text">
+                        Make small purchases on your credit cards and pay them off monthly. This shows active, responsible use and maintains the accounts. Just keep utilization under 10%.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

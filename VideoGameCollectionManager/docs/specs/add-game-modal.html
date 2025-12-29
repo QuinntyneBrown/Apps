@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Game - Video Game Collection Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: rgba(26, 26, 46, 0.95);
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 77, 87, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 12px;
+            border: 1px dashed rgba(0, 212, 255, 0.3);
+        }
+
+        .search-section h3 {
+            font-size: 16px;
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .search-results {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .search-result-item {
+            display: flex;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #00d4ff;
+        }
+
+        .result-cover {
+            width: 50px;
+            height: 65px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .result-meta {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-section h3 {
+            font-size: 16px;
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 13px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #ff4757;
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #ddd;
+        }
+
+        .checkbox-label input {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            min-height: 80px;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-remove:hover {
+            color: #ff4757;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>
+                    <span>➕</span>
+                    Add Game to Collection
+                </h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="search-section">
+                    <h3>🔍 Quick Add from Database</h3>
+                    <div class="search-box">
+                        <span class="search-icon">🎮</span>
+                        <input type="text" placeholder="Search for a game... (e.g., 'Elden Ring', 'Zelda')">
+                    </div>
+                    <div class="search-results">
+                        <div class="search-result-item">
+                            <div class="result-cover" style="background: linear-gradient(135deg, #c94b4b, #4b134f);"></div>
+                            <div class="result-info">
+                                <div class="result-title">Elden Ring</div>
+                                <div class="result-meta">FromSoftware • 2022 • Action RPG</div>
+                            </div>
+                        </div>
+                        <div class="search-result-item">
+                            <div class="result-cover" style="background: linear-gradient(135deg, #1e3c72, #2a5298);"></div>
+                            <div class="result-info">
+                                <div class="result-title">The Legend of Zelda: Tears of the Kingdom</div>
+                                <div class="result-meta">Nintendo • 2023 • Adventure</div>
+                            </div>
+                        </div>
+                        <div class="search-result-item">
+                            <div class="result-cover" style="background: linear-gradient(135deg, #3a1c71, #d76d77);"></div>
+                            <div class="result-info">
+                                <div class="result-title">Baldur's Gate 3</div>
+                                <div class="result-meta">Larian Studios • 2023 • RPG</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider">OR ENTER MANUALLY</div>
+
+                <div class="form-section">
+                    <h3>📝 Game Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Game Title <span class="required">*</span></label>
+                            <input type="text" placeholder="Enter game title">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Platform <span class="required">*</span></label>
+                            <select>
+                                <option>Select platform...</option>
+                                <option>PlayStation 5</option>
+                                <option>PlayStation 4</option>
+                                <option>Xbox Series X/S</option>
+                                <option>Xbox One</option>
+                                <option>Nintendo Switch</option>
+                                <option>PC (Steam)</option>
+                                <option>PC (Epic Games)</option>
+                                <option>PC (GOG)</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Genre</label>
+                            <select>
+                                <option>Select genre...</option>
+                                <option>Action</option>
+                                <option>Action RPG</option>
+                                <option>Adventure</option>
+                                <option>FPS</option>
+                                <option>RPG</option>
+                                <option>Strategy</option>
+                                <option>Simulation</option>
+                                <option>Sports</option>
+                                <option>Racing</option>
+                                <option>Puzzle</option>
+                                <option>Indie</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Developer</label>
+                            <input type="text" placeholder="e.g., FromSoftware">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Publisher</label>
+                            <input type="text" placeholder="e.g., Bandai Namco">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Release Date</label>
+                            <input type="date">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Acquisition Date</label>
+                            <input type="date">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="margin-top: 30px;">
+                    <h3>💰 Ownership Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Format</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="radio" name="format" checked>
+                                    Digital
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="radio" name="format">
+                                    Physical
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Purchase Price</label>
+                            <input type="number" placeholder="$0.00" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Acquisition Source</label>
+                            <select>
+                                <option>Select source...</option>
+                                <option>Purchased (Store)</option>
+                                <option>Purchased (Online)</option>
+                                <option>Gift</option>
+                                <option>Game Pass / PS Plus</option>
+                                <option>Trade</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Current Value</label>
+                            <input type="number" placeholder="$0.00" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="margin-top: 30px;">
+                    <h3>🎮 Playing Status</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select>
+                                <option>Not Started</option>
+                                <option>Currently Playing</option>
+                                <option>Completed</option>
+                                <option>100% Completed</option>
+                                <option>Backlog</option>
+                                <option>Abandoned</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Priority Level</label>
+                            <select>
+                                <option>None</option>
+                                <option>Low</option>
+                                <option>Medium</option>
+                                <option>High</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Estimated Playtime (hours)</label>
+                            <input type="number" placeholder="0" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Personal Rating</label>
+                            <select>
+                                <option>Not Rated</option>
+                                <option>⭐ 1 - Poor</option>
+                                <option>⭐⭐ 2 - Below Average</option>
+                                <option>⭐⭐⭐ 3 - Average</option>
+                                <option>⭐⭐⭐⭐ 4 - Good</option>
+                                <option>⭐⭐⭐⭐⭐ 5 - Excellent</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Tags</label>
+                            <div class="tag-input-wrapper">
+                                <span class="tag">Open World <span class="tag-remove">×</span></span>
+                                <span class="tag">Souls-like <span class="tag-remove">×</span></span>
+                                <span class="tag">Fantasy <span class="tag-remove">×</span></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Notes</label>
+                            <textarea placeholder="Add any additional notes about this game..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <label class="checkbox-label">
+                    <input type="checkbox" checked>
+                    Add to backlog after saving
+                </label>
+                <div class="footer-buttons">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Add Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Calendar - Week View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .controls {
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .calendar-nav button {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .current-week {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        .view-toggle button {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .week-wrapper {
+            padding: 32px;
+            overflow-x: auto;
+        }
+        .week-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+            min-width: 1200px;
+        }
+        .time-header {
+            background: white;
+            padding: 16px;
+        }
+        .day-header {
+            background: #f9fafb;
+            padding: 16px;
+            text-align: center;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .day-header.today {
+            background: #eff6ff;
+            border-bottom: 2px solid #667eea;
+        }
+        .day-name {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .day-date {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 4px;
+        }
+        .day-header.today .day-date {
+            color: #667eea;
+        }
+        .time-slot {
+            background: white;
+            padding: 12px;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: right;
+            border-right: 2px solid #e5e7eb;
+        }
+        .event-slot {
+            background: white;
+            padding: 4px;
+            position: relative;
+            min-height: 60px;
+        }
+        .event-slot.today {
+            background: #fefce8;
+        }
+        .event-block {
+            background: #3b82f6;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+        .event-block:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .event-time-range {
+            font-size: 10px;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        .event-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .event-location {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        .event-attendees {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+        .conflict-warning {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #dc2626;
+            color: white;
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        .all-day-section {
+            grid-column: 1 / -1;
+            background: #fef3c7;
+            padding: 12px;
+            border-bottom: 2px solid #e5e7eb;
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 4px;
+        }
+        .all-day-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #92400e;
+            text-align: right;
+            padding-right: 12px;
+        }
+        .all-day-event {
+            background: #fbbf24;
+            color: #78350f;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .current-time-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dc2626;
+            z-index: 10;
+        }
+        .current-time-dot {
+            position: absolute;
+            left: -5px;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: #dc2626;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Family Calendar & Event Planner</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Dashboard</button>
+                <button class="btn btn-primary">+ Add Event</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="calendar-nav">
+                <button>← Previous</button>
+                <div class="current-week">Dec 23 - Dec 29, 2025</div>
+                <button>Next →</button>
+                <button>Today</button>
+            </div>
+            <div class="view-toggle">
+                <button>Day</button>
+                <button class="active">Week</button>
+                <button>Month</button>
+                <button>Agenda</button>
+            </div>
+        </div>
+
+        <div class="week-wrapper">
+            <div class="week-grid">
+                <!-- All-day events section -->
+                <div class="all-day-section">
+                    <div class="all-day-label">All Day</div>
+                    <div></div>
+                    <div></div>
+                    <div class="all-day-event">🎄 Christmas Eve</div>
+                    <div class="all-day-event">🎄 Christmas Day</div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+
+                <!-- Header row -->
+                <div class="time-header"></div>
+                <div class="day-header">
+                    <div class="day-name">Sun</div>
+                    <div class="day-date">23</div>
+                </div>
+                <div class="day-header">
+                    <div class="day-name">Mon</div>
+                    <div class="day-date">24</div>
+                </div>
+                <div class="day-header">
+                    <div class="day-name">Tue</div>
+                    <div class="day-date">25</div>
+                </div>
+                <div class="day-header">
+                    <div class="day-name">Wed</div>
+                    <div class="day-date">26</div>
+                </div>
+                <div class="day-header">
+                    <div class="day-name">Thu</div>
+                    <div class="day-date">27</div>
+                </div>
+                <div class="day-header">
+                    <div class="day-name">Fri</div>
+                    <div class="day-date">28</div>
+                </div>
+                <div class="day-header today">
+                    <div class="day-name">Sat</div>
+                    <div class="day-date">29</div>
+                </div>
+
+                <!-- 7:00 AM -->
+                <div class="time-slot">7:00 AM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">7:00 - 8:00 AM</div>
+                        <div class="event-title">Family Breakfast</div>
+                        <div class="event-attendees">👨‍👩‍👧‍👦 All</div>
+                    </div>
+                </div>
+
+                <!-- 8:00 AM -->
+                <div class="time-slot">8:00 AM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 9:00 AM -->
+                <div class="time-slot">9:00 AM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">9:00 - 11:00 AM</div>
+                        <div class="event-title">Christmas Eve Prep</div>
+                        <div class="event-location">📍 Home</div>
+                    </div>
+                </div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">9:00 AM - 2:00 PM</div>
+                        <div class="event-title">Christmas Celebration</div>
+                        <div class="event-location">📍 Home</div>
+                    </div>
+                </div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #10b981;">
+                        <div class="event-time-range">9:00 - 3:30 PM</div>
+                        <div class="event-title">School Day</div>
+                        <div class="event-location">📍 Lincoln Middle</div>
+                        <div class="event-attendees">Emma, Liam</div>
+                        <div class="conflict-warning">⚠️</div>
+                    </div>
+                </div>
+
+                <!-- 10:00 AM -->
+                <div class="time-slot">10:00 AM</div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #ef4444;">
+                        <div class="event-time-range">10:00 - 12:00 PM</div>
+                        <div class="event-title">Holiday Shopping</div>
+                        <div class="event-location">📍 Mall</div>
+                        <div class="event-attendees">Jennifer</div>
+                    </div>
+                </div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">10:00 - 1:00 PM</div>
+                        <div class="event-title">Family Gathering</div>
+                        <div class="event-location">📍 Home</div>
+                    </div>
+                </div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #ef4444;">
+                        <div class="event-time-range">10:00 - 11:30 AM</div>
+                        <div class="event-title">Dentist Appt</div>
+                        <div class="event-location">📍 Bright Smiles</div>
+                        <div class="event-attendees">Mom, Liam</div>
+                        <div class="conflict-warning">⚠️</div>
+                    </div>
+                </div>
+
+                <!-- 11:00 AM -->
+                <div class="time-slot">11:00 AM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 12:00 PM -->
+                <div class="time-slot">12:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 1:00 PM -->
+                <div class="time-slot">1:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 2:00 PM -->
+                <div class="time-slot">2:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 3:00 PM -->
+                <div class="time-slot">3:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 4:00 PM -->
+                <div class="time-slot">4:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #10b981;">
+                        <div class="event-time-range">4:00 - 5:30 PM</div>
+                        <div class="event-title">Soccer Practice</div>
+                        <div class="event-location">📍 Sports Complex</div>
+                        <div class="event-attendees">Emma, Dad</div>
+                    </div>
+                </div>
+
+                <!-- 5:00 PM -->
+                <div class="time-slot">5:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">5:00 - 7:00 PM</div>
+                        <div class="event-title">Christmas Eve Service</div>
+                        <div class="event-location">📍 Church</div>
+                        <div class="event-attendees">👨‍👩‍👧‍👦 All</div>
+                    </div>
+                </div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #f59e0b;">
+                        <div class="event-time-range">5:00 - 6:00 PM</div>
+                        <div class="event-title">Piano Lesson</div>
+                        <div class="event-location">📍 Music Academy</div>
+                        <div class="event-attendees">Liam, Mom</div>
+                    </div>
+                </div>
+
+                <!-- 6:00 PM -->
+                <div class="time-slot">6:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">6:30 - 7:30 PM</div>
+                        <div class="event-title">Family Dinner</div>
+                        <div class="event-location">📍 Home</div>
+                        <div class="event-attendees">👨‍👩‍👧‍👦 All</div>
+                    </div>
+                </div>
+
+                <!-- 7:00 PM -->
+                <div class="time-slot">7:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+
+                <!-- 8:00 PM -->
+                <div class="time-slot">8:00 PM</div>
+                <div class="event-slot"></div>
+                <div class="event-slot">
+                    <div class="event-block" style="background: #667eea;">
+                        <div class="event-time-range">8:00 - 10:00 PM</div>
+                        <div class="event-title">Family Movie Night</div>
+                        <div class="event-location">📍 Home</div>
+                    </div>
+                </div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot"></div>
+                <div class="event-slot today"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

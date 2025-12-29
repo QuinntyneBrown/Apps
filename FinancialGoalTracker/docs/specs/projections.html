@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Projections - Financial Goal Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 32px;
+        }
+
+        .goal-selector {
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .goal-selector:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .status-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .status-banner.on-track {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .status-banner.off-track {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .status-info h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .status-banner.on-track .status-info h2 {
+            color: #065f46;
+        }
+
+        .status-banner.off-track .status-info h2 {
+            color: #991b1b;
+        }
+
+        .status-info p {
+            font-size: 15px;
+        }
+
+        .status-banner.on-track .status-info p {
+            color: #047857;
+        }
+
+        .status-banner.off-track .status-info p {
+            color: #dc2626;
+        }
+
+        .status-icon {
+            font-size: 64px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            color: #1a202c;
+            font-size: 24px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .projection-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .projection-item {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .projection-label {
+            color: #718096;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .projection-value {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .projection-value.positive {
+            color: #10b981;
+        }
+
+        .projection-value.negative {
+            color: #dc2626;
+        }
+
+        .projection-subtext {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .timeline-chart {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #cbd5e0;
+            text-align: center;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timeline-chart .placeholder-text {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-visual {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .timeline-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-label {
+            width: 150px;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .timeline-track {
+            flex: 1;
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            width: 3px;
+            height: 100%;
+            background: #dc2626;
+            top: 0;
+        }
+
+        .timeline-date {
+            width: 100px;
+            color: #4a5568;
+            font-size: 13px;
+        }
+
+        .scenarios-section {
+            margin-top: 30px;
+        }
+
+        .scenario-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .scenario-card:hover {
+            background: #edf2f7;
+        }
+
+        .scenario-card.current {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .scenario-card.optimistic {
+            border-color: #10b981;
+        }
+
+        .scenario-card.pessimistic {
+            border-color: #f59e0b;
+        }
+
+        .scenario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .scenario-header h4 {
+            color: #1a202c;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .scenario-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .scenario-card.current .scenario-badge {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .scenario-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            font-size: 13px;
+        }
+
+        .scenario-detail {
+            color: #718096;
+        }
+
+        .scenario-detail strong {
+            color: #1a202c;
+        }
+
+        .recommendations-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .recommendations-card h2 {
+            color: #1a202c;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendation {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .recommendation h4 {
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .recommendation p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-card h3 {
+            color: #1a202c;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .metric-value {
+            color: #1a202c;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .confidence-meter {
+            margin-top: 20px;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .confidence-label span {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .confidence-label strong {
+            font-size: 18px;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .confidence-bar {
+            background: #e2e8f0;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            border-radius: 6px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .projection-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .status-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .timeline-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .timeline-label,
+            .timeline-date {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Goal Projections & Forecasting</h1>
+                <select class="goal-selector">
+                    <option>Emergency Fund</option>
+                    <option>Home Down Payment</option>
+                    <option>Japan Vacation</option>
+                    <option>Retirement IRA 2026</option>
+                </select>
+            </div>
+            <p>Track progress and forecast completion dates based on your contribution patterns</p>
+        </div>
+
+        <div class="status-banner on-track">
+            <div class="status-info">
+                <h2>✓ You're On Track!</h2>
+                <p>At your current savings rate, you'll reach your goal 138 days ahead of schedule</p>
+            </div>
+            <div class="status-icon">🎯</div>
+        </div>
+
+        <div class="content-grid">
+            <div class="main-content">
+                <div class="card">
+                    <h2>📊 Projection Overview</h2>
+
+                    <div class="projection-summary">
+                        <div class="projection-item">
+                            <div class="projection-label">Target Completion</div>
+                            <div class="projection-value">Dec 31, 2026</div>
+                            <div class="projection-subtext">Your goal deadline</div>
+                        </div>
+
+                        <div class="projection-item">
+                            <div class="projection-label">Projected Completion</div>
+                            <div class="projection-value positive">Aug 15, 2026</div>
+                            <div class="projection-subtext">Based on current rate</div>
+                        </div>
+
+                        <div class="projection-item">
+                            <div class="projection-label">Days Ahead/Behind</div>
+                            <div class="projection-value positive">+138 days</div>
+                            <div class="projection-subtext">Ahead of schedule</div>
+                        </div>
+
+                        <div class="projection-item">
+                            <div class="projection-label">Required Monthly</div>
+                            <div class="projection-value">$389</div>
+                            <div class="projection-subtext">To meet deadline</div>
+                        </div>
+
+                        <div class="projection-item">
+                            <div class="projection-label">Current Monthly Rate</div>
+                            <div class="projection-value positive">$1,000</div>
+                            <div class="projection-subtext">Average last 3 months</div>
+                        </div>
+
+                        <div class="projection-item">
+                            <div class="projection-label">Monthly Surplus</div>
+                            <div class="projection-value positive">+$611</div>
+                            <div class="projection-subtext">Above required rate</div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-chart">
+                        <div class="placeholder-text">📈 Goal Timeline Visualization</div>
+                        <div class="timeline-visual">
+                            <div class="timeline-bar">
+                                <div class="timeline-label">Target Date</div>
+                                <div class="timeline-track">
+                                    <div class="timeline-progress" style="width: 65%">
+                                        65% Complete
+                                    </div>
+                                    <div class="timeline-marker" style="left: 65%;"></div>
+                                </div>
+                                <div class="timeline-date">Dec 31, 2026</div>
+                            </div>
+
+                            <div class="timeline-bar">
+                                <div class="timeline-label">Projected Date</div>
+                                <div class="timeline-track">
+                                    <div class="timeline-progress" style="width: 80%; background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);">
+                                        On Track
+                                    </div>
+                                </div>
+                                <div class="timeline-date">Aug 15, 2026</div>
+                            </div>
+
+                            <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 10px;">
+                                <div style="color: #718096; font-size: 13px; margin-bottom: 10px;">PROGRESS TIMELINE</div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #4a5568; margin-bottom: 8px;">
+                                    <span>Sep 2025</span>
+                                    <span>Today</span>
+                                    <span>Aug 2026</span>
+                                    <span>Dec 2026</span>
+                                </div>
+                                <div style="background: #e2e8f0; height: 8px; border-radius: 4px; position: relative;">
+                                    <div style="width: 65%; height: 100%; background: linear-gradient(90deg, #10b981 0%, #34d399 100%); border-radius: 4px;"></div>
+                                    <div style="position: absolute; width: 12px; height: 12px; background: #3b82f6; border: 3px solid white; border-radius: 50%; top: -2px; left: 65%; transform: translateX(-50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🎯 What-If Scenarios</h2>
+                    <div class="scenarios-section">
+                        <div class="scenario-card current">
+                            <div class="scenario-header">
+                                <h4>Current Trajectory</h4>
+                                <span class="scenario-badge">Active</span>
+                            </div>
+                            <div class="scenario-details">
+                                <div class="scenario-detail">
+                                    <strong>Monthly:</strong> $1,000
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Completion:</strong> Aug 15, 2026
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Timeline:</strong> 9 months
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Status:</strong> Ahead by 138 days
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scenario-card optimistic">
+                            <div class="scenario-header">
+                                <h4>Accelerated Plan</h4>
+                                <span class="scenario-badge" style="background: #d1fae5; color: #065f46;">Faster</span>
+                            </div>
+                            <div class="scenario-details">
+                                <div class="scenario-detail">
+                                    <strong>Monthly:</strong> $1,500 (+$500)
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Completion:</strong> May 1, 2026
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Timeline:</strong> 6 months
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Status:</strong> Ahead by 244 days
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scenario-card pessimistic">
+                            <div class="scenario-header">
+                                <h4>Reduced Contributions</h4>
+                                <span class="scenario-badge" style="background: #fef3c7; color: #92400e;">Slower</span>
+                            </div>
+                            <div class="scenario-details">
+                                <div class="scenario-detail">
+                                    <strong>Monthly:</strong> $500 (-$500)
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Completion:</strong> Feb 15, 2027
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Timeline:</strong> 15 months
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Status:</strong> Behind by 46 days
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scenario-card">
+                            <div class="scenario-header">
+                                <h4>Minimum Required</h4>
+                                <span class="scenario-badge" style="background: #e2e8f0; color: #4a5568;">Baseline</span>
+                            </div>
+                            <div class="scenario-details">
+                                <div class="scenario-detail">
+                                    <strong>Monthly:</strong> $389
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Completion:</strong> Dec 31, 2026
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Timeline:</strong> 13 months
+                                </div>
+                                <div class="scenario-detail">
+                                    <strong>Status:</strong> Exactly on time
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendations-card">
+                    <h2>💡 Recommendations</h2>
+
+                    <div class="recommendation">
+                        <h4>Keep Up the Great Work!</h4>
+                        <p>Your current savings rate of $1,000/month is excellent. You're on track to reach your goal 4.6 months early. Consider maintaining this pace or exploring the accelerated plan to reach your goal even sooner.</p>
+                    </div>
+
+                    <div class="recommendation">
+                        <h4>Consider Setting a New Milestone</h4>
+                        <p>Since you're ahead of schedule, you might want to set an earlier target date of August 15, 2026, or increase your goal amount to $12,000 to build a larger emergency fund.</p>
+                    </div>
+
+                    <div class="recommendation">
+                        <h4>Opportunity for Diversification</h4>
+                        <p>With your emergency fund progressing well, consider allocating some surplus funds ($611/month) to other financial goals like retirement savings or debt reduction.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h3>Key Metrics</h3>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Current Balance</span>
+                        <span class="metric-value">$6,500</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Target Amount</span>
+                        <span class="metric-value">$10,000</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Remaining</span>
+                        <span class="metric-value">$3,500</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Time Remaining</span>
+                        <span class="metric-value">13 months</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Contributions Made</span>
+                        <span class="metric-value">8 total</span>
+                    </div>
+
+                    <div class="confidence-meter">
+                        <div class="confidence-label">
+                            <span>Confidence Level</span>
+                            <strong>95%</strong>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 95%"></div>
+                        </div>
+                        <p style="color: #718096; font-size: 12px; margin-top: 8px;">
+                            Very high confidence based on consistent contribution history
+                        </p>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>Quick Actions</h3>
+                    <button class="action-button btn-primary">Add Contribution</button>
+                    <button class="action-button btn-secondary">Adjust Strategy</button>
+                    <button class="action-button btn-secondary">View Goal Details</button>
+                    <button class="action-button btn-secondary">Export Projection</button>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>Historical Data</h3>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Avg Contribution</span>
+                        <span class="metric-value">$813</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Largest Contribution</span>
+                        <span class="metric-value">$2,500</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Days Active</span>
+                        <span class="metric-value">92 days</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Growth Rate</span>
+                        <span class="metric-value" style="color: #10b981;">+23%/mo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

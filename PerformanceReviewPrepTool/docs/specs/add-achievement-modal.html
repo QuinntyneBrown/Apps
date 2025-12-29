@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Achievement - Performance Review Prep Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-subtitle {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .form-help {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .metric-input-group input {
+            flex: 1;
+        }
+
+        .add-metric-btn {
+            background: #f3f4f6;
+            border: 1px dashed #d1d5db;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .add-metric-btn:hover {
+            background: #e5e7eb;
+            border-color: #667eea;
+        }
+
+        .tags-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            min-height: 48px;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            background: #e0e7ff;
+            color: #3730a3;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 150px;
+            padding: 0.25rem;
+        }
+
+        .impact-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .impact-option {
+            padding: 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .impact-option:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .impact-option.selected {
+            border-color: #667eea;
+            background: #f3f0ff;
+        }
+
+        .impact-option.high.selected {
+            border-color: #dc2626;
+            background: #fee2e2;
+        }
+
+        .impact-option.medium.selected {
+            border-color: #f59e0b;
+            background: #fed7aa;
+        }
+
+        .impact-option.low.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .impact-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .impact-label {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .impact-desc {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .linked-goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .goal-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .goal-checkbox-item:hover {
+            background: #f9fafb;
+        }
+
+        .goal-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .goal-checkbox-label {
+            flex: 1;
+        }
+
+        .goal-checkbox-title {
+            font-weight: 500;
+            color: #1a202c;
+        }
+
+        .goal-checkbox-progress {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .uploaded-files {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .uploaded-file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #1a202c;
+            font-size: 0.875rem;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .file-remove {
+            cursor: pointer;
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+        .btn-save-draft {
+            background: #f3f4f6;
+            color: #4a5568;
+        }
+
+        .btn-save-draft:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-tips {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-tips-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .quick-tips ul {
+            list-style: none;
+            font-size: 0.75rem;
+            color: #1e40af;
+        }
+
+        .quick-tips li {
+            padding: 0.25rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .quick-tips li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">📊 Performance Review Prep</div>
+        </div>
+    </header>
+
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🏆 Add New Achievement</h2>
+                <p class="modal-subtitle">Document your accomplishments and their impact</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="quick-tips">
+                    <div class="quick-tips-title">💡 Pro Tips for Great Achievements</div>
+                    <ul>
+                        <li>Be specific and quantify your impact with numbers (e.g., "Reduced load time by 40%")</li>
+                        <li>Include the context: What was the problem? How did you solve it? What was the result?</li>
+                        <li>Link achievements to your goals to show consistent progress</li>
+                    </ul>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <div class="section-title">📝 Basic Information</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Title <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="E.g., Led migration to microservices architecture" value="Implemented real-time notification system">
+                            <div class="form-help">Keep it concise and action-oriented</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Date <span class="required">*</span></label>
+                            <input type="date" class="form-input" value="2025-12-20">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description <span class="required">*</span></label>
+                            <textarea class="form-input form-textarea" placeholder="Describe what you accomplished, how you did it, and why it mattered...">Designed and implemented a real-time notification system using WebSockets and Redis Pub/Sub to deliver instant updates to users. The system handles 50,000+ concurrent connections and processes 2 million notifications daily. Replaced the previous polling-based system that was causing performance issues and high server costs.
+
+Worked cross-functionally with product, design, and DevOps teams to ensure scalability and reliability. Created comprehensive documentation and conducted training sessions for the engineering team.</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">📊 Impact & Metrics</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Impact Level <span class="required">*</span></label>
+                            <div class="impact-selector">
+                                <div class="impact-option high selected">
+                                    <div class="impact-icon">🔥</div>
+                                    <div class="impact-label">High Impact</div>
+                                    <div class="impact-desc">Major business value</div>
+                                </div>
+                                <div class="impact-option medium">
+                                    <div class="impact-icon">⚡</div>
+                                    <div class="impact-label">Medium Impact</div>
+                                    <div class="impact-desc">Significant contribution</div>
+                                </div>
+                                <div class="impact-option low">
+                                    <div class="impact-icon">✨</div>
+                                    <div class="impact-label">Low Impact</div>
+                                    <div class="impact-desc">Important but smaller</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Quantifiable Metrics</label>
+                            <div class="metrics-grid">
+                                <div>
+                                    <input type="text" class="form-input" placeholder="Metric name" value="Server Costs">
+                                    <input type="text" class="form-input" placeholder="Value/Change" value="↓ $8,000/month" style="margin-top: 0.5rem;">
+                                </div>
+                                <div>
+                                    <input type="text" class="form-input" placeholder="Metric name" value="User Engagement">
+                                    <input type="text" class="form-input" placeholder="Value/Change" value="↑ 35%" style="margin-top: 0.5rem;">
+                                </div>
+                                <div>
+                                    <input type="text" class="form-input" placeholder="Metric name" value="Response Time">
+                                    <input type="text" class="form-input" placeholder="Value/Change" value="< 100ms avg" style="margin-top: 0.5rem;">
+                                </div>
+                            </div>
+                            <button type="button" class="add-metric-btn" style="margin-top: 1rem; width: 100%;">+ Add Another Metric</button>
+                            <div class="form-help">Add specific numbers to quantify your impact</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">🏷️ Categorization</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-select">
+                                <option>Select a category...</option>
+                                <option>Technical Leadership</option>
+                                <option selected>Performance Optimization</option>
+                                <option>Product Development</option>
+                                <option>Innovation</option>
+                                <option>Mentoring & Leadership</option>
+                                <option>Quality & Testing</option>
+                                <option>Process Improvement</option>
+                                <option>Cross-functional Collaboration</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Skills & Technologies</label>
+                            <div class="tags-input-container">
+                                <span class="tag-item">
+                                    WebSockets
+                                    <span class="tag-remove">×</span>
+                                </span>
+                                <span class="tag-item">
+                                    Redis
+                                    <span class="tag-remove">×</span>
+                                </span>
+                                <span class="tag-item">
+                                    System Design
+                                    <span class="tag-remove">×</span>
+                                </span>
+                                <span class="tag-item">
+                                    Node.js
+                                    <span class="tag-remove">×</span>
+                                </span>
+                                <input type="text" class="tag-input" placeholder="Type and press Enter...">
+                            </div>
+                            <div class="form-help">Add relevant skills, technologies, or keywords</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Project/Initiative</label>
+                            <input type="text" class="form-input" placeholder="E.g., User Experience Enhancement Q4" value="Platform Infrastructure Upgrade">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">🎯 Link to Goals</div>
+
+                        <div class="linked-goals-list">
+                            <label class="goal-checkbox-item">
+                                <input type="checkbox" checked>
+                                <div class="goal-checkbox-label">
+                                    <div class="goal-checkbox-title">Improve system performance and scalability</div>
+                                    <div class="goal-checkbox-progress">Progress: 75% • Due: Dec 31, 2025</div>
+                                </div>
+                            </label>
+
+                            <label class="goal-checkbox-item">
+                                <input type="checkbox">
+                                <div class="goal-checkbox-label">
+                                    <div class="goal-checkbox-title">Complete AWS Solutions Architect certification</div>
+                                    <div class="goal-checkbox-progress">Progress: 85% • Due: Dec 31, 2025</div>
+                                </div>
+                            </label>
+
+                            <label class="goal-checkbox-item">
+                                <input type="checkbox">
+                                <div class="goal-checkbox-label">
+                                    <div class="goal-checkbox-title">Lead 2 major architectural initiatives</div>
+                                    <div class="goal-checkbox-progress">Progress: 100% • Due: Dec 31, 2025</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-help">Link this achievement to relevant goals to track your progress</div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">📎 Evidence & Attachments</div>
+
+                        <div class="file-upload-area">
+                            <div class="file-upload-icon">📁</div>
+                            <div style="font-weight: 600; color: #1a202c; margin-bottom: 0.25rem;">
+                                Drop files here or click to upload
+                            </div>
+                            <div style="font-size: 0.875rem; color: #718096;">
+                                Screenshots, metrics, emails, or any supporting evidence
+                            </div>
+                        </div>
+
+                        <div class="uploaded-files">
+                            <div class="uploaded-file-item">
+                                <div class="file-icon">📊</div>
+                                <div class="file-info">
+                                    <div class="file-name">notification-system-metrics.png</div>
+                                    <div class="file-size">245 KB</div>
+                                </div>
+                                <div class="file-remove">×</div>
+                            </div>
+
+                            <div class="uploaded-file-item">
+                                <div class="file-icon">📄</div>
+                                <div class="file-info">
+                                    <div class="file-name">architecture-diagram.pdf</div>
+                                    <div class="file-size">1.2 MB</div>
+                                </div>
+                                <div class="file-remove">×</div>
+                            </div>
+
+                            <div class="uploaded-file-item">
+                                <div class="file-icon">💬</div>
+                                <div class="file-info">
+                                    <div class="file-name">positive-feedback-from-pm.txt</div>
+                                    <div class="file-size">3 KB</div>
+                                </div>
+                                <div class="file-remove">×</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-cancel">Cancel</button>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-save-draft">Save as Draft</button>
+                    <button class="btn btn-primary">Add Achievement</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

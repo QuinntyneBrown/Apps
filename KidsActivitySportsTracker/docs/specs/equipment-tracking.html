@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Tracking - Kids Activity & Sports Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.15);
+            padding: 15px 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .controls {
+            padding: 25px 30px;
+            background: #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            color: #1a202c;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .alert-icon {
+            font-size: 36px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .equipment-by-child {
+            display: grid;
+            gap: 30px;
+        }
+
+        .child-section {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .child-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .child-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .child-info h3 {
+            font-size: 22px;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .child-stats {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .equipment-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .equipment-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .equipment-card.warning {
+            border-color: #feca57;
+            background: #fffbeb;
+        }
+
+        .equipment-card.overdue {
+            border-color: #f5576c;
+            background: #fff5f5;
+        }
+
+        .equipment-header {
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .equipment-icon {
+            font-size: 48px;
+        }
+
+        .equipment-info {
+            flex: 1;
+        }
+
+        .equipment-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .equipment-activity {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.issued {
+            background: #48bb78;
+            color: white;
+        }
+
+        .status-badge.due-soon {
+            background: #feca57;
+            color: #1a202c;
+        }
+
+        .status-badge.overdue {
+            background: #f5576c;
+            color: white;
+        }
+
+        .status-badge.available {
+            background: #4facfe;
+            color: white;
+        }
+
+        .equipment-details {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .detail-label {
+            color: #718096;
+        }
+
+        .detail-value {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .equipment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-danger {
+            background: #f5576c;
+            color: white;
+        }
+
+        .inventory-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+
+        .summary-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .size-tracker {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .size-header {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .size-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .size-name {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .size-value {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 968px) {
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👕 Equipment & Gear Tracking</h1>
+            <p style="opacity: 0.9;">Manage uniforms, equipment, and gear for all activities</p>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">18</div>
+                    <div class="stat-label">Currently Issued</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Due for Return</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Size Updates Needed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filters">
+                <button class="filter-chip active">All Equipment</button>
+                <button class="filter-chip">👧 Emma</button>
+                <button class="filter-chip">👦 Liam</button>
+                <button class="filter-chip">👧 Olivia</button>
+                <button class="filter-chip">⚠️ Due Soon</button>
+                <button class="filter-chip">🔴 Overdue</button>
+            </div>
+            <button class="add-btn">+ Add Equipment</button>
+        </div>
+
+        <div class="content">
+            <div class="alert-banner">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <div class="alert-title">Action Required: Items Due for Return</div>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Emma's soccer uniform is due for return by December 31st. Liam's swimming gear needs size update.
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span>📊</span>
+                    <span>Inventory Summary</span>
+                </div>
+                <div class="inventory-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">👕</div>
+                        <div class="summary-value">12</div>
+                        <div class="summary-label">Uniforms</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">👟</div>
+                        <div class="summary-value">6</div>
+                        <div class="summary-label">Footwear</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🎒</div>
+                        <div class="summary-value">4</div>
+                        <div class="summary-label">Bags & Gear</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">⚽</div>
+                        <div class="summary-value">2</div>
+                        <div class="summary-label">Sports Equipment</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="equipment-by-child">
+                    <!-- Emma's Equipment -->
+                    <div class="child-section">
+                        <div class="child-header">
+                            <div class="child-avatar">EJ</div>
+                            <div class="child-info">
+                                <h3>Emma Johnson</h3>
+                                <div class="child-stats">Age 10 • 10 items issued • 1 item due soon</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-grid">
+                            <div class="equipment-card warning">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">⚽</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Soccer Uniform #7</div>
+                                        <div class="equipment-activity">Lightning Strikers</div>
+                                        <span class="status-badge due-soon">Return Due Dec 31</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Youth Medium</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Issued:</span>
+                                        <span class="detail-value">Sep 1, 2025</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Condition:</span>
+                                        <span class="detail-value">Good</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Return By:</span>
+                                        <span class="detail-value">Dec 31, 2025</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-primary">Mark Returned</button>
+                                    <button class="btn btn-secondary">Update</button>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">👟</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Soccer Cleats</div>
+                                        <div class="equipment-activity">Personal Equipment</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Youth 5</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Brand:</span>
+                                        <span class="detail-value">Nike Mercurial</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Purchased:</span>
+                                        <span class="detail-value">Aug 2025</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Condition:</span>
+                                        <span class="detail-value">Good</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-secondary">Update Size</button>
+                                    <button class="btn btn-secondary">Edit</button>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">⚾</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Baseball Glove</div>
+                                        <div class="equipment-activity">Personal Equipment</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">10 inch</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Brand:</span>
+                                        <span class="detail-value">Rawlings</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Hand:</span>
+                                        <span class="detail-value">Left-handed</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Condition:</span>
+                                        <span class="detail-value">Excellent</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-secondary">View Details</button>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">👕</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Baseball Jersey #12</div>
+                                        <div class="equipment-activity">Red Sox Team</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Youth Medium</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Issued:</span>
+                                        <span class="detail-value">Sep 15, 2025</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Return By:</span>
+                                        <span class="detail-value">Mar 31, 2026</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-secondary">Update</button>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">🤸</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Gymnastics Leotard</div>
+                                        <div class="equipment-activity">Personal Equipment</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Child Medium</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Color:</span>
+                                        <span class="detail-value">Purple Sparkle</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="size-tracker" style="margin-top: 20px;">
+                            <div class="size-header">📏 Current Sizes for Emma</div>
+                            <div class="size-item">
+                                <span class="size-name">Uniform/Shirt Size</span>
+                                <span class="size-value">Youth Medium</span>
+                            </div>
+                            <div class="size-item">
+                                <span class="size-name">Shoe Size</span>
+                                <span class="size-value">Youth 5</span>
+                            </div>
+                            <div class="size-item">
+                                <span class="size-name">Pants/Shorts Size</span>
+                                <span class="size-value">Youth 10</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liam's Equipment -->
+                    <div class="child-section">
+                        <div class="child-header">
+                            <div class="child-avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">LJ</div>
+                            <div class="child-info">
+                                <h3>Liam Johnson</h3>
+                                <div class="child-stats">Age 8 • 8 items issued • Size update needed</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-grid">
+                            <div class="equipment-card warning">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">🏊</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Swimming Gear Set</div>
+                                        <div class="equipment-activity">Community Pool</div>
+                                        <span class="status-badge due-soon">Size Update Needed</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Current Size:</span>
+                                        <span class="detail-value">Youth Small</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Includes:</span>
+                                        <span class="detail-value">Goggles, Cap, Towel</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Last Updated:</span>
+                                        <span class="detail-value">Jun 2025</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-primary">Update Size</button>
+                                    <button class="btn btn-secondary">View Details</button>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">🏀</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Basketball Jersey #23</div>
+                                        <div class="equipment-activity">Mighty Ducks</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Youth Small</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Issued:</span>
+                                        <span class="detail-value">Nov 1, 2025</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Return By:</span>
+                                        <span class="detail-value">Feb 28, 2026</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">👟</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Basketball Shoes</div>
+                                        <div class="equipment-activity">Personal Equipment</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Youth 3</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Brand:</span>
+                                        <span class="detail-value">Nike LeBron</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="size-tracker" style="margin-top: 20px;">
+                            <div class="size-header">📏 Current Sizes for Liam</div>
+                            <div class="size-item">
+                                <span class="size-name">Uniform/Shirt Size</span>
+                                <span class="size-value">Youth Small</span>
+                            </div>
+                            <div class="size-item">
+                                <span class="size-name">Shoe Size</span>
+                                <span class="size-value">Youth 3</span>
+                            </div>
+                            <div class="size-item">
+                                <span class="size-name">Swimwear Size</span>
+                                <span class="size-value">Youth Small (Needs Update)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Olivia's Equipment -->
+                    <div class="child-section">
+                        <div class="child-header">
+                            <div class="child-avatar" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">OJ</div>
+                            <div class="child-info">
+                                <h3>Olivia Johnson</h3>
+                                <div class="child-stats">Age 6 • 6 items issued • All up to date</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-grid">
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">💃</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Ballet Outfit</div>
+                                        <div class="equipment-activity">Studio Arts Center</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Child Small</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Includes:</span>
+                                        <span class="detail-value">Tutu, Shoes, Tights</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Color:</span>
+                                        <span class="detail-value">Pink</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-icon">👟</div>
+                                    <div class="equipment-info">
+                                        <div class="equipment-name">Dance Shoes</div>
+                                        <div class="equipment-activity">Personal Equipment</div>
+                                        <span class="status-badge issued">Active</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Size:</span>
+                                        <span class="detail-value">Child 12</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Type:</span>
+                                        <span class="detail-value">Ballet Slippers</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="size-tracker" style="margin-top: 20px;">
+                            <div class="size-header">📏 Current Sizes for Olivia</div>
+                            <div class="size-item">
+                                <span class="size-name">Dancewear Size</span>
+                                <span class="size-value">Child Small</span>
+                            </div>
+                            <div class="size-item">
+                                <span class="size-name">Shoe Size</span>
+                                <span class="size-value">Child 12</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

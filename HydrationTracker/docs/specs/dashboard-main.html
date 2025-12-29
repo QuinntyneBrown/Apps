@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydration Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .water-icon {
+            font-size: 32px;
+        }
+
+        .date-info {
+            text-align: right;
+        }
+
+        .current-date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .streak-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .progress-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .daily-goal {
+            font-size: 18px;
+            margin-bottom: 24px;
+            opacity: 0.95;
+        }
+
+        .water-glass {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            background: rgba(255,255,255,0.2);
+            border: 4px solid rgba(255,255,255,0.4);
+            border-radius: 0 0 100px 100px;
+            margin: 0 auto 24px;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 72%;
+            background: linear-gradient(180deg, #56ccf2 0%, #2f80ed 100%);
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .water-percentage {
+            position: relative;
+            z-index: 10;
+            font-size: 48px;
+            font-weight: 700;
+            padding-top: 120px;
+        }
+
+        .intake-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-top: 24px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .view-all {
+            color: #667eea;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .intake-entry {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f7f9fc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .entry-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .entry-details {
+            flex: 1;
+        }
+
+        .entry-amount {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .entry-type {
+            font-size: 14px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .entry-time {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .reminder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f7f9fc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .reminder-time {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .reminder-status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .reminder-badge {
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .reminder-badge.pending {
+            background: #f59e0b;
+        }
+
+        .add-button {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .add-button:hover {
+            transform: scale(1.1);
+        }
+
+        .quick-add {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .quick-add-btn {
+            flex: 1;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-add-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .achievement {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .achievement-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .achievement-text {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>
+                    <span class="water-icon">💧</span>
+                    Hydration Tracker
+                </h1>
+                <div class="date-info">
+                    <div class="current-date">Monday, December 29, 2025</div>
+                    <div class="streak-badge">🔥 15 Day Streak!</div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="daily-goal">Daily Goal: 2,400 ml (80 oz)</div>
+                <div class="water-glass">
+                    <div class="water-fill"></div>
+                    <div class="water-percentage">72%</div>
+                </div>
+                <div class="intake-stats">
+                    <div class="stat">
+                        <div class="stat-value">1,728</div>
+                        <div class="stat-label">ml consumed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">672</div>
+                        <div class="stat-label">ml remaining</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">drinks today</div>
+                    </div>
+                </div>
+                <div class="quick-add">
+                    <button class="quick-add-btn">+ 240ml (8oz)</button>
+                    <button class="quick-add-btn">+ 480ml (16oz)</button>
+                    <button class="quick-add-btn">+ 720ml (24oz)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Today's Intake</h2>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">2:30 PM</div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">☕</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Coffee</div>
+                    </div>
+                    <div class="entry-time">12:15 PM</div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">10:45 AM</div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🍵</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Green Tea</div>
+                    </div>
+                    <div class="entry-time">9:30 AM</div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">8:00 AM</div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🥤</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Juice</div>
+                    </div>
+                    <div class="entry-time">7:15 AM</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upcoming Reminders</h2>
+                    <a href="#" class="view-all">Settings →</a>
+                </div>
+
+                <div class="reminder-item">
+                    <div>
+                        <div class="reminder-time">4:00 PM</div>
+                        <div class="reminder-status">Afternoon hydration</div>
+                    </div>
+                    <div class="reminder-badge pending">Upcoming</div>
+                </div>
+
+                <div class="reminder-item">
+                    <div>
+                        <div class="reminder-time">6:00 PM</div>
+                        <div class="reminder-status">Evening hydration</div>
+                    </div>
+                    <div class="reminder-badge pending">Upcoming</div>
+                </div>
+
+                <div class="reminder-item">
+                    <div>
+                        <div class="reminder-time">8:00 PM</div>
+                        <div class="reminder-status">Before bed</div>
+                    </div>
+                    <div class="reminder-badge pending">Upcoming</div>
+                </div>
+
+                <div class="reminder-item">
+                    <div>
+                        <div class="reminder-time">2:00 PM</div>
+                        <div class="reminder-status">Afternoon check-in</div>
+                    </div>
+                    <div class="reminder-badge">Completed</div>
+                </div>
+
+                <div class="achievement">
+                    <div class="achievement-icon">🏆</div>
+                    <div class="achievement-text">You're on a 15-day streak! Keep it up!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="add-button">+</button>
+</body>
+</html>

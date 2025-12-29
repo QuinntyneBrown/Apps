@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Distances - Golf Score Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+
+        .logo span {
+            color: #4CAF50;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .distance-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 400px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .club-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+        }
+
+        .clubs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .club-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .club-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .club-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .club-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .club-icon {
+            font-size: 32px;
+        }
+
+        .club-distance {
+            font-size: 42px;
+            font-weight: 800;
+            color: #4CAF50;
+            margin-bottom: 4px;
+        }
+
+        .club-unit {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+
+        .club-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .club-stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .gapping-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .gapping-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .gapping-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 120px 100px;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .gapping-club {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .gapping-bar-container {
+            background: #e0e0e0;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gapping-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+
+        .gapping-distance {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+        }
+
+        .gapping-gap {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .gap-good {
+            color: #4CAF50;
+        }
+
+        .gap-warning {
+            color: #FF9800;
+        }
+
+        .gap-bad {
+            color: #f44336;
+        }
+
+        .recommendations {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .recommendation-card {
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .recommendation-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .recommendation-card.warning {
+            border-left-color: #FF9800;
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-icon {
+            font-size: 24px;
+        }
+
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .recommendation-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                ⛳ Golf<span>Score</span>
+            </div>
+            <button class="btn btn-primary">+ Add Club Distance</button>
+        </header>
+
+        <div class="page-header">
+            <h1 class="page-title">Club Distances</h1>
+            <p class="page-subtitle">Track and optimize your club distances for better course management</p>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon">🏌️</div>
+                <div class="summary-value">14</div>
+                <div class="summary-label">Clubs Tracked</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📏</div>
+                <div class="summary-value">285</div>
+                <div class="summary-label">Driver Distance</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📊</div>
+                <div class="summary-value">12 yds</div>
+                <div class="summary-label">Avg Gap</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">🎯</div>
+                <div class="summary-value">142</div>
+                <div class="summary-label">Shots Tracked</div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h2 class="chart-title">Distance Overview</h2>
+            <div class="distance-chart">
+                <div class="club-bar">
+                    <div class="bar" style="height: 95%;">
+                        <div class="bar-value">285</div>
+                    </div>
+                    <div class="bar-label">DR</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 87%; background: linear-gradient(180deg, #2196F3 0%, #1976D2 100%);">
+                        <div class="bar-value">265</div>
+                    </div>
+                    <div class="bar-label">3W</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 79%; background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);">
+                        <div class="bar-value">240</div>
+                    </div>
+                    <div class="bar-label">5W</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 72%; background: linear-gradient(180deg, #9C27B0 0%, #7B1FA2 100%);">
+                        <div class="bar-value">220</div>
+                    </div>
+                    <div class="bar-label">3H</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 68%; background: linear-gradient(180deg, #00BCD4 0%, #0097A7 100%);">
+                        <div class="bar-value">205</div>
+                    </div>
+                    <div class="bar-label">4i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 63%;">
+                        <div class="bar-value">190</div>
+                    </div>
+                    <div class="bar-label">5i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 58%;">
+                        <div class="bar-value">175</div>
+                    </div>
+                    <div class="bar-label">6i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 53%;">
+                        <div class="bar-value">160</div>
+                    </div>
+                    <div class="bar-label">7i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 48%;">
+                        <div class="bar-value">145</div>
+                    </div>
+                    <div class="bar-label">8i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 43%;">
+                        <div class="bar-value">130</div>
+                    </div>
+                    <div class="bar-label">9i</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 38%;">
+                        <div class="bar-value">115</div>
+                    </div>
+                    <div class="bar-label">PW</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 33%;">
+                        <div class="bar-value">100</div>
+                    </div>
+                    <div class="bar-label">GW</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 28%;">
+                        <div class="bar-value">85</div>
+                    </div>
+                    <div class="bar-label">SW</div>
+                </div>
+                <div class="club-bar">
+                    <div class="bar" style="height: 23%;">
+                        <div class="bar-value">70</div>
+                    </div>
+                    <div class="bar-label">LW</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h2 class="chart-title">My Clubs</h2>
+            <div class="clubs-grid">
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">Driver</div>
+                        <div class="club-icon">🏌️</div>
+                    </div>
+                    <div class="club-distance">285</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">305</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">265</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">42</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">62%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">3 Wood</div>
+                        <div class="club-icon">🏌️</div>
+                    </div>
+                    <div class="club-distance">265</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">280</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">250</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">18</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">71%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">5 Wood</div>
+                        <div class="club-icon">🏌️</div>
+                    </div>
+                    <div class="club-distance">240</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">255</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">225</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">12</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">75%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">3 Hybrid</div>
+                        <div class="club-icon">🏌️</div>
+                    </div>
+                    <div class="club-distance">220</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">235</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">205</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">24</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">68%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">4 Iron</div>
+                        <div class="club-icon">⛳</div>
+                    </div>
+                    <div class="club-distance">205</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">220</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">190</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">15</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">64%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">5 Iron</div>
+                        <div class="club-icon">⛳</div>
+                    </div>
+                    <div class="club-distance">190</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">205</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">175</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">22</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">70%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">7 Iron</div>
+                        <div class="club-icon">⛳</div>
+                    </div>
+                    <div class="club-distance">160</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">175</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">145</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">36</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">78%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="club-card">
+                    <div class="club-header">
+                        <div class="club-name">Pitching Wedge</div>
+                        <div class="club-icon">⛳</div>
+                    </div>
+                    <div class="club-distance">115</div>
+                    <div class="club-unit">yards</div>
+                    <div class="club-stats">
+                        <div class="club-stat">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">130</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">100</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value">48</div>
+                        </div>
+                        <div class="club-stat">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">82%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gapping-section">
+            <h2 class="section-title">Gapping Analysis</h2>
+            <div class="gapping-grid">
+                <div class="gapping-row">
+                    <div class="gapping-club">Driver</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 95%;"></div>
+                    </div>
+                    <div class="gapping-distance">285 yds</div>
+                    <div class="gapping-gap gap-good">-20</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">3 Wood</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 88%;"></div>
+                    </div>
+                    <div class="gapping-distance">265 yds</div>
+                    <div class="gapping-gap gap-warning">-25</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">5 Wood</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 80%;"></div>
+                    </div>
+                    <div class="gapping-distance">240 yds</div>
+                    <div class="gapping-gap gap-good">-20</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">3 Hybrid</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 73%;"></div>
+                    </div>
+                    <div class="gapping-distance">220 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">4 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 68%;"></div>
+                    </div>
+                    <div class="gapping-distance">205 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">5 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 63%;"></div>
+                    </div>
+                    <div class="gapping-distance">190 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">6 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 58%;"></div>
+                    </div>
+                    <div class="gapping-distance">175 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">7 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 53%;"></div>
+                    </div>
+                    <div class="gapping-distance">160 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">8 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 48%;"></div>
+                    </div>
+                    <div class="gapping-distance">145 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">9 Iron</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 43%;"></div>
+                    </div>
+                    <div class="gapping-distance">130 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">PW</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 38%;"></div>
+                    </div>
+                    <div class="gapping-distance">115 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">GW</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 33%;"></div>
+                    </div>
+                    <div class="gapping-distance">100 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">SW</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 28%;"></div>
+                    </div>
+                    <div class="gapping-distance">85 yds</div>
+                    <div class="gapping-gap gap-good">-15</div>
+                </div>
+                <div class="gapping-row">
+                    <div class="gapping-club">LW</div>
+                    <div class="gapping-bar-container">
+                        <div class="gapping-bar" style="width: 23%;"></div>
+                    </div>
+                    <div class="gapping-distance">70 yds</div>
+                    <div class="gapping-gap">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h2 class="section-title">Recommendations</h2>
+
+            <div class="recommendation-card">
+                <div class="recommendation-header">
+                    <div class="recommendation-icon">✓</div>
+                    <div class="recommendation-title">Good Iron Gapping</div>
+                </div>
+                <div class="recommendation-text">
+                    Your irons (5i-PW) show consistent 15-yard gaps, which is ideal for club selection and distance control. This allows you to confidently choose the right club for any distance within your iron range.
+                </div>
+            </div>
+
+            <div class="recommendation-card warning">
+                <div class="recommendation-header">
+                    <div class="recommendation-icon">⚠</div>
+                    <div class="recommendation-title">Large Gap Between 3W and 5W</div>
+                </div>
+                <div class="recommendation-text">
+                    There's a 25-yard gap between your 3 wood (265 yds) and 5 wood (240 yds). Consider adding a 4 wood or hybrid around 250-255 yards to fill this distance gap and give you more options on long approach shots.
+                </div>
+            </div>
+
+            <div class="recommendation-card">
+                <div class="recommendation-header">
+                    <div class="recommendation-icon">💡</div>
+                    <div class="recommendation-title">Track More Fairway Wood Shots</div>
+                </div>
+                <div class="recommendation-text">
+                    You've only tracked 12 shots with your 5 wood. Try to gather more data (aim for 20+ shots) to get a more accurate average distance and better understand your consistency with this club.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

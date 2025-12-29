@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Watchlist - Movie & TV Show Watchlist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+        }
+
+        .search-box {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            outline: none;
+            width: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .sort-select {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            outline: none;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sort-select option {
+            background: #302b63;
+            color: #fff;
+        }
+
+        .watchlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .watchlist-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .watchlist-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(5px);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .poster-small {
+            width: 100px;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .priority-high {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .priority-medium {
+            background: rgba(234, 179, 8, 0.3);
+            border: 1px solid rgba(234, 179, 8, 0.5);
+        }
+
+        .priority-low {
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .platform-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: auto;
+        }
+
+        .platform-badge {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.3);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .added-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-watch {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+        }
+
+        .btn-watch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fff;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-remove:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .recommendation-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(147, 51, 234, 0.3);
+            border: 1px solid rgba(147, 51, 234, 0.5);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mood-tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 8px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🎬 WatchTracker</div>
+        </header>
+
+        <div class="page-header">
+            <h1 class="page-title">My Watchlist</h1>
+            <p class="page-subtitle">47 titles waiting to be watched</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Items:</span>
+                <span class="stat-value">47</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">High Priority:</span>
+                <span class="stat-value">12</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Movies:</span>
+                <span class="stat-value">28</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">TV Shows:</span>
+                <span class="stat-value">19</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Estimated Time:</span>
+                <span class="stat-value">68h</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <button class="btn active">All</button>
+                <button class="btn">Movies</button>
+                <button class="btn">TV Shows</button>
+                <button class="btn">High Priority</button>
+                <button class="btn">Available Now</button>
+            </div>
+            <input type="text" class="search-box" placeholder="Search watchlist...">
+            <select class="sort-select">
+                <option>Sort by: Date Added</option>
+                <option>Sort by: Priority</option>
+                <option>Sort by: Title A-Z</option>
+                <option>Sort by: Release Year</option>
+                <option>Sort by: Runtime</option>
+            </select>
+        </div>
+
+        <div class="watchlist-grid">
+            <div class="watchlist-card">
+                <div class="poster-small">⚛️</div>
+                <div class="card-content">
+                    <div class="card-title">Oppenheimer</div>
+                    <div class="priority-badge priority-high">HIGH PRIORITY</div>
+                    <div class="card-meta">2023 • Biography, Drama • 3h 1min</div>
+                    <div class="card-meta">Directed by Christopher Nolan</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Peacock</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 3 weeks ago • Recommended by Film Critic</div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🌌</div>
+                <div class="card-content">
+                    <div class="card-title">Dune: Part Two</div>
+                    <div class="priority-badge priority-high">HIGH PRIORITY</div>
+                    <div class="card-meta">2024 • Sci-Fi, Adventure • 2h 46min</div>
+                    <div class="card-meta">Directed by Denis Villeneuve</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Max</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 2 weeks ago • <span class="mood-tag">Epic</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🦇</div>
+                <div class="card-content">
+                    <div class="card-title">The Batman</div>
+                    <div class="priority-badge priority-high">HIGH PRIORITY</div>
+                    <div class="card-meta">2022 • Action, Crime, Drama • 2h 56min</div>
+                    <div class="card-meta">Directed by Matt Reeves</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Max</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 1 month ago • <span class="mood-tag">Dark</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+                <div class="recommendation-tag">Friend's Pick</div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🎭</div>
+                <div class="card-content">
+                    <div class="card-title">Poor Things</div>
+                    <div class="priority-badge priority-medium">MEDIUM PRIORITY</div>
+                    <div class="card-meta">2023 • Comedy, Drama, Romance • 2h 21min</div>
+                    <div class="card-meta">Directed by Yorgos Lanthimos</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Hulu</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 5 days ago • <span class="mood-tag">Quirky</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🔪</div>
+                <div class="card-content">
+                    <div class="card-title">The Silence of the Lambs</div>
+                    <div class="priority-badge priority-medium">MEDIUM PRIORITY</div>
+                    <div class="card-meta">1991 • Crime, Drama, Thriller • 1h 58min</div>
+                    <div class="card-meta">Directed by Jonathan Demme</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Prime Video</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 2 months ago • <span class="mood-tag">Suspenseful</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🏎️</div>
+                <div class="card-content">
+                    <div class="card-title">Drive My Car</div>
+                    <div class="priority-badge priority-low">LOW PRIORITY</div>
+                    <div class="card-meta">2021 • Drama • 2h 59min</div>
+                    <div class="card-meta">Directed by Ryusuke Hamaguchi</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">HBO Max</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 1 week ago • <span class="mood-tag">Thoughtful</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+                <div class="recommendation-tag">Awards Winner</div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🧛</div>
+                <div class="card-content">
+                    <div class="card-title">Interview with the Vampire</div>
+                    <div class="priority-badge priority-high">HIGH PRIORITY</div>
+                    <div class="card-meta">2022 • Drama, Fantasy, Horror • 2 Seasons</div>
+                    <div class="card-meta">Ongoing Series • 15 episodes</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">AMC+</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 1 week ago • <span class="mood-tag">Gothic</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🌊</div>
+                <div class="card-content">
+                    <div class="card-title">The Whale</div>
+                    <div class="priority-badge priority-medium">MEDIUM PRIORITY</div>
+                    <div class="card-meta">2022 • Drama • 1h 57min</div>
+                    <div class="card-meta">Directed by Darren Aronofsky</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Showtime</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 3 days ago • <span class="mood-tag">Emotional</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🚀</div>
+                <div class="card-content">
+                    <div class="card-title">Severance</div>
+                    <div class="priority-badge priority-high">HIGH PRIORITY</div>
+                    <div class="card-meta">2022 • Drama, Mystery, Sci-Fi • 2 Seasons</div>
+                    <div class="card-meta">Ongoing Series • 19 episodes</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Apple TV+</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 2 weeks ago • <span class="mood-tag">Mind-bending</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+                <div class="recommendation-tag">Trending</div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🎨</div>
+                <div class="card-content">
+                    <div class="card-title">Past Lives</div>
+                    <div class="priority-badge priority-medium">MEDIUM PRIORITY</div>
+                    <div class="card-meta">2023 • Drama, Romance • 1h 46min</div>
+                    <div class="card-meta">Directed by Celine Song</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Paramount+</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 4 days ago • <span class="mood-tag">Romantic</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🏀</div>
+                <div class="card-content">
+                    <div class="card-title">Air</div>
+                    <div class="priority-badge priority-low">LOW PRIORITY</div>
+                    <div class="card-meta">2023 • Biography, Drama, Sport • 1h 52min</div>
+                    <div class="card-meta">Directed by Ben Affleck</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Prime Video</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 3 weeks ago • <span class="mood-tag">Inspiring</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-card">
+                <div class="poster-small">🎹</div>
+                <div class="card-content">
+                    <div class="card-title">Maestro</div>
+                    <div class="priority-badge priority-medium">MEDIUM PRIORITY</div>
+                    <div class="card-meta">2023 • Biography, Drama, Music • 2h 9min</div>
+                    <div class="card-meta">Directed by Bradley Cooper</div>
+                    <div class="platform-info">
+                        <span class="platform-badge">Netflix</span>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="added-date">Added 1 week ago • <span class="mood-tag">Artistic</span></div>
+                    <div class="card-actions">
+                        <button class="btn-small btn-watch">Start Watching</button>
+                        <button class="btn-small btn-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

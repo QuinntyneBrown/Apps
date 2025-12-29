@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Deduction - Tax Deduction Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .uploaded-files {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-size {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .remove-file-btn {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .remove-file-btn:hover {
+            background: #fecaca;
+        }
+
+        .category-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .category-option {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .category-option:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .category-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .category-schedule {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .info-box {
+            padding: 1rem;
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-box-text {
+            font-size: 0.875rem;
+            color: #78350f;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .save-draft {
+            color: #64748b;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .save-draft:hover {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                📊 Tax Deduction Organizer
+            </div>
+            <div style="color: #93c5fd; font-size: 0.875rem;">
+                Tax Year 2024
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center; padding: 4rem 0; color: #64748b;">
+            Background content (deductions list would be here)
+        </div>
+    </div>
+
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Deduction</h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">📝 Basic Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Date <span class="required">*</span>
+                                </label>
+                                <input type="date" class="form-input" value="2024-12-29" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Amount <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-input" placeholder="0.00" step="0.01" required>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    Description <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-input" placeholder="e.g., Office supplies from Staples" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Vendor/Payee
+                                </label>
+                                <input type="text" class="form-input" placeholder="Enter vendor name">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Payment Method
+                                </label>
+                                <select class="form-select">
+                                    <option>Select payment method</option>
+                                    <option>Credit Card</option>
+                                    <option>Debit Card</option>
+                                    <option>Cash</option>
+                                    <option>Check</option>
+                                    <option>Bank Transfer</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    Additional Notes
+                                </label>
+                                <textarea class="form-textarea" placeholder="Add any additional details or context..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="form-section">
+                        <h3 class="section-title">🏷️ Category Selection <span class="required">*</span></h3>
+                        <div class="category-selector">
+                            <div class="category-option selected">
+                                <div class="category-icon">💼</div>
+                                <div class="category-name">Business Expenses</div>
+                                <div class="category-schedule">Schedule C</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">🏥</div>
+                                <div class="category-name">Medical & Dental</div>
+                                <div class="category-schedule">Schedule A</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">❤️</div>
+                                <div class="category-name">Charitable</div>
+                                <div class="category-schedule">Schedule A</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">🚗</div>
+                                <div class="category-name">Business Mileage</div>
+                                <div class="category-schedule">Schedule C</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">🏠</div>
+                                <div class="category-name">Home Office</div>
+                                <div class="category-schedule">Schedule C</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">📚</div>
+                                <div class="category-name">Prof. Development</div>
+                                <div class="category-schedule">Schedule C</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">✈️</div>
+                                <div class="category-name">Business Travel</div>
+                                <div class="category-schedule">Schedule C</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">💰</div>
+                                <div class="category-name">State/Local Tax</div>
+                                <div class="category-schedule">Schedule A</div>
+                            </div>
+
+                            <div class="category-option">
+                                <div class="category-icon">🏦</div>
+                                <div class="category-name">Mortgage Interest</div>
+                                <div class="category-schedule">Schedule A</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label">
+                                Subcategory (Optional)
+                            </label>
+                            <select class="form-select">
+                                <option>Select subcategory</option>
+                                <option>Office Supplies</option>
+                                <option>Software & Subscriptions</option>
+                                <option>Equipment</option>
+                                <option>Marketing & Advertising</option>
+                                <option>Legal & Professional Fees</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Upload -->
+                    <div class="form-section">
+                        <h3 class="section-title">📎 Receipt & Documentation</h3>
+                        <div class="upload-zone">
+                            <div class="upload-icon">📤</div>
+                            <div class="upload-text">Drop files here or click to upload</div>
+                            <div class="upload-hint">Supports: PDF, JPG, PNG (max 10MB per file)</div>
+                        </div>
+
+                        <div class="uploaded-files">
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-details">
+                                        <div class="file-name">receipt_staples_12292024.pdf</div>
+                                        <div class="file-size">2.4 MB • Uploaded just now</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="remove-file-btn">🗑️ Remove</button>
+                            </div>
+
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">🖼️</div>
+                                    <div class="file-details">
+                                        <div class="file-name">receipt_photo.jpg</div>
+                                        <div class="file-size">1.8 MB • Uploaded just now</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="remove-file-btn">🗑️ Remove</button>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-title">💡 Receipt Tips</div>
+                            <div class="info-box-text">
+                                For IRS compliance, ensure receipts show: date, vendor name, amount, and items purchased.
+                                Keep receipts for 7 years for audit protection.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Options -->
+                    <div class="form-section">
+                        <h3 class="section-title">⚙️ Additional Options</h3>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="flag-review" class="checkbox">
+                            <label for="flag-review" class="checkbox-label">
+                                🚩 Flag for review - This deduction may require additional documentation or professional review
+                            </label>
+                        </div>
+
+                        <div class="checkbox-group" style="margin-top: 0.75rem;">
+                            <input type="checkbox" id="auto-recurring" class="checkbox">
+                            <label for="auto-recurring" class="checkbox-label">
+                                🔄 Set as recurring - Automatically create this deduction monthly
+                            </label>
+                        </div>
+
+                        <div class="form-grid" style="margin-top: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Business Use Percentage
+                                </label>
+                                <input type="number" class="form-input" placeholder="100" min="0" max="100" value="100">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Invoice/Reference Number
+                                </label>
+                                <input type="text" class="form-input" placeholder="Enter reference number">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <span class="save-draft">💾 Save as Draft</span>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">✓ Add Deduction</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

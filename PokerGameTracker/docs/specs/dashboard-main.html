@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokerGameTracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #10b981;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .card-action {
+            color: #10b981;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            height: 300px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            position: relative;
+        }
+
+        .chart-bar:nth-child(2) { height: 60%; opacity: 0.7; }
+        .chart-bar:nth-child(3) { height: 75%; opacity: 0.8; }
+        .chart-bar:nth-child(4) { height: 90%; opacity: 0.9; }
+        .chart-bar:nth-child(5) { height: 100%; }
+        .chart-bar:nth-child(6) { height: 85%; opacity: 0.85; }
+        .chart-bar:nth-child(7) { height: 95%; opacity: 0.95; }
+
+        .session-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .session-item {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .session-item:hover {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-type {
+            color: #f1f5f9;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .session-meta {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .session-profit {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .session-profit.positive {
+            color: #10b981;
+        }
+
+        .session-profit.negative {
+            color: #ef4444;
+        }
+
+        .session-duration {
+            color: #64748b;
+            font-size: 12px;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .milestone {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .milestone-title {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .milestone-progress {
+            height: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .milestone-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            border-radius: 4px;
+            width: 73%;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                PokerGameTracker
+            </div>
+            <nav class="nav">
+                <a href="#" class="active">Dashboard</a>
+                <a href="#">Sessions</a>
+                <a href="#">Analytics</a>
+                <a href="#">Bankroll</a>
+                <a href="#">Goals</a>
+            </nav>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Bankroll</span>
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">💰</div>
+                </div>
+                <div class="stat-value">$12,450</div>
+                <div class="stat-change positive">
+                    ↑ $2,340 (23.1%) this month
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">All-Time Profit</span>
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">📈</div>
+                </div>
+                <div class="stat-value">$8,725</div>
+                <div class="stat-change positive">
+                    ↑ $1,280 this month
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Win Rate</span>
+                    <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">🎯</div>
+                </div>
+                <div class="stat-value">12.4 bb/100</div>
+                <div class="stat-change positive">
+                    ↑ 2.1 bb/100 vs last month
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Hourly Rate</span>
+                    <div class="stat-icon" style="background: rgba(234, 179, 8, 0.1); color: #eab308;">⏱️</div>
+                </div>
+                <div class="stat-value">$42.50/hr</div>
+                <div class="stat-change positive">
+                    ↑ $8.25/hr improvement
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Profit Trend (Last 7 Days)</h2>
+                    <a href="#" class="card-action">View Details →</a>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-line">
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn">
+                        ➕ New Session
+                    </button>
+                    <button class="action-btn secondary">
+                        📝 Log Hand
+                    </button>
+                    <button class="action-btn secondary">
+                        💵 Update Bankroll
+                    </button>
+                    <button class="action-btn secondary">
+                        📊 View Stats
+                    </button>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-title">Next Milestone: $15,000 Bankroll</div>
+                    <div style="color: #94a3b8; font-size: 13px;">$2,550 to go</div>
+                    <div class="milestone-progress">
+                        <div class="milestone-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recent Sessions</h2>
+                <a href="#" class="card-action">View All →</a>
+            </div>
+            <div class="session-list">
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-type">NL $1/$2 Cash Game</div>
+                        <div class="session-meta">The Bellagio • Table 15 • 2 hours ago</div>
+                    </div>
+                    <div>
+                        <div class="session-profit positive">+$425</div>
+                        <div class="session-duration">3h 45m • 142 hands</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-type">NL $2/$5 Cash Game</div>
+                        <div class="session-meta">Aria Poker Room • Table 8 • Yesterday</div>
+                    </div>
+                    <div>
+                        <div class="session-profit positive">+$780</div>
+                        <div class="session-duration">5h 20m • 198 hands</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-type">Tournament - $150 Buy-in</div>
+                        <div class="session-meta">Wynn Poker Room • 2 days ago</div>
+                    </div>
+                    <div>
+                        <div class="session-profit negative">-$150</div>
+                        <div class="session-duration">2h 15m • Busted 45th/120</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-type">NL $1/$2 Cash Game</div>
+                        <div class="session-meta">The Venetian • Table 22 • 3 days ago</div>
+                    </div>
+                    <div>
+                        <div class="session-profit positive">+$315</div>
+                        <div class="session-duration">4h 10m • 165 hands</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-type">NL $2/$5 Cash Game</div>
+                        <div class="session-meta">Caesars Palace • Table 4 • 4 days ago</div>
+                    </div>
+                    <div>
+                        <div class="session-profit negative">-$220</div>
+                        <div class="session-duration">2h 30m • 95 hands</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

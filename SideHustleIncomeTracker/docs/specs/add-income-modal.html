@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Income - Side Hustle Income Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            color: #2d3748;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem 2rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+
+        .modal-subtitle {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-icon {
+            font-size: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .form-label.required::after {
+            content: ' *';
+            color: #e53e3e;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #5a67d8;
+            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-input.large {
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+        .input-prefix {
+            position: relative;
+        }
+
+        .input-prefix .form-input {
+            padding-left: 2rem;
+        }
+
+        .input-prefix::before {
+            content: '$';
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .radio-option:hover {
+            border-color: #cbd5e0;
+        }
+
+        .radio-option.selected {
+            border-color: #5a67d8;
+            background: #eef2ff;
+        }
+
+        .radio-option-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .radio-option-label {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 45px;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: #5a67d8;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .tag-input input {
+            flex: 1;
+            border: none;
+            outline: none;
+            min-width: 100px;
+            font-size: 0.875rem;
+        }
+
+        .file-upload {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: #5a67d8;
+            background: #f7fafc;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-text {
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+
+        .file-upload-hint {
+            color: #a0aec0;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .info-box-text {
+            color: #2c5282;
+            font-size: 0.75rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #718096;
+        }
+
+        .btn-ghost:hover {
+            background: #f7fafc;
+        }
+
+        .quick-amounts {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .quick-amount-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .quick-amount-btn:hover {
+            background: #f7fafc;
+            border-color: #5a67d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">💰 Add Income Entry</h2>
+            <p class="modal-subtitle">Record a new payment or revenue from your side hustles</p>
+        </div>
+
+        <div class="modal-body">
+            <!-- Amount Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">💵</span>
+                    Income Amount
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label required">Amount</label>
+                        <div class="input-prefix">
+                            <input type="text" class="form-input large" placeholder="0.00" value="2,500.00">
+                        </div>
+                        <div class="quick-amounts">
+                            <button class="quick-amount-btn">$100</button>
+                            <button class="quick-amount-btn">$500</button>
+                            <button class="quick-amount-btn">$1,000</button>
+                            <button class="quick-amount-btn">$2,500</button>
+                            <button class="quick-amount-btn">$5,000</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Income Details -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">📋</span>
+                    Income Details
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label required">Income Stream</label>
+                        <select class="form-select">
+                            <option value="">Select income stream...</option>
+                            <option value="web-dev" selected>Web Development Freelance</option>
+                            <option value="etsy">Etsy Shop - Digital Prints</option>
+                            <option value="photography">Photography Services</option>
+                            <option value="youtube">YouTube Ad Revenue</option>
+                            <option value="courses">Online Course Sales</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Date Received</label>
+                        <input type="date" class="form-input" value="2025-12-28">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Client</label>
+                        <select class="form-select">
+                            <option value="">Select client...</option>
+                            <option value="acme" selected>Acme Corp</option>
+                            <option value="techstart">TechStart Inc</option>
+                            <option value="startupxyz">StartupXYZ</option>
+                            <option value="new">+ Add New Client</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select">
+                            <option value="">Select method...</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="paypal" selected>PayPal</option>
+                            <option value="stripe">Stripe</option>
+                            <option value="venmo">Venmo</option>
+                            <option value="cash">Cash</option>
+                            <option value="check">Check</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" placeholder="e.g., Website Redesign Project" value="Website Redesign - Phase 1">
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" placeholder="Additional details about this payment...">Full payment for redesigning company website. Includes homepage, about page, and contact form. Client was very satisfied with the work.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Income Type -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">🏷️</span>
+                    Income Type
+                </div>
+                <div class="radio-group">
+                    <div class="radio-option selected">
+                        <div class="radio-option-icon">💼</div>
+                        <div class="radio-option-label">One-time Payment</div>
+                    </div>
+                    <div class="radio-option">
+                        <div class="radio-option-icon">🔄</div>
+                        <div class="radio-option-label">Recurring Income</div>
+                    </div>
+                    <div class="radio-option">
+                        <div class="radio-option-icon">📝</div>
+                        <div class="radio-option-label">Invoice Payment</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Associated Invoice -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">🧾</span>
+                    Invoice (Optional)
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" class="form-input" placeholder="e.g., INV-2025-001" value="INV-2025-124">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" class="form-input" value="2025-12-15">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Information -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">💼</span>
+                    Tax Information
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="taxable" class="checkbox" checked>
+                    <label for="taxable" class="checkbox-label">
+                        This income is subject to self-employment tax (include in quarterly estimates)
+                    </label>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-title">💡 Tax Estimate Impact</div>
+                    <div class="info-box-text">
+                        This $2,500 payment will add approximately $383 to your Q4 2025 tax estimate (15.3% SE tax + estimated income tax).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">🏷️</span>
+                    Tags
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Add tags for organization</label>
+                    <div class="tag-input">
+                        <span class="tag">web-design <span class="tag-remove">×</span></span>
+                        <span class="tag">milestone <span class="tag-remove">×</span></span>
+                        <span class="tag">phase-1 <span class="tag-remove">×</span></span>
+                        <input type="text" placeholder="Add tag...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Upload -->
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="section-icon">📎</span>
+                    Attachments
+                </div>
+                <div class="file-upload">
+                    <div class="file-upload-icon">📄</div>
+                    <div class="file-upload-text">
+                        <strong>Click to upload</strong> or drag and drop
+                    </div>
+                    <div class="file-upload-hint">
+                        Invoice, receipt, or contract (PDF, PNG, JPG up to 10MB)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Celebration -->
+            <div class="form-section">
+                <div class="checkbox-group" style="background: #fef5e7; border: 2px solid #f39c12;">
+                    <input type="checkbox" id="milestone" class="checkbox">
+                    <label for="milestone" class="checkbox-label">
+                        🎉 Mark as milestone payment (celebrate this achievement!)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost">Cancel</button>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn btn-secondary">Save as Draft</button>
+                <button class="btn btn-primary">💰 Add Income</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

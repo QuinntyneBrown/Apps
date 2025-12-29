@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracking - Conference & Event Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            background: #edf2f7;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .expense-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .expense-table thead {
+            background: #f7fafc;
+        }
+
+        .expense-table th {
+            padding: 15px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .expense-table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .expense-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .category-badge {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .category-registration {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .category-travel {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .category-accommodation {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .category-meals {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .category-other {
+            background: #e9d8fd;
+            color: #553c9a;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-paid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-pending {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .status-reimbursed {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .expense-amount {
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .chart-container {
+            height: 250px;
+            background: #f7fafc;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 10px 5px;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: translateY(-5px);
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -30px;
+            font-size: 11px;
+            color: #718096;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+        }
+
+        .roi-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            padding: 30px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .roi-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .roi-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .roi-desc {
+            font-size: 13px;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .breakdown-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .breakdown-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .breakdown-name {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 14px;
+        }
+
+        .breakdown-percentage {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .breakdown-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn-small {
+            padding: 6px 12px;
+            border: none;
+            background: #edf2f7;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn-small:hover {
+            background: #e2e8f0;
+        }
+
+        .reimbursement-section {
+            padding: 20px;
+            background: #fffaf0;
+            border-left: 4px solid #ed8936;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .reimbursement-title {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .reimbursement-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #c05621;
+            margin-bottom: 5px;
+        }
+
+        .reimbursement-desc {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .budget-progress {
+            margin-bottom: 20px;
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .budget-label {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .budget-values {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .budget-bar {
+            background: #e2e8f0;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .budget-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .budget-fill.over-budget {
+            background: linear-gradient(90deg, #fc8181 0%, #f56565 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Conference Expenses & ROI Tracking</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📤 Export Report</button>
+                    <button class="btn btn-secondary">📎 Upload Receipt</button>
+                    <button class="btn btn-primary">+ Add Expense</button>
+                </div>
+            </div>
+            <div class="filters-bar">
+                <div class="filter-chip active">All Expenses</div>
+                <div class="filter-chip">Pending Reimbursement</div>
+                <div class="filter-chip">This Year</div>
+                <select style="padding: 8px 16px; border: 2px solid #e2e8f0; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    <option>All Conferences</option>
+                    <option>TechSummit 2026</option>
+                    <option>AI Summit 2026</option>
+                    <option>DevOps Days 2025</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value">$18,245</div>
+                <div class="stat-label">Total Spent (2026)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value">$3,450</div>
+                <div class="stat-label">Pending Reimbursement</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value">$14,795</div>
+                <div class="stat-label">Reimbursed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-value">$25,000</div>
+                <div class="stat-label">Annual Budget</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value">73%</div>
+                <div class="stat-label">Budget Used</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div>
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Expense Breakdown by Category</h2>
+                        <select style="padding: 8px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 600;">
+                            <option>2026</option>
+                            <option>2025</option>
+                            <option>All Time</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-bar" style="height: 85%;">
+                            <div>$6,500</div>
+                            <div class="chart-label">Registration</div>
+                        </div>
+                        <div class="chart-bar" style="height: 65%;">
+                            <div>$4,800</div>
+                            <div class="chart-label">Travel</div>
+                        </div>
+                        <div class="chart-bar" style="height: 70%;">
+                            <div>$5,200</div>
+                            <div class="chart-label">Accommodation</div>
+                        </div>
+                        <div class="chart-bar" style="height: 30%;">
+                            <div>$1,245</div>
+                            <div class="chart-label">Meals</div>
+                        </div>
+                        <div class="chart-bar" style="height: 20%;">
+                            <div>$500</div>
+                            <div class="chart-label">Other</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Recent Expenses</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary">Filter</button>
+                            <button class="btn btn-secondary">Sort</button>
+                        </div>
+                    </div>
+
+                    <table class="expense-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Conference</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Jan 10, 2026</td>
+                                <td>TechSummit Registration</td>
+                                <td>TechSummit 2026</td>
+                                <td><span class="category-badge category-registration">Registration</span></td>
+                                <td><span class="status-badge status-paid">Paid</span></td>
+                                <td class="expense-amount">$1,299.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Jan 15, 2026</td>
+                                <td>Flight to San Francisco</td>
+                                <td>TechSummit 2026</td>
+                                <td><span class="category-badge category-travel">Travel</span></td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td class="expense-amount">$425.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Jan 15, 2026</td>
+                                <td>Hotel Moscone (3 nights)</td>
+                                <td>TechSummit 2026</td>
+                                <td><span class="category-badge category-accommodation">Accommodation</span></td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td class="expense-amount">$720.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dec 15, 2025</td>
+                                <td>AI Summit Early Bird</td>
+                                <td>AI Summit 2026</td>
+                                <td><span class="category-badge category-registration">Registration</span></td>
+                                <td><span class="status-badge status-reimbursed">Reimbursed</span></td>
+                                <td class="expense-amount">$1,099.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dec 20, 2025</td>
+                                <td>Flight to Boston</td>
+                                <td>AI Summit 2026</td>
+                                <td><span class="category-badge category-travel">Travel</span></td>
+                                <td><span class="status-badge status-reimbursed">Reimbursed</span></td>
+                                <td class="expense-amount">$385.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Nov 10, 2025</td>
+                                <td>Data Science Conf Registration</td>
+                                <td>Data Science Conf 2025</td>
+                                <td><span class="category-badge category-registration">Registration</span></td>
+                                <td><span class="status-badge status-reimbursed">Reimbursed</span></td>
+                                <td class="expense-amount">$1,450.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Nov 11, 2025</td>
+                                <td>Flight to New York</td>
+                                <td>Data Science Conf 2025</td>
+                                <td><span class="category-badge category-travel">Travel</span></td>
+                                <td><span class="status-badge status-reimbursed">Reimbursed</span></td>
+                                <td class="expense-amount">$320.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Nov 11, 2025</td>
+                                <td>Hotel (4 nights)</td>
+                                <td>Data Science Conf 2025</td>
+                                <td><span class="category-badge category-accommodation">Accommodation</span></td>
+                                <td><span class="status-badge status-reimbursed">Reimbursed</span></td>
+                                <td class="expense-amount">$880.00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-small">📄 Receipt</button>
+                                        <button class="action-btn-small">✏️ Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <div class="section">
+                    <div class="roi-card">
+                        <div class="roi-value">285%</div>
+                        <div class="roi-label">Average ROI</div>
+                        <div class="roi-desc">Based on career advancement, salary increases, new opportunities, and knowledge gained from conferences</div>
+                    </div>
+
+                    <div class="reimbursement-section">
+                        <div class="reimbursement-title">Pending Reimbursement</div>
+                        <div class="reimbursement-amount">$3,450</div>
+                        <div class="reimbursement-desc">5 expenses awaiting approval</div>
+                        <button class="btn btn-primary" style="margin-top: 15px; width: 100%;">Submit for Reimbursement</button>
+                    </div>
+
+                    <h3 style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 15px;">Category Breakdown</h3>
+
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <div class="breakdown-icon" style="background: #bee3f8;">🎟️</div>
+                            <div>
+                                <div class="breakdown-name">Registration</div>
+                                <div class="breakdown-percentage">36% of total</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-amount">$6,500</div>
+                    </div>
+
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <div class="breakdown-icon" style="background: #feebc8;">🏨</div>
+                            <div>
+                                <div class="breakdown-name">Accommodation</div>
+                                <div class="breakdown-percentage">29% of total</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-amount">$5,200</div>
+                    </div>
+
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <div class="breakdown-icon" style="background: #c6f6d5;">✈️</div>
+                            <div>
+                                <div class="breakdown-name">Travel</div>
+                                <div class="breakdown-percentage">26% of total</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-amount">$4,800</div>
+                    </div>
+
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <div class="breakdown-icon" style="background: #fed7d7;">🍽️</div>
+                            <div>
+                                <div class="breakdown-name">Meals</div>
+                                <div class="breakdown-percentage">7% of total</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-amount">$1,245</div>
+                    </div>
+
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <div class="breakdown-icon" style="background: #e9d8fd;">📦</div>
+                            <div>
+                                <div class="breakdown-name">Other</div>
+                                <div class="breakdown-percentage">2% of total</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-amount">$500</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3 style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 15px;">2026 Budget Progress</h3>
+
+                    <div class="budget-progress">
+                        <div class="budget-header">
+                            <div class="budget-label">Annual Budget</div>
+                            <div class="budget-values">$18,245 / $25,000</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-fill" style="width: 73%;"></div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 13px; color: #718096;">$6,755 remaining</div>
+                    </div>
+
+                    <div class="budget-progress">
+                        <div class="budget-header">
+                            <div class="budget-label">Q1 Budget</div>
+                            <div class="budget-values">$4,944 / $6,250</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-fill" style="width: 79%;"></div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 13px; color: #718096;">$1,306 remaining</div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #f0fff4; border-left: 4px solid #48bb78; border-radius: 8px;">
+                        <div style="font-weight: 700; color: #22543d; margin-bottom: 5px;">On Track</div>
+                        <div style="font-size: 13px; color: #4a5568;">You're within budget and on pace for annual spending goals. Great job tracking expenses!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

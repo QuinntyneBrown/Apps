@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Trends - Personal Health Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            color: #1a202c;
+        }
+
+        .time-range {
+            display: flex;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .time-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            background: transparent;
+            border: none;
+        }
+
+        .time-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .chart-large {
+            grid-column: span 8;
+        }
+
+        .insights {
+            grid-column: span 4;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 24px;
+            height: 400px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+
+        .chart-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .trend-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .trend-stat {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .trend-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .trend-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .trend-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .trend-change {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .trend-change.positive {
+            color: #15803d;
+        }
+
+        .trend-change.negative {
+            color: #b91c1c;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .insight-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .insight-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .insight-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-top: 4px;
+        }
+
+        .insight-text {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .insight-action {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .type-positive {
+            color: #15803d;
+        }
+
+        .type-warning {
+            color: #b45309;
+        }
+
+        .type-info {
+            color: #0369a1;
+        }
+
+        .correlation-grid {
+            grid-column: span 12;
+        }
+
+        .correlation-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .correlation-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .correlation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .correlation-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .correlation-strength {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .strength-strong {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .strength-moderate {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .correlation-metrics {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .metric-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .correlation-chart {
+            height: 120px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        .comparison-grid {
+            grid-column: span 12;
+        }
+
+        .comparison-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .comparison-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .comparison-header {
+            margin-bottom: 20px;
+        }
+
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .comparison-period {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .comparison-values {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-value {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .comparison-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .comparison-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .comparison-delta {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .delta-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .delta-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .milestones {
+            grid-column: span 12;
+        }
+
+        .milestone-timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .milestone {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .milestone::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 24px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+        }
+
+        .milestone-date {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .milestone-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .milestone-description {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .milestone-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="back-btn">←</div>
+                <h1>Health Trends & Analytics</h1>
+            </div>
+            <div class="time-range">
+                <button class="time-btn">7D</button>
+                <button class="time-btn">1M</button>
+                <button class="time-btn active">3M</button>
+                <button class="time-btn">6M</button>
+                <button class="time-btn">1Y</button>
+                <button class="time-btn">All</button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card chart-large">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Blood Pressure Trends</div>
+                        <div class="card-subtitle">Last 3 months • 84 readings</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <svg viewBox="0 0 900 400">
+                        <!-- Grid lines -->
+                        <line x1="60" y1="30" x2="60" y2="340" stroke="#e2e8f0" stroke-width="2"/>
+                        <line x1="60" y1="340" x2="860" y2="340" stroke="#e2e8f0" stroke-width="2"/>
+
+                        <!-- Horizontal grid -->
+                        <line x1="60" y1="80" x2="860" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="60" y1="130" x2="860" y2="130" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="60" y1="180" x2="860" y2="180" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="60" y1="230" x2="860" y2="230" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="60" y1="280" x2="860" y2="280" stroke="#f1f5f9" stroke-width="1"/>
+
+                        <!-- Y-axis labels -->
+                        <text x="30" y="35" font-size="12" fill="#94a3b8">150</text>
+                        <text x="30" y="85" font-size="12" fill="#94a3b8">140</text>
+                        <text x="30" y="135" font-size="12" fill="#94a3b8">130</text>
+                        <text x="30" y="185" font-size="12" fill="#94a3b8">120</text>
+                        <text x="30" y="235" font-size="12" fill="#94a3b8">110</text>
+                        <text x="30" y="285" font-size="12" fill="#94a3b8">100</text>
+                        <text x="35" y="335" font-size="12" fill="#94a3b8">90</text>
+
+                        <!-- X-axis labels -->
+                        <text x="120" y="360" font-size="11" fill="#94a3b8">Oct</text>
+                        <text x="320" y="360" font-size="11" fill="#94a3b8">Nov</text>
+                        <text x="620" y="360" font-size="11" fill="#94a3b8">Dec</text>
+                        <text x="820" y="360" font-size="11" fill="#94a3b8">Jan</text>
+
+                        <!-- Normal range area -->
+                        <path d="M 60 180 L 860 180 L 860 230 L 60 230 Z" fill="#dcfce7" opacity="0.3"/>
+
+                        <!-- Systolic trend line -->
+                        <path d="M 100 160 Q 200 140, 300 150 T 500 145 T 700 135 T 850 130"
+                              stroke="#667eea" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+                        <!-- Diastolic trend line -->
+                        <path d="M 100 260 Q 200 250, 300 255 T 500 250 T 700 245 T 850 240"
+                              stroke="#764ba2" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+                        <!-- Moving average -->
+                        <path d="M 100 155 L 850 128" stroke="#22c55e" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="trend-stats">
+                    <div class="trend-stat">
+                        <div class="trend-icon">📉</div>
+                        <div class="trend-value">-8%</div>
+                        <div class="trend-label">3-Month Change</div>
+                        <div class="trend-change positive">↓ Improving</div>
+                    </div>
+                    <div class="trend-stat">
+                        <div class="trend-icon">📊</div>
+                        <div class="trend-value">121/76</div>
+                        <div class="trend-label">Average</div>
+                        <div class="trend-change">Last 30 days</div>
+                    </div>
+                    <div class="trend-stat">
+                        <div class="trend-icon">🎯</div>
+                        <div class="trend-value">92%</div>
+                        <div class="trend-label">In Range</div>
+                        <div class="trend-change positive">↑ +5%</div>
+                    </div>
+                    <div class="trend-stat">
+                        <div class="trend-icon">📈</div>
+                        <div class="trend-value">Low</div>
+                        <div class="trend-label">Variability</div>
+                        <div class="trend-change positive">Very Stable</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card insights">
+                <div class="card-header">
+                    <div class="card-title">AI Insights</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">✨</div>
+                        <div>
+                            <div class="insight-type type-positive">Great Progress</div>
+                            <div class="insight-title">Blood Pressure Improving</div>
+                        </div>
+                    </div>
+                    <div class="insight-text">
+                        Your blood pressure has decreased by 8% over the last 3 months. Keep up your current exercise routine!
+                    </div>
+                    <div class="insight-action">View Details →</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">💤</div>
+                        <div>
+                            <div class="insight-type type-info">Pattern Detected</div>
+                            <div class="insight-title">Sleep & Heart Rate</div>
+                        </div>
+                    </div>
+                    <div class="insight-text">
+                        Better sleep quality correlates with lower resting heart rate. You sleep 7+ hours 83% of the time.
+                    </div>
+                    <div class="insight-action">Learn More →</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">⚠️</div>
+                        <div>
+                            <div class="insight-type type-warning">Recommendation</div>
+                            <div class="insight-title">Weekend Readings</div>
+                        </div>
+                    </div>
+                    <div class="insight-text">
+                        Your readings are slightly higher on weekends. Consider taking measurements at consistent times.
+                    </div>
+                    <div class="insight-action">Set Reminders →</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon" style="background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);">🎯</div>
+                        <div>
+                            <div class="insight-type type-positive">Milestone</div>
+                            <div class="insight-title">Goal Achievement</div>
+                        </div>
+                    </div>
+                    <div class="insight-text">
+                        You've maintained readings in the healthy range for 14 consecutive days. Excellent work!
+                    </div>
+                    <div class="insight-action">Share Achievement →</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon" style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);">📊</div>
+                        <div>
+                            <div class="insight-type type-info">Comparison</div>
+                            <div class="insight-title">vs. Age Group</div>
+                        </div>
+                    </div>
+                    <div class="insight-text">
+                        Your vitals are 12% better than the average for your age group (35-40 years).
+                    </div>
+                    <div class="insight-action">View Benchmark →</div>
+                </div>
+            </div>
+
+            <div class="card correlation-grid">
+                <div class="card-header">
+                    <div class="card-title">Health Correlations</div>
+                    <div class="card-subtitle">Relationships between your health metrics</div>
+                </div>
+                <div class="correlation-cards">
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title">Exercise & Heart Health</div>
+                            <span class="correlation-strength strength-strong">Strong</span>
+                        </div>
+                        <div class="correlation-metrics">
+                            <div class="metric">
+                                <div class="metric-icon">🏃</div>
+                                <div class="metric-label">Activity</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-icon">❤️</div>
+                                <div class="metric-label">Heart Rate</div>
+                            </div>
+                        </div>
+                        <div class="correlation-chart">📈</div>
+                        <div class="insight-text" style="margin-top: 12px;">
+                            Days with 30+ minutes of exercise show 15% lower resting heart rate
+                        </div>
+                    </div>
+
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title">Sleep & Blood Pressure</div>
+                            <span class="correlation-strength strength-strong">Strong</span>
+                        </div>
+                        <div class="correlation-metrics">
+                            <div class="metric">
+                                <div class="metric-icon">💤</div>
+                                <div class="metric-label">Sleep</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-icon">🩺</div>
+                                <div class="metric-label">BP</div>
+                            </div>
+                        </div>
+                        <div class="correlation-chart">📉</div>
+                        <div class="insight-text" style="margin-top: 12px;">
+                            7+ hours of sleep correlates with 8% lower systolic pressure
+                        </div>
+                    </div>
+
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title">Stress & Weight</div>
+                            <span class="correlation-strength strength-moderate">Moderate</span>
+                        </div>
+                        <div class="correlation-metrics">
+                            <div class="metric">
+                                <div class="metric-icon">😰</div>
+                                <div class="metric-label">Stress</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-icon">⚖️</div>
+                                <div class="metric-label">Weight</div>
+                            </div>
+                        </div>
+                        <div class="correlation-chart">📊</div>
+                        <div class="insight-text" style="margin-top: 12px;">
+                            Higher stress days show slight increase in weight fluctuation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card comparison-grid">
+                <div class="card-header">
+                    <div class="card-title">Period Comparisons</div>
+                    <div class="card-subtitle">How your health metrics have changed</div>
+                </div>
+                <div class="comparison-cards">
+                    <div class="comparison-card">
+                        <div class="comparison-header">
+                            <div class="comparison-title">Blood Pressure</div>
+                            <div class="comparison-period">This Month vs Last Month</div>
+                        </div>
+                        <div class="comparison-values">
+                            <div class="comparison-value">
+                                <div class="comparison-label">Last Month</div>
+                                <div class="comparison-number">124/80</div>
+                            </div>
+                            <div class="comparison-value">
+                                <div class="comparison-label">This Month</div>
+                                <div class="comparison-number">118/75</div>
+                            </div>
+                        </div>
+                        <div class="comparison-delta">
+                            <div class="delta-value" style="color: #15803d;">↓ 6/5 mmHg</div>
+                            <div class="delta-label">Improved by 4.8%</div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-card">
+                        <div class="comparison-header">
+                            <div class="comparison-title">Daily Steps</div>
+                            <div class="comparison-period">This Week vs Last Week</div>
+                        </div>
+                        <div class="comparison-values">
+                            <div class="comparison-value">
+                                <div class="comparison-label">Last Week</div>
+                                <div class="comparison-number">7,842</div>
+                            </div>
+                            <div class="comparison-value">
+                                <div class="comparison-label">This Week</div>
+                                <div class="comparison-number">9,156</div>
+                            </div>
+                        </div>
+                        <div class="comparison-delta">
+                            <div class="delta-value" style="color: #15803d;">↑ 1,314 steps</div>
+                            <div class="delta-label">Increased by 16.7%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card milestones">
+                <div class="card-header">
+                    <div class="card-title">Health Milestones</div>
+                    <div class="card-subtitle">Your health journey achievements</div>
+                </div>
+                <div class="milestone-timeline">
+                    <div class="timeline-line"></div>
+
+                    <div class="milestone">
+                        <div class="milestone-date">December 29, 2024</div>
+                        <div class="milestone-title">14-Day Healthy Streak</div>
+                        <div class="milestone-description">
+                            Maintained blood pressure in healthy range for 14 consecutive days
+                        </div>
+                        <span class="milestone-badge">🎯 Goal Achieved</span>
+                    </div>
+
+                    <div class="milestone">
+                        <div class="milestone-date">December 15, 2024</div>
+                        <div class="milestone-title">Weight Loss Goal Reached</div>
+                        <div class="milestone-description">
+                            Successfully lost 5 kg over 3 months through consistent activity and nutrition
+                        </div>
+                        <span class="milestone-badge">⚖️ -5 kg</span>
+                    </div>
+
+                    <div class="milestone">
+                        <div class="milestone-date">November 28, 2024</div>
+                        <div class="milestone-title">Step Goal Master</div>
+                        <div class="milestone-description">
+                            Achieved 10,000+ daily steps for 30 consecutive days
+                        </div>
+                        <span class="milestone-badge">🚶 30 Days</span>
+                    </div>
+
+                    <div class="milestone">
+                        <div class="milestone-date">November 1, 2024</div>
+                        <div class="milestone-title">Improved Sleep Quality</div>
+                        <div class="milestone-description">
+                            Average sleep duration increased from 6.2 to 7.5 hours per night
+                        </div>
+                        <span class="milestone-badge">💤 +1.3 hours</span>
+                    </div>
+
+                    <div class="milestone">
+                        <div class="milestone-date">October 10, 2024</div>
+                        <div class="milestone-title">First Month Complete</div>
+                        <div class="milestone-description">
+                            Completed your first full month of consistent health tracking
+                        </div>
+                        <span class="milestone-badge">📊 100% Tracked</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

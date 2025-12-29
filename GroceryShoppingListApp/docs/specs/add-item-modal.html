@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item - Shopping List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: #f3f4f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #10b981;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .suggestion-item:hover {
+            background: #f9fafb;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .suggestion-info {
+            flex: 1;
+        }
+
+        .suggestion-name {
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .suggestion-meta {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .category-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .category-option {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .category-option:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .category-option.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .category-icon-large {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .category-name {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .price-hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fef3c7;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #92400e;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 2px solid #f3f4f6;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            background: #e5e7eb;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .switch.active {
+            background: #10b981;
+        }
+
+        .switch-handle {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .switch.active .switch-handle {
+            transform: translateX(20px);
+        }
+
+        .switch-label {
+            color: #374151;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h1>Add Item to List</h1>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <form>
+                <div class="form-group">
+                    <label>Item Name <span class="required">*</span></label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" placeholder="e.g., Organic Apples" value="Milk">
+                        <div class="autocomplete-suggestions">
+                            <div class="suggestion-item">
+                                <div class="suggestion-icon" style="background: #fef3c7;">🥛</div>
+                                <div class="suggestion-info">
+                                    <div class="suggestion-name">Whole Milk</div>
+                                    <div class="suggestion-meta">Dairy • Avg $4.29 • Bought 12 times</div>
+                                </div>
+                            </div>
+                            <div class="suggestion-item">
+                                <div class="suggestion-icon" style="background: #dbeafe;">🥛</div>
+                                <div class="suggestion-info">
+                                    <div class="suggestion-name">2% Milk</div>
+                                    <div class="suggestion-meta">Dairy • Avg $3.99 • Bought 8 times</div>
+                                </div>
+                            </div>
+                            <div class="suggestion-item">
+                                <div class="suggestion-icon" style="background: #fecaca;">🥛</div>
+                                <div class="suggestion-info">
+                                    <div class="suggestion-name">Almond Milk</div>
+                                    <div class="suggestion-meta">Dairy Alternatives • Avg $4.79 • Bought 5 times</div>
+                                </div>
+                            </div>
+                            <div class="suggestion-item">
+                                <div class="suggestion-icon" style="background: #d1fae5;">🥛</div>
+                                <div class="suggestion-info">
+                                    <div class="suggestion-name">Oat Milk</div>
+                                    <div class="suggestion-meta">Dairy Alternatives • Avg $5.49 • Bought 3 times</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <div class="category-selector">
+                        <div class="category-option">
+                            <div class="category-icon-large">🥬</div>
+                            <div class="category-name">Produce</div>
+                        </div>
+                        <div class="category-option selected">
+                            <div class="category-icon-large">🥛</div>
+                            <div class="category-name">Dairy</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🍗</div>
+                            <div class="category-name">Meat</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🍞</div>
+                            <div class="category-name">Bakery</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🥫</div>
+                            <div class="category-name">Pantry</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🧊</div>
+                            <div class="category-name">Frozen</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🥤</div>
+                            <div class="category-name">Beverages</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🍪</div>
+                            <div class="category-name">Snacks</div>
+                        </div>
+                        <div class="category-option">
+                            <div class="category-icon-large">🧴</div>
+                            <div class="category-name">Personal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <select>
+                            <option>gallon</option>
+                            <option>half gallon</option>
+                            <option>quart</option>
+                            <option>liter</option>
+                            <option>oz</option>
+                            <option>lb</option>
+                            <option>count</option>
+                            <option>package</option>
+                            <option>container</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Estimated Price</label>
+                    <input type="number" step="0.01" placeholder="$0.00" value="4.29">
+                    <div class="price-hint">
+                        💡 Last purchased for $4.29 at Walmart (2 weeks ago)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Store/Aisle (Optional)</label>
+                    <input type="text" placeholder="e.g., Walmart - Aisle 12">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea placeholder="Any special instructions or preferences..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-handle"></div>
+                        </div>
+                        <span class="switch-label">Add to favorites for quick access</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

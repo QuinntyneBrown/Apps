@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Categories - Financial Goal Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #718096;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            color: #1a202c;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .subtext {
+            color: #10b981;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .category-card:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .category-card.emergency .category-icon {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .category-card.housing .category-icon {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .category-card.travel .category-icon {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        .category-card.retirement .category-icon {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+        }
+
+        .category-card.education .category-icon {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+        }
+
+        .category-info h2 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .category-info p {
+            color: #718096;
+            font-size: 15px;
+        }
+
+        .category-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .category-stat {
+            text-align: center;
+        }
+
+        .category-stat .label {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .category-stat .value {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .category-stat .value.positive {
+            color: #10b981;
+        }
+
+        .progress-section {
+            margin: 25px 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            color: #718096;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-value {
+            color: #1a202c;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 0.5s ease;
+        }
+
+        .category-card.emergency .progress-fill {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        }
+
+        .category-card.housing .progress-fill {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+        }
+
+        .category-card.travel .progress-fill {
+            background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+        }
+
+        .category-card.retirement .progress-fill {
+            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+
+        .category-card.education .progress-fill {
+            background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%);
+        }
+
+        .goals-in-category {
+            margin-top: 25px;
+        }
+
+        .goals-in-category h4 {
+            color: #1a202c;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .goal-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .goal-item-info h5 {
+            color: #1a202c;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .goal-item-info p {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .goal-item-progress {
+            text-align: right;
+        }
+
+        .goal-amount {
+            color: #1a202c;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .goal-percentage {
+            color: #10b981;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .empty-category {
+            text-align: center;
+            padding: 50px 30px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .empty-category .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-category h4 {
+            color: #718096;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-category p {
+            color: #a0aec0;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 1024px) {
+            .category-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .overview-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .category-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .category-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Goal Categories</h1>
+            <p>Organize and track your financial goals by category</p>
+        </div>
+
+        <div class="overview-stats">
+            <div class="stat-card">
+                <h3>Total Across All Categories</h3>
+                <div class="value">$27,550</div>
+                <div class="subtext">42.4% of $65,000 target</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Active Categories</h3>
+                <div class="value">4</div>
+                <div class="subtext">5 total goals</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Best Performing</h3>
+                <div class="value">Emergency</div>
+                <div class="subtext">65% complete</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Monthly Contribution</h3>
+                <div class="value">$1,148</div>
+                <div class="subtext">Average per month</div>
+            </div>
+        </div>
+
+        <!-- Emergency Category -->
+        <div class="category-card emergency">
+            <div class="category-header">
+                <div class="category-title">
+                    <div class="category-icon">🏥</div>
+                    <div class="category-info">
+                        <h2>Emergency & Safety</h2>
+                        <p>Financial security and emergency preparedness</p>
+                    </div>
+                </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="label">Saved</div>
+                        <div class="value">$6,500</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Target</div>
+                        <div class="value">$10,000</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Progress</div>
+                        <div class="value positive">65%</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Goals</div>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Category Progress</span>
+                    <span class="progress-value">$6,500 / $10,000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 65%"></div>
+                </div>
+            </div>
+
+            <div class="goals-in-category">
+                <h4>Goals in this Category</h4>
+                <div class="goal-item">
+                    <div class="goal-item-info">
+                        <h5>Emergency Fund</h5>
+                        <p>Due: Dec 31, 2026 • On Track • High Priority</p>
+                    </div>
+                    <div class="goal-item-progress">
+                        <div class="goal-amount">$6,500</div>
+                        <div class="goal-percentage">65%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Housing Category -->
+        <div class="category-card housing">
+            <div class="category-header">
+                <div class="category-title">
+                    <div class="category-icon">🏠</div>
+                    <div class="category-info">
+                        <h2>Housing & Property</h2>
+                        <p>Home ownership and real estate investments</p>
+                    </div>
+                </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="label">Saved</div>
+                        <div class="value">$18,750</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Target</div>
+                        <div class="value">$50,000</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Progress</div>
+                        <div class="value positive">37.5%</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Goals</div>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Category Progress</span>
+                    <span class="progress-value">$18,750 / $50,000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 37.5%"></div>
+                </div>
+            </div>
+
+            <div class="goals-in-category">
+                <h4>Goals in this Category</h4>
+                <div class="goal-item">
+                    <div class="goal-item-info">
+                        <h5>Home Down Payment</h5>
+                        <p>Due: Jun 15, 2027 • On Track • High Priority</p>
+                    </div>
+                    <div class="goal-item-progress">
+                        <div class="goal-amount">$18,750</div>
+                        <div class="goal-percentage">37.5%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Travel Category -->
+        <div class="category-card travel">
+            <div class="category-header">
+                <div class="category-title">
+                    <div class="category-icon">✈️</div>
+                    <div class="category-info">
+                        <h2>Travel & Experiences</h2>
+                        <p>Vacations, adventures, and memorable experiences</p>
+                    </div>
+                </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="label">Saved</div>
+                        <div class="value">$2,300</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Target</div>
+                        <div class="value">$5,000</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Progress</div>
+                        <div class="value positive">46%</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Goals</div>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Category Progress</span>
+                    <span class="progress-value">$2,300 / $5,000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 46%"></div>
+                </div>
+            </div>
+
+            <div class="goals-in-category">
+                <h4>Goals in this Category</h4>
+                <div class="goal-item">
+                    <div class="goal-item-info">
+                        <h5>Dream Vacation to Japan</h5>
+                        <p>Due: Mar 1, 2026 • Off Track • Medium Priority</p>
+                    </div>
+                    <div class="goal-item-progress">
+                        <div class="goal-amount">$2,300</div>
+                        <div class="goal-percentage">46%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retirement Category -->
+        <div class="category-card retirement">
+            <div class="category-header">
+                <div class="category-title">
+                    <div class="category-icon">💼</div>
+                    <div class="category-info">
+                        <h2>Retirement & Investment</h2>
+                        <p>Long-term wealth building and retirement planning</p>
+                    </div>
+                </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="label">Saved</div>
+                        <div class="value">$0</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Target</div>
+                        <div class="value">$6,500</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Progress</div>
+                        <div class="value">0%</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Goals</div>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Category Progress</span>
+                    <span class="progress-value">$0 / $6,500</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="goals-in-category">
+                <h4>Goals in this Category</h4>
+                <div class="goal-item">
+                    <div class="goal-item-info">
+                        <h5>Retirement IRA 2026</h5>
+                        <p>Due: Dec 31, 2026 • Just Started • Low Priority</p>
+                    </div>
+                    <div class="goal-item-progress">
+                        <div class="goal-amount">$0</div>
+                        <div class="goal-percentage">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education Category (Empty) -->
+        <div class="category-card education">
+            <div class="category-header">
+                <div class="category-title">
+                    <div class="category-icon">🎓</div>
+                    <div class="category-info">
+                        <h2>Education & Learning</h2>
+                        <p>Courses, degrees, certifications, and skill development</p>
+                    </div>
+                </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="label">Saved</div>
+                        <div class="value">$0</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Target</div>
+                        <div class="value">$0</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Progress</div>
+                        <div class="value">—</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="label">Goals</div>
+                        <div class="value">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-category">
+                <div class="icon">📚</div>
+                <h4>No Goals in This Category Yet</h4>
+                <p>Start saving for education, courses, or skill development</p>
+                <button class="btn-add">+ Add Education Goal</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

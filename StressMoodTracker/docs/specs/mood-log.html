@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood & Stress History - Stress & Mood Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .log-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+        }
+
+        .timeline-group {
+            margin-bottom: 35px;
+        }
+
+        .date-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-entry {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .log-entry::before {
+            content: '';
+            position: absolute;
+            left: -35px;
+            top: 25px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+
+        .log-entry:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .mood-stress-combo {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mood-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mood-emoji {
+            font-size: 28px;
+        }
+
+        .stress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stress-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .stress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+
+        .stress-dot.filled {
+            background: #ff6b6b;
+        }
+
+        .entry-time {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .entry-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .entry-note {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .entry-context {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .context-item {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .context-label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .mood-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mood-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mood-bar-label {
+            font-size: 24px;
+            width: 35px;
+        }
+
+        .mood-bar-container {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mood-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .common-triggers {
+            list-style: none;
+        }
+
+        .trigger-item {
+            padding: 12px;
+            background: #fff3e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trigger-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .trigger-count {
+            background: #ff9800;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📅 Mood & Stress History</h1>
+                <div class="filter-controls">
+                    <button class="filter-btn">All Time</button>
+                    <button class="filter-btn active">This Month</button>
+                    <button class="filter-btn">This Week</button>
+                    <button class="filter-btn">Today</button>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value">127</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">7.2</div>
+                    <div class="stat-label">Avg Mood</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.5</div>
+                    <div class="stat-label">Avg Stress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">78%</div>
+                    <div class="stat-label">Positive Days</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="log-section">
+                <h2 class="section-title">📝 Your Timeline</h2>
+
+                <div class="timeline">
+                    <div class="timeline-group">
+                        <div class="date-header">📆 Today - December 29, 2025</div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="mood-stress-combo">
+                                    <div class="mood-display">
+                                        <span class="mood-emoji">😊</span>
+                                        <span>Happy</span>
+                                    </div>
+                                    <div class="stress-indicator">
+                                        Stress:
+                                        <div class="stress-dots">
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                        </div>
+                                        (4/10)
+                                    </div>
+                                </div>
+                                <div class="entry-time">2:30 PM</div>
+                            </div>
+                            <div class="entry-tags">
+                                <span class="tag">🧘 Exercise</span>
+                                <span class="tag">☀️ Outdoors</span>
+                                <span class="tag">😌 Relaxed</span>
+                            </div>
+                            <div class="entry-note">
+                                Had a wonderful morning yoga session followed by a walk in the park. The fresh air and movement really helped clear my mind. Feeling energized and ready to tackle the afternoon tasks.
+                            </div>
+                            <div class="entry-context">
+                                <div class="context-item">
+                                    <span class="context-label">💤 Sleep</span>
+                                    7.5 hours
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">☕ Caffeine</span>
+                                    1 coffee
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">🏃 Activity</span>
+                                    60 min yoga
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="mood-stress-combo">
+                                    <div class="mood-display">
+                                        <span class="mood-emoji">😐</span>
+                                        <span>Neutral</span>
+                                    </div>
+                                    <div class="stress-indicator">
+                                        Stress:
+                                        <div class="stress-dots">
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                        </div>
+                                        (5/10)
+                                    </div>
+                                </div>
+                                <div class="entry-time">8:00 AM</div>
+                            </div>
+                            <div class="entry-tags">
+                                <span class="tag">🌅 Morning</span>
+                                <span class="tag">💼 Work</span>
+                            </div>
+                            <div class="entry-note">
+                                Woke up feeling okay. A bit anxious about the presentation later today, but trying to stay positive.
+                            </div>
+                            <div class="entry-context">
+                                <div class="context-item">
+                                    <span class="context-label">💤 Sleep</span>
+                                    7.5 hours
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">☕ Caffeine</span>
+                                    None yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-group">
+                        <div class="date-header">📆 Yesterday - December 28, 2025</div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="mood-stress-combo">
+                                    <div class="mood-display">
+                                        <span class="mood-emoji">😄</span>
+                                        <span>Very Happy</span>
+                                    </div>
+                                    <div class="stress-indicator">
+                                        Stress:
+                                        <div class="stress-dots">
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                        </div>
+                                        (2/10)
+                                    </div>
+                                </div>
+                                <div class="entry-time">7:45 PM</div>
+                            </div>
+                            <div class="entry-tags">
+                                <span class="tag">👨‍👩‍👧‍👦 Family</span>
+                                <span class="tag">🎉 Celebration</span>
+                                <span class="tag">❤️ Grateful</span>
+                            </div>
+                            <div class="entry-note">
+                                Amazing family dinner tonight! We celebrated my sister's promotion. So much laughter and good food. Days like this remind me what's truly important in life.
+                            </div>
+                            <div class="entry-context">
+                                <div class="context-item">
+                                    <span class="context-label">🍷 Social</span>
+                                    Family gathering
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">🏃 Activity</span>
+                                    Light walk
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="mood-stress-combo">
+                                    <div class="mood-display">
+                                        <span class="mood-emoji">😟</span>
+                                        <span>Anxious</span>
+                                    </div>
+                                    <div class="stress-indicator">
+                                        Stress:
+                                        <div class="stress-dots">
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                        </div>
+                                        (7/10)
+                                    </div>
+                                </div>
+                                <div class="entry-time">2:15 PM</div>
+                            </div>
+                            <div class="entry-tags">
+                                <span class="tag">💼 Work Pressure</span>
+                                <span class="tag">⏰ Deadline</span>
+                                <span class="tag">😰 Overwhelmed</span>
+                            </div>
+                            <div class="entry-note">
+                                Intense deadline pressure today. Multiple projects competing for attention. Took a quick breathing break which helped a bit. Need to remember to pace myself better.
+                            </div>
+                            <div class="entry-context">
+                                <div class="context-item">
+                                    <span class="context-label">💤 Sleep</span>
+                                    6 hours
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">☕ Caffeine</span>
+                                    3 coffees
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">🧘 Coping</span>
+                                    Breathing exercises
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-group">
+                        <div class="date-header">📆 December 27, 2025</div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="mood-stress-combo">
+                                    <div class="mood-display">
+                                        <span class="mood-emoji">😌</span>
+                                        <span>Calm</span>
+                                    </div>
+                                    <div class="stress-indicator">
+                                        Stress:
+                                        <div class="stress-dots">
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot filled"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                            <div class="stress-dot"></div>
+                                        </div>
+                                        (3/10)
+                                    </div>
+                                </div>
+                                <div class="entry-time">6:30 PM</div>
+                            </div>
+                            <div class="entry-tags">
+                                <span class="tag">📚 Reading</span>
+                                <span class="tag">🏠 Home</span>
+                                <span class="tag">☕ Quiet Time</span>
+                            </div>
+                            <div class="entry-note">
+                                Perfect evening at home. Finished a great book, enjoyed some herbal tea, and just relaxed. These quiet moments are so valuable for recharging.
+                            </div>
+                            <div class="entry-context">
+                                <div class="context-item">
+                                    <span class="context-label">💤 Sleep</span>
+                                    8 hours (prev)
+                                </div>
+                                <div class="context-item">
+                                    <span class="context-label">🧘 Activity</span>
+                                    Meditation 20min
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h3 class="section-title">😊 Mood Distribution</h3>
+                    <div class="mood-distribution">
+                        <div class="mood-bar-item">
+                            <div class="mood-bar-label">😄</div>
+                            <div class="mood-bar-container">
+                                <div class="mood-bar-fill" style="width: 35%;">35%</div>
+                            </div>
+                        </div>
+                        <div class="mood-bar-item">
+                            <div class="mood-bar-label">😊</div>
+                            <div class="mood-bar-container">
+                                <div class="mood-bar-fill" style="width: 45%;">45%</div>
+                            </div>
+                        </div>
+                        <div class="mood-bar-item">
+                            <div class="mood-bar-label">😐</div>
+                            <div class="mood-bar-container">
+                                <div class="mood-bar-fill" style="width: 12%;">12%</div>
+                            </div>
+                        </div>
+                        <div class="mood-bar-item">
+                            <div class="mood-bar-label">😟</div>
+                            <div class="mood-bar-container">
+                                <div class="mood-bar-fill" style="width: 6%;">6%</div>
+                            </div>
+                        </div>
+                        <div class="mood-bar-item">
+                            <div class="mood-bar-label">😢</div>
+                            <div class="mood-bar-container">
+                                <div class="mood-bar-fill" style="width: 2%;">2%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3 class="section-title">⚠️ Common Triggers</h3>
+                    <ul class="common-triggers">
+                        <li class="trigger-item">
+                            <span class="trigger-name">Work Deadlines</span>
+                            <span class="trigger-count">23</span>
+                        </li>
+                        <li class="trigger-item">
+                            <span class="trigger-name">Poor Sleep</span>
+                            <span class="trigger-count">18</span>
+                        </li>
+                        <li class="trigger-item">
+                            <span class="trigger-name">Social Conflict</span>
+                            <span class="trigger-count">12</span>
+                        </li>
+                        <li class="trigger-item">
+                            <span class="trigger-name">Financial Stress</span>
+                            <span class="trigger-count">9</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3 class="section-title">⚡ Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button class="action-btn btn-primary">
+                            <span>➕</span>
+                            <span>Add Entry</span>
+                        </button>
+                        <button class="action-btn btn-secondary">
+                            <span>📊</span>
+                            <span>View Insights</span>
+                        </button>
+                        <button class="action-btn btn-secondary">
+                            <span>📥</span>
+                            <span>Export Data</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

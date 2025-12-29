@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Collection - Video Game Collection Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .filters-bar {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        select {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .collection-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .collection-stats span {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .game-cover {
+            width: 100%;
+            height: 260px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .game-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: rgba(0, 255, 136, 0.9);
+            color: #1a1a2e;
+        }
+
+        .status-playing {
+            background: rgba(0, 212, 255, 0.9);
+            color: #1a1a2e;
+        }
+
+        .status-backlog {
+            background: rgba(255, 165, 2, 0.9);
+            color: #1a1a2e;
+        }
+
+        .status-not-started {
+            background: rgba(136, 136, 136, 0.9);
+            color: #fff;
+        }
+
+        .game-info {
+            padding: 15px;
+        }
+
+        .game-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .game-meta {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .game-platform {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 4px;
+            font-size: 10px;
+            color: #00d4ff;
+            margin-right: 5px;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .rating {
+            color: #ffa502;
+        }
+
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .game-cover {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span>📚</span>
+            My Game Collection
+        </h1>
+        <div class="header-actions">
+            <button class="btn btn-primary">
+                <span>➕</span>
+                Add Game
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-bar">
+        <div class="filters-row">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search games by title, platform, genre...">
+            </div>
+
+            <select>
+                <option>All Platforms</option>
+                <option>PlayStation 5</option>
+                <option>Xbox Series X</option>
+                <option>Nintendo Switch</option>
+                <option>PC</option>
+                <option>PlayStation 4</option>
+            </select>
+
+            <select>
+                <option>All Genres</option>
+                <option>Action RPG</option>
+                <option>Adventure</option>
+                <option>FPS</option>
+                <option>RPG</option>
+                <option>Strategy</option>
+                <option>Indie</option>
+            </select>
+
+            <select>
+                <option>All Status</option>
+                <option>Completed</option>
+                <option>Currently Playing</option>
+                <option>Backlog</option>
+                <option>Not Started</option>
+            </select>
+
+            <select>
+                <option>Sort: Recently Added</option>
+                <option>Sort: Title A-Z</option>
+                <option>Sort: Rating (High-Low)</option>
+                <option>Sort: Playtime</option>
+                <option>Sort: Release Date</option>
+            </select>
+
+            <div class="view-toggle">
+                <button class="view-btn active">🎴</button>
+                <button class="view-btn">📋</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="collection-stats">
+        <div>Total Games: <span>247</span></div>
+        <div>Completed: <span>128</span></div>
+        <div>Playing: <span>12</span></div>
+        <div>Backlog: <span>64</span></div>
+        <div>Total Value: <span>$4,892</span></div>
+    </div>
+
+    <div class="games-grid">
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #c94b4b, #4b134f);">
+                <span class="game-status status-playing">Playing</span>
+                ELDEN RING
+            </div>
+            <div class="game-info">
+                <div class="game-title">Elden Ring</div>
+                <div class="game-meta">FromSoftware • 2022</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>87.5 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+                <span class="game-status status-playing">Playing</span>
+                ZELDA: TOTK
+            </div>
+            <div class="game-info">
+                <div class="game-title">The Legend of Zelda: Tears of the Kingdom</div>
+                <div class="game-meta">Nintendo • 2023</div>
+                <div>
+                    <span class="game-platform">Switch</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>52.3 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);">
+                <span class="game-status status-playing">Playing</span>
+                CYBERPUNK 2077
+            </div>
+            <div class="game-info">
+                <div class="game-title">Cyberpunk 2077: Phantom Liberty</div>
+                <div class="game-meta">CD Projekt Red • 2023</div>
+                <div>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>18.7 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #ee0979, #ff6a00);">
+                <span class="game-status status-completed">Completed</span>
+                GOD OF WAR RAGNARÖK
+            </div>
+            <div class="game-info">
+                <div class="game-title">God of War Ragnarök</div>
+                <div class="game-meta">Santa Monica Studio • 2022</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>45.8 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);">
+                <span class="game-status status-backlog">Backlog</span>
+                BALDUR'S GATE 3
+            </div>
+            <div class="game-info">
+                <div class="game-title">Baldur's Gate 3</div>
+                <div class="game-meta">Larian Studios • 2023</div>
+                <div>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #434343, #000000);">
+                <span class="game-status status-backlog">Backlog</span>
+                FINAL FANTASY XVI
+            </div>
+            <div class="game-info">
+                <div class="game-title">Final Fantasy XVI</div>
+                <div class="game-meta">Square Enix • 2023</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #ff0000, #5c0000);">
+                <span class="game-status status-completed">Completed</span>
+                SPIDER-MAN 2
+            </div>
+            <div class="game-info">
+                <div class="game-title">Marvel's Spider-Man 2</div>
+                <div class="game-meta">Insomniac Games • 2023</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>32.5 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #232526, #414345);">
+                <span class="game-status status-backlog">Backlog</span>
+                STARFIELD
+            </div>
+            <div class="game-info">
+                <div class="game-title">Starfield</div>
+                <div class="game-meta">Bethesda • 2023</div>
+                <div>
+                    <span class="game-platform">Xbox</span>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.0</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #141e30, #243b55);">
+                <span class="game-status status-completed">Completed</span>
+                HOLLOW KNIGHT
+            </div>
+            <div class="game-info">
+                <div class="game-title">Hollow Knight</div>
+                <div class="game-meta">Team Cherry • 2017</div>
+                <div>
+                    <span class="game-platform">Switch</span>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>68.2 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #8e2de2, #4a00e0);">
+                <span class="game-status status-backlog">Backlog</span>
+                PERSONA 5 ROYAL
+            </div>
+            <div class="game-info">
+                <div class="game-title">Persona 5 Royal</div>
+                <div class="game-meta">Atlus • 2019</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #f12711, #f5af19);">
+                <span class="game-status status-completed">Completed</span>
+                HADES
+            </div>
+            <div class="game-info">
+                <div class="game-title">Hades</div>
+                <div class="game-meta">Supergiant Games • 2020</div>
+                <div>
+                    <span class="game-platform">Switch</span>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 5.0</span>
+                    <span>95.3 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #000000, #434343);">
+                <span class="game-status status-not-started">Not Started</span>
+                ALAN WAKE II
+            </div>
+            <div class="game-info">
+                <div class="game-title">Alan Wake II</div>
+                <div class="game-meta">Remedy Entertainment • 2023</div>
+                <div>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ —</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #2c3e50, #3498db);">
+                <span class="game-status status-completed">Completed</span>
+                HORIZON FORBIDDEN WEST
+            </div>
+            <div class="game-info">
+                <div class="game-title">Horizon Forbidden West</div>
+                <div class="game-meta">Guerrilla Games • 2022</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>58.7 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #fc4a1a, #f7b733);">
+                <span class="game-status status-completed">Completed</span>
+                RETURNAL
+            </div>
+            <div class="game-info">
+                <div class="game-title">Returnal</div>
+                <div class="game-meta">Housemarque • 2021</div>
+                <div>
+                    <span class="game-platform">PS5</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>42.1 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #136a8a, #267871);">
+                <span class="game-status status-backlog">Backlog</span>
+                SEA OF STARS
+            </div>
+            <div class="game-info">
+                <div class="game-title">Sea of Stars</div>
+                <div class="game-meta">Sabotage Studio • 2023</div>
+                <div>
+                    <span class="game-platform">Switch</span>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ 4.5</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-cover" style="background: linear-gradient(135deg, #834d9b, #d04ed6);">
+                <span class="game-status status-backlog">Backlog</span>
+                HADES II
+            </div>
+            <div class="game-info">
+                <div class="game-title">Hades II (Early Access)</div>
+                <div class="game-meta">Supergiant Games • 2024</div>
+                <div>
+                    <span class="game-platform">PC</span>
+                </div>
+                <div class="game-stats">
+                    <span class="rating">⭐ —</span>
+                    <span>0 hrs</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

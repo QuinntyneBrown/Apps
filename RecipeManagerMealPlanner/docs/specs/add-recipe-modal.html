@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Recipe - Recipe Manager & Meal Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgba(0,0,0,0.5);
+            color: #2c3e50;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .import-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .import-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .import-input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .import-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e8ecf1;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .btn-import {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+            color: #95a5a6;
+            font-weight: 600;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e8ecf1;
+        }
+
+        .divider::before {
+            margin-right: 1rem;
+        }
+
+        .divider::after {
+            margin-left: 1rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .form-label .required {
+            color: #e74c3c;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e8ecf1;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .photo-upload {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .photo-upload:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        .ingredients-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .ingredient-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .ingredient-input {
+            flex: 2;
+        }
+
+        .quantity-input {
+            flex: 1;
+        }
+
+        .unit-select {
+            flex: 1;
+        }
+
+        .btn-remove {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .btn-remove:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .btn-add {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn-add:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .instructions-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-input {
+            flex: 1;
+        }
+
+        .tags-section {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .tag-checkbox {
+            display: none;
+        }
+
+        .tag-label {
+            padding: 0.5rem 1.25rem;
+            background: #f8f9fa;
+            border: 2px solid #e8ecf1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .tag-checkbox:checked + .tag-label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e8ecf1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-cancel {
+            background: #f8f9fa;
+            color: #7f8c8d;
+        }
+
+        .btn-cancel:hover {
+            background: #e8ecf1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #95a5a6;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">➕ Add New Recipe</h2>
+            <button class="close-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="import-section">
+                <h3 class="import-title">🌐 Import from URL</h3>
+                <div class="import-input-group">
+                    <input type="url" class="import-input" placeholder="Paste recipe URL from any cooking website...">
+                    <button class="btn-import">Import Recipe</button>
+                </div>
+                <p class="help-text">We'll automatically extract recipe details from popular cooking websites</p>
+            </div>
+
+            <div class="divider">OR ADD MANUALLY</div>
+
+            <form>
+                <div class="form-section">
+                    <h3 class="section-title">📝 Basic Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Recipe Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="e.g., Grandma's Chocolate Chip Cookies" value="Homemade Margherita Pizza">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" placeholder="Brief description of the recipe...">Classic Italian pizza with fresh mozzarella, ripe tomatoes, and fragrant basil on a homemade crispy thin crust.</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Cuisine Type</label>
+                            <select class="form-select">
+                                <option>Italian</option>
+                                <option>Mexican</option>
+                                <option>Asian</option>
+                                <option>American</option>
+                                <option>Mediterranean</option>
+                                <option>French</option>
+                                <option>Indian</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Difficulty Level</label>
+                            <select class="form-select">
+                                <option>Easy</option>
+                                <option>Medium</option>
+                                <option>Hard</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Prep Time (minutes)</label>
+                            <input type="number" class="form-input" placeholder="20" value="15">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Cook Time (minutes)</label>
+                            <input type="number" class="form-input" placeholder="30" value="12">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Servings</label>
+                            <input type="number" class="form-input" placeholder="4" value="4">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Calories per Serving</label>
+                            <input type="number" class="form-input" placeholder="350" value="420">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">📷 Recipe Photo</h3>
+                    <div class="photo-upload">
+                        <div class="upload-icon">📸</div>
+                        <div class="upload-text">Click to upload or drag and drop</div>
+                        <div class="upload-hint">PNG, JPG up to 5MB</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">🥘 Ingredients</h3>
+                    <div class="ingredients-section">
+                        <div class="ingredient-item">
+                            <input type="text" class="form-input ingredient-input" placeholder="Ingredient name" value="Pizza dough">
+                            <input type="number" class="form-input quantity-input" placeholder="Qty" value="1">
+                            <select class="form-select unit-select">
+                                <option>lb</option>
+                                <option>oz</option>
+                                <option>cup</option>
+                                <option>tbsp</option>
+                                <option>tsp</option>
+                                <option>piece</option>
+                            </select>
+                            <button type="button" class="btn-remove">×</button>
+                        </div>
+
+                        <div class="ingredient-item">
+                            <input type="text" class="form-input ingredient-input" placeholder="Ingredient name" value="Crushed tomatoes">
+                            <input type="number" class="form-input quantity-input" placeholder="Qty" value="1">
+                            <select class="form-select unit-select">
+                                <option>can</option>
+                                <option>lb</option>
+                                <option>oz</option>
+                                <option>cup</option>
+                            </select>
+                            <button type="button" class="btn-remove">×</button>
+                        </div>
+
+                        <div class="ingredient-item">
+                            <input type="text" class="form-input ingredient-input" placeholder="Ingredient name" value="Fresh mozzarella">
+                            <input type="number" class="form-input quantity-input" placeholder="Qty" value="8">
+                            <select class="form-select unit-select">
+                                <option>oz</option>
+                                <option>lb</option>
+                                <option>cup</option>
+                            </select>
+                            <button type="button" class="btn-remove">×</button>
+                        </div>
+
+                        <div class="ingredient-item">
+                            <input type="text" class="form-input ingredient-input" placeholder="Ingredient name" value="Fresh basil leaves">
+                            <input type="number" class="form-input quantity-input" placeholder="Qty" value="1">
+                            <select class="form-select unit-select">
+                                <option>cup</option>
+                                <option>bunch</option>
+                                <option>tbsp</option>
+                            </select>
+                            <button type="button" class="btn-remove">×</button>
+                        </div>
+
+                        <div class="ingredient-item">
+                            <input type="text" class="form-input ingredient-input" placeholder="Ingredient name" value="Olive oil">
+                            <input type="number" class="form-input quantity-input" placeholder="Qty" value="2">
+                            <select class="form-select unit-select">
+                                <option>tbsp</option>
+                                <option>tsp</option>
+                                <option>cup</option>
+                            </select>
+                            <button type="button" class="btn-remove">×</button>
+                        </div>
+
+                        <button type="button" class="btn-add">
+                            <span>➕</span>
+                            Add Another Ingredient
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">📋 Instructions</h3>
+                    <div class="instructions-section">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <textarea class="form-textarea step-input" placeholder="Describe this step...">Preheat your oven to 475°F (245°C). If you have a pizza stone, place it in the oven to heat up.</textarea>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <textarea class="form-textarea step-input" placeholder="Describe this step...">Roll out the pizza dough on a floured surface to your desired thickness. Transfer to a pizza peel or baking sheet.</textarea>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <textarea class="form-textarea step-input" placeholder="Describe this step...">Spread crushed tomatoes evenly over the dough, leaving a 1-inch border. Drizzle with olive oil and season with salt.</textarea>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <textarea class="form-textarea step-input" placeholder="Describe this step...">Tear fresh mozzarella into pieces and distribute over the sauce. Add fresh basil leaves.</textarea>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <textarea class="form-textarea step-input" placeholder="Describe this step...">Bake for 10-12 minutes until the crust is golden and cheese is bubbly. Let cool for 2 minutes before slicing.</textarea>
+                        </div>
+
+                        <button type="button" class="btn-add">
+                            <span>➕</span>
+                            Add Another Step
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">🏷️ Dietary Tags</h3>
+                    <div class="tags-section">
+                        <input type="checkbox" id="vegetarian" class="tag-checkbox" checked>
+                        <label for="vegetarian" class="tag-label">Vegetarian</label>
+
+                        <input type="checkbox" id="vegan" class="tag-checkbox">
+                        <label for="vegan" class="tag-label">Vegan</label>
+
+                        <input type="checkbox" id="gluten-free" class="tag-checkbox">
+                        <label for="gluten-free" class="tag-label">Gluten-Free</label>
+
+                        <input type="checkbox" id="dairy-free" class="tag-checkbox">
+                        <label for="dairy-free" class="tag-label">Dairy-Free</label>
+
+                        <input type="checkbox" id="keto" class="tag-checkbox">
+                        <label for="keto" class="tag-label">Keto</label>
+
+                        <input type="checkbox" id="paleo" class="tag-checkbox">
+                        <label for="paleo" class="tag-label">Paleo</label>
+
+                        <input type="checkbox" id="low-carb" class="tag-checkbox">
+                        <label for="low-carb" class="tag-label">Low-Carb</label>
+
+                        <input type="checkbox" id="kid-friendly" class="tag-checkbox" checked>
+                        <label for="kid-friendly" class="tag-label">Kid-Friendly</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-primary">Save Recipe</button>
+        </div>
+    </div>
+</body>
+</html>

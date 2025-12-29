@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Budget - HouseholdBudgetManager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdf;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .breadcrumb a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .household-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .household-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .household-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .household-members {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .member-avatars {
+            display: flex;
+            margin-left: -10px;
+        }
+
+        .member-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-left: -10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .member-avatar:hover {
+            transform: translateY(-5px);
+            z-index: 10;
+        }
+
+        .avatar-john {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .avatar-jane {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .avatar-add {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            font-size: 1.5rem;
+        }
+
+        .household-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .members-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .member-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .member-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.1);
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .member-avatar-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .member-details h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .member-role {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 0.3rem;
+        }
+
+        .member-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .member-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #3498db;
+        }
+
+        .role-admin {
+            background: #fff3e0;
+            color: #f39c12;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .activity-feed {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .activity-text strong {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .activity-amount {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2c3e50;
+            flex-shrink: 0;
+        }
+
+        .pending-approvals {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .approval-card {
+            padding: 1.2rem;
+            border: 2px solid #fff3e0;
+            background: #fffbf5;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .approval-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .approval-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .approval-meta {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .approval-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f39c12;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-approve {
+            background: #27ae60;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-approve:hover {
+            background: #229954;
+        }
+
+        .btn-reject {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-reject:hover {
+            background: #c0392b;
+        }
+
+        .spending-comparison {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .comparison-chart {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .member-column {
+            flex: 1;
+            text-align: center;
+        }
+
+        .member-name {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .spending-bar {
+            height: 300px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .spending-fill {
+            width: 100%;
+            border-radius: 10px;
+            position: relative;
+            transition: height 0.3s;
+        }
+
+        .fill-john {
+            background: linear-gradient(0deg, #3498db, #5dade2);
+        }
+
+        .fill-jane {
+            background: linear-gradient(0deg, #e74c3c, #ec7063);
+        }
+
+        .spending-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 1.1rem;
+            white-space: nowrap;
+        }
+
+        .spending-details {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-chart {
+                flex-direction: column;
+            }
+
+            .spending-bar {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">💰 HouseholdBudget</div>
+            <div class="header-actions">
+                <button class="btn btn-primary">+ Add Expense</button>
+                <button class="btn btn-secondary">← Dashboard</button>
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="#">Dashboard</a>
+                <span>/</span>
+                <span>Household</span>
+            </div>
+        </div>
+
+        <div class="household-info">
+            <div class="household-header">
+                <h1 class="household-title">👨‍👩‍👧‍👦 The Doe Family</h1>
+                <div class="household-members">
+                    <div class="member-avatars">
+                        <div class="member-avatar avatar-john">JD</div>
+                        <div class="member-avatar avatar-jane">JD</div>
+                        <div class="member-avatar avatar-add">+</div>
+                    </div>
+                    <button class="btn btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Invite Member</button>
+                </div>
+            </div>
+
+            <div class="household-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Members</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Shared Budget</div>
+                    <div class="stat-value">$5,000</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Expenses</div>
+                    <div class="stat-value">$3,245</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Active Since</div>
+                    <div class="stat-value">Jan 2024</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="members-section">
+            <div class="section-header">
+                <h2 class="section-title">Household Members</h2>
+                <button class="btn btn-primary">+ Invite New Member</button>
+            </div>
+
+            <div class="member-card">
+                <div class="member-info">
+                    <div class="member-avatar-large avatar-john">JD</div>
+                    <div class="member-details">
+                        <h3>John Doe</h3>
+                        <p class="member-role"><span class="role-badge role-admin">Admin</span></p>
+                        <div class="member-stats">
+                            <span class="member-stat">💳 63 expenses</span>
+                            <span class="member-stat">💰 $1,845 spent</span>
+                            <span class="member-stat">📊 56.8% of total</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary">Manage</button>
+            </div>
+
+            <div class="member-card">
+                <div class="member-info">
+                    <div class="member-avatar-large avatar-jane">JD</div>
+                    <div class="member-details">
+                        <h3>Jane Doe</h3>
+                        <p class="member-role"><span class="role-badge">Member</span></p>
+                        <div class="member-stats">
+                            <span class="member-stat">💳 64 expenses</span>
+                            <span class="member-stat">💰 $1,400 spent</span>
+                            <span class="member-stat">📊 43.2% of total</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary">Manage</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="activity-feed">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <a href="#" style="color: #3498db; text-decoration: none; font-weight: 500;">View All →</a>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-john">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>John Doe</strong> added an expense at <strong>Whole Foods Market</strong></p>
+                        <p class="activity-time">🕐 2 hours ago • Groceries</p>
+                    </div>
+                    <div class="activity-amount">$87.45</div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-jane">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>Jane Doe</strong> added an expense at <strong>Starbucks Coffee</strong></p>
+                        <p class="activity-time">🕐 5 hours ago • Dining</p>
+                    </div>
+                    <div class="activity-amount">$12.50</div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-john">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>John Doe</strong> added an expense at <strong>Shell Gas Station</strong></p>
+                        <p class="activity-time">🕐 1 day ago • Transportation</p>
+                    </div>
+                    <div class="activity-amount">$52.00</div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-jane">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>Jane Doe</strong> added an expense at <strong>Domino's Pizza</strong></p>
+                        <p class="activity-time">🕐 1 day ago • Dining</p>
+                    </div>
+                    <div class="activity-amount">$34.99</div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-john">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>John Doe</strong> added an expense at <strong>Target</strong></p>
+                        <p class="activity-time">🕐 1 day ago • Groceries</p>
+                    </div>
+                    <div class="activity-amount">$145.67</div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-jane">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>Jane Doe</strong> updated the <strong>Entertainment</strong> budget</p>
+                        <p class="activity-time">🕐 2 days ago</p>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar avatar-john">JD</div>
+                    <div class="activity-content">
+                        <p class="activity-text"><strong>John Doe</strong> approved an expense from <strong>Jane Doe</strong></p>
+                        <p class="activity-time">🕐 3 days ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pending-approvals">
+                <div class="section-header">
+                    <h2 class="section-title">Pending Approvals</h2>
+                    <span class="role-badge role-admin">2 Pending</span>
+                </div>
+
+                <div class="approval-card">
+                    <div class="approval-header">
+                        <div class="approval-info">
+                            <h4>Target</h4>
+                            <p class="approval-meta">
+                                Added by <strong>Jane Doe</strong><br>
+                                🕐 3 hours ago • Groceries<br>
+                                📎 Receipt attached
+                            </p>
+                        </div>
+                        <div class="approval-amount">$145.67</div>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-approve">✓ Approve</button>
+                        <button class="btn-reject">✕ Reject</button>
+                        <button class="btn btn-secondary" style="padding: 0.5rem 1rem;">View Details</button>
+                    </div>
+                </div>
+
+                <div class="approval-card">
+                    <div class="approval-header">
+                        <div class="approval-info">
+                            <h4>H&M Fashion Store</h4>
+                            <p class="approval-meta">
+                                Added by <strong>Jane Doe</strong><br>
+                                🕐 1 day ago • Shopping<br>
+                                📎 Receipt attached
+                            </p>
+                        </div>
+                        <div class="approval-amount">$89.99</div>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-approve">✓ Approve</button>
+                        <button class="btn-reject">✕ Reject</button>
+                        <button class="btn btn-secondary" style="padding: 0.5rem 1rem;">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="spending-comparison">
+            <div class="section-header">
+                <h2 class="section-title">Member Spending Comparison</h2>
+                <select class="btn btn-secondary" style="appearance: none; padding-right: 2rem; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg width=\'10\' height=\'6\' xmlns=\'http://www.w3.org/2000/svg\'%3e%3cpath d=\'M1 1l4 4 4-4\' stroke=\'%232c3e50\' stroke-width=\'2\' fill=\'none\'/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 1rem center;">
+                    <option>This Month</option>
+                    <option>Last Month</option>
+                    <option>Last 3 Months</option>
+                    <option>Last 6 Months</option>
+                </select>
+            </div>
+
+            <div class="comparison-chart">
+                <div class="member-column">
+                    <div class="member-name">👨 John Doe</div>
+                    <div class="spending-bar">
+                        <div class="spending-fill fill-john" style="height: 75%">
+                            <div class="spending-label">$1,845</div>
+                        </div>
+                    </div>
+                    <div class="spending-details">
+                        <div>63 transactions</div>
+                        <div>56.8% of total spending</div>
+                        <div>Average: $29.29/transaction</div>
+                    </div>
+                </div>
+
+                <div class="member-column">
+                    <div class="member-name">👩 Jane Doe</div>
+                    <div class="spending-bar">
+                        <div class="spending-fill fill-jane" style="height: 57%">
+                            <div class="spending-label">$1,400</div>
+                        </div>
+                    </div>
+                    <div class="spending-details">
+                        <div>64 transactions</div>
+                        <div>43.2% of total spending</div>
+                        <div>Average: $21.88/transaction</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

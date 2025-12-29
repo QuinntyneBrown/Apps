@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking - Freelance Project Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 73px;
+            width: 250px;
+            height: calc(100vh - 73px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 0;
+        }
+
+        .nav-item {
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #f7fafc;
+            color: #6366f1;
+            border-right: 3px solid #6366f1;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+
+        .timer-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+            color: white;
+        }
+
+        .timer-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .timer-time {
+            font-size: 4rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer-project {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .timer-btn {
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .timer-btn-start {
+            background: white;
+            color: #6366f1;
+        }
+
+        .timer-btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .timer-btn-stop {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .timer-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+
+        .timer-input {
+            padding: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .timer-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .timer-select {
+            padding: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .date-range {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .date-input {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .entries-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: #718096;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .entry-date {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .entry-project {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .entry-project:hover {
+            text-decoration: underline;
+        }
+
+        .entry-description {
+            color: #4a5568;
+        }
+
+        .entry-duration {
+            font-weight: 700;
+            color: #2d3748;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .entry-billable {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .billable-yes {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .billable-no {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+
+        .group-header {
+            background: #f7fafc;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-total {
+            color: #6366f1;
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">FreelanceHub</div>
+        <div class="user-info">
+            <span>Sarah Anderson</span>
+            <div class="avatar">SA</div>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <a href="#" class="nav-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="#" class="nav-item active">
+            <span>⏱️</span>
+            <span>Time Tracking</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span>🧾</span>
+            <span>Invoices</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span>👥</span>
+            <span>Clients</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span>💰</span>
+            <span>Earnings</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Time Tracking</h1>
+            <button class="btn btn-primary">+ Manual Entry</button>
+        </div>
+
+        <div class="timer-card">
+            <div class="timer-display">
+                <div class="timer-time">02:34:18</div>
+                <div class="timer-project">E-commerce Website Redesign</div>
+            </div>
+
+            <div class="timer-controls">
+                <button class="timer-btn timer-btn-stop">⏸ Pause</button>
+                <button class="timer-btn timer-btn-stop">⏹ Stop & Save</button>
+            </div>
+
+            <div class="timer-form">
+                <input type="text" class="timer-input" placeholder="What are you working on?" value="Designing checkout flow mockups">
+                <select class="timer-select">
+                    <option>E-commerce Website Redesign</option>
+                    <option>Mobile App UI Design</option>
+                    <option>Brand Identity Package</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Today</div>
+                <div class="stat-value">6.5h</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">This Week</div>
+                <div class="stat-value">32.5h</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">This Month</div>
+                <div class="stat-value">142.5h</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Billable Hours</div>
+                <div class="stat-value">128h</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="date-range">
+                <input type="date" class="date-input" value="2025-12-01">
+                <span>to</span>
+                <input type="date" class="date-input" value="2025-12-31">
+            </div>
+            <select class="filter-select">
+                <option>All Projects</option>
+                <option>E-commerce Website Redesign</option>
+                <option>Mobile App UI Design</option>
+                <option>Brand Identity Package</option>
+            </select>
+            <select class="filter-select">
+                <option>All Billable Status</option>
+                <option>Billable Only</option>
+                <option>Non-Billable Only</option>
+            </select>
+            <select class="filter-select">
+                <option>All Clients</option>
+                <option>TechStyle Co.</option>
+                <option>StartupX</option>
+                <option>GreenLeaf Organic</option>
+            </select>
+        </div>
+
+        <div class="entries-table">
+            <div class="table-header">
+                <h2 class="table-title">Time Entries</h2>
+                <span style="color: #718096;">Total: 142.5 hours</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Project</th>
+                        <th>Description</th>
+                        <th>Duration</th>
+                        <th>Billable</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="group-header">
+                        <td colspan="6">
+                            <span>This Week</span>
+                            <span class="group-total">32.5 hours</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 28, 2025</td>
+                        <td><a href="#" class="entry-project">E-commerce Website Redesign</a></td>
+                        <td class="entry-description">Created high-fidelity mockups for product pages</td>
+                        <td class="entry-duration">4.5h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 27, 2025</td>
+                        <td><a href="#" class="entry-project">E-commerce Website Redesign</a></td>
+                        <td class="entry-description">Wireframing for homepage and category pages</td>
+                        <td class="entry-duration">6.0h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 27, 2025</td>
+                        <td><a href="#" class="entry-project">Mobile App UI Design</a></td>
+                        <td class="entry-description">Design system component library setup</td>
+                        <td class="entry-duration">5.5h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 26, 2025</td>
+                        <td><a href="#" class="entry-project">Mobile App UI Design</a></td>
+                        <td class="entry-description">User flow diagrams and navigation structure</td>
+                        <td class="entry-duration">4.0h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 24, 2025</td>
+                        <td><a href="#" class="entry-project">Brand Identity Package</a></td>
+                        <td class="entry-description">Logo variations and brand color palette</td>
+                        <td class="entry-duration">7.5h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 23, 2025</td>
+                        <td><a href="#" class="entry-project">E-commerce Website Redesign</a></td>
+                        <td class="entry-description">Client review meeting and feedback session</td>
+                        <td class="entry-duration">2.0h</td>
+                        <td><span class="entry-billable billable-no">Non-Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 23, 2025</td>
+                        <td><a href="#" class="entry-project">Brand Identity Package</a></td>
+                        <td class="entry-description">Typography selection and pairing</td>
+                        <td class="entry-duration">3.0h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="group-header">
+                        <td colspan="6">
+                            <span>Last Week</span>
+                            <span class="group-total">38.5 hours</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 20, 2025</td>
+                        <td><a href="#" class="entry-project">E-commerce Website Redesign</a></td>
+                        <td class="entry-description">Information architecture and site mapping</td>
+                        <td class="entry-duration">5.0h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 19, 2025</td>
+                        <td><a href="#" class="entry-project">Mobile App UI Design</a></td>
+                        <td class="entry-description">Onboarding screen designs</td>
+                        <td class="entry-duration">6.5h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="entry-date">Dec 18, 2025</td>
+                        <td><a href="#" class="entry-project">E-commerce Website Redesign</a></td>
+                        <td class="entry-description">Competitive analysis and market research</td>
+                        <td class="entry-duration">4.0h</td>
+                        <td><span class="entry-billable billable-yes">Billable</span></td>
+                        <td>
+                            <div class="entry-actions">
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

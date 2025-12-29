@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommendations - Book Reading Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .header-subtitle {
+            font-size: 15px;
+            color: #718096;
+        }
+
+        .tabs {
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .section {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .book-cover-container {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .match-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .book-info {
+            padding: 16px;
+        }
+
+        .book-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 6px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .book-author {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .book-rating {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            color: #fbbf24;
+            font-size: 14px;
+        }
+
+        .star-empty {
+            color: #e2e8f0;
+        }
+
+        .rating-count {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-left: 6px;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-wishlist {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-wishlist:hover {
+            background: #f7fafc;
+        }
+
+        .reason-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #f7fafc;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .friend-recommendation {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .friend-recommendation:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .friend-content {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .friend-message {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .recommended-book {
+            display: flex;
+            gap: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .recommended-book-cover {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .recommended-book-info {
+            flex: 1;
+        }
+
+        .recommended-book-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .recommended-book-author {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .list-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .list-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .list-meta {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .list-description {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .list-books {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .list-book-cover {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .wishlist-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .wishlist-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .wishlist-cover {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .wishlist-info {
+            flex: 1;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .priority-low {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .wishlist-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .wishlist-author {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .wishlist-reason {
+            font-size: 13px;
+            color: #4a5568;
+            font-style: italic;
+            margin-bottom: 12px;
+        }
+
+        .wishlist-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💡 Book Recommendations</h1>
+            <p class="header-subtitle">Discover your next great read based on your reading history and preferences</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">For You</button>
+            <button class="tab">From Friends</button>
+            <button class="tab">Reading Lists</button>
+            <button class="tab">My Wishlist</button>
+            <button class="tab">Trending</button>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🎯 Personalized Picks</h2>
+                    <p class="section-subtitle">Based on your 5-star ratings and reading history</p>
+                </div>
+                <a href="#" class="view-all">Refresh →</a>
+            </div>
+
+            <div class="books-grid">
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">94% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">The Seven Husbands of Evelyn Hugo</div>
+                        <div class="book-author">Taylor Jenkins Reid</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="rating-count">(4.2k)</span>
+                        </div>
+                        <div class="reason-tag">Similar to your favorites</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">92% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">Educated: A Memoir</div>
+                        <div class="book-author">Tara Westover</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="rating-count">(3.8k)</span>
+                        </div>
+                        <div class="reason-tag">Biographical like Sapiens</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">89% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">The Silent Patient</div>
+                        <div class="book-author">Alex Michaelides</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star star-empty">★</span>
+                            <span class="rating-count">(2.1k)</span>
+                        </div>
+                        <div class="reason-tag">Psychological thriller</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">87% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">Where the Crawdads Sing</div>
+                        <div class="book-author">Delia Owens</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star star-empty">★</span>
+                            <span class="rating-count">(5.2k)</span>
+                        </div>
+                        <div class="reason-tag">Best seller in fiction</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1551029506-0807df4e7e4e?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">85% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">Circe</div>
+                        <div class="book-author">Madeline Miller</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="rating-count">(3.3k)</span>
+                        </div>
+                        <div class="reason-tag">Literary fiction</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover-container">
+                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop" alt="Book Cover" class="book-cover">
+                        <div class="match-badge">84% Match</div>
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">The Song of Achilles</div>
+                        <div class="book-author">Madeline Miller</div>
+                        <div class="book-rating">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="rating-count">(2.9k)</span>
+                        </div>
+                        <div class="reason-tag">By author you like</div>
+                        <div class="book-actions">
+                            <button class="btn-small btn-add">+ Library</button>
+                            <button class="btn-small btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">👥 Recommendations from Friends</h2>
+                    <p class="section-subtitle">See what your reading friends think you'd love</p>
+                </div>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-avatar">SM</div>
+                <div class="friend-content">
+                    <div class="friend-name">Sarah Martinez</div>
+                    <div class="friend-message">
+                        "I know you loved 'The Midnight Library' - you HAVE to read this! It has the same philosophical depth but with a sci-fi twist. Couldn't put it down!"
+                    </div>
+                    <div class="recommended-book">
+                        <img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=120&h=180&fit=crop" alt="Book" class="recommended-book-cover">
+                        <div class="recommended-book-info">
+                            <div class="recommended-book-title">Recursion</div>
+                            <div class="recommended-book-author">Blake Crouch</div>
+                            <div class="book-rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star star-empty">★</span>
+                            </div>
+                            <div class="recommendation-actions">
+                                <button class="btn-small btn-add">+ Add to Library</button>
+                                <button class="btn-small btn-wishlist">+ Wishlist</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-avatar">JC</div>
+                <div class="friend-content">
+                    <div class="friend-name">James Chen</div>
+                    <div class="friend-message">
+                        "Since you're into productivity books like Atomic Habits, this is a must-read. Changed how I think about focus and deep work."
+                    </div>
+                    <div class="recommended-book">
+                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=120&h=180&fit=crop" alt="Book" class="recommended-book-cover">
+                        <div class="recommended-book-info">
+                            <div class="recommended-book-title">Deep Work</div>
+                            <div class="recommended-book-author">Cal Newport</div>
+                            <div class="book-rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                            <div class="recommendation-actions">
+                                <button class="btn-small btn-add">+ Add to Library</button>
+                                <button class="btn-small btn-wishlist">+ Wishlist</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friend-recommendation">
+                <div class="friend-avatar">EW</div>
+                <div class="friend-content">
+                    <div class="friend-name">Emily Watson</div>
+                    <div class="friend-message">
+                        "Perfect for our book club! Beautiful prose and fascinating historical perspective. Think you'll really connect with it."
+                    </div>
+                    <div class="recommended-book">
+                        <img src="https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=120&h=180&fit=crop" alt="Book" class="recommended-book-cover">
+                        <div class="recommended-book-info">
+                            <div class="recommended-book-title">The Vanishing Half</div>
+                            <div class="recommended-book-author">Brit Bennett</div>
+                            <div class="book-rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star star-empty">★</span>
+                            </div>
+                            <div class="recommendation-actions">
+                                <button class="btn-small btn-add">+ Add to Library</button>
+                                <button class="btn-small btn-wishlist">+ Wishlist</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">📚 Curated Reading Lists</h2>
+                    <p class="section-subtitle">Explore themed collections from the community</p>
+                </div>
+                <a href="#" class="view-all">Browse All →</a>
+            </div>
+
+            <div class="list-card">
+                <div class="list-header">
+                    <div>
+                        <div class="list-title">Best Science Fiction of 2024-2025</div>
+                        <div class="list-meta">Created by BookClub Pro • 15 books • 2.3k followers</div>
+                    </div>
+                </div>
+                <div class="list-description">
+                    A carefully curated collection of the most groundbreaking and thought-provoking science fiction novels from the past two years. From space operas to near-future dystopias.
+                </div>
+                <div class="list-books">
+                    <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1551029506-0807df4e7e4e?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                </div>
+            </div>
+
+            <div class="list-card">
+                <div class="list-header">
+                    <div>
+                        <div class="list-title">Books That Changed My Life</div>
+                        <div class="list-meta">Created by Sarah Martinez • 12 books • 890 followers</div>
+                    </div>
+                </div>
+                <div class="list-description">
+                    Personal favorites that fundamentally shifted my perspective on life, relationships, and personal growth. Each one offers profound insights.
+                </div>
+                <div class="list-books">
+                    <img src="https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                    <img src="https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=160&h=240&fit=crop" alt="Book" class="list-book-cover">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">⭐ My Wishlist</h2>
+                    <p class="section-subtitle">Books you want to read (45 total)</p>
+                </div>
+                <a href="#" class="view-all">View All →</a>
+            </div>
+
+            <div class="wishlist-item">
+                <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=160&h=240&fit=crop" alt="Book" class="wishlist-cover">
+                <div class="wishlist-info">
+                    <div class="priority-badge priority-high">High Priority</div>
+                    <div class="wishlist-title">Where the Crawdads Sing</div>
+                    <div class="wishlist-author">Delia Owens</div>
+                    <div class="wishlist-reason">"Recommended by Emily from book club - she said it's a beautiful coming-of-age story with mystery elements."</div>
+                    <div class="wishlist-meta">
+                        <span>📅 Added Nov 15, 2025</span>
+                        <span>📚 Fiction, Mystery</span>
+                        <span>📄 384 pages</span>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn-small btn-add">Start Reading</button>
+                        <button class="btn-small btn-wishlist">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=160&h=240&fit=crop" alt="Book" class="wishlist-cover">
+                <div class="wishlist-info">
+                    <div class="priority-badge priority-high">High Priority</div>
+                    <div class="wishlist-title">Becoming</div>
+                    <div class="wishlist-author">Michelle Obama</div>
+                    <div class="wishlist-reason">"Want to read before the end of the year. Heard amazing things about her storytelling and perspective."</div>
+                    <div class="wishlist-meta">
+                        <span>📅 Added Oct 28, 2025</span>
+                        <span>📚 Biography, Memoir</span>
+                        <span>📄 448 pages</span>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn-small btn-add">Start Reading</button>
+                        <button class="btn-small btn-wishlist">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=160&h=240&fit=crop" alt="Book" class="wishlist-cover">
+                <div class="wishlist-info">
+                    <div class="priority-badge priority-medium">Medium Priority</div>
+                    <div class="wishlist-title">Dune</div>
+                    <div class="wishlist-author">Frank Herbert</div>
+                    <div class="wishlist-reason">"Classic sci-fi I've been meaning to read. Want to tackle it after finishing Project Hail Mary."</div>
+                    <div class="wishlist-meta">
+                        <span>📅 Added Sep 12, 2025</span>
+                        <span>📚 Science Fiction, Epic</span>
+                        <span>📄 688 pages</span>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn-small btn-add">Start Reading</button>
+                        <button class="btn-small btn-wishlist">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=160&h=240&fit=crop" alt="Book" class="wishlist-cover">
+                <div class="wishlist-info">
+                    <div class="priority-badge priority-low">Low Priority</div>
+                    <div class="wishlist-title">The Vanishing Half</div>
+                    <div class="wishlist-author">Brit Bennett</div>
+                    <div class="wishlist-reason">"Saw this recommended on several year-end lists. Intriguing premise about twin sisters."</div>
+                    <div class="wishlist-meta">
+                        <span>📅 Added Aug 5, 2025</span>
+                        <span>📚 Fiction, Historical</span>
+                        <span>📄 343 pages</span>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn-small btn-add">Start Reading</button>
+                        <button class="btn-small btn-wishlist">Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Chore - ChoreAssignmentTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 25px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 25px 25px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-label.required::after {
+            content: "*";
+            color: #ee0979;
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-label {
+            display: block;
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .radio-option input[type="radio"]:checked + .radio-label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .radio-label:hover {
+            border-color: #667eea;
+        }
+
+        .difficulty-options .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .difficulty-icon {
+            font-size: 32px;
+        }
+
+        .points-preview {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .points-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #78350f;
+            margin-bottom: 5px;
+        }
+
+        .points-label {
+            color: #78350f;
+            font-weight: 600;
+        }
+
+        .frequency-section {
+            display: grid;
+            gap: 15px;
+        }
+
+        .frequency-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .frequency-option:hover {
+            border-color: #667eea;
+        }
+
+        .frequency-option.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: #667eea;
+        }
+
+        .frequency-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .frequency-description {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .day-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .day-btn {
+            width: 45px;
+            height: 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .day-btn:hover {
+            border-color: #667eea;
+        }
+
+        .day-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .assignment-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .assignment-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .assignment-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .assignment-card.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: #667eea;
+        }
+
+        .assignment-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .assignment-title {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .assignment-description {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            padding: 30px 40px;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-cancel:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .help-text {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>✨</span>
+                    <span>Add New Chore</span>
+                </div>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span>📝</span>
+                        <span>Basic Information</span>
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label required">Chore Name</label>
+                        <input type="text" class="form-input" placeholder="e.g., Do the dishes, Vacuum living room">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" placeholder="Add detailed instructions or notes about this chore..."></textarea>
+                        <div class="help-text">Include any specific requirements or helpful tips</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label required">Category</label>
+                            <select class="form-input">
+                                <option value="">Select a category</option>
+                                <option value="cleaning">🧹 Cleaning</option>
+                                <option value="kitchen">🍽️ Kitchen</option>
+                                <option value="outdoor">🌳 Outdoor</option>
+                                <option value="pets">🐕 Pets</option>
+                                <option value="laundry">👕 Laundry</option>
+                                <option value="organization">📦 Organization</option>
+                                <option value="other">📌 Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Estimated Time</label>
+                            <input type="number" class="form-input" placeholder="Minutes" min="5" step="5">
+                            <div class="help-text">How long does this typically take?</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Difficulty & Points -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span>⚡</span>
+                        <span>Difficulty & Points</span>
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label required">Difficulty Level</label>
+                        <div class="radio-group difficulty-options">
+                            <div class="radio-option">
+                                <input type="radio" name="difficulty" id="easy" value="easy" checked>
+                                <label for="easy" class="radio-label">
+                                    <span class="difficulty-icon">😊</span>
+                                    <span>Easy</span>
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="difficulty" id="medium" value="medium">
+                                <label for="medium" class="radio-label">
+                                    <span class="difficulty-icon">💪</span>
+                                    <span>Medium</span>
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="difficulty" id="hard" value="hard">
+                                <label for="hard" class="radio-label">
+                                    <span class="difficulty-icon">🔥</span>
+                                    <span>Hard</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Custom Point Value</label>
+                            <input type="number" class="form-input" placeholder="Auto-calculated" min="1" step="5">
+                            <div class="help-text">Leave blank for auto-calculation based on difficulty</div>
+                        </div>
+
+                        <div class="points-preview">
+                            <div class="points-value">30</div>
+                            <div class="points-label">Points Reward</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frequency & Schedule -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span>📅</span>
+                        <span>Frequency & Schedule</span>
+                    </h3>
+
+                    <div class="frequency-section">
+                        <div class="frequency-option selected">
+                            <div class="frequency-header">
+                                <span>🔄</span>
+                                <span>Daily</span>
+                            </div>
+                            <div class="frequency-description">Repeats every day</div>
+                            <input type="time" class="form-input" value="09:00" style="margin-top: 10px;">
+                        </div>
+
+                        <div class="frequency-option">
+                            <div class="frequency-header">
+                                <span>📆</span>
+                                <span>Weekly</span>
+                            </div>
+                            <div class="frequency-description">Repeats on specific days each week</div>
+                            <div class="day-selector">
+                                <button class="day-btn selected">M</button>
+                                <button class="day-btn">T</button>
+                                <button class="day-btn selected">W</button>
+                                <button class="day-btn">T</button>
+                                <button class="day-btn selected">F</button>
+                                <button class="day-btn">S</button>
+                                <button class="day-btn">S</button>
+                            </div>
+                        </div>
+
+                        <div class="frequency-option">
+                            <div class="frequency-header">
+                                <span>📌</span>
+                                <span>One-time</span>
+                            </div>
+                            <div class="frequency-description">Occurs once on a specific date</div>
+                            <input type="date" class="form-input" style="margin-top: 10px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Method -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span>👥</span>
+                        <span>Assignment Method</span>
+                    </h3>
+
+                    <div class="assignment-options">
+                        <div class="assignment-card selected">
+                            <div class="assignment-icon">🔄</div>
+                            <div class="assignment-title">Auto-Rotate</div>
+                            <div class="assignment-description">Automatically rotates among members</div>
+                        </div>
+
+                        <div class="assignment-card">
+                            <div class="assignment-icon">👤</div>
+                            <div class="assignment-title">Specific Person</div>
+                            <div class="assignment-description">Always assigned to same person</div>
+                        </div>
+
+                        <div class="assignment-card">
+                            <div class="assignment-icon">🙋</div>
+                            <div class="assignment-title">Volunteer</div>
+                            <div class="assignment-description">Anyone can claim this chore</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">Assign To (for rotation)</label>
+                        <select class="form-input" multiple size="4">
+                            <option value="emma" selected>Emma (14)</option>
+                            <option value="lucas" selected>Lucas (11)</option>
+                            <option value="olivia" selected>Olivia (8)</option>
+                            <option value="sarah">Sarah (Mom)</option>
+                            <option value="david">David (Dad)</option>
+                        </select>
+                        <div class="help-text">Hold Ctrl/Cmd to select multiple members</div>
+                    </div>
+                </div>
+
+                <!-- Instructions & Media -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span>📸</span>
+                        <span>Instructions & Media (Optional)</span>
+                    </h3>
+
+                    <div class="upload-area">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Upload Photos or Instructions</div>
+                        <div class="upload-hint">Drag and drop files here, or click to browse</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-cancel">Cancel</button>
+                <button class="btn btn-primary">✨ Create Chore</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

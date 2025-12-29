@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recurring Events - Family Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .page-header {
+            padding: 32px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .page-description {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .content {
+            padding: 32px;
+        }
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .recurring-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .recurring-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .recurring-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        .event-title-section {
+            flex: 1;
+        }
+        .event-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .event-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .event-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #d1d5db;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .switch.active {
+            background: #10b981;
+        }
+        .switch-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .switch.active .switch-knob {
+            left: 26px;
+        }
+        .event-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .pattern-info {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .pattern-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .pattern-details {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        .attendees {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .attendee-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        .upcoming-instances {
+            background: #fefce8;
+            border: 1px solid #fef08a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .instances-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #854d0e;
+            margin-bottom: 8px;
+        }
+        .instance-dates {
+            font-size: 12px;
+            color: #713f12;
+            line-height: 1.5;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .action-btn {
+            padding: 10px 20px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f9fafb;
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .action-btn.danger:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        .exceptions-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #dc2626;
+            margin-left: 8px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Recurring Events</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Calendar</button>
+                <button class="btn btn-primary">+ Create Recurring Event</button>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <h2 class="page-title">Manage Recurring Events</h2>
+            <p class="page-description">View and manage all recurring events, patterns, and exceptions for your family calendar.</p>
+        </div>
+
+        <div class="content">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Active Recurring Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Total Instances This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Exceptions Created</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active">All Events</button>
+                <button class="filter-btn">Daily</button>
+                <button class="filter-btn">Weekly</button>
+                <button class="filter-btn">Monthly</button>
+                <button class="filter-btn">Yearly</button>
+                <button class="filter-btn">With Exceptions</button>
+            </div>
+
+            <div class="recurring-list">
+                <div class="recurring-card">
+                    <div class="card-header">
+                        <div class="event-title-section">
+                            <div class="event-icon">⚽</div>
+                            <div class="event-title">Soccer Practice</div>
+                            <span class="event-category" style="background: #10b981;">Sports</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-info">
+                        <div class="pattern-title">📅 Recurrence Pattern</div>
+                        <div class="pattern-details">
+                            Repeats <strong>weekly on Saturdays</strong> at 4:00 PM<br>
+                            Ends on June 30, 2026 (78 total occurrences)
+                        </div>
+                    </div>
+
+                    <div class="event-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span>1 hour 30 minutes</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span>📍 Sports Complex - Field 3</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Instance:</span>
+                            <span>Sat, Jan 4, 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="attendees">
+                        <div class="attendee-badge" style="background: #10b981;">Emma</div>
+                        <div class="attendee-badge" style="background: #3b82f6;">Dad (John)</div>
+                    </div>
+
+                    <div class="upcoming-instances">
+                        <div class="instances-title">📆 Next 5 Occurrences</div>
+                        <div class="instance-dates">
+                            Jan 4, 2026 • Jan 11, 2026 • Jan 18, 2026 • Jan 25, 2026 • Feb 1, 2026
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn">Edit Series</button>
+                        <button class="action-btn">Skip Next</button>
+                        <button class="action-btn">View All Instances</button>
+                        <button class="action-btn danger">Delete Series</button>
+                    </div>
+                </div>
+
+                <div class="recurring-card">
+                    <div class="card-header">
+                        <div class="event-title-section">
+                            <div class="event-icon">🏫</div>
+                            <div class="event-title">
+                                School Day
+                                <span class="exceptions-indicator">⚠️ 3 exceptions</span>
+                            </div>
+                            <span class="event-category" style="background: #f59e0b;">School</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-info">
+                        <div class="pattern-title">📅 Recurrence Pattern</div>
+                        <div class="pattern-details">
+                            Repeats <strong>weekly on Monday, Tuesday, Wednesday, Thursday, Friday</strong> at 9:00 AM<br>
+                            Ends on June 15, 2026 (180 total occurrences)
+                        </div>
+                    </div>
+
+                    <div class="event-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span>6 hours 30 minutes</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span>📍 Lincoln Middle School</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Instance:</span>
+                            <span>Mon, Jan 6, 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="attendees">
+                        <div class="attendee-badge" style="background: #10b981;">Emma</div>
+                        <div class="attendee-badge" style="background: #f59e0b;">Liam</div>
+                    </div>
+
+                    <div class="upcoming-instances">
+                        <div class="instances-title">📆 Next 5 Occurrences</div>
+                        <div class="instance-dates">
+                            Jan 6, 2026 • Jan 7, 2026 • Jan 8, 2026 • Jan 9, 2026 • Jan 10, 2026
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn">Edit Series</button>
+                        <button class="action-btn">View Exceptions</button>
+                        <button class="action-btn">Skip Next</button>
+                        <button class="action-btn danger">Delete Series</button>
+                    </div>
+                </div>
+
+                <div class="recurring-card">
+                    <div class="card-header">
+                        <div class="event-title-section">
+                            <div class="event-icon">🍽️</div>
+                            <div class="event-title">Family Dinner Night</div>
+                            <span class="event-category" style="background: #8b5cf6;">Family Dinner</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-info">
+                        <div class="pattern-title">📅 Recurrence Pattern</div>
+                        <div class="pattern-details">
+                            Repeats <strong>daily</strong> at 6:30 PM<br>
+                            No end date (ongoing)
+                        </div>
+                    </div>
+
+                    <div class="event-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span>1 hour</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span>📍 Home - Dining Room</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Instance:</span>
+                            <span>Today, 6:30 PM</span>
+                        </div>
+                    </div>
+
+                    <div class="attendees">
+                        <div class="attendee-badge" style="background: #ef4444;">Mom (Jennifer)</div>
+                        <div class="attendee-badge" style="background: #3b82f6;">Dad (John)</div>
+                        <div class="attendee-badge" style="background: #10b981;">Emma</div>
+                        <div class="attendee-badge" style="background: #f59e0b;">Liam</div>
+                    </div>
+
+                    <div class="upcoming-instances">
+                        <div class="instances-title">📆 Next 5 Occurrences</div>
+                        <div class="instance-dates">
+                            Dec 29, 2025 • Dec 30, 2025 • Dec 31, 2025 • Jan 1, 2026 • Jan 2, 2026
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn">Edit Series</button>
+                        <button class="action-btn">Skip Next</button>
+                        <button class="action-btn">View All Instances</button>
+                        <button class="action-btn danger">Delete Series</button>
+                    </div>
+                </div>
+
+                <div class="recurring-card">
+                    <div class="card-header">
+                        <div class="event-title-section">
+                            <div class="event-icon">🎹</div>
+                            <div class="event-title">Piano Lesson</div>
+                            <span class="event-category" style="background: #f59e0b;">School</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-info">
+                        <div class="pattern-title">📅 Recurrence Pattern</div>
+                        <div class="pattern-details">
+                            Repeats <strong>weekly on Saturdays</strong> at 5:00 PM<br>
+                            Ends on May 31, 2026 (22 total occurrences)
+                        </div>
+                    </div>
+
+                    <div class="event-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span>1 hour</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span>📍 Music Academy - Studio 2</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Instance:</span>
+                            <span>Sat, Jan 4, 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="attendees">
+                        <div class="attendee-badge" style="background: #f59e0b;">Liam</div>
+                        <div class="attendee-badge" style="background: #ef4444;">Mom (Jennifer)</div>
+                    </div>
+
+                    <div class="upcoming-instances">
+                        <div class="instances-title">📆 Next 5 Occurrences</div>
+                        <div class="instance-dates">
+                            Jan 4, 2026 • Jan 11, 2026 • Jan 18, 2026 • Jan 25, 2026 • Feb 1, 2026
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn">Edit Series</button>
+                        <button class="action-btn">Skip Next</button>
+                        <button class="action-btn">View All Instances</button>
+                        <button class="action-btn danger">Delete Series</button>
+                    </div>
+                </div>
+
+                <div class="recurring-card">
+                    <div class="card-header">
+                        <div class="event-title-section">
+                            <div class="event-icon">⛪</div>
+                            <div class="event-title">Church Service</div>
+                            <span class="event-category" style="background: #8b5cf6;">Family</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-info">
+                        <div class="pattern-title">📅 Recurrence Pattern</div>
+                        <div class="pattern-details">
+                            Repeats <strong>weekly on Sundays</strong> at 10:00 AM<br>
+                            No end date (ongoing)
+                        </div>
+                    </div>
+
+                    <div class="event-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration:</span>
+                            <span>1 hour 30 minutes</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span>📍 Community Church</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Instance:</span>
+                            <span>Sun, Jan 5, 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="attendees">
+                        <div class="attendee-badge" style="background: #ef4444;">Mom (Jennifer)</div>
+                        <div class="attendee-badge" style="background: #3b82f6;">Dad (John)</div>
+                        <div class="attendee-badge" style="background: #10b981;">Emma</div>
+                        <div class="attendee-badge" style="background: #f59e0b;">Liam</div>
+                    </div>
+
+                    <div class="upcoming-instances">
+                        <div class="instances-title">📆 Next 5 Occurrences</div>
+                        <div class="instance-dates">
+                            Jan 5, 2026 • Jan 12, 2026 • Jan 19, 2026 • Jan 26, 2026 • Feb 2, 2026
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn">Edit Series</button>
+                        <button class="action-btn">Skip Next</button>
+                        <button class="action-btn">View All Instances</button>
+                        <button class="action-btn danger">Delete Series</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

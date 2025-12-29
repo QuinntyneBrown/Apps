@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydration Tracker - Add Drink</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: block;
+        }
+
+        .beverage-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .beverage-btn {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            padding: 16px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .beverage-btn:hover {
+            background: #eef1f7;
+            border-color: #667eea;
+        }
+
+        .beverage-btn.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .beverage-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .beverage-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .amount-section {
+            margin-bottom: 28px;
+        }
+
+        .amount-presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .preset-btn {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            padding: 16px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: #eef1f7;
+            border-color: #667eea;
+        }
+
+        .preset-btn.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .preset-value {
+            font-size: 20px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .preset-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .custom-amount {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .amount-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .unit-toggle {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .unit-toggle:hover {
+            border-color: #667eea;
+        }
+
+        .slider-container {
+            margin-top: 16px;
+        }
+
+        .amount-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .amount-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+        }
+
+        .amount-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+        }
+
+        .time-section {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .time-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .now-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .now-btn:hover {
+            background: #5568d3;
+        }
+
+        .notes-section {
+            margin-bottom: 28px;
+        }
+
+        .notes-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .notes-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .summary {
+            background: #f7f9fc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .summary-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .summary-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .summary-detail {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .cancel-btn {
+            flex: 1;
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .cancel-btn:hover {
+            background: #f7f9fc;
+            border-color: #999;
+        }
+
+        .save-btn {
+            flex: 2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            flex: 1;
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2>💧 Log a Drink</h2>
+            <button class="close-btn">✕</button>
+        </div>
+
+        <div class="quick-actions">
+            <button class="quick-action">🕐 Morning</button>
+            <button class="quick-action">☀️ Noon</button>
+            <button class="quick-action">🌆 Evening</button>
+            <button class="quick-action">🏃 Post-Workout</button>
+        </div>
+
+        <div class="section">
+            <label class="section-label">Beverage Type</label>
+            <div class="beverage-types">
+                <button class="beverage-btn selected">
+                    <span class="beverage-icon">💧</span>
+                    <span class="beverage-name">Water</span>
+                </button>
+                <button class="beverage-btn">
+                    <span class="beverage-icon">☕</span>
+                    <span class="beverage-name">Coffee</span>
+                </button>
+                <button class="beverage-btn">
+                    <span class="beverage-icon">🍵</span>
+                    <span class="beverage-name">Tea</span>
+                </button>
+                <button class="beverage-btn">
+                    <span class="beverage-icon">🥤</span>
+                    <span class="beverage-name">Juice</span>
+                </button>
+                <button class="beverage-btn">
+                    <span class="beverage-icon">🥛</span>
+                    <span class="beverage-name">Milk</span>
+                </button>
+                <button class="beverage-btn">
+                    <span class="beverage-icon">🧃</span>
+                    <span class="beverage-name">Other</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="amount-section">
+            <label class="section-label">Amount</label>
+            <div class="amount-presets">
+                <button class="preset-btn">
+                    <span class="preset-value">240</span>
+                    <span class="preset-label">ml (8oz)</span>
+                </button>
+                <button class="preset-btn">
+                    <span class="preset-value">360</span>
+                    <span class="preset-label">ml (12oz)</span>
+                </button>
+                <button class="preset-btn selected">
+                    <span class="preset-value">480</span>
+                    <span class="preset-label">ml (16oz)</span>
+                </button>
+                <button class="preset-btn">
+                    <span class="preset-value">720</span>
+                    <span class="preset-label">ml (24oz)</span>
+                </button>
+            </div>
+
+            <div class="custom-amount">
+                <input type="number" class="amount-input" value="480" placeholder="Enter amount">
+                <button class="unit-toggle">ml</button>
+            </div>
+
+            <div class="slider-container">
+                <input type="range" class="amount-slider" min="0" max="1000" value="480" step="10">
+            </div>
+        </div>
+
+        <div class="section">
+            <label class="section-label">Time</label>
+            <div class="time-section">
+                <input type="time" class="time-input" value="14:30">
+                <input type="date" class="time-input" value="2025-12-29">
+                <button class="now-btn">Now</button>
+            </div>
+        </div>
+
+        <div class="notes-section">
+            <label class="section-label">Notes (Optional)</label>
+            <textarea class="notes-input" placeholder="Add any notes about this drink..."></textarea>
+        </div>
+
+        <div class="summary">
+            <div class="summary-icon">💧</div>
+            <div class="summary-text">480 ml</div>
+            <div class="summary-detail">Water • Today at 2:30 PM</div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-btn">Cancel</button>
+            <button class="save-btn">Log Drink</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Account Sync - Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 1.8rem; color: #667eea; font-weight: 700; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+        .nav-tabs {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-info h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .page-info p {
+            font-size: 1rem;
+            color: #666;
+        }
+        .sync-status {
+            text-align: right;
+        }
+        .sync-time {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+        .btn-sync {
+            background: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .stat-value.success { color: #10b981; }
+        .stat-value.error { color: #ef4444; }
+
+        .accounts-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .account-card {
+            padding: 2rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        .account-card:hover {
+            background: #f9fafb;
+        }
+        .account-card:last-child {
+            border-bottom: none;
+        }
+
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        .account-info {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .account-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+        .account-details h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .account-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .sync-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-syncing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .sync-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .sync-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .sync-detail-label {
+            font-size: 0.8rem;
+            color: #999;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .sync-detail-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .account-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-refresh {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+        .btn-refresh:hover {
+            background: #059669;
+        }
+        .btn-reconnect {
+            background: #f59e0b;
+            color: white;
+            border: none;
+        }
+        .btn-disconnect {
+            background: white;
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+        .btn-settings {
+            background: white;
+            color: #667eea;
+            border: 2px solid #e5e7eb;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 2px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .error-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        .error-content {
+            flex: 1;
+        }
+        .error-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #991b1b;
+            margin-bottom: 0.25rem;
+        }
+        .error-text {
+            font-size: 0.85rem;
+            color: #7f1d1d;
+            line-height: 1.4;
+        }
+
+        .connect-new {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .connect-new h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .connect-new p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        .btn-connect {
+            background: white;
+            color: #667eea;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .sync-history {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .sync-history h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.75rem;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.85rem;
+            color: #666;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>💰 Personal Net Worth Dashboard</h1>
+        <div class="header-actions">
+            <button class="btn-secondary">⚙️ Settings</button>
+            <button class="btn-primary">🔗 Connect New Account</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab">Dashboard</div>
+            <div class="tab">Assets</div>
+            <div class="tab">Liabilities</div>
+            <div class="tab">Investments</div>
+            <div class="tab active">Accounts</div>
+            <div class="tab">Reports</div>
+        </div>
+
+        <div class="page-header">
+            <div class="page-info">
+                <h1>🔗 Connected Accounts</h1>
+                <p>Manage your linked accounts and automatic syncing</p>
+            </div>
+            <div class="sync-status">
+                <div class="sync-time">Last synced: 15 minutes ago</div>
+                <button class="btn-sync">
+                    <span>🔄</span>
+                    <span>Sync All Now</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Connected Accounts</div>
+                <div class="stat-value">7</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Successfully Synced</div>
+                <div class="stat-value success">6</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sync Errors</div>
+                <div class="stat-value error">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Next Scheduled Sync</div>
+                <div class="stat-value">45 min</div>
+            </div>
+        </div>
+
+        <div class="accounts-container">
+            <!-- Chase Bank - Success -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-info">
+                        <div class="account-logo">🏦</div>
+                        <div class="account-details">
+                            <h3>Chase Bank</h3>
+                            <div class="account-meta">
+                                <span>2 accounts connected</span>
+                                <span>•</span>
+                                <span>Last synced: 15 min ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sync-badge badge-success">
+                        <span>✓</span>
+                        <span>Synced</span>
+                    </div>
+                </div>
+
+                <div class="sync-details">
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Accounts</div>
+                        <div class="sync-detail-value">Chase Savings (•••1234)</div>
+                        <div class="sync-detail-value">Chase Checking (•••5678)</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Current Balance</div>
+                        <div class="sync-detail-value">$97,770</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Sync Frequency</div>
+                        <div class="sync-detail-value">Every 1 hour</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Connection Status</div>
+                        <div class="sync-detail-value" style="color: #10b981;">Healthy</div>
+                    </div>
+                </div>
+
+                <div class="account-actions">
+                    <button class="btn btn-refresh">🔄 Sync Now</button>
+                    <button class="btn btn-settings">⚙️ Settings</button>
+                    <button class="btn btn-disconnect">Disconnect</button>
+                </div>
+            </div>
+
+            <!-- Vanguard - Success -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-info">
+                        <div class="account-logo">📊</div>
+                        <div class="account-details">
+                            <h3>Vanguard</h3>
+                            <div class="account-meta">
+                                <span>1 account connected</span>
+                                <span>•</span>
+                                <span>Last synced: 1 hour ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sync-badge badge-success">
+                        <span>✓</span>
+                        <span>Synced</span>
+                    </div>
+                </div>
+
+                <div class="sync-details">
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Accounts</div>
+                        <div class="sync-detail-value">401(k) Plan (•••9012)</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Current Balance</div>
+                        <div class="sync-detail-value">$342,680</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Sync Frequency</div>
+                        <div class="sync-detail-value">Every 4 hours</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Holdings Tracked</div>
+                        <div class="sync-detail-value">3 positions</div>
+                    </div>
+                </div>
+
+                <div class="account-actions">
+                    <button class="btn btn-refresh">🔄 Sync Now</button>
+                    <button class="btn btn-settings">⚙️ Settings</button>
+                    <button class="btn btn-disconnect">Disconnect</button>
+                </div>
+            </div>
+
+            <!-- Fidelity - Error -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-info">
+                        <div class="account-logo">💼</div>
+                        <div class="account-details">
+                            <h3>Fidelity Investments</h3>
+                            <div class="account-meta">
+                                <span>1 account connected</span>
+                                <span>•</span>
+                                <span>Last successful sync: 3 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sync-badge badge-error">
+                        <span>✕</span>
+                        <span>Sync Failed</span>
+                    </div>
+                </div>
+
+                <div class="error-message">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-content">
+                        <div class="error-title">Authentication Required</div>
+                        <div class="error-text">
+                            Your connection to Fidelity has expired. Please reconnect your account to resume automatic syncing.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sync-details">
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Accounts</div>
+                        <div class="sync-detail-value">Brokerage (•••3456)</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Last Known Balance</div>
+                        <div class="sync-detail-value">$156,230</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Error Code</div>
+                        <div class="sync-detail-value" style="color: #ef4444;">AUTH_EXPIRED</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Failed Attempts</div>
+                        <div class="sync-detail-value">12 attempts</div>
+                    </div>
+                </div>
+
+                <div class="account-actions">
+                    <button class="btn btn-reconnect">🔗 Reconnect Account</button>
+                    <button class="btn btn-settings">⚙️ Settings</button>
+                    <button class="btn btn-disconnect">Disconnect</button>
+                </div>
+
+                <div class="sync-history">
+                    <h4>Recent Sync History</h4>
+                    <div class="history-item">
+                        <span>Dec 26, 2024 - 2:30 PM</span>
+                        <span style="color: #ef4444;">Failed (AUTH_EXPIRED)</span>
+                    </div>
+                    <div class="history-item">
+                        <span>Dec 26, 2024 - 10:30 AM</span>
+                        <span style="color: #ef4444;">Failed (AUTH_EXPIRED)</span>
+                    </div>
+                    <div class="history-item">
+                        <span>Dec 25, 2024 - 2:30 PM</span>
+                        <span style="color: #ef4444;">Failed (AUTH_EXPIRED)</span>
+                    </div>
+                    <div class="history-item">
+                        <span>Dec 24, 2024 - 2:30 PM</span>
+                        <span style="color: #10b981;">Success</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ally Bank - Success -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-info">
+                        <div class="account-logo">🏦</div>
+                        <div class="account-details">
+                            <h3>Ally Bank</h3>
+                            <div class="account-meta">
+                                <span>1 account connected</span>
+                                <span>•</span>
+                                <span>Last synced: 30 min ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sync-badge badge-success">
+                        <span>✓</span>
+                        <span>Synced</span>
+                    </div>
+                </div>
+
+                <div class="sync-details">
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Accounts</div>
+                        <div class="sync-detail-value">High Yield Savings (•••7890)</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Current Balance</div>
+                        <div class="sync-detail-value">$11,000</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Sync Frequency</div>
+                        <div class="sync-detail-value">Every 1 hour</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Interest Rate</div>
+                        <div class="sync-detail-value">4.35% APY</div>
+                    </div>
+                </div>
+
+                <div class="account-actions">
+                    <button class="btn btn-refresh">🔄 Sync Now</button>
+                    <button class="btn btn-settings">⚙️ Settings</button>
+                    <button class="btn btn-disconnect">Disconnect</button>
+                </div>
+            </div>
+
+            <!-- Charles Schwab - Syncing -->
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-info">
+                        <div class="account-logo">💰</div>
+                        <div class="account-details">
+                            <h3>Charles Schwab</h3>
+                            <div class="account-meta">
+                                <span>1 account connected</span>
+                                <span>•</span>
+                                <span>Syncing now...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sync-badge badge-syncing">
+                        <div class="spinner"></div>
+                        <span>Syncing...</span>
+                    </div>
+                </div>
+
+                <div class="sync-details">
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Accounts</div>
+                        <div class="sync-detail-value">Roth IRA (•••2468)</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Last Known Balance</div>
+                        <div class="sync-detail-value">$78,500</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Sync Progress</div>
+                        <div class="sync-detail-value">Fetching positions...</div>
+                    </div>
+                    <div class="sync-detail-item">
+                        <div class="sync-detail-label">Est. Time Remaining</div>
+                        <div class="sync-detail-value">30 seconds</div>
+                    </div>
+                </div>
+
+                <div class="account-actions">
+                    <button class="btn btn-settings">⚙️ Settings</button>
+                    <button class="btn btn-disconnect">Disconnect</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="connect-new">
+            <h2>🔗 Connect More Accounts</h2>
+            <p>Link additional bank accounts, credit cards, and investment accounts for comprehensive tracking</p>
+            <button class="btn-connect">+ Connect New Account</button>
+        </div>
+    </div>
+</body>
+</html>

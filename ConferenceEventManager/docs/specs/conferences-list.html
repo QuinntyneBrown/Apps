@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conferences - Conference & Event Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .nav {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-link {
+            color: #718096;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .nav-link.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tabs {
+            background: white;
+            padding: 0 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 30px;
+        }
+
+        .tab {
+            padding: 20px 10px;
+            color: #718096;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .conferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .conference-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .conference-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .conference-header {
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+        }
+
+        .conference-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .conference-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .conference-date {
+            font-size: 14px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .conference-body {
+            padding: 25px;
+        }
+
+        .conference-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .meta-content {
+            flex: 1;
+        }
+
+        .meta-label {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .progress-section {
+            margin-bottom: 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .progress-label-text {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .progress-label-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .conference-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-upcoming {
+            background: #4299e1;
+        }
+
+        .status-registered {
+            background: #48bb78;
+        }
+
+        .status-past {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Conference & Event Manager</h1>
+            <div class="nav">
+                <a href="#" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link active">Conferences</a>
+                <a href="#" class="nav-link">Sessions</a>
+                <a href="#" class="nav-link">Connections</a>
+                <a href="#" class="nav-link">Learning</a>
+                <a href="#" class="nav-link">Expenses</a>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+                <h2 style="color: #1a202c; font-size: 24px; font-weight: 700;">All Conferences</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search conferences...">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active">All (12)</button>
+                <button class="filter-btn">Upcoming (4)</button>
+                <button class="filter-btn">Past (8)</button>
+                <button class="btn btn-primary">+ Add Conference</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active">All Conferences</div>
+            <div class="tab">Tech & Engineering</div>
+            <div class="tab">Business & Leadership</div>
+            <div class="tab">Industry Specific</div>
+        </div>
+
+        <div class="conferences-grid">
+            <div class="conference-card">
+                <div class="conference-header">
+                    <span class="conference-badge">In 75 days</span>
+                    <div class="conference-title">TechSummit 2026</div>
+                    <div class="conference-date">📅 March 15-17, 2026 • San Francisco, CA</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">12 planned</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">5 set</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">8 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">💰</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Total Cost</div>
+                                <div class="meta-value">$2,450</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">Preparation Progress</span>
+                            <span class="progress-label-value">65%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Details</button>
+                        <button class="action-btn">Edit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conference-card">
+                <div class="conference-header">
+                    <span class="conference-badge">Registered</span>
+                    <div class="conference-title">AI & Machine Learning Conference</div>
+                    <div class="conference-date">📅 April 22-24, 2026 • Boston, MA</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">8 planned</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">3 set</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">5 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">💰</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Total Cost</div>
+                                <div class="meta-value">$1,850</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">Preparation Progress</span>
+                            <span class="progress-label-value">35%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 35%;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Details</button>
+                        <button class="action-btn">Edit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conference-card">
+                <div class="conference-header">
+                    <span class="conference-badge">In 163 days</span>
+                    <div class="conference-title">DevOps World 2026</div>
+                    <div class="conference-date">📅 June 10-12, 2026 • Austin, TX</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">15 planned</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">7 set</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">12 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">💰</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Total Cost</div>
+                                <div class="meta-value">$3,200</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">Preparation Progress</span>
+                            <span class="progress-label-value">20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Details</button>
+                        <button class="action-btn">Edit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conference-card">
+                <div class="conference-header">
+                    <span class="conference-badge">In 198 days</span>
+                    <div class="conference-title">Cloud Infrastructure Summit</div>
+                    <div class="conference-date">📅 July 15-17, 2026 • Seattle, WA</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">10 planned</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">4 set</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">6 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">💰</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Total Cost</div>
+                                <div class="meta-value">$2,800</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">Preparation Progress</span>
+                            <span class="progress-label-value">15%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 15%;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Details</button>
+                        <button class="action-btn">Edit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conference-card" style="opacity: 0.7;">
+                <div class="conference-header" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
+                    <span class="conference-badge">Completed</span>
+                    <div class="conference-title">Data Science Conference 2025</div>
+                    <div class="conference-date">📅 November 12-14, 2025 • New York, NY</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">14 attended</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">6 achieved</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">18 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">⭐</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Rating</div>
+                                <div class="meta-value">4.5/5.0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">ROI Score</span>
+                            <span class="progress-label-value" style="color: #48bb78;">Excellent</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%; background: #48bb78;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Report</button>
+                        <button class="action-btn">Archive</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conference-card" style="opacity: 0.7;">
+                <div class="conference-header" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
+                    <span class="conference-badge">Completed</span>
+                    <div class="conference-title">Agile Development Summit</div>
+                    <div class="conference-date">📅 September 20-22, 2025 • Denver, CO</div>
+                </div>
+                <div class="conference-body">
+                    <div class="conference-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Sessions</div>
+                                <div class="meta-value">11 attended</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🎯</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Objectives</div>
+                                <div class="meta-value">5 achieved</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">🤝</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Connections</div>
+                                <div class="meta-value">22 contacts</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">⭐</div>
+                            <div class="meta-content">
+                                <div class="meta-label">Rating</div>
+                                <div class="meta-value">4.8/5.0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span class="progress-label-text">ROI Score</span>
+                            <span class="progress-label-value" style="color: #48bb78;">Outstanding</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 92%; background: #48bb78;"></div>
+                        </div>
+                    </div>
+                    <div class="conference-actions">
+                        <button class="action-btn-primary action-btn">View Report</button>
+                        <button class="action-btn">Archive</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

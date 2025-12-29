@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payoff Strategies - Mortgage Payoff Optimizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .back-btn {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .header h1 {
+            font-size: 24px;
+            color: #1a202c;
+            font-weight: 700;
+        }
+        .intro-card {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .intro-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+        .intro-desc {
+            font-size: 15px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .strategy-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .strategy-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        .strategy-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #ebf4ff 0%, #ffffff 100%);
+        }
+        .strategy-badge {
+            position: absolute;
+            top: -12px;
+            right: 24px;
+            background: #667eea;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .strategy-badge.best {
+            background: #48bb78;
+        }
+        .strategy-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .strategy-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .icon-biweekly { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .icon-extra { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+        .icon-lump { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
+        .icon-round { background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); }
+        .icon-hybrid { background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); }
+        .strategy-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+        .strategy-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+        .strategy-description {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        .metric-value.highlight {
+            color: #48bb78;
+        }
+        .strategy-details {
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+        .detail-label {
+            color: #718096;
+        }
+        .detail-value {
+            color: #1a202c;
+            font-weight: 600;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .comparison-table-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background: #f7fafc;
+        }
+        th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #2d3748;
+        }
+        tr:hover {
+            background: #f7fafc;
+        }
+        .best-value {
+            background: #f0fff4;
+            font-weight: 700;
+            color: #48bb78;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .pros-list, .cons-list {
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .pros-list {
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+        }
+        .cons-list {
+            background: #fff5f5;
+            border-left: 3px solid #f56565;
+        }
+        .list-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .pros-list .list-title {
+            color: #22543d;
+        }
+        .cons-list .list-title {
+            color: #742a2a;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #4a5568;
+        }
+        .pros-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: 700;
+        }
+        .cons-list li:before {
+            content: '×';
+            position: absolute;
+            left: 0;
+            color: #f56565;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">← Back to Dashboard</button>
+                <h1>Payoff Strategies</h1>
+            </div>
+        </div>
+
+        <div class="intro-card">
+            <h2 class="intro-title">Choose Your Optimal Payoff Strategy</h2>
+            <p class="intro-desc">
+                Compare different mortgage payoff strategies to find the one that works best for your financial situation.
+                Each strategy offers different benefits in terms of interest savings, time to payoff, and monthly commitment.
+                Select a strategy to activate it and start tracking your progress.
+            </p>
+        </div>
+
+        <div class="strategies-grid">
+            <div class="strategy-card active">
+                <div class="strategy-badge">ACTIVE</div>
+                <div class="strategy-header">
+                    <div class="strategy-icon icon-biweekly">📅</div>
+                    <div>
+                        <div class="strategy-title">Bi-Weekly Payments</div>
+                        <div class="strategy-subtitle">26 half-payments per year</div>
+                    </div>
+                </div>
+                <p class="strategy-description">
+                    Make half your monthly payment every two weeks instead of one full payment monthly.
+                    This results in 13 full payments per year instead of 12, accelerating your payoff.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Interest Saved</div>
+                        <div class="metric-value highlight">$32,450</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Time Saved</div>
+                        <div class="metric-value highlight">4.2 years</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Bi-Weekly Payment</div>
+                        <div class="metric-value">$972.50</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">New Payoff Date</div>
+                        <div class="metric-value">Sep 2045</div>
+                    </div>
+                </div>
+                <div class="strategy-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Effort Level</span>
+                        <span class="detail-value">Low (Automatic)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Monthly Impact</span>
+                        <span class="detail-value">1 extra payment/year</span>
+                    </div>
+                </div>
+                <div class="pros-cons">
+                    <div class="pros-list">
+                        <div class="list-title">Pros</div>
+                        <ul>
+                            <li>Easy to automate</li>
+                            <li>Minimal lifestyle change</li>
+                            <li>Consistent savings</li>
+                        </ul>
+                    </div>
+                    <div class="cons-list">
+                        <div class="list-title">Cons</div>
+                        <ul>
+                            <li>Modest savings</li>
+                            <li>Requires biweekly budget</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-secondary">Currently Active</button>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-badge best">BEST VALUE</div>
+                <div class="strategy-header">
+                    <div class="strategy-icon icon-extra">💵</div>
+                    <div>
+                        <div class="strategy-title">Extra Monthly Payment</div>
+                        <div class="strategy-subtitle">Add $500 to each payment</div>
+                    </div>
+                </div>
+                <p class="strategy-description">
+                    Add a fixed amount to your regular monthly payment. This extra goes directly to principal,
+                    reducing your balance faster and saving significant interest over time.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Interest Saved</div>
+                        <div class="metric-value highlight">$68,240</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Time Saved</div>
+                        <div class="metric-value highlight">6.8 years</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Total Payment</div>
+                        <div class="metric-value">$2,445</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">New Payoff Date</div>
+                        <div class="metric-value">Mar 2043</div>
+                    </div>
+                </div>
+                <div class="strategy-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Effort Level</span>
+                        <span class="detail-value">Low (Automatic)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Monthly Impact</span>
+                        <span class="detail-value">+$500/month</span>
+                    </div>
+                </div>
+                <div class="pros-cons">
+                    <div class="pros-list">
+                        <div class="list-title">Pros</div>
+                        <ul>
+                            <li>Maximum savings</li>
+                            <li>Set and forget</li>
+                            <li>Fastest payoff</li>
+                        </ul>
+                    </div>
+                    <div class="cons-list">
+                        <div class="list-title">Cons</div>
+                        <ul>
+                            <li>Higher monthly cost</li>
+                            <li>Less flexibility</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Activate This Strategy</button>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-header">
+                    <div class="strategy-icon icon-lump">🎁</div>
+                    <div>
+                        <div class="strategy-title">Annual Lump Sum</div>
+                        <div class="strategy-subtitle">$10,000 bonus payment yearly</div>
+                    </div>
+                </div>
+                <p class="strategy-description">
+                    Make one large payment each year (from bonus, tax refund, etc.). This dramatically reduces
+                    your principal balance and compounds savings over the remaining term.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Interest Saved</div>
+                        <div class="metric-value highlight">$58,320</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Time Saved</div>
+                        <div class="metric-value highlight">5.9 years</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Annual Payment</div>
+                        <div class="metric-value">$10,000</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">New Payoff Date</div>
+                        <div class="metric-value">Feb 2044</div>
+                    </div>
+                </div>
+                <div class="strategy-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Effort Level</span>
+                        <span class="detail-value">Medium (Annual)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Monthly Impact</span>
+                        <span class="detail-value">None (1x per year)</span>
+                    </div>
+                </div>
+                <div class="pros-cons">
+                    <div class="pros-list">
+                        <div class="list-title">Pros</div>
+                        <ul>
+                            <li>No monthly change</li>
+                            <li>Great for bonuses</li>
+                            <li>High savings</li>
+                        </ul>
+                    </div>
+                    <div class="cons-list">
+                        <div class="list-title">Cons</div>
+                        <ul>
+                            <li>Requires large sum</li>
+                            <li>Less frequent impact</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Activate This Strategy</button>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-header">
+                    <div class="strategy-icon icon-round">🔢</div>
+                    <div>
+                        <div class="strategy-title">Round-Up Payments</div>
+                        <div class="strategy-subtitle">Round to nearest $100</div>
+                    </div>
+                </div>
+                <p class="strategy-description">
+                    Round each payment up to the nearest $100 (or $500). Simple mental math makes this easy to maintain,
+                    and the extra amount goes directly to principal reduction.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Interest Saved</div>
+                        <div class="metric-value highlight">$12,840</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Time Saved</div>
+                        <div class="metric-value highlight">2.1 years</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Rounded Payment</div>
+                        <div class="metric-value">$2,000</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">New Payoff Date</div>
+                        <div class="metric-value">Nov 2047</div>
+                    </div>
+                </div>
+                <div class="strategy-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Effort Level</span>
+                        <span class="detail-value">Very Low</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Monthly Impact</span>
+                        <span class="detail-value">+$55/month</span>
+                    </div>
+                </div>
+                <div class="pros-cons">
+                    <div class="pros-list">
+                        <div class="list-title">Pros</div>
+                        <ul>
+                            <li>Extremely simple</li>
+                            <li>Minimal cost</li>
+                            <li>Easy to remember</li>
+                        </ul>
+                    </div>
+                    <div class="cons-list">
+                        <div class="list-title">Cons</div>
+                        <ul>
+                            <li>Modest savings</li>
+                            <li>Slower payoff</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Activate This Strategy</button>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-header">
+                    <div class="strategy-icon icon-hybrid">⚡</div>
+                    <div>
+                        <div class="strategy-title">Hybrid Approach</div>
+                        <div class="strategy-subtitle">Bi-weekly + annual bonus</div>
+                    </div>
+                </div>
+                <p class="strategy-description">
+                    Combine bi-weekly payments with an annual lump sum payment. This maximizes savings by
+                    maintaining consistent extra payments plus periodic large reductions.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Interest Saved</div>
+                        <div class="metric-value highlight">$78,540</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Time Saved</div>
+                        <div class="metric-value highlight">8.4 years</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Combined Impact</div>
+                        <div class="metric-value">Maximum</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">New Payoff Date</div>
+                        <div class="metric-value">Aug 2041</div>
+                    </div>
+                </div>
+                <div class="strategy-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Effort Level</span>
+                        <span class="detail-value">Medium</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Monthly Impact</span>
+                        <span class="detail-value">Bi-weekly + annual</span>
+                    </div>
+                </div>
+                <div class="pros-cons">
+                    <div class="pros-list">
+                        <div class="list-title">Pros</div>
+                        <ul>
+                            <li>Highest total savings</li>
+                            <li>Fastest payoff</li>
+                            <li>Flexible approach</li>
+                        </ul>
+                    </div>
+                    <div class="cons-list">
+                        <div class="list-title">Cons</div>
+                        <ul>
+                            <li>Requires discipline</li>
+                            <li>Highest commitment</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Activate This Strategy</button>
+            </div>
+        </div>
+
+        <div class="comparison-table-card">
+            <h2 class="section-title">Strategy Comparison Table</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Monthly Cost</th>
+                        <th>Interest Saved</th>
+                        <th>Time Saved</th>
+                        <th>New Payoff Date</th>
+                        <th>Difficulty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>No Extra Payments</strong></td>
+                        <td>$1,945</td>
+                        <td>$0</td>
+                        <td>-</td>
+                        <td>Jan 2050</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Round-Up Payments</strong></td>
+                        <td>$2,000</td>
+                        <td>$12,840</td>
+                        <td>2.1 years</td>
+                        <td>Nov 2047</td>
+                        <td>Very Easy</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bi-Weekly Payments</strong></td>
+                        <td>$972.50 x 26</td>
+                        <td>$32,450</td>
+                        <td>4.2 years</td>
+                        <td>Sep 2045</td>
+                        <td>Easy</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Annual Lump Sum</strong></td>
+                        <td>$1,945 + $10k/yr</td>
+                        <td>$58,320</td>
+                        <td>5.9 years</td>
+                        <td>Feb 2044</td>
+                        <td>Medium</td>
+                    </tr>
+                    <tr class="best-value">
+                        <td><strong>Extra Monthly Payment</strong></td>
+                        <td>$2,445</td>
+                        <td>$68,240</td>
+                        <td>6.8 years</td>
+                        <td>Mar 2043</td>
+                        <td>Easy</td>
+                    </tr>
+                    <tr class="best-value">
+                        <td><strong>Hybrid Approach</strong></td>
+                        <td>$972.50 x 26 + $10k/yr</td>
+                        <td>$78,540</td>
+                        <td>8.4 years</td>
+                        <td>Aug 2041</td>
+                        <td>Medium</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

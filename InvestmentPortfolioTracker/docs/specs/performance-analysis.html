@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Analysis - Investment Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .time-period-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .time-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .time-tab:hover:not(.active) {
+            background: #f7fafc;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .metric-change {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .metric-change.positive {
+            color: #0f9960;
+        }
+
+        .metric-change.negative {
+            color: #db2c3e;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+            border-radius: 12px;
+            padding: 24px;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .chart-line {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .line-graph {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .line-path {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-line {
+            height: 1px;
+            background: #e2e8f0;
+            position: relative;
+        }
+
+        .grid-label {
+            position: absolute;
+            left: -60px;
+            top: -8px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .comparison-table td {
+            padding: 16px 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .benchmark-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .benchmark-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .stat-list {
+            list-style: none;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .stat-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .highlight-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .highlight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .highlight-item {
+            text-align: center;
+        }
+
+        .highlight-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .highlight-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .risk-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .risk-low {
+            background: #d4f8e8;
+            color: #0f9960;
+        }
+
+        .risk-medium {
+            background: #fff4e6;
+            color: #f59e0b;
+        }
+
+        .risk-high {
+            background: #ffeaea;
+            color: #db2c3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>📊 Performance Analysis</h1>
+                    <div class="card-subtitle">Comprehensive portfolio performance metrics and benchmarks</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📥 Export Report</button>
+                    <button class="btn btn-primary">⚙️ Customize</button>
+                </div>
+            </div>
+
+            <div class="time-period-tabs">
+                <button class="time-tab">1D</button>
+                <button class="time-tab">1W</button>
+                <button class="time-tab">1M</button>
+                <button class="time-tab">3M</button>
+                <button class="time-tab">6M</button>
+                <button class="time-tab active">1Y</button>
+                <button class="time-tab">3Y</button>
+                <button class="time-tab">5Y</button>
+                <button class="time-tab">All</button>
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-label">Total Return</div>
+                <div class="metric-value">+18.74%</div>
+                <div class="metric-change positive">▲ $142,391.58</div>
+            </div>
+
+            <div class="metric-box">
+                <div class="metric-label">Annualized Return</div>
+                <div class="metric-value">+17.32%</div>
+                <div class="metric-change positive">Time-weighted</div>
+            </div>
+
+            <div class="metric-box">
+                <div class="metric-label">vs S&P 500</div>
+                <div class="metric-value">+2.31%</div>
+                <div class="metric-change positive">▲ Outperforming</div>
+            </div>
+
+            <div class="metric-box">
+                <div class="metric-label">Sharpe Ratio</div>
+                <div class="metric-value">1.42</div>
+                <div class="metric-change">Risk-adjusted return</div>
+            </div>
+
+            <div class="metric-box">
+                <div class="metric-label">Max Drawdown</div>
+                <div class="metric-value">-8.34%</div>
+                <div class="metric-change negative">March 15, 2025</div>
+            </div>
+
+            <div class="metric-box">
+                <div class="metric-label">Volatility</div>
+                <div class="metric-value">14.8%</div>
+                <div class="metric-change">Standard deviation</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Portfolio Growth (12 Months)</h2>
+                    <div class="card-subtitle">Your portfolio vs major benchmarks</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="grid-lines">
+                    <div class="grid-line"><span class="grid-label">$900K</span></div>
+                    <div class="grid-line"><span class="grid-label">$850K</span></div>
+                    <div class="grid-line"><span class="grid-label">$800K</span></div>
+                    <div class="grid-line"><span class="grid-label">$750K</span></div>
+                    <div class="grid-line"><span class="grid-label">$700K</span></div>
+                </div>
+                <div class="line-graph">
+                    <svg viewBox="0 0 1000 300" preserveAspectRatio="none">
+                        <!-- Your Portfolio -->
+                        <path d="M 0 180 Q 83 165 166 155 T 333 135 T 500 115 T 666 95 T 833 75 T 1000 50"
+                              fill="none"
+                              stroke="#667eea"
+                              stroke-width="3"
+                              stroke-linecap="round"/>
+                        <!-- S&P 500 -->
+                        <path d="M 0 180 Q 83 170 166 162 T 333 148 T 500 135 T 666 118 T 833 95 T 1000 75"
+                              fill="none"
+                              stroke="#38f9d7"
+                              stroke-width="2.5"
+                              stroke-dasharray="5,5"
+                              opacity="0.7"/>
+                        <!-- NASDAQ -->
+                        <path d="M 0 180 Q 83 168 166 160 T 333 145 T 500 130 T 666 110 T 833 85 T 1000 60"
+                              fill="none"
+                              stroke="#f5576c"
+                              stroke-width="2.5"
+                              stroke-dasharray="5,5"
+                              opacity="0.7"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 32px; margin-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 3px; background: #667eea; border-radius: 2px;"></div>
+                    <span style="font-size: 14px; font-weight: 600; color: #4a5568;">Your Portfolio (+18.74%)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 3px; background: #38f9d7; border-radius: 2px;"></div>
+                    <span style="font-size: 14px; font-weight: 600; color: #4a5568;">S&P 500 (+16.43%)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 3px; background: #f5576c; border-radius: 2px;"></div>
+                    <span style="font-size: 14px; font-weight: 600; color: #4a5568;">NASDAQ (+21.15%)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Benchmark Comparison</h2>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Benchmark</th>
+                        <th>1 Month</th>
+                        <th>3 Months</th>
+                        <th>6 Months</th>
+                        <th>1 Year</th>
+                        <th>3 Years</th>
+                        <th>Beta</th>
+                        <th>Correlation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="benchmark-indicator" style="background: #667eea;"></span>
+                            <span class="benchmark-name">Your Portfolio</span>
+                        </td>
+                        <td class="gain-positive">+3.45%</td>
+                        <td class="gain-positive">+7.89%</td>
+                        <td class="gain-positive">+12.34%</td>
+                        <td class="gain-positive">+18.74%</td>
+                        <td class="gain-positive">+42.18%</td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="benchmark-indicator" style="background: #38f9d7;"></span>
+                            <span class="benchmark-name">S&P 500 (SPY)</span>
+                        </td>
+                        <td class="gain-positive">+2.87%</td>
+                        <td class="gain-positive">+6.45%</td>
+                        <td class="gain-positive">+10.23%</td>
+                        <td class="gain-positive">+16.43%</td>
+                        <td class="gain-positive">+38.92%</td>
+                        <td>0.92</td>
+                        <td>0.88</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="benchmark-indicator" style="background: #f5576c;"></span>
+                            <span class="benchmark-name">NASDAQ (QQQ)</span>
+                        </td>
+                        <td class="gain-positive">+4.12%</td>
+                        <td class="gain-positive">+9.34%</td>
+                        <td class="gain-positive">+14.67%</td>
+                        <td class="gain-positive">+21.15%</td>
+                        <td class="gain-positive">+51.24%</td>
+                        <td>1.18</td>
+                        <td>0.82</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="benchmark-indicator" style="background: #a8edea;"></span>
+                            <span class="benchmark-name">Russell 2000 (IWM)</span>
+                        </td>
+                        <td class="gain-positive">+1.23%</td>
+                        <td class="gain-positive">+4.56%</td>
+                        <td class="gain-positive">+8.90%</td>
+                        <td class="gain-positive">+12.45%</td>
+                        <td class="gain-positive">+28.67%</td>
+                        <td>0.76</td>
+                        <td>0.65</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="benchmark-indicator" style="background: #fbc2eb;"></span>
+                            <span class="benchmark-name">Total Bond (AGG)</span>
+                        </td>
+                        <td class="gain-positive">+0.45%</td>
+                        <td class="gain-positive">+1.23%</td>
+                        <td class="gain-positive">+2.67%</td>
+                        <td class="gain-positive">+4.89%</td>
+                        <td class="gain-positive">+8.34%</td>
+                        <td>0.12</td>
+                        <td>0.15</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="two-col-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Risk Metrics</h2>
+                </div>
+
+                <ul class="stat-list">
+                    <li class="stat-item">
+                        <span class="stat-label">Standard Deviation (Volatility)</span>
+                        <span class="stat-value">14.8%</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Beta (vs S&P 500)</span>
+                        <span class="stat-value">0.92</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Sharpe Ratio</span>
+                        <span class="stat-value">1.42</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Sortino Ratio</span>
+                        <span class="stat-value">1.87</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Max Drawdown</span>
+                        <span class="stat-value">-8.34%</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Value at Risk (95%)</span>
+                        <span class="stat-value">-$34,892</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Risk Rating</span>
+                        <span class="stat-value"><span class="risk-indicator risk-medium">⚠️ Medium</span></span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Return Analysis</h2>
+                </div>
+
+                <ul class="stat-list">
+                    <li class="stat-item">
+                        <span class="stat-label">Time-Weighted Return</span>
+                        <span class="stat-value gain-positive">+17.32%</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Money-Weighted Return</span>
+                        <span class="stat-value gain-positive">+16.89%</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Contributions</span>
+                        <span class="stat-value">$705,000</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Withdrawals</span>
+                        <span class="stat-value">$0</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Net Investment Gain</span>
+                        <span class="stat-value gain-positive">+$142,392</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Dividend Income (YTD)</span>
+                        <span class="stat-value gain-positive">+$12,458</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Average Cost Basis</span>
+                        <span class="stat-value">$128.45</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Top Performers & Underperformers</h2>
+            </div>
+
+            <div class="two-col-grid">
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f9960; margin-bottom: 16px;">🏆 Top 5 Winners</h3>
+                    <ul class="stat-list">
+                        <li class="stat-item">
+                            <span class="stat-label">NVDA</span>
+                            <span class="stat-value gain-positive">+50.53%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">META</span>
+                            <span class="stat-value gain-positive">+28.74%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">MSFT</span>
+                            <span class="stat-value gain-positive">+23.64%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">AAPL</span>
+                            <span class="stat-value gain-positive">+21.55%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">NFLX</span>
+                            <span class="stat-value gain-positive">+21.43%</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #db2c3e; margin-bottom: 16px;">📉 Bottom 5 Performers</h3>
+                    <ul class="stat-list">
+                        <li class="stat-item">
+                            <span class="stat-label">TSLA</span>
+                            <span class="stat-value gain-negative">-11.77%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">DIS</span>
+                            <span class="stat-value gain-negative">-8.77%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">PYPL</span>
+                            <span class="stat-value gain-negative">-6.24%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">INTC</span>
+                            <span class="stat-value gain-negative">-4.89%</span>
+                        </li>
+                        <li class="stat-item">
+                            <span class="stat-label">BA</span>
+                            <span class="stat-value gain-negative">-3.12%</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <div class="highlight-title">🎯 Performance Insights</div>
+                <p style="color: #718096; font-size: 14px; line-height: 1.6;">
+                    Your portfolio has outperformed the S&P 500 by 2.31% over the past year, with strong gains in technology
+                    holdings like NVDA and META driving performance. The portfolio shows moderate volatility (14.8%) with a
+                    Sharpe ratio of 1.42, indicating good risk-adjusted returns. Consider rebalancing to lock in gains and
+                    maintain target allocation.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

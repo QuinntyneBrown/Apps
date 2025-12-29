@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routes & Maps - Running Log & Race Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        .routes-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #666;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip:hover {
+            border-color: #667eea;
+        }
+
+        .chip.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .route-list {
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        .route-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .route-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .route-item.active {
+            border: 2px solid #667eea;
+            background: #f0f4ff;
+        }
+
+        .route-preview {
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .route-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .route-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .route-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .route-favorite {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .map-header {
+            padding: 25px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .route-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .route-subtitle {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .map-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .map-btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .map-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .map-area {
+            height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: white;
+            position: relative;
+        }
+
+        .route-path {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border: 4px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+
+        .map-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background: #f9fafb;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .elevation-chart {
+            padding: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .elevation-graph {
+            height: 150px;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .elevation-line {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(102, 126, 234, 0.1) 5%,
+                rgba(102, 126, 234, 0.2) 15%,
+                rgba(102, 126, 234, 0.3) 25%,
+                rgba(102, 126, 234, 0.4) 40%,
+                rgba(102, 126, 234, 0.5) 50%,
+                rgba(102, 126, 234, 0.4) 60%,
+                rgba(102, 126, 234, 0.3) 75%,
+                rgba(102, 126, 234, 0.2) 85%,
+                rgba(102, 126, 234, 0.1) 95%,
+                transparent 100%
+            );
+            clip-path: polygon(
+                0% 100%, 0% 60%, 5% 55%, 10% 50%, 15% 48%, 20% 45%,
+                25% 40%, 30% 35%, 35% 30%, 40% 25%, 45% 22%, 50% 20%,
+                55% 25%, 60% 30%, 65% 35%, 70% 40%, 75% 50%, 80% 60%,
+                85% 70%, 90% 75%, 95% 80%, 100% 85%, 100% 100%
+            );
+            border-radius: 8px;
+        }
+
+        .recent-runs {
+            padding: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .run-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .run-history-item:hover {
+            background: #f9fafb;
+        }
+
+        .run-date-time {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .run-metrics {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .run-pace {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @media (max-width: 968px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .map-area {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Routes & Maps</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Import Route</button>
+                <button class="btn btn-primary">+ Create Route</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Routes</div>
+                <div class="stat-value">24</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Favorite Routes</div>
+                <div class="stat-value">8</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Distance</div>
+                <div class="stat-value">147.3 mi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Route Length</div>
+                <div class="stat-value">6.1 mi</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="routes-sidebar">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Search routes...">
+                    <div class="filter-chips">
+                        <div class="chip active">All</div>
+                        <div class="chip">Favorites</div>
+                        <div class="chip">Recent</div>
+                        <div class="chip">Long</div>
+                        <div class="chip">Short</div>
+                    </div>
+                </div>
+
+                <div class="route-list">
+                    <div class="route-item active">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">⭐</div>
+                        </div>
+                        <div class="route-name">City Park Loop</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 6.2 mi</div>
+                            <div class="route-stat">⛰️ 245 ft</div>
+                            <div class="route-stat">🏃 18 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">⭐</div>
+                        </div>
+                        <div class="route-name">River Trail - 10 Miles</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 10.0 mi</div>
+                            <div class="route-stat">⛰️ 120 ft</div>
+                            <div class="route-stat">🏃 12 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">☆</div>
+                        </div>
+                        <div class="route-name">Downtown 5K Route</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 3.1 mi</div>
+                            <div class="route-stat">⛰️ 80 ft</div>
+                            <div class="route-stat">🏃 25 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">⭐</div>
+                        </div>
+                        <div class="route-name">Hill Training Circuit</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 5.5 mi</div>
+                            <div class="route-stat">⛰️ 680 ft</div>
+                            <div class="route-stat">🏃 8 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">☆</div>
+                        </div>
+                        <div class="route-name">Lakeside Easy Run</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 4.0 mi</div>
+                            <div class="route-stat">⛰️ 45 ft</div>
+                            <div class="route-stat">🏃 15 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">⭐</div>
+                        </div>
+                        <div class="route-name">Half Marathon Course</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 13.1 mi</div>
+                            <div class="route-stat">⛰️ 325 ft</div>
+                            <div class="route-stat">🏃 6 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">☆</div>
+                        </div>
+                        <div class="route-name">Neighborhood Quick Loop</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 2.5 mi</div>
+                            <div class="route-stat">⛰️ 35 ft</div>
+                            <div class="route-stat">🏃 30 runs</div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div style="position: relative;">
+                            <div class="route-preview">🗺️</div>
+                            <div class="route-favorite">⭐</div>
+                        </div>
+                        <div class="route-name">Long Run - 18 Miles</div>
+                        <div class="route-stats">
+                            <div class="route-stat">📏 18.0 mi</div>
+                            <div class="route-stat">⛰️ 450 ft</div>
+                            <div class="route-stat">🏃 4 runs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div class="map-header">
+                    <div>
+                        <h2 class="route-title">City Park Loop</h2>
+                        <p class="route-subtitle">Your most popular route • Last run 2 days ago</p>
+                    </div>
+                    <div class="map-actions">
+                        <button class="map-btn">⭐ Favorite</button>
+                        <button class="map-btn">📤 Share</button>
+                        <button class="map-btn">✏️ Edit</button>
+                        <button class="map-btn">🗑️ Delete</button>
+                    </div>
+                </div>
+
+                <div class="map-area">
+                    <div class="route-path"></div>
+                    🗺️
+                </div>
+
+                <div class="map-details">
+                    <div class="detail-item">
+                        <div class="detail-value">6.2</div>
+                        <div class="detail-label">Miles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value">245</div>
+                        <div class="detail-label">Elevation Gain (ft)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value">248</div>
+                        <div class="detail-label">Elevation Loss (ft)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value">8:15</div>
+                        <div class="detail-label">Avg Pace</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value">18</div>
+                        <div class="detail-label">Total Runs</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value">Loop</div>
+                        <div class="detail-label">Route Type</div>
+                    </div>
+                </div>
+
+                <div class="elevation-chart">
+                    <h3 class="chart-title">Elevation Profile</h3>
+                    <div class="elevation-graph">
+                        <div class="elevation-line"></div>
+                    </div>
+                </div>
+
+                <div class="recent-runs">
+                    <h3 class="chart-title">Recent Runs on This Route</h3>
+
+                    <div class="run-history-item">
+                        <div>
+                            <div class="run-date-time">December 26, 2025 • 7:00 AM</div>
+                            <div class="run-metrics">6.2 mi • 51:24 • ☀️ 48°F</div>
+                        </div>
+                        <div class="run-pace">8:17/mi</div>
+                    </div>
+
+                    <div class="run-history-item">
+                        <div>
+                            <div class="run-date-time">December 19, 2025 • 6:45 AM</div>
+                            <div class="run-metrics">6.2 mi • 50:36 • ☁️ 52°F</div>
+                        </div>
+                        <div class="run-pace">8:10/mi</div>
+                    </div>
+
+                    <div class="run-history-item">
+                        <div>
+                            <div class="run-date-time">December 12, 2025 • 7:15 AM</div>
+                            <div class="run-metrics">6.2 mi • 52:12 • 🌧️ 45°F</div>
+                        </div>
+                        <div class="run-pace">8:25/mi</div>
+                    </div>
+
+                    <div class="run-history-item">
+                        <div>
+                            <div class="run-date-time">December 5, 2025 • 7:00 AM</div>
+                            <div class="run-metrics">6.2 mi • 51:00 • ☀️ 55°F</div>
+                        </div>
+                        <div class="run-pace">8:13/mi</div>
+                    </div>
+
+                    <div class="run-history-item">
+                        <div>
+                            <div class="run-date-time">November 28, 2025 • 8:00 AM</div>
+                            <div class="run-metrics">6.2 mi • 53:18 • ❄️ 38°F</div>
+                        </div>
+                        <div class="run-pace">8:36/mi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
