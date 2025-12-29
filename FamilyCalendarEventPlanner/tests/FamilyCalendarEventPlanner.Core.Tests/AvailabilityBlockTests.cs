@@ -165,13 +165,14 @@ public class AvailabilityBlockTests
     [Test]
     public void OverlapsWith_TouchingAtStart_ReturnsFalse()
     {
+        var now = DateTime.UtcNow;
         var block = new AvailabilityBlock(
             _memberId,
-            DateTime.UtcNow.AddHours(2),
-            DateTime.UtcNow.AddHours(3),
+            now.AddHours(2),
+            now.AddHours(3),
             BlockType.Busy);
 
-        var overlaps = block.OverlapsWith(DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2));
+        var overlaps = block.OverlapsWith(now.AddHours(1), now.AddHours(2));
 
         Assert.That(overlaps, Is.False);
     }

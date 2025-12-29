@@ -132,7 +132,7 @@ public class EventAttendeeTests
         var attendee = new EventAttendee(_eventId, _familyMemberId);
 
         attendee.Accept();
-        var firstResponseTime = attendee.ResponseTime;
+        var firstResponseTime = attendee.ResponseTime!.Value;
 
         System.Threading.Thread.Sleep(10);
         attendee.Decline("Changed my mind");
