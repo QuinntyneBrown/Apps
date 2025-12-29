@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Values Explorer - Personal Mission Statement Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .value-card {
+            padding: 16px;
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .value-card:hover {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        .value-card.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: #667eea;
+        }
+        .value-card .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .value-card .name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+        .value-card .description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .value-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #667eea;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .value-card {
+            position: relative;
+        }
+        .selected-values {
+            margin-bottom: 20px;
+        }
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .rank-number {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        .rank-content {
+            flex: 1;
+        }
+        .rank-content .name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .rank-content .description {
+            font-size: 12px;
+            color: #666;
+        }
+        .rank-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .rank-btn {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .rank-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .info-box {
+            background: #fff9e6;
+            border-left: 4px solid #fbbf24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info-box p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 12px;
+        }
+        .progress-indicator {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Core Values Explorer</h1>
+            <p>Select and rank the values that matter most to you (aim for 4-8 core values)</p>
+        </div>
+
+        <div class="layout">
+            <div class="card">
+                <h2>Explore Values</h2>
+
+                <div class="search-box">
+                    <input type="text" placeholder="Search values...">
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="tab active">All Values</button>
+                    <button class="tab">Personal Growth</button>
+                    <button class="tab">Relationships</button>
+                    <button class="tab">Professional</button>
+                    <button class="tab">Community</button>
+                    <button class="tab">Lifestyle</button>
+                </div>
+
+                <div class="values-grid">
+                    <div class="value-card selected">
+                        <div class="icon">🎯</div>
+                        <div class="name">Integrity</div>
+                        <div class="description">Being honest and having strong moral principles</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">📚</div>
+                        <div class="name">Learning</div>
+                        <div class="description">Continuous growth and knowledge acquisition</div>
+                    </div>
+                    <div class="value-card selected">
+                        <div class="icon">🤝</div>
+                        <div class="name">Community</div>
+                        <div class="description">Contributing to and serving others</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">💪</div>
+                        <div class="name">Resilience</div>
+                        <div class="description">Bouncing back from challenges</div>
+                    </div>
+                    <div class="value-card selected">
+                        <div class="icon">⚖️</div>
+                        <div class="name">Balance</div>
+                        <div class="description">Harmony between different life areas</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">🎨</div>
+                        <div class="name">Creativity</div>
+                        <div class="description">Expressing imagination and innovation</div>
+                    </div>
+                    <div class="value-card selected">
+                        <div class="icon">🌟</div>
+                        <div class="name">Excellence</div>
+                        <div class="description">Striving for quality in everything</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">❤️</div>
+                        <div class="name">Compassion</div>
+                        <div class="description">Showing empathy and kindness</div>
+                    </div>
+                    <div class="value-card selected">
+                        <div class="icon">🦁</div>
+                        <div class="name">Courage</div>
+                        <div class="description">Facing fear and taking bold action</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">🌍</div>
+                        <div class="name">Sustainability</div>
+                        <div class="description">Protecting our environment</div>
+                    </div>
+                    <div class="value-card selected">
+                        <div class="icon">📈</div>
+                        <div class="name">Growth</div>
+                        <div class="description">Personal and professional development</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">🎭</div>
+                        <div class="name">Authenticity</div>
+                        <div class="description">Being true to yourself</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">🔬</div>
+                        <div class="name">Innovation</div>
+                        <div class="description">Finding new and better ways</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">👨‍👩‍👧‍👦</div>
+                        <div class="name">Family</div>
+                        <div class="description">Prioritizing loved ones</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">🎓</div>
+                        <div class="name">Wisdom</div>
+                        <div class="description">Making sound judgments</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="icon">✨</div>
+                        <div class="name">Joy</div>
+                        <div class="description">Finding happiness and pleasure</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>Your Top Values</h2>
+
+                    <div class="info-box">
+                        <p>Drag to reorder your values by importance. Your top 3-5 values will form the foundation of your mission statement.</p>
+                    </div>
+
+                    <div class="ranking-list">
+                        <div class="rank-item">
+                            <div class="rank-number">1</div>
+                            <div class="rank-content">
+                                <div class="name">Integrity</div>
+                                <div class="description">Being honest and ethical</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-number">2</div>
+                            <div class="rank-content">
+                                <div class="name">Growth</div>
+                                <div class="description">Continuous development</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-number">3</div>
+                            <div class="rank-content">
+                                <div class="name">Community</div>
+                                <div class="description">Contributing to others</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-number">4</div>
+                            <div class="rank-content">
+                                <div class="name">Excellence</div>
+                                <div class="description">Quality in everything</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-number">5</div>
+                            <div class="rank-content">
+                                <div class="name">Balance</div>
+                                <div class="description">Life harmony</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-number">6</div>
+                            <div class="rank-content">
+                                <div class="name">Courage</div>
+                                <div class="description">Bold action</div>
+                            </div>
+                            <div class="rank-controls">
+                                <button class="rank-btn">↑</button>
+                                <button class="rank-btn">↓</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn">Save Rankings</button>
+                    <button class="btn btn-secondary">Add Custom Value</button>
+
+                    <div class="progress-indicator">
+                        6 of 4-8 values selected ✓
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

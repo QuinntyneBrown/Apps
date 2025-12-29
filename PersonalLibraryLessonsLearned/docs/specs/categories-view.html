@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories - Personal Library Lessons Learned</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .category-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .category-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .category-count {
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .category-description {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .category-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .category-stat {
+            text-align: center;
+        }
+
+        .category-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .category-stat-label {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .recent-lessons {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .recent-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .recent-lesson-item {
+            font-size: 13px;
+            color: #4a5568;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .recent-lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .view-all-link {
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏷️ Browse by Category</h1>
+            <p>Organize and explore your lessons by topic area</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Total Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">127</div>
+                <div class="stat-label">Total Lessons</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">10.6</div>
+                <div class="stat-label">Avg per Category</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">Leadership</div>
+                <div class="stat-label">Most Active</div>
+            </div>
+        </div>
+
+        <div class="categories-grid">
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">💼</div>
+                        <div class="category-name">Leadership</div>
+                    </div>
+                    <span class="category-count">28</span>
+                </div>
+
+                <div class="category-description">
+                    Lessons about managing teams, making decisions, delegating effectively, and developing
+                    leadership skills.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">94%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">High</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">5</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Validate assumptions before major decisions</div>
+                    <div class="recent-lesson-item">→ Delegation isn't abdication</div>
+                    <div class="recent-lesson-item">→ Give feedback within 24 hours</div>
+                    <a href="#" class="view-all-link">View all 28 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">🚀</div>
+                        <div class="category-name">Product Management</div>
+                    </div>
+                    <span class="category-count">22</span>
+                </div>
+
+                <div class="category-description">
+                    Insights on product development, user research, feature prioritization, and product strategy.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">87%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">High</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">3</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Customer feedback is gold</div>
+                    <div class="recent-lesson-item">→ Ship early, iterate fast</div>
+                    <div class="recent-lesson-item">→ Focus on outcome, not output</div>
+                    <a href="#" class="view-all-link">View all 22 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">⚡</div>
+                        <div class="category-name">Productivity</div>
+                    </div>
+                    <span class="category-count">18</span>
+                </div>
+
+                <div class="category-description">
+                    Time management, focus strategies, workflow optimization, and getting things done effectively.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">92%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Med</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">4</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Time blocking increases productivity</div>
+                    <div class="recent-lesson-item">→ Deep work in morning hours</div>
+                    <div class="recent-lesson-item">→ Two-minute rule for quick tasks</div>
+                    <a href="#" class="view-all-link">View all 18 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">💬</div>
+                        <div class="category-name">Communication</div>
+                    </div>
+                    <span class="category-count">15</span>
+                </div>
+
+                <div class="category-description">
+                    Effective communication, active listening, difficult conversations, and clarity in messaging.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">89%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">High</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">2</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Written communication prevents misunderstandings</div>
+                    <div class="recent-lesson-item">→ Listen to understand, not to respond</div>
+                    <div class="recent-lesson-item">→ Context is everything</div>
+                    <a href="#" class="view-all-link">View all 15 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">🎯</div>
+                        <div class="category-name">Decision Making</div>
+                    </div>
+                    <span class="category-count">12</span>
+                </div>
+
+                <div class="category-description">
+                    Strategic thinking, problem-solving frameworks, risk assessment, and making better choices.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">85%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">High</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">1</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Use decision frameworks for big choices</div>
+                    <div class="recent-lesson-item">→ Consider second-order effects</div>
+                    <div class="recent-lesson-item">→ Document decision rationale</div>
+                    <a href="#" class="view-all-link">View all 12 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">🤝</div>
+                        <div class="category-name">Relationships</div>
+                    </div>
+                    <span class="category-count">10</span>
+                </div>
+
+                <div class="category-description">
+                    Building trust, networking, conflict resolution, and maintaining professional relationships.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">78%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Med</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">1</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Invest in relationships before you need them</div>
+                    <div class="recent-lesson-item">→ Small gestures build trust</div>
+                    <div class="recent-lesson-item">→ Address conflict early</div>
+                    <a href="#" class="view-all-link">View all 10 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">📈</div>
+                        <div class="category-name">Career Development</div>
+                    </div>
+                    <span class="category-count">9</span>
+                </div>
+
+                <div class="category-description">
+                    Professional growth, skill development, career planning, and advancement strategies.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">91%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Med</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">2</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Build skills before you need them</div>
+                    <div class="recent-lesson-item">→ Network internally and externally</div>
+                    <div class="recent-lesson-item">→ Document your wins</div>
+                    <a href="#" class="view-all-link">View all 9 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">💻</div>
+                        <div class="category-name">Technical Skills</div>
+                    </div>
+                    <span class="category-count">8</span>
+                </div>
+
+                <div class="category-description">
+                    Programming, tools, technical problem-solving, and engineering best practices.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">88%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Med</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">1</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Code reviews catch critical bugs</div>
+                    <div class="recent-lesson-item">→ Write tests first</div>
+                    <div class="recent-lesson-item">→ Refactor continuously</div>
+                    <a href="#" class="view-all-link">View all 8 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">💰</div>
+                        <div class="category-name">Finance</div>
+                    </div>
+                    <span class="category-count">6</span>
+                </div>
+
+                <div class="category-description">
+                    Personal finance, budgeting, investing, and financial planning insights.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">95%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">High</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">0</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Automate savings first</div>
+                    <div class="recent-lesson-item">→ Diversification reduces risk</div>
+                    <div class="recent-lesson-item">→ Track expenses religiously</div>
+                    <a href="#" class="view-all-link">View all 6 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">🏃</div>
+                        <div class="category-name">Health & Wellness</div>
+                    </div>
+                    <span class="category-count">5</span>
+                </div>
+
+                <div class="category-description">
+                    Physical health, mental well-being, exercise, nutrition, and work-life balance.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">82%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Med</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">1</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Morning exercise boosts energy</div>
+                    <div class="recent-lesson-item">→ Sleep affects everything</div>
+                    <div class="recent-lesson-item">→ Take regular breaks</div>
+                    <a href="#" class="view-all-link">View all 5 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">🎨</div>
+                        <div class="category-name">Creativity</div>
+                    </div>
+                    <span class="category-count">4</span>
+                </div>
+
+                <div class="category-description">
+                    Creative thinking, innovation, design, and generating new ideas effectively.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">75%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Low</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">0</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Constraints boost creativity</div>
+                    <div class="recent-lesson-item">→ Diverge then converge</div>
+                    <div class="recent-lesson-item">→ Ideas need incubation time</div>
+                    <a href="#" class="view-all-link">View all 4 lessons →</a>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <div class="category-header">
+                    <div>
+                        <div class="category-icon">📝</div>
+                        <div class="category-name">Other</div>
+                    </div>
+                    <span class="category-count">10</span>
+                </div>
+
+                <div class="category-description">
+                    Miscellaneous lessons that don't fit into specific categories but are valuable nonetheless.
+                </div>
+
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <div class="category-stat-value">80%</div>
+                        <div class="category-stat-label">Applied</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">Mixed</div>
+                        <div class="category-stat-label">Impact</div>
+                    </div>
+                    <div class="category-stat">
+                        <div class="category-stat-value">1</div>
+                        <div class="category-stat-label">This Month</div>
+                    </div>
+                </div>
+
+                <div class="recent-lessons">
+                    <div class="recent-label">Recent Lessons:</div>
+                    <div class="recent-lesson-item">→ Learn from everyone</div>
+                    <div class="recent-lesson-item">→ Stay curious</div>
+                    <div class="recent-lesson-item">→ Question assumptions</div>
+                    <a href="#" class="view-all-link">View all 10 lessons →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

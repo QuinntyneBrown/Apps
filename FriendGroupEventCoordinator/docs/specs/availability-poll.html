@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Availability Poll - Friend Group Event Coordinator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f7f9fc;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .poll-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .poll-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .poll-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .poll-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .poll-meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .poll-grid {
+            overflow-x: auto;
+            margin-bottom: 32px;
+        }
+
+        .poll-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .poll-table th {
+            background: #f9fafb;
+            padding: 16px 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .poll-table th:first-child {
+            text-align: left;
+            border-top-left-radius: 8px;
+        }
+
+        .poll-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        .date-header {
+            font-size: 13px;
+        }
+
+        .time-header {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .poll-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .poll-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .poll-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .availability-cell {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .availability-indicator {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .availability-indicator:hover {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .availability-indicator.available {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .availability-indicator.maybe {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .availability-indicator.unavailable {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .vote-count {
+            display: block;
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .summary-section {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .best-time-card {
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            margin-bottom: 16px;
+        }
+
+        .best-time-label {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .best-time-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .best-time-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .participants-section {
+            margin-top: 24px;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f9fafb;
+        }
+
+        .participant-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 12px;
+        }
+
+        .participant-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid;
+        }
+
+        .legend-box.available {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .legend-box.maybe {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .legend-box.unavailable {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .action-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Friend Group Event Coordinator</h1>
+            <button class="btn btn-secondary">← Back to Event</button>
+        </div>
+
+        <div class="card">
+            <div class="poll-header">
+                <div class="poll-icon">📊</div>
+                <h2 class="poll-title">Winter Ski Trip - Schedule Poll</h2>
+                <p class="poll-description">
+                    Help us find the best weekend for everyone! Click on each date to indicate your availability.
+                </p>
+                <div class="poll-meta">
+                    <span>👥 8/15 responded</span>
+                    <span>📅 Closes Jan 8, 2025</span>
+                    <span>✨ Created by Mike Johnson</span>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box available"></div>
+                    <span>Available ✓</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box maybe"></div>
+                    <span>Maybe ?</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box unavailable"></div>
+                    <span>Not Available ✗</span>
+                </div>
+            </div>
+
+            <div class="poll-grid">
+                <table class="poll-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>
+                                <div class="date-header">Fri, Jan 12</div>
+                                <div class="time-header">Evening</div>
+                            </th>
+                            <th>
+                                <div class="date-header">Sat, Jan 13</div>
+                                <div class="time-header">All Day</div>
+                            </th>
+                            <th>
+                                <div class="date-header">Sun, Jan 14</div>
+                                <div class="time-header">Until 5 PM</div>
+                            </th>
+                            <th>
+                                <div class="date-header">Fri, Jan 19</div>
+                                <div class="time-header">Evening</div>
+                            </th>
+                            <th>
+                                <div class="date-header">Sat, Jan 20</div>
+                                <div class="time-header">All Day</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mike Johnson (You)</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                                <span class="vote-count">6 votes</span>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                                <span class="vote-count">8 votes</span>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                                <span class="vote-count">7 votes</span>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator maybe">?</div>
+                                <span class="vote-count">4 votes</span>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                                <span class="vote-count">5 votes</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Emily Wilson</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>John Davis</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator maybe">?</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Anna Lee</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator maybe">?</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator maybe">?</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tom Chen</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Lisa Martinez</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Ryan Brown</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator maybe">?</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Katie White</td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator available">✓</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                            <td class="availability-cell">
+                                <div class="availability-indicator unavailable">✗</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-section">
+                <h3 class="summary-title">📈 Poll Results</h3>
+
+                <div class="best-time-card">
+                    <div class="best-time-label">🏆 Best Time Option</div>
+                    <div class="best-time-value">Saturday, January 13 (All Day)</div>
+                    <div class="best-time-details">
+                        ✓ 8 people available • ? 0 maybe • ✗ 0 unavailable
+                    </div>
+                </div>
+
+                <div class="participants-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h4 style="font-size: 16px; font-weight: 700; color: #1f2937;">Participants</h4>
+                        <span style="font-size: 14px; color: #6b7280;">8 of 15 responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">MJ</div>
+                        <div class="participant-name">Mike Johnson</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">EW</div>
+                        <div class="participant-name">Emily Wilson</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">JD</div>
+                        <div class="participant-name">John Davis</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">AL</div>
+                        <div class="participant-name">Anna Lee</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">TC</div>
+                        <div class="participant-name">Tom Chen</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">LM</div>
+                        <div class="participant-name">Lisa Martinez</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">RB</div>
+                        <div class="participant-name">Ryan Brown</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">KW</div>
+                        <div class="participant-name">Katie White</div>
+                        <span class="badge badge-success">Responded</span>
+                    </div>
+
+                    <div class="participant-item">
+                        <div class="participant-avatar">SJ</div>
+                        <div class="participant-name">Sarah Johnson</div>
+                        <span class="badge badge-gray">Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-footer">
+                <button class="btn btn-secondary">📤 Share Poll</button>
+                <button class="btn btn-primary">💾 Save My Availability</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

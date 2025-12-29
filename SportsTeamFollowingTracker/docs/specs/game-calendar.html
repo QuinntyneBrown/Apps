@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Calendar - Sports Team Following Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .calendar-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #718096;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #edf2f7;
+            color: #1a202c;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .calendar-grid {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .weekday-labels {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .weekday-label {
+            text-align: center;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #718096;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 120px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .calendar-day.today {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.4;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .day-games {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mini-game {
+            background: white;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 11px;
+            border-left: 3px solid #667eea;
+        }
+
+        .mini-game.live {
+            border-left-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .mini-game-teams {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .mini-game-time {
+            color: #718096;
+            font-size: 10px;
+        }
+
+        .legend {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .legend-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-label {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        @media (max-width: 1024px) {
+            .calendar-controls {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .calendar-day {
+                min-height: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .calendar-nav {
+                flex-direction: column;
+            }
+
+            .calendar-days {
+                grid-template-columns: 1fr;
+            }
+
+            .weekday-labels {
+                display: none;
+            }
+
+            .calendar-day {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-height: auto;
+            }
+
+            .day-games {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="logo">ST</div>
+                Game Calendar
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Filter Teams</button>
+                <button class="btn btn-primary">Export Calendar</button>
+            </div>
+        </div>
+
+        <div class="calendar-controls">
+            <div class="calendar-nav">
+                <button class="nav-btn">&lt;</button>
+                <h2 class="calendar-title">December 2025</h2>
+                <button class="nav-btn">&gt;</button>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn">Week</button>
+                <button class="view-btn active">Month</button>
+                <button class="view-btn">Year</button>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="weekday-labels">
+                <div class="weekday-label">Sunday</div>
+                <div class="weekday-label">Monday</div>
+                <div class="weekday-label">Tuesday</div>
+                <div class="weekday-label">Wednesday</div>
+                <div class="weekday-label">Thursday</div>
+                <div class="weekday-label">Friday</div>
+                <div class="weekday-label">Saturday</div>
+            </div>
+
+            <div class="calendar-days">
+                <div class="calendar-day other-month">
+                    <div class="day-number">30</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">1</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">LAL vs BOS</div>
+                            <div class="mini-game-time">7:30 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">2</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">3</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">CHI vs NYK</div>
+                            <div class="mini-game-time">8:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">4</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">MIA vs PHX</div>
+                            <div class="mini-game-time">9:00 PM</div>
+                        </div>
+                        <div class="mini-game">
+                            <div class="mini-game-teams">DAL vs HOU</div>
+                            <div class="mini-game-time">7:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">5</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">6</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">BOS vs LAL</div>
+                            <div class="mini-game-time">10:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-day">
+                    <div class="day-number">7</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">8</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">NYK vs CHI</div>
+                            <div class="mini-game-time">7:30 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">9</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">10</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">11</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">PHX vs MIA</div>
+                            <div class="mini-game-time">8:30 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">12</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">13</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">HOU vs DAL</div>
+                            <div class="mini-game-time">8:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-day">
+                    <div class="day-number">14</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">15</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">LAL vs NYK</div>
+                            <div class="mini-game-time">7:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">16</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">17</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">18</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">BOS vs CHI</div>
+                            <div class="mini-game-time">8:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">19</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">20</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">MIA vs DAL</div>
+                            <div class="mini-game-time">9:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-day">
+                    <div class="day-number">21</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">22</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">23</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">PHX vs HOU</div>
+                            <div class="mini-game-time">8:30 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">24</div>
+                </div>
+                <div class="calendar-day today">
+                    <div class="day-number">25</div>
+                    <div class="day-games">
+                        <div class="mini-game live">
+                            <div class="mini-game-teams">LAL vs BOS</div>
+                            <div class="mini-game-time">LIVE - Q3</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">26</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">27</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">NYK vs MIA</div>
+                            <div class="mini-game-time">7:00 PM</div>
+                        </div>
+                        <div class="mini-game">
+                            <div class="mini-game-teams">CHI vs PHX</div>
+                            <div class="mini-game-time">9:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-day">
+                    <div class="day-number">28</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">29</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">DAL vs BOS</div>
+                            <div class="mini-game-time">8:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">30</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-number">31</div>
+                    <div class="day-games">
+                        <div class="mini-game">
+                            <div class="mini-game-teams">HOU vs LAL</div>
+                            <div class="mini-game-time">10:30 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-day other-month">
+                    <div class="day-number">1</div>
+                </div>
+                <div class="calendar-day other-month">
+                    <div class="day-number">2</div>
+                </div>
+                <div class="calendar-day other-month">
+                    <div class="day-number">3</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Legend</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f0f4ff; border: 2px solid #667eea;"></div>
+                    <div class="legend-label">Today</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: white; border-left: 3px solid #667eea;"></div>
+                    <div class="legend-label">Scheduled Game</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff5f5; border-left: 3px solid #f56565;"></div>
+                    <div class="legend-label">Live Game</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

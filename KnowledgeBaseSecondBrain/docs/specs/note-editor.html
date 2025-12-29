@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Note - Second Brain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .editor-main {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .title-input {
+            width: 100%;
+            border: none;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .title-input:focus {
+            outline: none;
+        }
+
+        .title-input::placeholder {
+            color: #cbd5e0;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .toolbar {
+            padding: 15px 30px;
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding-right: 12px;
+            border-right: 1px solid #cbd5e0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4a5568;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toolbar-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .editor-content {
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .content-area {
+            width: 100%;
+            border: none;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #2d3748;
+            font-family: inherit;
+            resize: none;
+            min-height: 450px;
+        }
+
+        .content-area:focus {
+            outline: none;
+        }
+
+        .content-preview {
+            display: none;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #2d3748;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e6f2ff;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .tag-add {
+            background: #f7fafc;
+            color: #718096;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .tag-add:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f7fafc;
+        }
+
+        .link-item {
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .link-item:hover {
+            background: #e6f2ff;
+        }
+
+        .link-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .link-type {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .backlink-item {
+            padding: 10px;
+            background: #fff8e6;
+            border-left: 3px solid #f6ad55;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .backlink-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .backlink-preview {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 10px;
+            background: #f7fafc;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .action-btn:hover {
+            background: #e6f2ff;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <span>Second Brain</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Preview</button>
+                <button class="btn btn-secondary">Share</button>
+                <button class="btn btn-primary">Save Changes</button>
+            </div>
+        </header>
+
+        <div class="editor-container">
+            <div class="editor-main">
+                <div class="editor-header">
+                    <input type="text" class="title-input" placeholder="Untitled Note" value="Learning How to Learn">
+                    <div class="meta-info">
+                        <span>📅 Created: Dec 28, 2024</span>
+                        <span>✏️ Modified: Today at 2:30 PM</span>
+                        <span>📝 432 words</span>
+                    </div>
+                </div>
+
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" title="Bold"><strong>B</strong></button>
+                        <button class="toolbar-btn" title="Italic"><em>I</em></button>
+                        <button class="toolbar-btn" title="Underline"><u>U</u></button>
+                        <button class="toolbar-btn" title="Strikethrough"><s>S</s></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" title="Heading 1">H1</button>
+                        <button class="toolbar-btn" title="Heading 2">H2</button>
+                        <button class="toolbar-btn" title="Heading 3">H3</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" title="Bullet List">•</button>
+                        <button class="toolbar-btn" title="Numbered List">1.</button>
+                        <button class="toolbar-btn" title="Todo List">✓</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" title="Link Note">🔗</button>
+                        <button class="toolbar-btn" title="Add Tag">#</button>
+                        <button class="toolbar-btn" title="Quote">💬</button>
+                        <button class="toolbar-btn" title="Code">{ }</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" title="Insert Image">🖼️</button>
+                        <button class="toolbar-btn" title="Insert Table">⊞</button>
+                    </div>
+                </div>
+
+                <div class="editor-content">
+                    <textarea class="content-area" placeholder="Start writing...">## Key Concepts
+
+Learning is not just about absorbing information - it's about making connections and building understanding. Here are the fundamental principles:
+
+### Active Recall
+Testing yourself on material is more effective than passive review. This technique strengthens neural pathways and improves long-term retention.
+
+Related: [[Spaced Repetition]] | [[Memory Techniques]]
+
+### Interleaving
+Mix different topics or skills in a single study session. This approach helps develop discrimination skills and improves problem-solving.
+
+See also: [[Study Techniques]] | [[Cognitive Science]]
+
+### The Pomodoro Technique
+- Work for 25 minutes focused
+- Take a 5-minute break
+- Repeat 4 times
+- Take a longer 15-30 minute break
+
+Reference: [[Time Management]] | [[Productivity Methods]]
+
+## Practical Applications
+
+1. Create summary sheets after each study session
+2. Teach the concept to someone else
+3. Apply the knowledge to real-world problems
+4. Review material at spaced intervals
+
+## Resources
+- Book: "Make It Stick" by Brown, Roediger, McDaniel
+- Course: [[Learning How to Learn - Coursera]]
+- Article: [[The Science of Learning]]
+
+#learning #productivity #study-techniques #cognitive-science</textarea>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-title">📊 Note Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">Outgoing Links</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Backlinks</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">432</div>
+                            <div class="stat-label">Words</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">4</div>
+                            <div class="stat-label">Tags</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🏷️ Tags</div>
+                    <div class="tags-container">
+                        <span class="tag">#learning</span>
+                        <span class="tag">#productivity</span>
+                        <span class="tag">#study-techniques</span>
+                        <span class="tag">#cognitive-science</span>
+                        <span class="tag tag-add">+ Add</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔗 Linked Notes</div>
+                    <div class="link-item">
+                        <div class="link-title">Spaced Repetition</div>
+                        <div class="link-type">→ Outgoing</div>
+                    </div>
+                    <div class="link-item">
+                        <div class="link-title">Memory Techniques</div>
+                        <div class="link-type">→ Outgoing</div>
+                    </div>
+                    <div class="link-item">
+                        <div class="link-title">Study Techniques</div>
+                        <div class="link-type">→ Outgoing</div>
+                    </div>
+                    <div class="link-item">
+                        <div class="link-title">Time Management</div>
+                        <div class="link-type">→ Outgoing</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">← Backlinks (12)</div>
+                    <div class="backlink-item">
+                        <div class="backlink-title">Personal Growth Plan</div>
+                        <div class="backlink-preview">...applying concepts from Learning How to Learn...</div>
+                    </div>
+                    <div class="backlink-item">
+                        <div class="backlink-title">Study System</div>
+                        <div class="backlink-preview">...based on the principles in Learning How to Learn...</div>
+                    </div>
+                    <div class="backlink-item">
+                        <div class="backlink-title">2024 Goals</div>
+                        <div class="backlink-preview">...improve learning efficiency using Learning How to Learn...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚡ Quick Actions</div>
+                    <div class="action-list">
+                        <button class="action-btn">🌐 View in Graph</button>
+                        <button class="action-btn">📋 Duplicate Note</button>
+                        <button class="action-btn">🔖 Add to Favorites</button>
+                        <button class="action-btn">📤 Export Note</button>
+                        <button class="action-btn">🗑️ Delete Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

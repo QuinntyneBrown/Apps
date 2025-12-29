@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Services - Roadside Assistance Info Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: #f3f4f6;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+            transform: translateX(-3px);
+        }
+
+        .header h1 {
+            color: #764ba2;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .location-info {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .current-location {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .location-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .location-text h3 {
+            color: #1f2937;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .location-text p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 30px;
+        }
+
+        .map-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            min-height: 600px;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .map-header h2 {
+            color: #1f2937;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .map-filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6b7280;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-marker {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #dc2626;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            cursor: pointer;
+        }
+
+        .map-marker::after {
+            content: '📍';
+            transform: rotate(45deg);
+            font-size: 20px;
+        }
+
+        .map-marker.you {
+            background: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            top: 50%;
+            left: 50%;
+        }
+
+        .map-marker.towing {
+            background: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            top: 35%;
+            left: 40%;
+        }
+
+        .map-marker.repair {
+            background: #f59e0b;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            top: 60%;
+            left: 65%;
+        }
+
+        .map-marker.gas {
+            background: #06b6d4;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+            top: 30%;
+            left: 70%;
+        }
+
+        .services-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .services-list {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        .service-card {
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .service-card:last-child {
+            border-bottom: none;
+        }
+
+        .service-card:hover {
+            background: #f9fafb;
+        }
+
+        .service-card.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid #667eea;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .service-info h4 {
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .service-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .service-type.towing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .service-type.repair {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .service-type.gas {
+            background: #cffafe;
+            color: #155e75;
+        }
+
+        .service-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #f59e0b;
+            font-size: 14px;
+        }
+
+        .service-details {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .service-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-call {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-call:hover {
+            background: #059669;
+        }
+
+        .btn-directions {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-directions:hover {
+            background: #e5e7eb;
+        }
+
+        .distance-badge {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .services-sidebar {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .location-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .map-filters {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">←</button>
+                <h1>Nearby Services</h1>
+            </div>
+            <button class="btn btn-primary">🆘 Request Emergency Help</button>
+        </div>
+
+        <div class="location-info">
+            <div class="current-location">
+                <div class="location-icon">📍</div>
+                <div class="location-text">
+                    <h3>Current Location</h3>
+                    <p>123 Main Street, Downtown Area, Springfield, MA 01103</p>
+                </div>
+            </div>
+            <button class="btn btn-primary">📍 Update Location</button>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="map-container">
+                <div class="map-header">
+                    <h2>Service Providers Map</h2>
+                    <div class="map-filters">
+                        <button class="filter-btn active">All</button>
+                        <button class="filter-btn">🚚 Towing</button>
+                        <button class="filter-btn">🔧 Repair</button>
+                        <button class="filter-btn">⛽ Gas</button>
+                    </div>
+                </div>
+                <div class="map-placeholder">
+                    <div class="map-marker you"></div>
+                    <div class="map-marker towing"></div>
+                    <div class="map-marker repair"></div>
+                    <div class="map-marker gas"></div>
+                    <div style="text-align: center; color: #667eea; font-size: 18px; font-weight: 600;">
+                        🗺️ Interactive Map View
+                    </div>
+                </div>
+            </div>
+
+            <div class="services-sidebar">
+                <div class="search-box">
+                    <input type="text" placeholder="🔍 Search services...">
+                </div>
+
+                <div class="services-list">
+                    <div class="service-card selected">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type towing">Towing Service</span>
+                                <h4>Bob's 24/7 Towing</h4>
+                            </div>
+                            <span class="distance-badge">1.2 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.8 <span style="color: #6b7280;">(234 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-869-2277</div>
+                            <div class="meta-item">🕒 Open 24 hours</div>
+                        </div>
+                        <div class="service-details">
+                            Professional towing service • Flatbed available • AAA approved • Fast response times
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call Now</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type repair">Auto Repair</span>
+                                <h4>Downtown Auto Repair</h4>
+                            </div>
+                            <span class="distance-badge">2.3 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.9 <span style="color: #6b7280;">(412 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-234-5678</div>
+                            <div class="meta-item">🕒 8AM - 6PM</div>
+                        </div>
+                        <div class="service-details">
+                            Full-service auto repair • ASE certified • Free diagnostics • Same-day service available
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call Now</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type gas">Gas Station</span>
+                                <h4>Shell Gas Station</h4>
+                            </div>
+                            <span class="distance-badge">0.8 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.5 <span style="color: #6b7280;">(156 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-345-6789</div>
+                            <div class="meta-item">🕒 Open 24 hours</div>
+                        </div>
+                        <div class="service-details">
+                            24/7 gas station • Convenience store • Air pump • Car wash available
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type towing">Towing Service</span>
+                                <h4>Express Towing & Recovery</h4>
+                            </div>
+                            <span class="distance-badge">3.5 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.7 <span style="color: #6b7280;">(189 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-456-7890</div>
+                            <div class="meta-item">🕒 Open 24 hours</div>
+                        </div>
+                        <div class="service-details">
+                            Emergency towing • Winch service • Motorcycle towing • Lockout service
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call Now</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type repair">Tire Service</span>
+                                <h4>Express Tire & Service</h4>
+                            </div>
+                            <span class="distance-badge">2.9 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.6 <span style="color: #6b7280;">(298 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-345-6789</div>
+                            <div class="meta-item">🕒 7AM - 8PM</div>
+                        </div>
+                        <div class="service-details">
+                            Mobile tire service • Flat repair • New tires • Wheel alignment
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call Now</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-header">
+                            <div class="service-info">
+                                <span class="service-type repair">Battery Service</span>
+                                <h4>AutoZone Battery Center</h4>
+                            </div>
+                            <span class="distance-badge">1.7 mi</span>
+                        </div>
+                        <div class="service-rating">
+                            ⭐ 4.4 <span style="color: #6b7280;">(324 reviews)</span>
+                        </div>
+                        <div class="service-meta">
+                            <div class="meta-item">📞 1-555-567-8901</div>
+                            <div class="meta-item">🕒 8AM - 9PM</div>
+                        </div>
+                        <div class="service-details">
+                            Battery testing • Installation • Jump start service • Wide selection in stock
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn-small btn-call">📞 Call</button>
+                            <button class="btn-small btn-directions">🧭 Directions</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

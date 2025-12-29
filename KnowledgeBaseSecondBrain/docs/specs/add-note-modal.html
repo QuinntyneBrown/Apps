@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Note - Second Brain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1;
+        }
+
+        .modal {
+            position: relative;
+            z-index: 2;
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 30px 30px 20px;
+            border-bottom: 2px solid #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #718096;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            min-height: 200px;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .toolbar-btn {
+            padding: 8px 12px;
+            border: none;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .quick-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e6f2ff;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .tag-input {
+            display: inline-block;
+            padding: 6px 12px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-input:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .suggestions {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .suggestions-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-item {
+            display: inline-block;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #4a5568;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .template-card {
+            padding: 15px;
+            background: #f7fafc;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .template-card:hover {
+            background: #e6f2ff;
+            border-color: #667eea;
+        }
+
+        .template-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .template-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-hint {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span>✍️</span>
+                <span>Create New Note</span>
+            </h2>
+            <button class="close-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Choose a Template (Optional)</label>
+                <div class="template-grid">
+                    <div class="template-card">
+                        <div class="template-icon">📝</div>
+                        <div class="template-name">Blank Note</div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-icon">📓</div>
+                        <div class="template-name">Daily Journal</div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-icon">📚</div>
+                        <div class="template-name">Book Notes</div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-icon">💼</div>
+                        <div class="template-name">Meeting Notes</div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-icon">💡</div>
+                        <div class="template-name">Idea</div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-icon">📋</div>
+                        <div class="template-name">Project Plan</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-input" placeholder="Enter a descriptive title..." autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Content</label>
+                <div class="toolbar">
+                    <button class="toolbar-btn"><strong>B</strong></button>
+                    <button class="toolbar-btn"><em>I</em></button>
+                    <button class="toolbar-btn">H1</button>
+                    <button class="toolbar-btn">🔗</button>
+                    <button class="toolbar-btn">• List</button>
+                    <button class="toolbar-btn">✓ Todo</button>
+                    <button class="toolbar-btn">💬 Quote</button>
+                    <button class="toolbar-btn">```Code</button>
+                </div>
+                <textarea class="form-textarea" placeholder="Start writing... Use [[Note Title]] to link to other notes and #tags to categorize."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Tags</label>
+                <div class="quick-tags">
+                    <span class="tag">#personal <span class="tag-remove">×</span></span>
+                    <span class="tag">#ideas <span class="tag-remove">×</span></span>
+                    <span class="tag-input">+ Add tag</span>
+                </div>
+                <div class="suggestions">
+                    <div class="suggestions-title">Suggested tags based on content:</div>
+                    <span class="suggestion-item">#productivity</span>
+                    <span class="suggestion-item">#learning</span>
+                    <span class="suggestion-item">#work</span>
+                    <span class="suggestion-item">#project</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="footer-hint">💡 Tip: Use Ctrl+Enter to save quickly</div>
+            <div class="footer-actions">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Create Note</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

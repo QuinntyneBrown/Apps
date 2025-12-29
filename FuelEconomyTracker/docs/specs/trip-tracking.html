@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Tracking - Fuel Economy Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 32px;
+        }
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #f0f0f0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card .label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .trip-card {
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .trip-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+        .trip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .trip-title {
+            flex: 1;
+        }
+        .trip-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .trip-date {
+            font-size: 14px;
+            color: #666;
+        }
+        .trip-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        .trip-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+        .trip-stat {
+            text-align: center;
+        }
+        .trip-stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .trip-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .trip-route {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #666;
+        }
+        .trip-route-arrow {
+            color: #667eea;
+            font-size: 18px;
+        }
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .filter-btn.active {
+            background: white;
+            color: #667eea;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #666;
+        }
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .empty-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .empty-subtext {
+            font-size: 14px;
+            color: #888;
+        }
+        .trip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .action-btn:hover {
+            background: #f8f9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Trip Tracking</h1>
+            <button class="btn">+ Start New Trip</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Active Trips</div>
+                <div class="value">2</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Trips</div>
+                <div class="value">18</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Avg Trip MPG</div>
+                <div class="value">33.2</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Trip Miles</div>
+                <div class="value">4,823</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active">All Trips</button>
+            <button class="filter-btn">Active</button>
+            <button class="filter-btn">Completed</button>
+            <button class="filter-btn">Business</button>
+            <button class="filter-btn">Personal</button>
+        </div>
+
+        <div class="card">
+            <h2>Active Trips</h2>
+
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-title">
+                        <div class="trip-name">Holiday Road Trip</div>
+                        <div class="trip-date">Started Dec 26, 2024</div>
+                    </div>
+                    <span class="trip-badge badge-active">Active</span>
+                </div>
+                <div class="trip-stats">
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Distance</div>
+                        <div class="trip-stat-value">487 mi</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">MPG</div>
+                        <div class="trip-stat-value">35.2</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fuel Cost</div>
+                        <div class="trip-stat-value">$53.67</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fill-Ups</div>
+                        <div class="trip-stat-value">2</div>
+                    </div>
+                </div>
+                <div class="trip-route">
+                    <span>San Francisco, CA</span>
+                    <span class="trip-route-arrow">→</span>
+                    <span>Los Angeles, CA</span>
+                </div>
+                <div class="trip-actions">
+                    <button class="action-btn">End Trip</button>
+                    <button class="action-btn">Add Fill-Up</button>
+                    <button class="action-btn">View Details</button>
+                </div>
+            </div>
+
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-title">
+                        <div class="trip-name">Weekly Commute - Dec Week 4</div>
+                        <div class="trip-date">Started Dec 23, 2024</div>
+                    </div>
+                    <span class="trip-badge badge-active">Active</span>
+                </div>
+                <div class="trip-stats">
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Distance</div>
+                        <div class="trip-stat-value">156 mi</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">MPG</div>
+                        <div class="trip-stat-value">29.8</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fuel Cost</div>
+                        <div class="trip-stat-value">$20.35</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fill-Ups</div>
+                        <div class="trip-stat-value">1</div>
+                    </div>
+                </div>
+                <div class="trip-route">
+                    <span>Home</span>
+                    <span class="trip-route-arrow">⇄</span>
+                    <span>Office (Daily Commute)</span>
+                </div>
+                <div class="trip-actions">
+                    <button class="action-btn">End Trip</button>
+                    <button class="action-btn">Add Fill-Up</button>
+                    <button class="action-btn">View Details</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Completed Trips</h2>
+
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-title">
+                        <div class="trip-name">Weekend Getaway - Lake Tahoe</div>
+                        <div class="trip-date">Dec 14-16, 2024</div>
+                    </div>
+                    <span class="trip-badge badge-completed">Completed</span>
+                </div>
+                <div class="trip-stats">
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Distance</div>
+                        <div class="trip-stat-value">312 mi</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">MPG</div>
+                        <div class="trip-stat-value">32.4</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fuel Cost</div>
+                        <div class="trip-stat-value">$37.45</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Duration</div>
+                        <div class="trip-stat-value">3 days</div>
+                    </div>
+                </div>
+                <div class="trip-route">
+                    <span>Sacramento, CA</span>
+                    <span class="trip-route-arrow">⇄</span>
+                    <span>Lake Tahoe, CA</span>
+                </div>
+                <div class="trip-actions">
+                    <button class="action-btn">View Details</button>
+                    <button class="action-btn">Export Report</button>
+                </div>
+            </div>
+
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-title">
+                        <div class="trip-name">Business Trip - Portland</div>
+                        <div class="trip-date">Dec 5-8, 2024</div>
+                    </div>
+                    <span class="trip-badge badge-completed">Completed</span>
+                </div>
+                <div class="trip-stats">
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Distance</div>
+                        <div class="trip-stat-value">635 mi</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">MPG</div>
+                        <div class="trip-stat-value">36.8</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fuel Cost</div>
+                        <div class="trip-stat-value">$67.23</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Duration</div>
+                        <div class="trip-stat-value">4 days</div>
+                    </div>
+                </div>
+                <div class="trip-route">
+                    <span>San Francisco, CA</span>
+                    <span class="trip-route-arrow">⇄</span>
+                    <span>Portland, OR</span>
+                </div>
+                <div class="trip-actions">
+                    <button class="action-btn">View Details</button>
+                    <button class="action-btn">Export Report</button>
+                </div>
+            </div>
+
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-title">
+                        <div class="trip-name">Thanksgiving Family Visit</div>
+                        <div class="trip-date">Nov 23-25, 2024</div>
+                    </div>
+                    <span class="trip-badge badge-completed">Completed</span>
+                </div>
+                <div class="trip-stats">
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Distance</div>
+                        <div class="trip-stat-value">428 mi</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">MPG</div>
+                        <div class="trip-stat-value">31.9</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Fuel Cost</div>
+                        <div class="trip-stat-value">$52.18</div>
+                    </div>
+                    <div class="trip-stat">
+                        <div class="trip-stat-label">Duration</div>
+                        <div class="trip-stat-value">3 days</div>
+                    </div>
+                </div>
+                <div class="trip-route">
+                    <span>Home</span>
+                    <span class="trip-route-arrow">⇄</span>
+                    <span>Parents' House</span>
+                </div>
+                <div class="trip-actions">
+                    <button class="action-btn">View Details</button>
+                    <button class="action-btn">Export Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

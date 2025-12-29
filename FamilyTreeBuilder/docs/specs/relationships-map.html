@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationships Map - Family Tree Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .back-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #374151;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+        .sidebar {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        .filter-text {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .map-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .map-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .map-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        .control-btn:hover {
+            border-color: #667eea;
+        }
+        .network-map {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+        .center-node {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            z-index: 10;
+            border: 4px solid white;
+        }
+        .center-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 80px);
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .relation-node {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .relation-node:hover {
+            border-color: #667eea;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        }
+        .relation-label {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+        .relation-type {
+            position: absolute;
+            font-size: 11px;
+            color: #6b7280;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #e5e7eb;
+        }
+        .connection-line {
+            position: absolute;
+            background: #d1d5db;
+            height: 2px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 2px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">← Back</button>
+                <h1>Relationship Map</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📥 Export</button>
+                <button class="btn btn-primary">🔍 Find Connection</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h2 class="sidebar-title">Filters</h2>
+
+                <div class="filter-section">
+                    <label class="filter-label">Show Relationships</label>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Parents</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Siblings</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Spouse</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Children</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">Grandparents</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">Uncles/Aunts</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">Cousins</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">View Options</label>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Show Names</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Show Relationships</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">Show Photos</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Select Person</label>
+                    <select class="control-btn" style="width: 100%; text-align: left;">
+                        <option>Michael Johnson (You)</option>
+                        <option>David Johnson (Father)</option>
+                        <option>Sarah Johnson (Mother)</option>
+                        <option>Jennifer Smith (Spouse)</option>
+                        <option>Emily Johnson (Sister)</option>
+                        <option>Andrew Johnson (Brother)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Parents</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Spouse</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Siblings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Children</div>
+                    </div>
+                </div>
+
+                <div class="map-container">
+                    <div class="map-header">
+                        <h2 class="map-title">Direct Relationships - Michael Johnson</h2>
+                        <div class="map-controls">
+                            <button class="control-btn">− Zoom Out</button>
+                            <button class="control-btn">+ Zoom In</button>
+                            <button class="control-btn">⟲ Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="network-map">
+                        <!-- Center Node (You) -->
+                        <div class="center-node">MJ</div>
+                        <div class="center-label">Michael Johnson (You)</div>
+
+                        <!-- Parent Nodes -->
+                        <div class="connection-line" style="width: 180px; top: 50%; left: 50%; transform: translate(-100%, -50%) rotate(180deg) translateX(60px);"></div>
+                        <div class="relation-node" style="top: 25%; left: 20%;">
+                            DJ
+                        </div>
+                        <div class="relation-label" style="top: 23%; left: 20%; transform: translateX(-50%);">
+                            David Johnson
+                        </div>
+                        <div class="relation-type" style="top: 36%; left: 20%; transform: translateX(-50%);">
+                            Father
+                        </div>
+
+                        <div class="connection-line" style="width: 180px; top: 50%; left: 50%; transform: translate(-100%, -50%) rotate(180deg) translateX(60px);"></div>
+                        <div class="relation-node" style="top: 25%; right: 20%;">
+                            SJ
+                        </div>
+                        <div class="relation-label" style="top: 23%; right: 20%; transform: translateX(50%);">
+                            Sarah Johnson
+                        </div>
+                        <div class="relation-type" style="top: 36%; right: 20%; transform: translateX(50%);">
+                            Mother
+                        </div>
+
+                        <!-- Spouse Node -->
+                        <div class="connection-line" style="width: 200px; top: 50%; left: 50%; transform: translateY(-50%) translateX(60px);"></div>
+                        <div class="relation-node" style="top: 50%; right: 15%; transform: translateY(-50%);">
+                            JS
+                        </div>
+                        <div class="relation-label" style="top: 48%; right: 15%; transform: translate(50%, -50%) translateX(-50%);">
+                            Jennifer Smith
+                        </div>
+                        <div class="relation-type" style="top: 62%; right: 15%; transform: translateX(50%);">
+                            Spouse
+                        </div>
+
+                        <!-- Sibling Nodes -->
+                        <div class="connection-line" style="width: 160px; top: 50%; left: 50%; transform: translate(-100%, -50%) rotate(225deg) translateX(60px);"></div>
+                        <div class="relation-node" style="top: 70%; left: 25%;">
+                            EJ
+                        </div>
+                        <div class="relation-label" style="top: 83%; left: 25%; transform: translateX(-50%);">
+                            Emily Johnson
+                        </div>
+                        <div class="relation-type" style="top: 68%; left: 25%; transform: translateX(-50%);">
+                            Sister
+                        </div>
+
+                        <div class="connection-line" style="width: 160px; top: 50%; left: 50%; transform: translate(0, -50%) rotate(-45deg) translateX(60px);"></div>
+                        <div class="relation-node" style="top: 70%; right: 25%;">
+                            AJ
+                        </div>
+                        <div class="relation-label" style="top: 83%; right: 25%; transform: translateX(50%);">
+                            Andrew Johnson
+                        </div>
+                        <div class="relation-type" style="top: 68%; right: 25%; transform: translateX(50%);">
+                            Brother
+                        </div>
+
+                        <!-- Children Nodes -->
+                        <div class="connection-line" style="width: 100px; top: 50%; left: 50%; transform: translateX(-50%) rotate(90deg) translateX(60px);"></div>
+                        <div class="relation-node" style="width: 70px; height: 70px; font-size: 24px; bottom: 15%; left: 35%;">
+                            OJ
+                        </div>
+                        <div class="relation-label" style="bottom: 5%; left: 35%; transform: translateX(-50%); font-size: 12px;">
+                            Olivia
+                        </div>
+                        <div class="relation-type" style="bottom: 26%; left: 35%; transform: translateX(-50%);">
+                            Daughter
+                        </div>
+
+                        <div class="connection-line" style="width: 100px; top: 50%; left: 50%; transform: translateX(-50%) rotate(90deg) translateX(60px);"></div>
+                        <div class="relation-node" style="width: 70px; height: 70px; font-size: 24px; bottom: 15%; left: 50%;">
+                            NJ
+                        </div>
+                        <div class="relation-label" style="bottom: 5%; left: 50%; transform: translateX(-50%); font-size: 12px;">
+                            Noah
+                        </div>
+                        <div class="relation-type" style="bottom: 26%; left: 50%; transform: translateX(-50%);">
+                            Son
+                        </div>
+
+                        <div class="connection-line" style="width: 100px; top: 50%; left: 50%; transform: translateX(-50%) rotate(90deg) translateX(60px);"></div>
+                        <div class="relation-node" style="width: 70px; height: 70px; font-size: 24px; bottom: 15%; left: 65%;">
+                            LJ
+                        </div>
+                        <div class="relation-label" style="bottom: 5%; left: 65%; transform: translateX(-50%); font-size: 12px;">
+                            Liam
+                        </div>
+                        <div class="relation-type" style="bottom: 26%; left: 65%; transform: translateX(-50%);">
+                            Son
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Graph - Second Brain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .slider {
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .filter-text {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .tag-filter {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f7fafc;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-filter:hover {
+            background: #e6f2ff;
+            color: #667eea;
+        }
+
+        .tag-filter.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .graph-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-header {
+            padding: 20px 25px;
+            border-bottom: 2px solid #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .graph-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .graph-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: calc(100vh - 200px);
+            background: #f7fafc;
+            position: relative;
+        }
+
+        .node {
+            position: absolute;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .node:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .node-large {
+            width: 80px;
+            height: 80px;
+            font-size: 32px;
+        }
+
+        .node-medium {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        .node-small {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+
+        .node-label {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d3748;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            opacity: 0.3;
+            transform-origin: left center;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+        }
+
+        .selected-note {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .selected-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .selected-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .selected-meta {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .connected-item {
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .connected-item:hover {
+            background: #e6f2ff;
+        }
+
+        .connected-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .connected-strength {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e6f2ff;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <span>Second Brain</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Notes</button>
+                <button class="btn btn-secondary">Export Graph</button>
+                <button class="btn btn-primary">Focus Mode</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="sidebar">
+                <div class="card-title">🎛️ Filters & Options</div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Connection Strength</label>
+                    <input type="range" class="slider" min="1" max="10" value="3">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #718096;">
+                        <span>Weak</span>
+                        <span>Strong</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Node Size</label>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">By Links</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">By Words</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">By Age</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Show Nodes</label>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">All Notes</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-text">Orphans</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-text">Hubs (5+ links)</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Filter by Tags</label>
+                    <span class="tag-filter active">#all</span>
+                    <span class="tag-filter">#productivity</span>
+                    <span class="tag-filter">#learning</span>
+                    <span class="tag-filter">#work</span>
+                    <span class="tag-filter">#ideas</span>
+                    <span class="tag-filter">#personal</span>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Legend</label>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #667eea; border: 3px solid #667eea;"></div>
+                            <span>Hub (5+ links)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: white; border: 3px solid #667eea;"></div>
+                            <span>Normal note</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: white; border: 3px solid #f6ad55;"></div>
+                            <span>Orphan (no links)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="graph-container">
+                <div class="graph-header">
+                    <h2 class="graph-title">Knowledge Graph</h2>
+                    <div class="graph-controls">
+                        <button class="control-btn" title="Zoom In">+</button>
+                        <button class="control-btn" title="Zoom Out">-</button>
+                        <button class="control-btn" title="Reset View">⟲</button>
+                        <button class="control-btn" title="Center">◎</button>
+                    </div>
+                </div>
+                <div class="graph-canvas">
+                    <!-- Central hub node -->
+                    <div class="node node-large" style="top: 45%; left: 48%; border-width: 4px;">
+                        📚
+                        <div class="node-label">Learning How to Learn</div>
+                    </div>
+
+                    <!-- Connected nodes - ring 1 -->
+                    <div class="node node-medium" style="top: 20%; left: 50%;">
+                        🧠
+                        <div class="node-label">Memory Techniques</div>
+                    </div>
+
+                    <div class="node node-medium" style="top: 40%; left: 75%;">
+                        📊
+                        <div class="node-label">Study Techniques</div>
+                    </div>
+
+                    <div class="node node-medium" style="top: 70%; left: 65%;">
+                        ⏰
+                        <div class="node-label">Time Management</div>
+                    </div>
+
+                    <div class="node node-medium" style="top: 65%; left: 30%;">
+                        🔬
+                        <div class="node-label">Cognitive Science</div>
+                    </div>
+
+                    <div class="node node-medium" style="top: 35%; left: 20%;">
+                        🎯
+                        <div class="node-label">Productivity Methods</div>
+                    </div>
+
+                    <!-- Connected nodes - ring 2 -->
+                    <div class="node node-small" style="top: 10%; left: 35%;">
+                        💡
+                        <div class="node-label">Active Recall</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 15%; left: 65%;">
+                        📈
+                        <div class="node-label">Spaced Repetition</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 50%; left: 85%;">
+                        ✅
+                        <div class="node-label">Pomodoro Technique</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 80%; left: 75%;">
+                        📝
+                        <div class="node-label">Note Taking</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 78%; left: 45%;">
+                        🎓
+                        <div class="node-label">Deep Work</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 75%; left: 15%;">
+                        🧩
+                        <div class="node-label">Mental Models</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 50%; left: 8%;">
+                        🌱
+                        <div class="node-label">Personal Growth</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 25%; left: 12%;">
+                        💼
+                        <div class="node-label">Work System</div>
+                    </div>
+
+                    <!-- Orphan nodes -->
+                    <div class="node node-small" style="top: 8%; left: 88%; border-color: #f6ad55;">
+                        📖
+                        <div class="node-label">Book List</div>
+                    </div>
+
+                    <div class="node node-small" style="top: 88%; left: 88%; border-color: #f6ad55;">
+                        🎨
+                        <div class="node-label">Creative Ideas</div>
+                    </div>
+
+                    <!-- Connection lines (simplified representation) -->
+                    <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                        <line x1="50%" y1="47%" x2="50%" y2="22%" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+                        <line x1="50%" y1="47%" x2="75%" y2="42%" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+                        <line x1="50%" y1="47%" x2="65%" y2="72%" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+                        <line x1="50%" y1="47%" x2="30%" y2="67%" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+                        <line x1="50%" y1="47%" x2="20%" y2="37%" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+
+                        <defs>
+                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="selected-note">
+                    <div class="selected-icon">📚</div>
+                    <div class="selected-title">Learning How to Learn</div>
+                    <div class="selected-meta">Last edited: Today at 2:30 PM</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Direct Links</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Backlinks</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">Total Network</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Depth Level</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔗 Direct Connections</div>
+                    <div class="connected-item">
+                        <div class="connected-title">Memory Techniques</div>
+                        <div class="connected-strength">Strong connection • 3 references</div>
+                    </div>
+                    <div class="connected-item">
+                        <div class="connected-title">Study Techniques</div>
+                        <div class="connected-strength">Strong connection • 2 references</div>
+                    </div>
+                    <div class="connected-item">
+                        <div class="connected-title">Time Management</div>
+                        <div class="connected-strength">Medium connection • 1 reference</div>
+                    </div>
+                    <div class="connected-item">
+                        <div class="connected-title">Cognitive Science</div>
+                        <div class="connected-strength">Medium connection • 1 reference</div>
+                    </div>
+                    <div class="connected-item">
+                        <div class="connected-title">Productivity Methods</div>
+                        <div class="connected-strength">Medium connection • 1 reference</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🏷️ Tags</div>
+                    <span class="tag">#learning</span>
+                    <span class="tag">#productivity</span>
+                    <span class="tag">#study-techniques</span>
+                    <span class="tag">#cognitive-science</span>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📊 Network Insights</div>
+                    <div style="padding: 15px; background: #f7fafc; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #4a5568;">
+                        This note is a <strong>hub</strong> in your knowledge network with high connectivity. It serves as a central concept linking learning methodologies to practical applications.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

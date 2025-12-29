@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Log - TimeAuditTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .filter-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .filter-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-box {
+            position: relative;
+            flex: 2;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: #999;
+        }
+        .log-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .log-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .log-stats {
+            font-size: 14px;
+            color: #666;
+        }
+        .log-table {
+            width: 100%;
+        }
+        .log-entry {
+            display: grid;
+            grid-template-columns: 120px 80px 1fr 140px 100px 120px 80px;
+            gap: 16px;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .log-entry:hover {
+            background: #f9fafb;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .entry-date {
+            font-size: 13px;
+            color: #999;
+        }
+        .entry-time {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .entry-activity {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .entry-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        .entry-description {
+            font-size: 13px;
+            color: #666;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .entry-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            padding: 4px 10px;
+            background: #f3f4f6;
+            color: #666;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .entry-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .category-deep-work {
+            background: #ede9fe;
+            color: #667eea;
+        }
+        .category-meetings {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        .category-email {
+            background: #fed7aa;
+            color: #f59e0b;
+        }
+        .category-learning {
+            background: #ddd6fe;
+            color: #8b5cf6;
+        }
+        .category-break {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .entry-duration {
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+        }
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #e5e7eb;
+        }
+        .summary-bar {
+            padding: 20px 24px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .summary-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .page-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .page-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Time Log</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Export CSV</button>
+                <button class="btn btn-primary">+ Log Time</button>
+            </div>
+        </div>
+
+        <div class="filter-card">
+            <div class="filter-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search activities, tags, or descriptions...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select class="filter-select">
+                        <option>This Week</option>
+                        <option>Last Week</option>
+                        <option>This Month</option>
+                        <option>Last Month</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select">
+                        <option>All Categories</option>
+                        <option>Deep Work</option>
+                        <option>Meetings</option>
+                        <option>Email</option>
+                        <option>Learning</option>
+                        <option>Breaks</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select">
+                        <option>Newest First</option>
+                        <option>Oldest First</option>
+                        <option>Duration (High-Low)</option>
+                        <option>Duration (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-card">
+            <div class="log-header">
+                <div class="log-title">All Entries</div>
+                <div class="log-stats">Showing 47 entries from Dec 23-29, 2025</div>
+            </div>
+
+            <div class="log-table">
+                <div class="log-entry">
+                    <div class="entry-date">Dec 29<br>Friday</div>
+                    <div class="entry-time">2:30 PM<br>4:00 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Product Design Review</div>
+                        <div class="entry-description">Reviewed new dashboard designs with the team and provided feedback</div>
+                        <div class="entry-tags">
+                            <span class="tag">design</span>
+                            <span class="tag">review</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-deep-work">💼 Deep Work</div>
+                    <div class="entry-duration">1h 30m</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 29<br>Friday</div>
+                    <div class="entry-time">1:00 PM<br>2:00 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Team Standup Meeting</div>
+                        <div class="entry-description">Daily sync with the engineering team about sprint progress</div>
+                        <div class="entry-tags">
+                            <span class="tag">standup</span>
+                            <span class="tag">team</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-meetings">👥 Meetings</div>
+                    <div class="entry-duration">1h</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 29<br>Friday</div>
+                    <div class="entry-time">10:30 AM<br>12:30 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Feature Development</div>
+                        <div class="entry-description">Implemented user authentication flow with OAuth integration</div>
+                        <div class="entry-tags">
+                            <span class="tag">development</span>
+                            <span class="tag">backend</span>
+                            <span class="tag">auth</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-deep-work">💼 Deep Work</div>
+                    <div class="entry-duration">2h</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 29<br>Friday</div>
+                    <div class="entry-time">9:45 AM<br>10:20 AM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Email Responses</div>
+                        <div class="entry-description">Responded to client emails and internal communications</div>
+                        <div class="entry-tags">
+                            <span class="tag">email</span>
+                            <span class="tag">communication</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-email">✉️ Email</div>
+                    <div class="entry-duration">35m</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 29<br>Friday</div>
+                    <div class="entry-time">9:00 AM<br>9:45 AM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Read Industry Articles</div>
+                        <div class="entry-description">Caught up on latest tech trends and best practices</div>
+                        <div class="entry-tags">
+                            <span class="tag">reading</span>
+                            <span class="tag">research</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-learning">📚 Learning</div>
+                    <div class="entry-duration">45m</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 28<br>Thursday</div>
+                    <div class="entry-time">3:15 PM<br>5:30 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Code Review Session</div>
+                        <div class="entry-description">Reviewed pull requests and provided detailed feedback to team members</div>
+                        <div class="entry-tags">
+                            <span class="tag">code-review</span>
+                            <span class="tag">mentoring</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-deep-work">💼 Deep Work</div>
+                    <div class="entry-duration">2h 15m</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 28<br>Thursday</div>
+                    <div class="entry-time">2:30 PM<br>3:00 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">Coffee Break</div>
+                        <div class="entry-description">Short break to recharge and chat with colleagues</div>
+                        <div class="entry-tags">
+                            <span class="tag">break</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-break">☕ Break</div>
+                    <div class="entry-duration">30m</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="log-entry">
+                    <div class="entry-date">Dec 28<br>Thursday</div>
+                    <div class="entry-time">11:00 AM<br>2:00 PM</div>
+                    <div class="entry-activity">
+                        <div class="entry-title">API Integration</div>
+                        <div class="entry-description">Integrated third-party payment API with error handling and testing</div>
+                        <div class="entry-tags">
+                            <span class="tag">api</span>
+                            <span class="tag">integration</span>
+                            <span class="tag">testing</span>
+                        </div>
+                    </div>
+                    <div class="entry-category category-deep-work">💼 Deep Work</div>
+                    <div class="entry-duration">3h</div>
+                    <div></div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-bar">
+                <div class="summary-item">
+                    <div class="summary-label">Total Entries</div>
+                    <div class="summary-value">47</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Time</div>
+                    <div class="summary-value">42h 35m</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Avg per Day</div>
+                    <div class="summary-value">7h 5m</div>
+                </div>
+                <div class="pagination">
+                    <button class="page-btn">←</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">→</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

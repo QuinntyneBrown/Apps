@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History - Roadside Assistance Info Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: #f3f4f6;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+            transform: translateX(-3px);
+        }
+
+        .header h1 {
+            color: #764ba2;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            text-align: center;
+        }
+
+        .stat-card .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #764ba2;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .filter-group select {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .timeline {
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 30px;
+            margin-left: 60px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -50px;
+            top: 30px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+        }
+
+        .timeline-item.completed::before {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .service-info h3 {
+            color: #1f2937;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .service-info .date {
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .service-info .location {
+            color: #667eea;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .service-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-item .label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .detail-item .value {
+            color: #1f2937;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .service-description {
+            color: #4b5563;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .vehicle-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #e0e7ff;
+            color: #3730a3;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .empty-state .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .timeline::before {
+                left: 15px;
+            }
+
+            .timeline-item {
+                margin-left: 45px;
+            }
+
+            .timeline-item::before {
+                left: -35px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-group select {
+                flex: 1;
+            }
+
+            .service-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">←</button>
+                <h1>Service History</h1>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">📋</div>
+                <div class="value">6</div>
+                <div class="label">Total Service Calls</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📅</div>
+                <div class="value">2</div>
+                <div class="label">Calls This Year</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">💰</div>
+                <div class="value">$0</div>
+                <div class="label">Total Cost Saved</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⏱️</div>
+                <div class="value">18 min</div>
+                <div class="label">Avg Response Time</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Filter by:</label>
+                <select>
+                    <option>All Services</option>
+                    <option>Towing</option>
+                    <option>Battery Jump</option>
+                    <option>Flat Tire</option>
+                    <option>Fuel Delivery</option>
+                    <option>Lockout</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Year:</label>
+                <select>
+                    <option selected>2025</option>
+                    <option>2024</option>
+                    <option>2023</option>
+                    <option>All Time</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Vehicle:</label>
+                <select>
+                    <option selected>All Vehicles</option>
+                    <option>2024 Honda Accord</option>
+                    <option>2022 Toyota RAV4</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item completed">
+                <div class="service-header">
+                    <div class="service-info">
+                        <h3>🔋 Battery Jump Start</h3>
+                        <div class="date">March 15, 2025 at 8:45 AM</div>
+                        <div class="location">📍 Downtown Parking Garage, 123 Main St</div>
+                    </div>
+                    <span class="status-badge completed">✓ Completed</span>
+                </div>
+
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="label">Vehicle</span>
+                        <span class="value">2024 Honda Accord</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Provider</span>
+                        <span class="value">AAA Roadside</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Response Time</span>
+                        <span class="value">15 minutes</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Cost</span>
+                        <span class="value">$0 (Covered)</span>
+                    </div>
+                </div>
+
+                <p class="service-description">
+                    Vehicle wouldn't start due to dead battery after leaving headlights on overnight.
+                    Technician arrived within 15 minutes and provided jump start service. Battery tested
+                    and recommended replacement due to age. Vehicle started successfully and drove to
+                    service center for battery replacement.
+                </p>
+
+                <div class="service-actions">
+                    <button class="btn btn-outline">📄 View Receipt</button>
+                    <button class="btn btn-outline">⭐ Rate Service</button>
+                    <button class="btn btn-outline">🔁 Request Again</button>
+                </div>
+            </div>
+
+            <div class="timeline-item completed">
+                <div class="service-header">
+                    <div class="service-info">
+                        <h3>🛞 Flat Tire Service</h3>
+                        <div class="date">January 8, 2025 at 4:20 PM</div>
+                        <div class="location">📍 I-95 Southbound, Exit 42</div>
+                    </div>
+                    <span class="status-badge completed">✓ Completed</span>
+                </div>
+
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="label">Vehicle</span>
+                        <span class="value">2024 Honda Accord</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Provider</span>
+                        <span class="value">Express Roadside</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Response Time</span>
+                        <span class="value">22 minutes</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Cost</span>
+                        <span class="value">$0 (Covered)</span>
+                    </div>
+                </div>
+
+                <p class="service-description">
+                    Right front tire went flat on highway. Called for assistance while safely parked on shoulder.
+                    Technician changed to spare tire. Recommended visiting tire shop for permanent repair or
+                    replacement. Tire had a nail puncture that could not be safely repaired.
+                </p>
+
+                <div class="service-actions">
+                    <button class="btn btn-outline">📄 View Receipt</button>
+                    <button class="btn btn-outline">⭐ Rate Service</button>
+                    <button class="btn btn-outline">🔁 Request Again</button>
+                </div>
+            </div>
+
+            <div class="timeline-item completed">
+                <div class="service-header">
+                    <div class="service-info">
+                        <h3>🔑 Lockout Service</h3>
+                        <div class="date">October 22, 2024 at 11:30 AM</div>
+                        <div class="location">📍 Grocery Store Parking, 456 Oak Avenue</div>
+                    </div>
+                    <span class="status-badge completed">✓ Completed</span>
+                </div>
+
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="label">Vehicle</span>
+                        <span class="value">2022 Toyota RAV4</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Provider</span>
+                        <span class="value">AAA Roadside</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Response Time</span>
+                        <span class="value">18 minutes</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Cost</span>
+                        <span class="value">$0 (Covered)</span>
+                    </div>
+                </div>
+
+                <p class="service-description">
+                    Keys locked inside vehicle with engine running. Technician used specialized tools to
+                    safely unlock vehicle without damage. No damage to door or window. Received spare key
+                    to prevent future lockouts.
+                </p>
+
+                <div class="service-actions">
+                    <button class="btn btn-outline">📄 View Receipt</button>
+                    <button class="btn btn-outline">⭐ Rate Service</button>
+                    <button class="btn btn-outline">🔁 Request Again</button>
+                </div>
+            </div>
+
+            <div class="timeline-item completed">
+                <div class="service-header">
+                    <div class="service-info">
+                        <h3>⛽ Fuel Delivery</h3>
+                        <div class="date">August 5, 2024 at 7:15 PM</div>
+                        <div class="location">📍 Route 27, Mile Marker 14</div>
+                    </div>
+                    <span class="status-badge completed">✓ Completed</span>
+                </div>
+
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="label">Vehicle</span>
+                        <span class="value">2024 Honda Accord</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Provider</span>
+                        <span class="value">AAA Roadside</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Response Time</span>
+                        <span class="value">25 minutes</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Service Cost</span>
+                        <span class="value">$15 (Fuel only)</span>
+                    </div>
+                </div>
+
+                <p class="service-description">
+                    Ran out of fuel on rural road. Service included delivery, paid for fuel. Technician
+                    delivered 3 gallons of gasoline, enough to reach nearest gas station. Fuel gauge
+                    malfunction suspected - recommended diagnostic check.
+                </p>
+
+                <div class="service-actions">
+                    <button class="btn btn-outline">📄 View Receipt</button>
+                    <button class="btn btn-outline">⭐ Rate Service</button>
+                    <button class="btn btn-outline">🔁 Request Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

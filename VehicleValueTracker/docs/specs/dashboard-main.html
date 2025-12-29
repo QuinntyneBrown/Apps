@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Value Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-action {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .vehicle-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .vehicle-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .vehicle-item:last-child {
+            border-bottom: none;
+        }
+
+        .vehicle-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .vehicle-year {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .vehicle-value {
+            text-align: right;
+        }
+
+        .current-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .value-change {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .value-change.down {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .value-change.up {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .chart-placeholder {
+            height: 250px;
+            background: linear-gradient(to top, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 20px;
+            position: relative;
+        }
+
+        .chart-bar {
+            width: 40px;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            background: #fef3c7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .alert-text {
+            font-size: 12px;
+            color: #78350f;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Vehicle Value Tracker</h1>
+            <p>Track your vehicles' worth and make informed decisions</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Portfolio Value</div>
+                <div class="stat-value">$87,450</div>
+                <div class="stat-change negative">
+                    <span>↓</span>
+                    <span>$2,340 (2.6%) this month</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Vehicles Tracked</div>
+                <div class="stat-value">3</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>1 added this month</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Avg. Monthly Depreciation</div>
+                <div class="stat-value">-1.2%</div>
+                <div class="stat-change negative">
+                    <span>↓</span>
+                    <span>$1,049 per month</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Best Time to Sell</div>
+                <div class="stat-value">Q2 2026</div>
+                <div class="stat-change positive">
+                    <span>⚡</span>
+                    <span>Maximum equity potential</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">My Vehicles</h2>
+                    <a href="#" class="card-action">View All →</a>
+                </div>
+
+                <div class="vehicle-item">
+                    <div class="vehicle-icon">🚗</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-name">Tesla Model 3 Long Range</div>
+                        <div class="vehicle-year">2022 • 18,500 miles</div>
+                    </div>
+                    <div class="vehicle-value">
+                        <div class="current-value">$38,200</div>
+                        <span class="value-change down">-$1,200</span>
+                    </div>
+                </div>
+
+                <div class="vehicle-item">
+                    <div class="vehicle-icon">🚙</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-name">Honda CR-V EX-L</div>
+                        <div class="vehicle-year">2020 • 32,100 miles</div>
+                    </div>
+                    <div class="vehicle-value">
+                        <div class="current-value">$28,750</div>
+                        <span class="value-change down">-$850</span>
+                    </div>
+                </div>
+
+                <div class="vehicle-item">
+                    <div class="vehicle-icon">🏎️</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-name">Mazda MX-5 Miata</div>
+                        <div class="vehicle-year">2019 • 15,200 miles</div>
+                    </div>
+                    <div class="vehicle-value">
+                        <div class="current-value">$20,500</div>
+                        <span class="value-change down">-$290</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Portfolio Value Trend</h2>
+                    </div>
+                    <div class="chart-placeholder">
+                        <div class="chart-bar" style="height: 180px;">
+                            <span class="chart-label">Jan</span>
+                        </div>
+                        <div class="chart-bar" style="height: 170px;">
+                            <span class="chart-label">Feb</span>
+                        </div>
+                        <div class="chart-bar" style="height: 175px;">
+                            <span class="chart-label">Mar</span>
+                        </div>
+                        <div class="chart-bar" style="height: 165px;">
+                            <span class="chart-label">Apr</span>
+                        </div>
+                        <div class="chart-bar" style="height: 160px;">
+                            <span class="chart-label">May</span>
+                        </div>
+                        <div class="chart-bar" style="height: 155px;">
+                            <span class="chart-label">Jun</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Alerts & Insights</h2>
+                    </div>
+
+                    <div class="alert-item">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <div class="alert-title">Market Change</div>
+                            <div class="alert-text">Tesla Model 3 values dropped 3.2% this week</div>
+                        </div>
+                    </div>
+
+                    <div class="alert-item">
+                        <div class="alert-icon">📊</div>
+                        <div class="alert-content">
+                            <div class="alert-title">Optimal Selling Window</div>
+                            <div class="alert-text">Your CR-V is in peak selling season</div>
+                        </div>
+                    </div>
+
+                    <div class="alert-item">
+                        <div class="alert-icon">💡</div>
+                        <div class="alert-content">
+                            <div class="alert-title">Mileage Milestone</div>
+                            <div class="alert-text">MX-5 approaching 20k - value may adjust</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Actions</h2>
+                    </div>
+                    <a href="#" class="btn" style="width: 100%; margin-bottom: 12px;">+ Add New Vehicle</a>
+                    <a href="#" class="btn" style="width: 100%; background: white; color: #667eea; border: 2px solid #667eea;">View Market Trends</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

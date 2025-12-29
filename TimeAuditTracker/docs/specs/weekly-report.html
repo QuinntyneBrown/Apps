@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Report - TimeAuditTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .report-period {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-top: 4px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .daily-breakdown {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+        .day-card {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .day-card.weekend {
+            opacity: 0.6;
+        }
+        .day-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .day-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+        .day-total {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        .day-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .day-category {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+        }
+        .productivity-score {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #d1fae5;
+            color: #10b981;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .score-excellent {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        .score-good {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+        .score-fair {
+            background: #fed7aa;
+            color: #f59e0b;
+        }
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .highlight-item {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+        .highlight-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .highlight-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+        .highlight-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .highlight-description {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            text-align: left;
+            padding: 12px;
+            background: #f9fafb;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+        .table tr:hover {
+            background: #f9fafb;
+        }
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .trend-indicator {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .trend-up {
+            color: #10b981;
+        }
+        .trend-down {
+            color: #ef4444;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        .achievement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border-left: 3px solid #10b981;
+        }
+        .achievement-icon {
+            font-size: 32px;
+        }
+        .achievement-text {
+            flex: 1;
+        }
+        .achievement-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .achievement-description {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Weekly Time Audit Report</h1>
+                <div class="report-period">December 23-29, 2025</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📧 Email Report</button>
+                <button class="btn btn-secondary">💾 Download PDF</button>
+                <button class="btn btn-primary">+ Log Time</button>
+            </div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-icon">⏱️</div>
+                <div class="summary-value">42h 35m</div>
+                <div class="summary-label">Total Time</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📊</div>
+                <div class="summary-value">6h 5m</div>
+                <div class="summary-label">Daily Average</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">🎯</div>
+                <div class="summary-value">72%</div>
+                <div class="summary-label">Productive Time</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📈</div>
+                <div class="summary-value">+15%</div>
+                <div class="summary-label">vs Last Week</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">✨</div>
+                <div class="summary-value">A+</div>
+                <div class="summary-label">Productivity Score</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Daily Breakdown</h2>
+                    <div class="card-subtitle">Time logged each day of the week</div>
+                </div>
+            </div>
+            <div class="daily-breakdown">
+                <div class="day-card">
+                    <div class="day-name">Monday</div>
+                    <div class="day-date">Dec 23</div>
+                    <div class="day-total">6h 30m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Deep Work</span>
+                            <span>2h 45m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Meetings</span>
+                            <span>1h 30m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>1h 15m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Other</span>
+                            <span>1h</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Tuesday</div>
+                    <div class="day-date">Dec 24</div>
+                    <div class="day-total">7h 30m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Deep Work</span>
+                            <span>3h 15m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Meetings</span>
+                            <span>2h</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>1h 20m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Other</span>
+                            <span>55m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Wednesday</div>
+                    <div class="day-date">Dec 25</div>
+                    <div class="day-total">8h 30m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Deep Work</span>
+                            <span>4h</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Meetings</span>
+                            <span>2h 15m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>1h 10m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Other</span>
+                            <span>1h 5m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Thursday</div>
+                    <div class="day-date">Dec 26</div>
+                    <div class="day-total">7h</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Deep Work</span>
+                            <span>2h 50m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Meetings</span>
+                            <span>2h 30m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>55m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Other</span>
+                            <span>45m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Friday</div>
+                    <div class="day-date">Dec 27</div>
+                    <div class="day-total">8h 45m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Deep Work</span>
+                            <span>3h 30m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Meetings</span>
+                            <span>2h 40m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>1h 30m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Other</span>
+                            <span>1h 5m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card weekend">
+                    <div class="day-name">Saturday</div>
+                    <div class="day-date">Dec 28</div>
+                    <div class="day-total">2h 30m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Learning</span>
+                            <span>1h 45m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Email</span>
+                            <span>45m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-card weekend">
+                    <div class="day-name">Sunday</div>
+                    <div class="day-date">Dec 29</div>
+                    <div class="day-total">1h 50m</div>
+                    <div class="day-categories">
+                        <div class="day-category">
+                            <span>Learning</span>
+                            <span>1h 20m</span>
+                        </div>
+                        <div class="day-category">
+                            <span>Planning</span>
+                            <span>30m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Week Highlights</h2>
+            </div>
+            <div class="highlights-grid">
+                <div class="highlight-item">
+                    <div class="highlight-icon">🏆</div>
+                    <div class="highlight-title">Most Productive Day</div>
+                    <div class="highlight-value">Friday</div>
+                    <div class="highlight-description">8h 45m logged with 4h of deep work and high focus time</div>
+                </div>
+                <div class="highlight-item" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="highlight-icon">💼</div>
+                    <div class="highlight-title">Deep Work Champion</div>
+                    <div class="highlight-value">15h 20m</div>
+                    <div class="highlight-description">36% of total time spent on focused, productive work</div>
+                </div>
+                <div class="highlight-item" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="highlight-icon">📉</div>
+                    <div class="highlight-title">Meeting Reduction</div>
+                    <div class="highlight-value">-8%</div>
+                    <div class="highlight-description">Less time in meetings compared to last week - great job!</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Category Performance</h2>
+                <div class="card-subtitle">Time spent by category with week-over-week comparison</div>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>This Week</th>
+                        <th>Last Week</th>
+                        <th>Change</th>
+                        <th>% of Total</th>
+                        <th>Progress to Goal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background: #ede9fe; color: #667eea;">
+                                💼 Deep Work
+                            </span>
+                        </td>
+                        <td><strong>15h 20m</strong></td>
+                        <td>13h 40m</td>
+                        <td><span class="trend-indicator trend-up">↑ 12%</span></td>
+                        <td>36%</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background: #d1fae5; color: #10b981;">
+                                👥 Meetings
+                            </span>
+                        </td>
+                        <td><strong>11h 15m</strong></td>
+                        <td>12h 10m</td>
+                        <td><span class="trend-indicator trend-down">↓ 8%</span></td>
+                        <td>26%</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background: #fed7aa; color: #f59e0b;">
+                                ✉️ Email
+                            </span>
+                        </td>
+                        <td><strong>6h 30m</strong></td>
+                        <td>7h 40m</td>
+                        <td><span class="trend-indicator trend-down">↓ 15%</span></td>
+                        <td>15%</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 55%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background: #ddd6fe; color: #8b5cf6;">
+                                📚 Learning
+                            </span>
+                        </td>
+                        <td><strong>4h 20m</strong></td>
+                        <td>3h 30m</td>
+                        <td><span class="trend-indicator trend-up">↑ 26%</span></td>
+                        <td>10%</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 72%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background: #fee2e2; color: #ef4444;">
+                                ☕ Breaks
+                            </span>
+                        </td>
+                        <td><strong>5h 10m</strong></td>
+                        <td>4h 45m</td>
+                        <td><span class="trend-indicator trend-up">↑ 9%</span></td>
+                        <td>13%</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Achievements & Milestones</h2>
+            </div>
+            <div class="achievement-list">
+                <div class="achievement-item">
+                    <div class="achievement-icon">🎯</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Deep Work Goal Exceeded</div>
+                        <div class="achievement-description">You spent 15h 20m on deep work this week, exceeding your 12h goal by 28%</div>
+                    </div>
+                </div>
+                <div class="achievement-item">
+                    <div class="achievement-icon">📧</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Email Time Reduced</div>
+                        <div class="achievement-description">Successfully reduced email time by 15% compared to last week</div>
+                    </div>
+                </div>
+                <div class="achievement-item">
+                    <div class="achievement-icon">📚</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Learning Streak</div>
+                        <div class="achievement-description">7 consecutive days with learning activities logged - keep it up!</div>
+                    </div>
+                </div>
+                <div class="achievement-item">
+                    <div class="achievement-icon">⏰</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Consistent Tracking</div>
+                        <div class="achievement-description">Logged time entries every day this week with 95% accuracy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

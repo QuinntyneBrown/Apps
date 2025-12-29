@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Items & Memories - Bucket List Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .stats-banner {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stats-banner h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 24px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+        select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .memories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        .memory-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .memory-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        .memory-header {
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, #667eea, #764ba2) 1;
+        }
+        .completion-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .memory-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .memory-date {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .memory-content {
+            padding: 24px;
+        }
+        .memory-story {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .memory-photos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .memory-photo {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        .memory-highlights {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .highlight-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .highlight-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .highlight-item {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .highlight-bullet {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+            flex-shrink: 0;
+        }
+        .memory-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e0e0e0;
+            color: #666;
+        }
+        .memory-footer {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        .share-icons {
+            display: flex;
+            gap: 8px;
+        }
+        .share-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #e0e0e0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .share-btn:hover {
+            background: #d0d0d0;
+            transform: scale(1.1);
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .category-travel {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .category-adventure {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .category-personal {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .category-creative {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        @media (max-width: 768px) {
+            .memories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Completed Items & Memories</h1>
+            <div class="header-subtitle">Celebrate your achievements and relive the moments</div>
+        </div>
+
+        <div class="stats-banner">
+            <h2>Your Achievement Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Items Completed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">This Year</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">127</div>
+                    <div class="stat-label">Photos Captured</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">32%</div>
+                    <div class="stat-label">Overall Progress</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <span class="filter-label">Filter by:</span>
+            <select>
+                <option>All Categories</option>
+                <option>Travel</option>
+                <option>Adventure</option>
+                <option>Personal Growth</option>
+                <option>Career</option>
+                <option>Creative</option>
+            </select>
+            <select>
+                <option>All Time</option>
+                <option>This Year</option>
+                <option>Last Year</option>
+                <option>Last 6 Months</option>
+            </select>
+            <select>
+                <option>Sort by: Latest First</option>
+                <option>Sort by: Oldest First</option>
+                <option>Sort by: Category</option>
+            </select>
+        </div>
+
+        <div class="memories-grid">
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Learn to Scuba Dive</div>
+                    <div class="memory-date">📅 Completed on December 15, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        Finally got my PADI Open Water certification in the stunning Maldives! The underwater world is even more incredible than I imagined. Swimming alongside sea turtles, colorful fish, and exploring coral reefs was absolutely magical. This experience has opened up a whole new world of adventure possibilities.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🐠</div>
+                        <div class="memory-photo">🐢</div>
+                        <div class="memory-photo">🪸</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Highlights</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Dove to 18 meters depth on first certification dive</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Saw 3 sea turtles and a small reef shark</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Completed 4 open water dives</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-adventure">Adventure</span>
+                        <span class="tag">Maldives</span>
+                        <span class="tag">Ocean</span>
+                        <span class="tag">Certification</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Attend Coachella Music Festival</div>
+                    <div class="memory-date">📅 Completed on November 28, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        Three days of incredible music, art, and vibes in the California desert! Saw 15 of my favorite bands live, made new friends from around the world, and experienced the unique Coachella atmosphere. The sunsets over the festival grounds were breathtaking. This was everything I hoped for and more.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🎵</div>
+                        <div class="memory-photo">🌅</div>
+                        <div class="memory-photo">🎪</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Best Moments</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Front row for my favorite band's headlining set</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Discovered 5 new artists I now love</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Amazing art installations and food</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-personal">Personal Growth</span>
+                        <span class="tag">Music</span>
+                        <span class="tag">Festival</span>
+                        <span class="tag">California</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Try 50 New Restaurants</div>
+                    <div class="memory-date">📅 Completed on October 22, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        What a delicious journey! Explored cuisines from 15 different countries right in my city. From authentic Japanese ramen to Ethiopian injera, Mexican street tacos to French fine dining. Created a detailed food journal with ratings and reviews. My palate and appreciation for global cuisine has expanded tremendously.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🍜</div>
+                        <div class="memory-photo">🌮</div>
+                        <div class="memory-photo">🍱</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Favorites Discovered</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Found an incredible hidden gem Thai restaurant</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Tried 15 different cuisine types</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Created a food blog documenting the journey</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-creative">Creative</span>
+                        <span class="tag">Food</span>
+                        <span class="tag">Culinary</span>
+                        <span class="tag">Local</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Road Trip Across Route 66</div>
+                    <div class="memory-date">📅 Completed on September 10, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        Two weeks driving the Mother Road from Chicago to Santa Monica. Experienced authentic Americana, vintage diners, quirky roadside attractions, and stunning landscapes. Met fascinating people in small towns and created memories that will last a lifetime. This journey exceeded all expectations.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🚗</div>
+                        <div class="memory-photo">🏜️</div>
+                        <div class="memory-photo">🛣️</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Unforgettable Stops</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Cadillac Ranch in Amarillo, Texas</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Grand Canyon sunrise detour</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Historic diners and classic motels</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-travel">Travel</span>
+                        <span class="tag">Road Trip</span>
+                        <span class="tag">USA</span>
+                        <span class="tag">Adventure</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Complete a 30-Day Yoga Challenge</div>
+                    <div class="memory-date">📅 Completed on August 5, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        Committed to practicing yoga every single day for 30 days. The transformation was incredible - improved flexibility, mental clarity, and inner peace. Started with basic poses and by day 30 could hold advanced positions I never thought possible. This practice has become a permanent part of my life.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🧘</div>
+                        <div class="memory-photo">🌅</div>
+                        <div class="memory-photo">☮️</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Achievements</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>30 consecutive days of practice</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Mastered 15 new yoga poses</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Improved flexibility by 40%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-personal">Personal Growth</span>
+                        <span class="tag">Yoga</span>
+                        <span class="tag">Health</span>
+                        <span class="tag">Wellness</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-card">
+                <div class="memory-header">
+                    <div class="completion-badge">✓ Completed</div>
+                    <div class="memory-title">Learn to Make Authentic Pasta from Scratch</div>
+                    <div class="memory-date">📅 Completed on July 18, 2025</div>
+                </div>
+                <div class="memory-content">
+                    <div class="memory-story">
+                        Took a hands-on pasta making class and practiced for weeks. Mastered making fettuccine, ravioli, and gnocchi from scratch. The difference in taste and texture compared to store-bought is incredible. Now I regularly make fresh pasta for family dinners and everyone loves it. A skill I'll treasure forever.
+                    </div>
+                    <div class="memory-photos">
+                        <div class="memory-photo">🍝</div>
+                        <div class="memory-photo">👨‍🍳</div>
+                        <div class="memory-photo">🇮🇹</div>
+                    </div>
+                    <div class="memory-highlights">
+                        <div class="highlight-title">Skills Learned</div>
+                        <div class="highlight-list">
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Perfect dough consistency and kneading</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Three types of pasta shapes</span>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-bullet"></div>
+                                <span>Traditional Italian sauce pairings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-tags">
+                        <span class="category-badge category-creative">Creative</span>
+                        <span class="tag">Cooking</span>
+                        <span class="tag">Italian</span>
+                        <span class="tag">Skill</span>
+                    </div>
+                </div>
+                <div class="memory-footer">
+                    <button class="btn btn-primary">View Full Story</button>
+                    <div class="share-icons">
+                        <button class="share-btn">📤</button>
+                        <button class="share-btn">❤️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

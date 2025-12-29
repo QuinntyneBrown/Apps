@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Recommendations - Password Account Auditor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .progress-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .progress-title {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        .progress-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 48px;
+            font-weight: bold;
+            background: conic-gradient(#10b981 0% 60%, #e5e7eb 60% 100%);
+            position: relative;
+        }
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+        }
+        .progress-value {
+            position: relative;
+            z-index: 1;
+            color: #1f2937;
+        }
+        .progress-label {
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .progress-sublabel {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .tab {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h2 {
+            font-size: 20px;
+            color: #1f2937;
+        }
+        .priority-filter {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-badge.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .filter-badge.high {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .filter-badge.medium {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .recommendation-item {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 20px;
+        }
+        .recommendation-item:last-child {
+            border-bottom: none;
+        }
+        .recommendation-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .recommendation-icon.critical {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .recommendation-icon.high {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+        .recommendation-icon.medium {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+        .recommendation-icon.low {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        .recommendation-content {
+            flex: 1;
+        }
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .priority-badge.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .priority-badge.high {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .priority-badge.medium {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .priority-badge.low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .recommendation-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .recommendation-impact {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .impact-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .affected-accounts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .account-badge {
+            padding: 4px 10px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #374151;
+        }
+        .recommendation-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        .best-practices {
+            padding: 24px;
+        }
+        .practice-item {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+        }
+        .practice-item:last-child {
+            margin-bottom: 0;
+        }
+        .practice-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .practice-content h4 {
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .practice-content p {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        .info-banner {
+            padding: 20px 24px;
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+        .info-banner-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .info-banner-content h3 {
+            font-size: 16px;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+        .info-banner-content p {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            .recommendation-item {
+                flex-direction: column;
+            }
+            .recommendation-actions {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Security Recommendations</h1>
+            <p>Personalized suggestions to improve your account security</p>
+        </div>
+
+        <div class="progress-card">
+            <div class="progress-title">Security Improvement Progress</div>
+            <div class="progress-circle">
+                <div class="progress-value">12/20</div>
+            </div>
+            <div class="progress-label">Recommendations Completed</div>
+            <div class="progress-sublabel">8 recommendations remaining - 60% complete</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">All (20)</button>
+            <button class="tab">Critical (3)</button>
+            <button class="tab">High Priority (7)</button>
+            <button class="tab">Medium (6)</button>
+            <button class="tab">Completed (12)</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Critical Recommendations</h2>
+                <div class="priority-filter">
+                    <span class="filter-badge critical">3 Critical</span>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon critical">🔥</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Change Password for Breached LinkedIn Account</h3>
+                        <span class="priority-badge critical">Critical</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Your LinkedIn account was found in a recent data breach (March 2024). Your password and email were exposed. Change your password immediately to prevent unauthorized access.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: Very High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 5 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +15 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">LinkedIn</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Change Password Now</button>
+                        <button class="btn btn-secondary">View Account Details</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon critical">🔥</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Change Password for Breached Twitter Account</h3>
+                        <span class="priority-badge critical">Critical</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Your Twitter account was compromised in a security incident (January 2024). Account tokens and personal information were exposed. Update your password and review account activity.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: Very High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 5 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +15 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Twitter</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Change Password Now</button>
+                        <button class="btn btn-secondary">View Account Details</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon critical">🔥</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Stop Reusing Gmail Password Across 5 Accounts</h3>
+                        <span class="priority-badge critical">Critical</span>
+                    </div>
+                    <p class="recommendation-description">
+                        You're using the same password for Gmail, Facebook, Twitter, Instagram, and Netflix. If one account is compromised, all five are at risk. Create unique passwords for each account.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: Very High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 15 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +20 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Gmail</span>
+                        <span class="account-badge">Facebook</span>
+                        <span class="account-badge">Twitter</span>
+                        <span class="account-badge">Instagram</span>
+                        <span class="account-badge">Netflix</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Fix All Passwords</button>
+                        <button class="btn btn-secondary">Generate Passwords</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>High Priority Recommendations</h2>
+                <div class="priority-filter">
+                    <span class="filter-badge high">7 High</span>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon high">⚠️</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Strengthen Weak Facebook Password</h3>
+                        <span class="priority-badge high">High</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Your Facebook password is only 7 characters long and lacks special characters and uppercase letters. This makes it vulnerable to brute force attacks.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 3 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +10 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Facebook</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Strengthen Password</button>
+                        <button class="btn btn-secondary">Generate Strong Password</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon high">⚠️</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Enable Two-Factor Authentication on Facebook</h3>
+                        <span class="priority-badge high">High</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Facebook doesn't have two-factor authentication enabled. Adding 2FA provides an extra layer of security against unauthorized access, even if your password is compromised.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 5 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +12 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Facebook</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Enable 2FA</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon high">⚠️</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Update Bank Account Password (180 Days Old)</h3>
+                        <span class="priority-badge high">High</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Your Bank of America password hasn't been changed in 6 months. For high-security accounts like banking, it's recommended to update passwords every 90 days.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: High</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 5 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +8 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Bank of America</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Update Password</button>
+                        <button class="btn btn-secondary">Set Reminder</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Medium Priority Recommendations</h2>
+                <div class="priority-filter">
+                    <span class="filter-badge medium">6 Medium</span>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon medium">ℹ️</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Enable Two-Factor Authentication on Amazon</h3>
+                        <span class="priority-badge medium">Medium</span>
+                    </div>
+                    <p class="recommendation-description">
+                        Your Amazon account doesn't have 2FA enabled. Since this account is linked to payment information, adding two-factor authentication is highly recommended.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: Medium</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 5 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +8 points</span>
+                        </div>
+                    </div>
+                    <div class="affected-accounts">
+                        <span class="account-badge">Amazon</span>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Enable 2FA</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="recommendation-icon medium">ℹ️</div>
+                <div class="recommendation-content">
+                    <div class="recommendation-header">
+                        <h3 class="recommendation-title">Review Account Recovery Options</h3>
+                        <span class="priority-badge medium">Medium</span>
+                    </div>
+                    <p class="recommendation-description">
+                        15 accounts don't have updated recovery email or phone numbers. Make sure you can recover your accounts if you lose access.
+                    </p>
+                    <div class="recommendation-impact">
+                        <div class="impact-item">
+                            <span>⚡</span>
+                            <span>Impact: Medium</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>⏱️</span>
+                            <span>Est. Time: 20 minutes</span>
+                        </div>
+                        <div class="impact-item">
+                            <span>🛡️</span>
+                            <span>Security Boost: +5 points</span>
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn btn-primary">Review Accounts</button>
+                        <button class="btn btn-secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Password Security Best Practices</h2>
+            </div>
+            <div class="info-banner">
+                <div class="info-banner-icon">💡</div>
+                <div class="info-banner-content">
+                    <h3>Follow These Guidelines for Maximum Security</h3>
+                    <p>Implementing these best practices will significantly improve your overall account security.</p>
+                </div>
+            </div>
+            <div class="best-practices">
+                <div class="practice-item">
+                    <div class="practice-number">1</div>
+                    <div class="practice-content">
+                        <h4>Use Long, Complex Passwords</h4>
+                        <p>Create passwords with at least 12 characters, including uppercase, lowercase, numbers, and special characters. Avoid dictionary words and personal information.</p>
+                    </div>
+                </div>
+                <div class="practice-item">
+                    <div class="practice-number">2</div>
+                    <div class="practice-content">
+                        <h4>Never Reuse Passwords</h4>
+                        <p>Each account should have a unique password. If one account is compromised, others remain secure with unique passwords.</p>
+                    </div>
+                </div>
+                <div class="practice-item">
+                    <div class="practice-number">3</div>
+                    <div class="practice-content">
+                        <h4>Enable Two-Factor Authentication</h4>
+                        <p>Add an extra layer of security by requiring a second form of verification. Use authenticator apps instead of SMS when possible.</p>
+                    </div>
+                </div>
+                <div class="practice-item">
+                    <div class="practice-number">4</div>
+                    <div class="practice-content">
+                        <h4>Update Passwords Regularly</h4>
+                        <p>Change passwords every 90 days for high-priority accounts like banking and email. Set reminders to stay on schedule.</p>
+                    </div>
+                </div>
+                <div class="practice-item">
+                    <div class="practice-number">5</div>
+                    <div class="practice-content">
+                        <h4>Use a Password Manager</h4>
+                        <p>Let a password manager generate and store complex passwords for you. You only need to remember one master password.</p>
+                    </div>
+                </div>
+                <div class="practice-item">
+                    <div class="practice-number">6</div>
+                    <div class="practice-content">
+                        <h4>Monitor for Data Breaches</h4>
+                        <p>Regularly check if your accounts have been compromised in data breaches. Take immediate action if any breaches are detected.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

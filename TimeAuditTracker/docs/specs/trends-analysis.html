@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trends Analysis - TimeAuditTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+            padding: 20px 0;
+        }
+        .line-chart {
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative;
+        }
+        .chart-point {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .point-line {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .point-dot {
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            position: absolute;
+            z-index: 2;
+        }
+        .point-value {
+            position: absolute;
+            top: -25px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+        .point-label {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+        .trend-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .trend-card {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+        .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .trend-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        .trend-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .trend-up {
+            color: #10b981;
+        }
+        .trend-down {
+            color: #ef4444;
+        }
+        .trend-mini-chart {
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .mini-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 2px;
+            min-height: 4px;
+        }
+        .trend-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+        }
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            gap: 4px;
+            margin: 20px 0;
+        }
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: #e5e7eb;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        .heatmap-cell.level-0 { background: #f3f4f6; }
+        .heatmap-cell.level-1 { background: #ddd6fe; }
+        .heatmap-cell.level-2 { background: #c4b5fd; }
+        .heatmap-cell.level-3 { background: #a78bfa; }
+        .heatmap-cell.level-4 { background: #8b5cf6; }
+        .heatmap-cell.level-5 { background: #7c3aed; }
+        .heatmap-labels {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .heatmap-label {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+        .patterns-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .pattern-item {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border-left: 4px solid;
+        }
+        .pattern-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .pattern-icon {
+            font-size: 28px;
+        }
+        .pattern-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .pattern-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .pattern-stats {
+            display: flex;
+            gap: 20px;
+        }
+        .pattern-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #666;
+        }
+        .pattern-stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .comparison-chart {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        .comparison-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .comparison-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .comparison-label {
+            min-width: 100px;
+            font-size: 13px;
+            color: #666;
+        }
+        .comparison-bar {
+            flex: 1;
+            height: 32px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        .comparison-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .insight-card {
+            padding: 16px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border-left: 3px solid #10b981;
+        }
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .insight-icon {
+            font-size: 20px;
+        }
+        .insight-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .insight-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Trends Analysis</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Export Data</button>
+                <button class="btn btn-primary">+ Log Time</button>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab">7 Days</button>
+            <button class="tab">30 Days</button>
+            <button class="tab active">3 Months</button>
+            <button class="tab">6 Months</button>
+            <button class="tab">1 Year</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Total Time Trend</h2>
+                    <div class="card-subtitle">Daily time logged over the last 3 months</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="line-chart">
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 65%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">5.2h</div>
+                        </div>
+                        <div class="point-label">Oct</div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 70%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">5.6h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 68%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">5.4h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 75%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.0h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 72%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">5.8h</div>
+                        </div>
+                        <div class="point-label">Nov</div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 78%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.2h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 76%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.1h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 80%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.4h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 82%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.6h</div>
+                        </div>
+                        <div class="point-label">Dec</div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 85%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">6.8h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 88%;">
+                            <div class="point-dot"></div>
+                            <div class="point-value">7.0h</div>
+                        </div>
+                        <div class="point-label"></div>
+                    </div>
+                    <div class="chart-point">
+                        <div class="point-line" style="height: 90%;">
+                            <div class="point-dot" style="background: #10b981;"></div>
+                            <div class="point-value">7.2h</div>
+                        </div>
+                        <div class="point-label">Now</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="trend-grid">
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">💼 Deep Work</div>
+                    <div class="trend-change trend-up">↑ 24%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 45%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                    <div class="mini-bar" style="height: 65%;"></div>
+                    <div class="mini-bar" style="height: 70%;"></div>
+                    <div class="mini-bar" style="height: 75%;"></div>
+                    <div class="mini-bar" style="height: 78%;"></div>
+                    <div class="mini-bar" style="height: 82%;"></div>
+                    <div class="mini-bar" style="height: 88%;"></div>
+                    <div class="mini-bar" style="height: 92%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>2.8h/day</strong></div>
+                    <div>Peak: <strong>4.5h</strong></div>
+                </div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">👥 Meetings</div>
+                    <div class="trend-change trend-down">↓ 12%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 88%;"></div>
+                    <div class="mini-bar" style="height: 82%;"></div>
+                    <div class="mini-bar" style="height: 85%;"></div>
+                    <div class="mini-bar" style="height: 78%;"></div>
+                    <div class="mini-bar" style="height: 75%;"></div>
+                    <div class="mini-bar" style="height: 70%;"></div>
+                    <div class="mini-bar" style="height: 72%;"></div>
+                    <div class="mini-bar" style="height: 68%;"></div>
+                    <div class="mini-bar" style="height: 65%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>1.8h/day</strong></div>
+                    <div>Peak: <strong>3.2h</strong></div>
+                </div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">✉️ Email</div>
+                    <div class="trend-change trend-down">↓ 18%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 75%;"></div>
+                    <div class="mini-bar" style="height: 72%;"></div>
+                    <div class="mini-bar" style="height: 68%;"></div>
+                    <div class="mini-bar" style="height: 65%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 45%;"></div>
+                    <div class="mini-bar" style="height: 42%;"></div>
+                    <div class="mini-bar" style="height: 38%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>1.2h/day</strong></div>
+                    <div>Peak: <strong>2.1h</strong></div>
+                </div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">📚 Learning</div>
+                    <div class="trend-change trend-up">↑ 35%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 35%;"></div>
+                    <div class="mini-bar" style="height: 38%;"></div>
+                    <div class="mini-bar" style="height: 42%;"></div>
+                    <div class="mini-bar" style="height: 45%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                    <div class="mini-bar" style="height: 65%;"></div>
+                    <div class="mini-bar" style="height: 68%;"></div>
+                    <div class="mini-bar" style="height: 72%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>0.9h/day</strong></div>
+                    <div>Peak: <strong>2.0h</strong></div>
+                </div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">🎯 Planning</div>
+                    <div class="trend-change trend-up">↑ 8%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 45%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 45%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 60%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>0.7h/day</strong></div>
+                    <div>Peak: <strong>1.5h</strong></div>
+                </div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <div class="trend-title">☕ Breaks</div>
+                    <div class="trend-change trend-up">↑ 5%</div>
+                </div>
+                <div class="trend-mini-chart">
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 48%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 52%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 55%;"></div>
+                    <div class="mini-bar" style="height: 60%;"></div>
+                    <div class="mini-bar" style="height: 58%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                    <div class="mini-bar" style="height: 60%;"></div>
+                    <div class="mini-bar" style="height: 65%;"></div>
+                    <div class="mini-bar" style="height: 62%;"></div>
+                </div>
+                <div class="trend-stats">
+                    <div>Avg: <strong>0.8h/day</strong></div>
+                    <div>Peak: <strong>1.3h</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Hourly Activity Heatmap</h2>
+                    <div class="card-subtitle">Most active hours of the day over the past 3 months</div>
+                </div>
+            </div>
+            <div class="heatmap-labels">
+                <div class="heatmap-label">12a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">2a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">4a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">6a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">8a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">10a</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">12p</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">2p</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">4p</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">6p</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">8p</div>
+                <div class="heatmap-label"></div>
+                <div class="heatmap-label">10p</div>
+                <div class="heatmap-label"></div>
+            </div>
+            <div class="heatmap">
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-5"></div>
+                <div class="heatmap-cell level-5"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-5"></div>
+                <div class="heatmap-cell level-5"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+                <div class="heatmap-cell level-0"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Discovered Patterns</h2>
+            </div>
+            <div class="patterns-list">
+                <div class="pattern-item" style="border-left-color: #667eea;">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">🌅</div>
+                        <div class="pattern-title">Peak Productivity: Morning Hours</div>
+                    </div>
+                    <div class="pattern-description">
+                        Your most productive deep work sessions consistently occur between 9 AM and 12 PM. You complete an average of 2.5 hours of focused work during this window, which is 40% more than afternoon sessions.
+                    </div>
+                    <div class="pattern-stats">
+                        <div class="pattern-stat">
+                            <span>Confidence:</span>
+                            <span class="pattern-stat-value">92%</span>
+                        </div>
+                        <div class="pattern-stat">
+                            <span>Occurrences:</span>
+                            <span class="pattern-stat-value">68 days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pattern-item" style="border-left-color: #10b981;">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">📉</div>
+                        <div class="pattern-title">Meeting-Free Days = Higher Output</div>
+                    </div>
+                    <div class="pattern-description">
+                        On days with no meetings, you log 35% more deep work time and report higher satisfaction scores. Consider blocking one or two meeting-free days per week for focused work.
+                    </div>
+                    <div class="pattern-stats">
+                        <div class="pattern-stat">
+                            <span>Confidence:</span>
+                            <span class="pattern-stat-value">88%</span>
+                        </div>
+                        <div class="pattern-stat">
+                            <span>Occurrences:</span>
+                            <span class="pattern-stat-value">24 days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pattern-item" style="border-left-color: #f59e0b;">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">📆</div>
+                        <div class="pattern-title">Friday Deep Work Surge</div>
+                    </div>
+                    <div class="pattern-description">
+                        You consistently log more deep work hours on Fridays (avg. 3.2h) compared to other weekdays (avg. 2.4h). This could be due to fewer meetings or deadline pressure before the weekend.
+                    </div>
+                    <div class="pattern-stats">
+                        <div class="pattern-stat">
+                            <span>Confidence:</span>
+                            <span class="pattern-stat-value">85%</span>
+                        </div>
+                        <div class="pattern-stat">
+                            <span>Occurrences:</span>
+                            <span class="pattern-stat-value">11 weeks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pattern-item" style="border-left-color: #8b5cf6;">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">🔄</div>
+                        <div class="pattern-title">Weekly Learning Consistency</div>
+                    </div>
+                    <div class="pattern-description">
+                        You've maintained a steady learning habit, logging educational activities 6.2 days per week on average. This consistency has led to a 35% increase in learning time over the past 3 months.
+                    </div>
+                    <div class="pattern-stats">
+                        <div class="pattern-stat">
+                            <span>Confidence:</span>
+                            <span class="pattern-stat-value">95%</span>
+                        </div>
+                        <div class="pattern-stat">
+                            <span>Streak:</span>
+                            <span class="pattern-stat-value">45 days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Trend Insights</h2>
+            </div>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon">📈</div>
+                        <div class="insight-title">Overall Time Increasing</div>
+                    </div>
+                    <div class="insight-text">
+                        Your total logged time has increased by 38% over the past 3 months, growing from an average of 5.2h to 7.2h per day.
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon">💼</div>
+                        <div class="insight-title">Deep Work Improving</div>
+                    </div>
+                    <div class="insight-text">
+                        Deep work sessions have increased from 1.8h to 2.8h per day - a 56% improvement showing better focus habits.
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon">👥</div>
+                        <div class="insight-title">Meeting Time Optimized</div>
+                    </div>
+                    <div class="insight-text">
+                        You've reduced meeting time by 12%, freeing up an average of 20 minutes per day for other activities.
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon">🎯</div>
+                        <div class="insight-title">Consistent Tracking</div>
+                    </div>
+                    <div class="insight-text">
+                        You've logged time on 87 out of 90 days, maintaining excellent tracking consistency for accurate insights.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

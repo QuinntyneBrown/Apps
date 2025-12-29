@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipts & Documents - Warranty Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .upload-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-bar {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 16px 20px;
+            border-radius: 10px;
+            display: flex;
+            gap: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .document-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .document-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+        }
+
+        .document-preview {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+
+        .document-preview.pdf {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .document-preview.image {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        .document-preview.doc {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        .document-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .document-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            word-break: break-word;
+        }
+
+        .document-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .document-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .document-actions {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .document-card:hover .document-actions {
+            opacity: 1;
+        }
+
+        .action-icon {
+            background: white;
+            border: 1px solid #d1d5db;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .action-icon:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .upload-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .upload-button-secondary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .folders-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .folders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .folder-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .folder-card:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .folder-icon {
+            font-size: 32px;
+        }
+
+        .folder-info {
+            flex: 1;
+        }
+
+        .folder-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .folder-count {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .upload-button {
+                width: 100%;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            .search-filter {
+                max-width: 100%;
+                flex-direction: column;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Receipts & Documents</h1>
+                <button class="upload-button">📤 Upload Document</button>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-label">Total Documents</div>
+                    <div class="stat-value">48</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Storage Used</div>
+                    <div class="stat-value">124 MB</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Items with Receipts</div>
+                    <div class="stat-value">21/24</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="upload-area">
+                <div class="upload-icon">📁</div>
+                <div class="upload-title">Upload Documents</div>
+                <div class="upload-desc">Drag and drop files here or click to browse</div>
+                <button class="upload-button-secondary">Choose Files</button>
+            </div>
+
+            <div class="folders-section">
+                <h3 class="section-title">Folders</h3>
+                <div class="folders-grid">
+                    <div class="folder-card">
+                        <div class="folder-icon">📂</div>
+                        <div class="folder-info">
+                            <div class="folder-name">Receipts</div>
+                            <div class="folder-count">24 files</div>
+                        </div>
+                    </div>
+                    <div class="folder-card">
+                        <div class="folder-icon">📂</div>
+                        <div class="folder-info">
+                            <div class="folder-name">Warranties</div>
+                            <div class="folder-count">18 files</div>
+                        </div>
+                    </div>
+                    <div class="folder-card">
+                        <div class="folder-icon">📂</div>
+                        <div class="folder-info">
+                            <div class="folder-name">Manuals</div>
+                            <div class="folder-count">6 files</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-filter">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search documents...">
+                    </div>
+                    <select class="filter-select">
+                        <option>All Types</option>
+                        <option>Receipts</option>
+                        <option>Warranties</option>
+                        <option>Manuals</option>
+                        <option>Other</option>
+                    </select>
+                    <select class="filter-select">
+                        <option>All Formats</option>
+                        <option>PDF</option>
+                        <option>Images</option>
+                        <option>Documents</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active">⊞</button>
+                    <button class="view-btn">☰</button>
+                </div>
+            </div>
+
+            <h3 class="section-title">Recent Documents</h3>
+
+            <div class="documents-grid">
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">sony_headphones_receipt.pdf</div>
+                        <div class="document-meta">245 KB • Dec 1, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Receipt</span>
+                            <span class="tag">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">samsung_tv_warranty.pdf</div>
+                        <div class="document-meta">1.2 MB • Jan 11, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Warranty</span>
+                            <span class="tag">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview image">🖼️</div>
+                    <div class="document-info">
+                        <div class="document-name">nike_shoes_receipt.jpg</div>
+                        <div class="document-meta">3.4 MB • Dec 5, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Receipt</span>
+                            <span class="tag">Apparel</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">dyson_vacuum_manual.pdf</div>
+                        <div class="document-meta">8.7 MB • Jan 27, 2024</div>
+                        <div class="document-tags">
+                            <span class="tag">Manual</span>
+                            <span class="tag">Appliances</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">apple_watch_receipt.pdf</div>
+                        <div class="document-meta">512 KB • Sep 15, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Receipt</span>
+                            <span class="tag">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">macbook_warranty.pdf</div>
+                        <div class="document-meta">2.1 MB • Dec 28, 2024</div>
+                        <div class="document-tags">
+                            <span class="tag">Warranty</span>
+                            <span class="tag">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview image">🖼️</div>
+                    <div class="document-info">
+                        <div class="document-name">iphone_packaging.jpg</div>
+                        <div class="document-meta">4.2 MB • Nov 5, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Photo</span>
+                            <span class="tag">Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-card">
+                    <div class="document-actions">
+                        <div class="action-icon">👁️</div>
+                        <div class="action-icon">⬇</div>
+                        <div class="action-icon">🗑️</div>
+                    </div>
+                    <div class="document-preview pdf">📄</div>
+                    <div class="document-info">
+                        <div class="document-name">herman_miller_chair_warranty.pdf</div>
+                        <div class="document-meta">1.8 MB • Aug 10, 2025</div>
+                        <div class="document-tags">
+                            <span class="tag">Warranty</span>
+                            <span class="tag">Furniture</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

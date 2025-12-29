@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminders Hub - Life Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .reminders-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .reminders-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #1f2937;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #ef4444;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.warning {
+            background: #f59e0b;
+        }
+
+        .badge.info {
+            background: #3b82f6;
+        }
+
+        .reminder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .reminder-item {
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reminder-item:hover {
+            background: #f3f4f6;
+            transform: translateX(4px);
+        }
+
+        .reminder-item.urgent {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .reminder-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .reminder-item.info {
+            border-left-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .reminder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .reminder-title {
+            font-size: 15px;
+            color: #1f2937;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .reminder-icon {
+            font-size: 20px;
+        }
+
+        .reminder-time {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .reminder-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .reminder-category {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .reminder-category.insurance {
+            background: #3b82f6;
+        }
+
+        .reminder-category.financial {
+            background: #10b981;
+        }
+
+        .reminder-category.health {
+            background: #ef4444;
+        }
+
+        .reminder-category.home {
+            background: #f59e0b;
+        }
+
+        .reminder-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.success {
+            background: #10b981;
+        }
+
+        .notification-icon.warning {
+            background: #f59e0b;
+        }
+
+        .notification-icon.info {
+            background: #3b82f6;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Reminders Hub</h1>
+                <p>Stay on top of all your notifications and deadlines</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Dashboard</button>
+                <button class="btn btn-primary">Settings</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">Active (15)</button>
+            <button class="tab">Upcoming (23)</button>
+            <button class="tab">Past (48)</button>
+            <button class="tab">All Notifications</button>
+        </div>
+
+        <div class="reminders-container">
+            <div class="reminders-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        🔴 Urgent - Due Today
+                        <span class="badge">3</span>
+                    </div>
+                </div>
+
+                <div class="reminder-list">
+                    <div class="reminder-item urgent">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Car insurance policy expires</div>
+                                <div class="reminder-time">⏰ Today at 5:00 PM</div>
+                            </div>
+                            <div class="reminder-icon">🚗</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category insurance">Insurance</span>
+                            <span>High Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">View Task</button>
+                            <button class="action-btn">Snooze</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item urgent">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Schedule annual health checkup</div>
+                                <div class="reminder-time">⏰ Today at 9:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">🏥</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category health">Health</span>
+                            <span>High Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">View Task</button>
+                            <button class="action-btn">Snooze</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item urgent">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Submit quarterly tax payment</div>
+                                <div class="reminder-time">⏰ Today before midnight</div>
+                            </div>
+                            <div class="reminder-icon">💰</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category financial">Financial</span>
+                            <span>High Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn primary">View Task</button>
+                            <button class="action-btn">Snooze</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reminders-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        🟡 Tomorrow
+                        <span class="badge warning">4</span>
+                    </div>
+                </div>
+
+                <div class="reminder-list">
+                    <div class="reminder-item warning">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Review and pay utility bills</div>
+                                <div class="reminder-time">⏰ Tomorrow at 10:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">💡</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category financial">Financial</span>
+                            <span>Medium Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn">View Task</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item warning">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Car registration renewal due</div>
+                                <div class="reminder-time">⏰ Tomorrow at 9:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">🚗</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category">Auto</span>
+                            <span>High Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn">View Task</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item warning">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Doctor appointment follow-up</div>
+                                <div class="reminder-time">⏰ Tomorrow at 2:00 PM</div>
+                            </div>
+                            <div class="reminder-icon">🏥</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category health">Health</span>
+                            <span>Medium Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn">View Task</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item warning">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Home warranty renewal decision</div>
+                                <div class="reminder-time">⏰ Tomorrow at 11:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">🏠</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category home">Home</span>
+                            <span>Medium Priority</span>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="action-btn">View Task</button>
+                            <button class="action-btn">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reminders-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        📅 This Week
+                        <span class="badge info">8</span>
+                    </div>
+                </div>
+
+                <div class="reminder-list">
+                    <div class="reminder-item info">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Update passport information</div>
+                                <div class="reminder-time">⏰ March 15 at 9:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">🛂</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category">Documents</span>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item info">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Schedule HVAC maintenance</div>
+                                <div class="reminder-time">⏰ March 18 at 10:00 AM</div>
+                            </div>
+                            <div class="reminder-icon">🏠</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category home">Home</span>
+                        </div>
+                    </div>
+
+                    <div class="reminder-item info">
+                        <div class="reminder-header">
+                            <div>
+                                <div class="reminder-title">Review investment portfolio</div>
+                                <div class="reminder-time">⏰ March 16 at 3:00 PM</div>
+                            </div>
+                            <div class="reminder-icon">📊</div>
+                        </div>
+                        <div class="reminder-meta">
+                            <span class="reminder-category financial">Financial</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reminders-section full-width">
+                <div class="section-header">
+                    <div class="section-title">Recent Notifications</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon success">✓</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Task Completed</div>
+                        <div class="notification-text">You completed "Compare insurance quotes" and marked it as done.</div>
+                        <div class="notification-time">2 hours ago</div>
+                    </div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon warning">⚠️</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Deadline Approaching</div>
+                        <div class="notification-text">3 tasks are due within the next 24 hours. Review them to stay on track.</div>
+                        <div class="notification-time">4 hours ago</div>
+                    </div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon info">📄</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Document Uploaded</div>
+                        <div class="notification-text">You uploaded "Competitor_Quote_ProviderB.pdf" to Insurance folder.</div>
+                        <div class="notification-time">1 day ago</div>
+                    </div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon">🔔</div>
+                    <div class="notification-content">
+                        <div class="notification-title">New Recurring Task</div>
+                        <div class="notification-text">Monthly budget review has been scheduled for the last day of each month.</div>
+                        <div class="notification-time">2 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

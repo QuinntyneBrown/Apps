@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Calendar - Letter to Future Self</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .calendar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: #f3f4f6;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .current-month {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .today-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 700;
+            color: #666;
+            padding: 15px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 2px solid #f3f4f6;
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: white;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .event-dot {
+            height: 6px;
+            border-radius: 3px;
+            width: 100%;
+        }
+
+        .event-dot.pending {
+            background: #f59e0b;
+        }
+
+        .event-dot.delivered {
+            background: #10b981;
+        }
+
+        .event-count {
+            font-size: 10px;
+            color: #666;
+            margin-top: 3px;
+            text-align: center;
+        }
+
+        .timeline-view {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .timeline-date {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .timeline-month {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .timeline-day {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .timeline-year {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .timeline-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .timeline-preview {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .timeline-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-delivered {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .upcoming-item {
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #667eea;
+        }
+
+        .upcoming-date {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upcoming-title {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .upcoming-countdown {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Delivery Calendar</h1>
+            <div class="view-toggle">
+                <button class="toggle-btn active">Calendar</button>
+                <button class="toggle-btn">Timeline</button>
+                <button class="toggle-btn">List</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
+            <div>
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button class="nav-btn">←</button>
+                            <div class="current-month">January 2026</div>
+                            <button class="nav-btn">→</button>
+                        </div>
+                        <button class="today-btn">Today</button>
+                    </div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #f59e0b;"></div>
+                            <span>Pending Delivery</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #10b981;"></div>
+                            <span>Delivered</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #667eea;"></div>
+                            <span>Today</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="calendar-grid">
+                            <div class="calendar-day-header">Sun</div>
+                            <div class="calendar-day-header">Mon</div>
+                            <div class="calendar-day-header">Tue</div>
+                            <div class="calendar-day-header">Wed</div>
+                            <div class="calendar-day-header">Thu</div>
+                            <div class="calendar-day-header">Fri</div>
+                            <div class="calendar-day-header">Sat</div>
+
+                            <!-- Week 1 -->
+                            <div class="calendar-day other-month">
+                                <div class="day-number">29</div>
+                            </div>
+                            <div class="calendar-day other-month">
+                                <div class="day-number">30</div>
+                            </div>
+                            <div class="calendar-day other-month">
+                                <div class="day-number">31</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">1</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">2</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">3</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">4</div>
+                            </div>
+
+                            <!-- Week 2 -->
+                            <div class="calendar-day">
+                                <div class="day-number">5</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">6</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">7</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">8</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">9</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">10</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">11</div>
+                            </div>
+
+                            <!-- Week 3 -->
+                            <div class="calendar-day">
+                                <div class="day-number">12</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">13</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">14</div>
+                                <div class="day-events">
+                                    <div class="event-dot delivered"></div>
+                                </div>
+                            </div>
+                            <div class="calendar-day today">
+                                <div class="day-number">15</div>
+                                <div class="day-events">
+                                    <div class="event-dot pending"></div>
+                                    <div class="event-dot pending"></div>
+                                </div>
+                                <div class="event-count">2 letters</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">16</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">17</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">18</div>
+                            </div>
+
+                            <!-- Week 4 -->
+                            <div class="calendar-day">
+                                <div class="day-number">19</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">20</div>
+                                <div class="day-events">
+                                    <div class="event-dot pending"></div>
+                                </div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">21</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">22</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">23</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">24</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">25</div>
+                            </div>
+
+                            <!-- Week 5 -->
+                            <div class="calendar-day">
+                                <div class="day-number">26</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">27</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">28</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">29</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">30</div>
+                            </div>
+                            <div class="calendar-day">
+                                <div class="day-number">31</div>
+                                <div class="day-events">
+                                    <div class="event-dot pending"></div>
+                                </div>
+                            </div>
+                            <div class="calendar-day other-month">
+                                <div class="day-number">1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-card" style="margin-top: 20px;">
+                    <div class="sidebar-title">Letters This Month</div>
+                    <div class="timeline-view">
+                        <div class="timeline-item">
+                            <div class="timeline-date">
+                                <div class="timeline-month">Jan</div>
+                                <div class="timeline-day">15</div>
+                                <div class="timeline-year">2026</div>
+                            </div>
+                            <div class="timeline-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div class="timeline-title">Reflections on My 30th Birthday</div>
+                                    <span class="badge badge-pending">Pending</span>
+                                </div>
+                                <div class="timeline-meta">
+                                    <span>📝 Created: Jan 15, 2025</span>
+                                    <span>⏰ Delivers in 5 days</span>
+                                    <span>😊 Hopeful</span>
+                                </div>
+                                <div class="timeline-preview">
+                                    Dear Future Self, As I turn 30 today, I'm filled with excitement and uncertainty about what lies ahead...
+                                </div>
+                                <div class="timeline-tags">
+                                    <span class="tag">🎯 Goals</span>
+                                    <span class="tag">🌱 Personal Growth</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">
+                                <div class="timeline-month">Jan</div>
+                                <div class="timeline-day">20</div>
+                                <div class="timeline-year">2026</div>
+                            </div>
+                            <div class="timeline-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div class="timeline-title">Career Leap Decision</div>
+                                    <span class="badge badge-pending">Pending</span>
+                                </div>
+                                <div class="timeline-meta">
+                                    <span>📝 Created: Jan 20, 2024</span>
+                                    <span>⏰ Delivers in 10 days</span>
+                                    <span>😕 Anxious</span>
+                                </div>
+                                <div class="timeline-preview">
+                                    I'm standing at a crossroads. The safe path or the risky one? Future me, I hope you took the leap...
+                                </div>
+                                <div class="timeline-tags">
+                                    <span class="tag">💼 Career</span>
+                                    <span class="tag">🎯 Goals</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">
+                                <div class="timeline-month">Jan</div>
+                                <div class="timeline-day">31</div>
+                                <div class="timeline-year">2026</div>
+                            </div>
+                            <div class="timeline-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div class="timeline-title">January Goals Check-In</div>
+                                    <span class="badge badge-pending">Pending</span>
+                                </div>
+                                <div class="timeline-meta">
+                                    <span>📝 Created: Jan 1, 2026</span>
+                                    <span>⏰ Delivers in 21 days</span>
+                                    <span>🤩 Excited</span>
+                                </div>
+                                <div class="timeline-preview">
+                                    One month in - time to check in on those New Year's resolutions. How did we do, future me?
+                                </div>
+                                <div class="timeline-tags">
+                                    <span class="tag">🎯 Goals</span>
+                                    <span class="tag">🌱 Personal Growth</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="sidebar">
+                    <div class="sidebar-title">Upcoming Deliveries</div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-date">January 15, 2026</div>
+                        <div class="upcoming-title">Reflections on My 30th Birthday</div>
+                        <div class="upcoming-countdown">⏰ In 5 days</div>
+                    </div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-date">January 20, 2026</div>
+                        <div class="upcoming-title">Career Leap Decision</div>
+                        <div class="upcoming-countdown">⏰ In 10 days</div>
+                    </div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-date">January 31, 2026</div>
+                        <div class="upcoming-title">January Goals Check-In</div>
+                        <div class="upcoming-countdown">⏰ In 21 days</div>
+                    </div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-date">February 14, 2026</div>
+                        <div class="upcoming-title">Valentine's Day Letter</div>
+                        <div class="upcoming-countdown">⏰ In 35 days</div>
+                    </div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-date">March 20, 2026</div>
+                        <div class="upcoming-title">Spring Reflections</div>
+                        <div class="upcoming-countdown">⏰ In 69 days</div>
+                    </div>
+                </div>
+
+                <div class="sidebar" style="margin-top: 20px;">
+                    <div class="sidebar-title">Calendar Stats</div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">This Month</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #333;">3 deliveries</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">Next 3 Months</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #333;">8 deliveries</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">This Year</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #333;">12 deliveries</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

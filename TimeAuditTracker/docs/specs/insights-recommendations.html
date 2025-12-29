@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Insights & Recommendations - TimeAuditTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-top: 4px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .ai-score-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .score-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 24px;
+        }
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        .score-value {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .score-label {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-top: 4px;
+        }
+        .score-details {
+            flex: 1;
+            text-align: left;
+        }
+        .score-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .score-description {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .score-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .metric-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .priority-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .priority-high {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .priority-medium {
+            background: #fed7aa;
+            color: #f59e0b;
+        }
+        .priority-low {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .insight-card {
+            padding: 24px;
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border-radius: 12px;
+            border: 2px solid #f3f4f6;
+            position: relative;
+            overflow: hidden;
+        }
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        .insight-card.positive::before {
+            background: #10b981;
+        }
+        .insight-card.warning::before {
+            background: #f59e0b;
+        }
+        .insight-card.info::before {
+            background: #667eea;
+        }
+        .insight-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .insight-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .insight-content {
+            flex: 1;
+        }
+        .insight-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .insight-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .insight-stat {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #ede9fe;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .recommendation-card {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border-left: 4px solid;
+        }
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .recommendation-title-group {
+            flex: 1;
+        }
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .recommendation-icon {
+            font-size: 24px;
+        }
+        .recommendation-category {
+            font-size: 12px;
+            color: #666;
+        }
+        .recommendation-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .recommendation-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .action-btn.primary:hover {
+            background: #5568d3;
+        }
+        .impact-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .impact-bar {
+            width: 80px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .impact-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
+        }
+        .patterns-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .pattern-card {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .pattern-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .pattern-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .pattern-description {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .pattern-confidence {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+        }
+        .optimization-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .optimization-card {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+        .optimization-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .optimization-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .optimization-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .optimization-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .optimization-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .optimization-bullet {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+        .optimization-text {
+            flex: 1;
+            font-size: 14px;
+            color: #666;
+        }
+        .focus-time-card {
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            grid-column: 1 / -1;
+        }
+        .focus-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .focus-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .focus-subtitle {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .focus-schedule {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+        .schedule-day {
+            background: rgba(255,255,255,0.15);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .schedule-day.optimal {
+            background: rgba(16, 185, 129, 0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        .schedule-day-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .schedule-time {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>AI Insights & Recommendations</h1>
+                <div class="header-subtitle">Powered by advanced analytics and machine learning</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Refresh Analysis</button>
+                <button class="btn btn-primary">+ Log Time</button>
+            </div>
+        </div>
+
+        <div class="ai-score-card">
+            <div class="score-container">
+                <div class="score-circle">
+                    <div class="score-value">92</div>
+                    <div class="score-label">Productivity Score</div>
+                </div>
+                <div class="score-details">
+                    <h2 class="score-title">Excellent Time Management!</h2>
+                    <p class="score-description">
+                        Your productivity score is in the top 10% of users. You're effectively balancing deep work, learning, and breaks while maintaining consistent tracking habits. Your recent improvements in deep work time and meeting reduction are particularly impressive.
+                    </p>
+                    <div class="score-metrics">
+                        <div class="metric-item">
+                            <div class="metric-label">Deep Work Quality</div>
+                            <div class="metric-value" style="color: #10b981;">A+</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Time Balance</div>
+                            <div class="metric-value" style="color: #10b981;">95%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Consistency</div>
+                            <div class="metric-value" style="color: #10b981;">98%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">All Insights</button>
+            <button class="tab">Productivity</button>
+            <button class="tab">Health & Balance</button>
+            <button class="tab">Patterns</button>
+            <button class="tab">Opportunities</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Key Insights</h2>
+                <div class="priority-badge priority-high">Action Required</div>
+            </div>
+            <div class="insights-grid">
+                <div class="insight-card positive">
+                    <div class="insight-header">
+                        <div class="insight-icon">🌅</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Morning Productivity Peak</div>
+                            <div class="insight-description">
+                                Your most productive hours are 9 AM - 12 PM, where you complete 40% more deep work than afternoon sessions. Consider scheduling your most important tasks during this window.
+                            </div>
+                            <span class="insight-stat">+2.5h potential gain/week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card warning">
+                    <div class="insight-header">
+                        <div class="insight-icon">⚠️</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Email Time Creeping Up</div>
+                            <div class="insight-description">
+                                Email time has increased by 18% over the past month. Implement email batching (check only 2-3 times daily) to reduce this by an estimated 1.5h per week.
+                            </div>
+                            <span class="insight-stat">-1.5h email time possible</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card positive">
+                    <div class="insight-header">
+                        <div class="insight-icon">🔥</div>
+                        <div class="insight-content">
+                            <div class="insight-title">45-Day Learning Streak</div>
+                            <div class="insight-description">
+                                You've maintained daily learning for 45 consecutive days! This consistency has increased your learning time by 35% compared to 3 months ago. Keep up the momentum!
+                            </div>
+                            <span class="insight-stat">Personal best streak</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card info">
+                    <div class="insight-header">
+                        <div class="insight-icon">📊</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Friday Focus Phenomenon</div>
+                            <div class="insight-description">
+                                You consistently log 33% more deep work on Fridays. This pattern suggests deadline motivation or fewer meetings. Consider replicating Friday conditions on other days.
+                            </div>
+                            <span class="insight-stat">3.2h avg Friday deep work</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card positive">
+                    <div class="insight-header">
+                        <div class="insight-icon">👥</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Meeting Time Optimized</div>
+                            <div class="insight-description">
+                                You've successfully reduced meeting time by 12% this month while maintaining team collaboration. This optimization freed up 2+ hours per week for focused work.
+                            </div>
+                            <span class="insight-stat">+2h recovered/week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card info">
+                    <div class="insight-header">
+                        <div class="insight-icon">🌙</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Evening Decline Pattern</div>
+                            <div class="insight-description">
+                                Productivity drops 60% after 4 PM. Consider shifting deep work earlier and using evenings for lighter tasks like email, planning, or learning.
+                            </div>
+                            <span class="insight-stat">Low-energy optimization</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Personalized Recommendations</h2>
+            </div>
+            <div class="recommendations-list">
+                <div class="recommendation-card" style="border-left-color: #667eea;">
+                    <div class="recommendation-header">
+                        <div class="recommendation-title-group">
+                            <div class="recommendation-title">
+                                <span class="recommendation-icon">🎯</span>
+                                Block "Deep Work Power Hours"
+                            </div>
+                            <div class="recommendation-category">Productivity • High Impact</div>
+                        </div>
+                        <div class="priority-badge priority-high">High Priority</div>
+                    </div>
+                    <div class="recommendation-description">
+                        Based on your patterns, schedule uninterrupted 9 AM - 12 PM blocks for deep work Monday through Thursday. Decline meeting invitations during these hours. This could increase your weekly deep work by 4-6 hours.
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div class="impact-indicator">
+                            <span>Potential Impact:</span>
+                            <div class="impact-bar">
+                                <div class="impact-fill" style="width: 95%;"></div>
+                            </div>
+                            <span style="font-weight: 600; color: #10b981;">Very High</span>
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="action-btn primary">Set Up Blocks</button>
+                        <button class="action-btn">Learn More</button>
+                        <button class="action-btn">Dismiss</button>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" style="border-left-color: #f59e0b;">
+                    <div class="recommendation-header">
+                        <div class="recommendation-title-group">
+                            <div class="recommendation-title">
+                                <span class="recommendation-icon">✉️</span>
+                                Implement Email Batching
+                            </div>
+                            <div class="recommendation-category">Communication • Medium Impact</div>
+                        </div>
+                        <div class="priority-badge priority-medium">Medium Priority</div>
+                    </div>
+                    <div class="recommendation-description">
+                        Check email only at 10 AM, 2 PM, and 4 PM instead of continuously throughout the day. This simple change could save you 1.5 hours per week and reduce context switching by 70%.
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div class="impact-indicator">
+                            <span>Potential Impact:</span>
+                            <div class="impact-bar">
+                                <div class="impact-fill" style="width: 75%;"></div>
+                            </div>
+                            <span style="font-weight: 600; color: #10b981;">High</span>
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="action-btn primary">Try It This Week</button>
+                        <button class="action-btn">Set Reminders</button>
+                        <button class="action-btn">Dismiss</button>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" style="border-left-color: #10b981;">
+                    <div class="recommendation-header">
+                        <div class="recommendation-title-group">
+                            <div class="recommendation-title">
+                                <span class="recommendation-icon">📆</span>
+                                Designate "No Meeting Wednesdays"
+                            </div>
+                            <div class="recommendation-category">Focus Time • High Impact</div>
+                        </div>
+                        <div class="priority-badge priority-high">High Priority</div>
+                    </div>
+                    <div class="recommendation-description">
+                        You achieve 35% more deep work on meeting-free days. Block every Wednesday as a no-meeting day dedicated to deep work. Communicate this boundary to your team and stakeholders.
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div class="impact-indicator">
+                            <span>Potential Impact:</span>
+                            <div class="impact-bar">
+                                <div class="impact-fill" style="width: 88%;"></div>
+                            </div>
+                            <span style="font-weight: 600; color: #10b981;">Very High</span>
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="action-btn primary">Block Calendar</button>
+                        <button class="action-btn">Draft Email</button>
+                        <button class="action-btn">Dismiss</button>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" style="border-left-color: #8b5cf6;">
+                    <div class="recommendation-header">
+                        <div class="recommendation-title-group">
+                            <div class="recommendation-title">
+                                <span class="recommendation-icon">🧘</span>
+                                Add Midday Energy Recharge
+                            </div>
+                            <div class="recommendation-category">Health & Balance • Medium Impact</div>
+                        </div>
+                        <div class="priority-badge priority-medium">Medium Priority</div>
+                    </div>
+                    <div class="recommendation-description">
+                        Your afternoon productivity is 40% lower than morning. Take a 15-minute walk or meditation break at 1 PM to boost afternoon focus and extend your productive hours.
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div class="impact-indicator">
+                            <span>Potential Impact:</span>
+                            <div class="impact-bar">
+                                <div class="impact-fill" style="width: 65%;"></div>
+                            </div>
+                            <span style="font-weight: 600; color: #f59e0b;">Medium</span>
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="action-btn primary">Set Daily Reminder</button>
+                        <button class="action-btn">View Tips</button>
+                        <button class="action-btn">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Discovered Behavioral Patterns</h2>
+            </div>
+            <div class="patterns-grid">
+                <div class="pattern-card">
+                    <div class="pattern-icon">🌤️</div>
+                    <div class="pattern-title">Morning Momentum</div>
+                    <div class="pattern-description">
+                        Starting your day with deep work before 10 AM leads to 2.3x more productive hours overall
+                    </div>
+                    <div class="pattern-confidence">92% confidence</div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-icon">🚫</div>
+                    <div class="pattern-title">Meeting-Free Success</div>
+                    <div class="pattern-description">
+                        Days with zero meetings result in 35% more deep work and higher satisfaction scores
+                    </div>
+                    <div class="pattern-confidence">88% confidence</div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-icon">📱</div>
+                    <div class="pattern-title">Context Switch Cost</div>
+                    <div class="pattern-description">
+                        Checking email more than 3x daily reduces deep work quality by 40%
+                    </div>
+                    <div class="pattern-confidence">85% confidence</div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-icon">🔄</div>
+                    <div class="pattern-title">Friday Finish Strong</div>
+                    <div class="pattern-description">
+                        You complete 33% more deep work on Fridays, likely due to deadline motivation
+                    </div>
+                    <div class="pattern-confidence">90% confidence</div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-icon">📚</div>
+                    <div class="pattern-title">Learning Consistency</div>
+                    <div class="pattern-description">
+                        Daily learning sessions, even short ones, compound to 35% more total learning time
+                    </div>
+                    <div class="pattern-confidence">95% confidence</div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-icon">⏰</div>
+                    <div class="pattern-title">Afternoon Energy Dip</div>
+                    <div class="pattern-description">
+                        Productivity drops 60% after 4 PM - better for light tasks and planning
+                    </div>
+                    <div class="pattern-confidence">87% confidence</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Optimization Opportunities</h2>
+            </div>
+            <div class="optimization-section">
+                <div class="optimization-card">
+                    <div class="optimization-header">
+                        <div class="optimization-icon">⚡</div>
+                        <div class="optimization-title">Quick Wins (This Week)</div>
+                    </div>
+                    <div class="optimization-items">
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Schedule deep work blocks for tomorrow 9-11 AM
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Set email check times: 10 AM, 2 PM, 4 PM only
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Decline one recurring meeting that's low-value
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Add 15-min midday walk to calendar
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="optimization-card">
+                    <div class="optimization-header">
+                        <div class="optimization-icon">🎯</div>
+                        <div class="optimization-title">Long-term Improvements</div>
+                    </div>
+                    <div class="optimization-items">
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Implement "No Meeting Wednesdays" policy
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Create morning deep work ritual (9 AM start)
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Shift lighter tasks to afternoon hours
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-bullet"></div>
+                            <div class="optimization-text">
+                                Set weekly learning goal: 7+ hours
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="focus-time-card">
+                    <div class="focus-header">
+                        <div class="focus-title">Your Optimal Focus Schedule</div>
+                        <div class="focus-subtitle">AI-recommended time blocks based on your productivity patterns</div>
+                    </div>
+                    <div class="focus-schedule">
+                        <div class="schedule-day optimal">
+                            <div class="schedule-day-name">Monday</div>
+                            <div class="schedule-time">9 AM - 12 PM</div>
+                        </div>
+                        <div class="schedule-day optimal">
+                            <div class="schedule-day-name">Tuesday</div>
+                            <div class="schedule-time">9 AM - 12 PM</div>
+                        </div>
+                        <div class="schedule-day optimal">
+                            <div class="schedule-day-name">Wednesday</div>
+                            <div class="schedule-time">All Day</div>
+                        </div>
+                        <div class="schedule-day optimal">
+                            <div class="schedule-day-name">Thursday</div>
+                            <div class="schedule-time">9 AM - 12 PM</div>
+                        </div>
+                        <div class="schedule-day optimal">
+                            <div class="schedule-day-name">Friday</div>
+                            <div class="schedule-time">9 AM - 2 PM</div>
+                        </div>
+                        <div class="schedule-day">
+                            <div class="schedule-day-name">Saturday</div>
+                            <div class="schedule-time">Flexible</div>
+                        </div>
+                        <div class="schedule-day">
+                            <div class="schedule-day-name">Sunday</div>
+                            <div class="schedule-time">Planning</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

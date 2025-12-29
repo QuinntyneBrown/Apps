@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breach Monitor - Password Account Auditor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .header-left p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card h3 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .stat-value.critical {
+            color: #ef4444;
+        }
+        .stat-value.info {
+            color: #3b82f6;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h2 {
+            font-size: 20px;
+            color: #1f2937;
+        }
+        .alert-banner {
+            padding: 20px 24px;
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            display: flex;
+            align-items: start;
+            gap: 16px;
+        }
+        .alert-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .alert-content {
+            flex: 1;
+        }
+        .alert-content h3 {
+            font-size: 18px;
+            color: #991b1b;
+            margin-bottom: 8px;
+        }
+        .alert-content p {
+            font-size: 14px;
+            color: #7f1d1d;
+            line-height: 1.5;
+        }
+        .breach-item {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .breach-item:last-child {
+            border-bottom: none;
+        }
+        .breach-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        .breach-title {
+            flex: 1;
+        }
+        .breach-title h3 {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .breach-date {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .severity-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .severity-badge.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .severity-badge.high {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .severity-badge.medium {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .breach-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .breach-detail-item {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .breach-detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .breach-detail-value {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+        }
+        .compromised-data {
+            margin-bottom: 16px;
+        }
+        .compromised-data h4 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .data-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .data-tag {
+            padding: 6px 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .affected-accounts {
+            margin-bottom: 16px;
+        }
+        .affected-accounts h4 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .account-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .account-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+        .account-icon-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .breach-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-small:hover {
+            transform: translateY(-1px);
+        }
+        .info-box {
+            padding: 16px 24px;
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .info-box p {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+        .monitoring-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 24px;
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .monitoring-status p {
+            font-size: 14px;
+            color: #065f46;
+            font-weight: 500;
+        }
+        .timeline {
+            padding: 24px;
+        }
+        .timeline-item {
+            padding: 16px 0;
+            border-left: 2px solid #e5e7eb;
+            padding-left: 24px;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        .timeline-item.critical::before {
+            background: #ef4444;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        .timeline-content {
+            font-size: 14px;
+            color: #1f2937;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .breach-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .breach-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Data Breach Monitor</h1>
+                <p>Real-time monitoring of compromised accounts</p>
+            </div>
+            <button class="btn btn-primary">🔍 Check All Accounts</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Breached Accounts</h3>
+                <div class="stat-value critical">3</div>
+                <div class="stat-label">Require immediate action</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Breaches</h3>
+                <div class="stat-value info">5</div>
+                <div class="stat-label">In our database</div>
+            </div>
+            <div class="stat-card">
+                <h3>Monitored Accounts</h3>
+                <div class="stat-value info">48</div>
+                <div class="stat-label">Being actively monitored</div>
+            </div>
+            <div class="stat-card">
+                <h3>Last Check</h3>
+                <div class="stat-value info" style="font-size: 20px;">2h ago</div>
+                <div class="stat-label">Next check in 22 hours</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="monitoring-status">
+                <div class="status-indicator"></div>
+                <p>✓ Active Monitoring Enabled - All accounts are being monitored 24/7 for data breaches</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="alert-banner">
+                <div class="alert-icon">🚨</div>
+                <div class="alert-content">
+                    <h3>3 Accounts Found in Recent Data Breaches</h3>
+                    <p>Your accounts were found in recent security breaches. Take immediate action to secure them by changing passwords and enabling two-factor authentication.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Active Breaches</h2>
+            </div>
+
+            <div class="breach-item">
+                <div class="breach-header">
+                    <div class="breach-title">
+                        <h3>LinkedIn Data Breach 2024</h3>
+                        <div class="breach-date">Discovered: March 15, 2024 • Reported: March 18, 2024</div>
+                    </div>
+                    <span class="severity-badge critical">Critical</span>
+                </div>
+
+                <div class="breach-details">
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Affected Users</div>
+                        <div class="breach-detail-value">2.1 Million</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Breach Type</div>
+                        <div class="breach-detail-value">Database Leak</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Status</div>
+                        <div class="breach-detail-value" style="color: #ef4444;">Unresolved</div>
+                    </div>
+                </div>
+
+                <div class="compromised-data">
+                    <h4>Compromised Data</h4>
+                    <div class="data-tags">
+                        <span class="data-tag">Email Addresses</span>
+                        <span class="data-tag">Passwords</span>
+                        <span class="data-tag">Profile Information</span>
+                        <span class="data-tag">Phone Numbers</span>
+                        <span class="data-tag">Employment History</span>
+                    </div>
+                </div>
+
+                <div class="affected-accounts">
+                    <h4>Your Affected Accounts</h4>
+                    <div class="account-tags">
+                        <div class="account-tag">
+                            <div class="account-icon-small">L</div>
+                            LinkedIn - john.doe@linkedin.com
+                        </div>
+                    </div>
+                </div>
+
+                <div class="breach-actions">
+                    <button class="btn-small btn-danger">Change Password Now</button>
+                    <button class="btn-small btn-secondary">View Details</button>
+                    <button class="btn-small btn-secondary">Mark as Resolved</button>
+                </div>
+            </div>
+
+            <div class="breach-item">
+                <div class="breach-header">
+                    <div class="breach-title">
+                        <h3>Twitter Security Incident</h3>
+                        <div class="breach-date">Discovered: January 8, 2024 • Reported: January 10, 2024</div>
+                    </div>
+                    <span class="severity-badge critical">Critical</span>
+                </div>
+
+                <div class="breach-details">
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Affected Users</div>
+                        <div class="breach-detail-value">400,000</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Breach Type</div>
+                        <div class="breach-detail-value">API Exploitation</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Status</div>
+                        <div class="breach-detail-value" style="color: #ef4444;">Unresolved</div>
+                    </div>
+                </div>
+
+                <div class="compromised-data">
+                    <h4>Compromised Data</h4>
+                    <div class="data-tags">
+                        <span class="data-tag">Email Addresses</span>
+                        <span class="data-tag">Usernames</span>
+                        <span class="data-tag">Phone Numbers</span>
+                        <span class="data-tag">Account Tokens</span>
+                    </div>
+                </div>
+
+                <div class="affected-accounts">
+                    <h4>Your Affected Accounts</h4>
+                    <div class="account-tags">
+                        <div class="account-tag">
+                            <div class="account-icon-small">T</div>
+                            Twitter - @johndoe
+                        </div>
+                    </div>
+                </div>
+
+                <div class="breach-actions">
+                    <button class="btn-small btn-danger">Change Password Now</button>
+                    <button class="btn-small btn-secondary">View Details</button>
+                    <button class="btn-small btn-secondary">Mark as Resolved</button>
+                </div>
+            </div>
+
+            <div class="breach-item">
+                <div class="breach-header">
+                    <div class="breach-title">
+                        <h3>Yahoo Data Breach (Historical)</h3>
+                        <div class="breach-date">Discovered: September 22, 2016 • Reported: December 14, 2016</div>
+                    </div>
+                    <span class="severity-badge high">High</span>
+                </div>
+
+                <div class="breach-details">
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Affected Users</div>
+                        <div class="breach-detail-value">1 Billion+</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Breach Type</div>
+                        <div class="breach-detail-value">Hacking</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Status</div>
+                        <div class="breach-detail-value" style="color: #f59e0b;">Historical</div>
+                    </div>
+                </div>
+
+                <div class="compromised-data">
+                    <h4>Compromised Data</h4>
+                    <div class="data-tags">
+                        <span class="data-tag">Email Addresses</span>
+                        <span class="data-tag">Passwords</span>
+                        <span class="data-tag">Security Questions</span>
+                        <span class="data-tag">Birth Dates</span>
+                    </div>
+                </div>
+
+                <div class="affected-accounts">
+                    <h4>Your Affected Accounts</h4>
+                    <div class="account-tags">
+                        <div class="account-tag">
+                            <div class="account-icon-small">Y</div>
+                            Yahoo - john.doe@yahoo.com
+                        </div>
+                    </div>
+                </div>
+
+                <div class="breach-actions">
+                    <button class="btn-small btn-danger">Change Password Now</button>
+                    <button class="btn-small btn-secondary">View Details</button>
+                    <button class="btn-small btn-secondary">Mark as Resolved</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Known Breaches (No Accounts Affected)</h2>
+            </div>
+            <div class="info-box">
+                <p>ℹ️ These breaches don't affect any of your monitored accounts, but you should be aware of them.</p>
+            </div>
+
+            <div class="breach-item">
+                <div class="breach-header">
+                    <div class="breach-title">
+                        <h3>Adobe Data Breach</h3>
+                        <div class="breach-date">Discovered: October 3, 2013</div>
+                    </div>
+                    <span class="severity-badge high">High</span>
+                </div>
+                <div class="breach-details">
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Affected Users</div>
+                        <div class="breach-detail-value">153 Million</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Compromised Data</div>
+                        <div class="breach-detail-value">Emails, Passwords, Credit Cards</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="breach-item">
+                <div class="breach-header">
+                    <div class="breach-title">
+                        <h3>Equifax Data Breach</h3>
+                        <div class="breach-date">Discovered: July 29, 2017</div>
+                    </div>
+                    <span class="severity-badge critical">Critical</span>
+                </div>
+                <div class="breach-details">
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Affected Users</div>
+                        <div class="breach-detail-value">147 Million</div>
+                    </div>
+                    <div class="breach-detail-item">
+                        <div class="breach-detail-label">Compromised Data</div>
+                        <div class="breach-detail-value">SSN, Birth Dates, Addresses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Monitoring Activity</h2>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item critical">
+                    <div class="timeline-date">Today, 2:30 PM</div>
+                    <div class="timeline-content">New breach detected: LinkedIn account compromised</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Today, 12:00 PM</div>
+                    <div class="timeline-content">Daily security scan completed - 48 accounts checked</div>
+                </div>
+                <div class="timeline-item critical">
+                    <div class="timeline-date">Yesterday, 5:45 PM</div>
+                    <div class="timeline-content">Twitter breach detected</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Dec 27, 2024</div>
+                    <div class="timeline-content">Security scan completed - No new breaches found</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Dec 26, 2024</div>
+                    <div class="timeline-content">5 new accounts added to monitoring</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

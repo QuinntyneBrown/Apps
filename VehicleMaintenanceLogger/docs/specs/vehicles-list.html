@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Vehicles - Vehicle Maintenance Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-content h1 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header-content p {
+            color: #718096;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-group label {
+            display: block;
+            color: #4a5568;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .vehicles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+        }
+        .vehicle-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vehicle-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+        .vehicle-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .vehicle-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-right: 16px;
+        }
+        .vehicle-title {
+            flex: 1;
+        }
+        .vehicle-name {
+            color: #1a202c;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .vehicle-vin {
+            color: #718096;
+            font-size: 13px;
+        }
+        .vehicle-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            color: #1a202c;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .vehicle-status {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-badge.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .vehicle-actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-secondary {
+            flex: 1;
+            background: #f7fafc;
+            color: #4a5568;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .vehicles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>My Vehicles</h1>
+                <p>Manage and track all your vehicles</p>
+            </div>
+            <button class="btn-primary">+ Add Vehicle</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" placeholder="Search by make, model, or VIN...">
+            </div>
+            <div class="filter-group">
+                <label>Sort By</label>
+                <select>
+                    <option>Recently Added</option>
+                    <option>Make (A-Z)</option>
+                    <option>Model (A-Z)</option>
+                    <option>Year (Newest)</option>
+                    <option>Year (Oldest)</option>
+                    <option>Mileage (Highest)</option>
+                    <option>Mileage (Lowest)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="vehicles-grid">
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="vehicle-icon">🚗</div>
+                    <div class="vehicle-title">
+                        <div class="vehicle-name">2020 Honda Accord</div>
+                        <div class="vehicle-vin">VIN: 1HGCV1F3XLA123456</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-stats">
+                    <div class="stat">
+                        <div class="stat-label">Current Mileage</div>
+                        <div class="stat-value">45,280 mi</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Cost YTD</div>
+                        <div class="stat-value">$1,245</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Last Service</div>
+                        <div class="stat-value">15 days ago</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Avg MPG</div>
+                        <div class="stat-value">32.4</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-status">
+                    <span class="status-badge danger">Oil Change Overdue</span>
+                    <span class="status-badge warning">2 Upcoming Services</span>
+                </div>
+
+                <div class="vehicle-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-secondary">Add Service</button>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="vehicle-icon">🚙</div>
+                    <div class="vehicle-title">
+                        <div class="vehicle-name">2018 Toyota RAV4</div>
+                        <div class="vehicle-vin">VIN: 2T3BFREV9JW789012</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-stats">
+                    <div class="stat">
+                        <div class="stat-label">Current Mileage</div>
+                        <div class="stat-value">62,450 mi</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Cost YTD</div>
+                        <div class="stat-value">$876</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Last Service</div>
+                        <div class="stat-value">8 days ago</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Avg MPG</div>
+                        <div class="stat-value">28.9</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-status">
+                    <span class="status-badge warning">Tire Rotation Due Soon</span>
+                    <span class="status-badge success">All Systems OK</span>
+                </div>
+
+                <div class="vehicle-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-secondary">Add Service</button>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="vehicle-icon">🚐</div>
+                    <div class="vehicle-title">
+                        <div class="vehicle-name">2019 Ford F-150</div>
+                        <div class="vehicle-vin">VIN: 1FTFW1E85KFA345678</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-stats">
+                    <div class="stat">
+                        <div class="stat-label">Current Mileage</div>
+                        <div class="stat-value">38,920 mi</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Cost YTD</div>
+                        <div class="stat-value">$1,542</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Last Service</div>
+                        <div class="stat-value">7 days ago</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Avg MPG</div>
+                        <div class="stat-value">19.2</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-status">
+                    <span class="status-badge success">All Maintenance Up-to-Date</span>
+                    <span class="status-badge warning">1 Upcoming Service</span>
+                </div>
+
+                <div class="vehicle-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-secondary">Add Service</button>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="vehicle-icon">🏍️</div>
+                    <div class="vehicle-title">
+                        <div class="vehicle-name">2021 Harley-Davidson</div>
+                        <div class="vehicle-vin">VIN: 1HD1KRM18MB012345</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-stats">
+                    <div class="stat">
+                        <div class="stat-label">Current Mileage</div>
+                        <div class="stat-value">8,450 mi</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Cost YTD</div>
+                        <div class="stat-value">$325</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Last Service</div>
+                        <div class="stat-value">45 days ago</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Avg MPG</div>
+                        <div class="stat-value">45.6</div>
+                    </div>
+                </div>
+
+                <div class="vehicle-status">
+                    <span class="status-badge success">All Systems OK</span>
+                </div>
+
+                <div class="vehicle-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-secondary">Add Service</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
