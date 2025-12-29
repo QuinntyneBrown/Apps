@@ -1,0 +1,101 @@
+@startuml Wine Collection Class Diagram
+
+class WineBottle <<Aggregate Root>> {
+  - bottleId: Guid
+  - userId: Guid
+  - wineName: string
+  - producer: string
+  - vintage: int
+  - region: string
+  - varietal: string
+  - acquisitionDate: DateTime
+  - acquisitionCost: decimal
+  - currentValue: decimal
+  - quantity: int
+  - locationId: Guid
+  - drinkingWindowStart: DateTime?
+  - drinkingWindowEnd: DateTime?
+  - status: WineStatus
+  --
+  + Open(occasion, companions): void
+  + UpdateValue(newValue): void
+  + Relocate(newLocationId): void
+  + IsInDrinkingWindow(): bool
+}
+
+enum WineStatus {
+  InCellar
+  Consumed
+  Damaged
+  Sold
+}
+
+class CellarLocation <<Entity>> {
+  - locationId: Guid
+  - name: string
+  - zone: string
+  - rackNumber: int?
+  - shelfNumber: int?
+  - position: int?
+  - capacity: int
+  - currentCount: int
+  - temperature: decimal?
+  --
+  + AddBottle(): void
+  + RemoveBottle(): void
+  + IsFull(): bool
+}
+
+class AcquireWineBottleCommand {
+  + WineName: string
+  + Producer: string
+  + Vintage: int
+  + Region: string
+  + Varietal: string
+  + AcquisitionCost: decimal
+  + Quantity: int
+  + LocationId: Guid
+}
+
+class OpenBottleCommand {
+  + BottleId: Guid
+  + OpenDate: DateTime
+  + Occasion: string
+  + Companions: List<string>
+}
+
+class WineBottleAcquired <<Domain Event>> {
+  + BottleId: Guid
+  + WineName: string
+  + Producer: string
+  + Vintage: int
+  + AcquisitionCost: decimal
+  + Quantity: int
+  + OccurredAt: DateTime
+}
+
+class BottleOpened <<Domain Event>> {
+  + BottleId: Guid
+  + OpenDate: DateTime
+  + Occasion: string
+  + Companions: List<string>
+  + OccurredAt: DateTime
+}
+
+class WineValueAssessed <<Domain Event>> {
+  + BottleId: Guid
+  + CurrentMarketValue: decimal
+  + AppreciationSincePurchase: decimal
+  + ValuationSource: string
+  + OccurredAt: DateTime
+}
+
+WineBottle *-- WineStatus
+WineBottle --> CellarLocation
+AcquireWineBottleCommand --> WineBottle : creates
+OpenBottleCommand --> WineBottle : opens
+WineBottle ..> WineBottleAcquired : raises
+WineBottle ..> BottleOpened : raises
+WineBottle ..> WineValueAssessed : raises
+
+@enduml

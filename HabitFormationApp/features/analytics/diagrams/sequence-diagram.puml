@@ -1,0 +1,36 @@
+@startuml Analytics - Sequence Diagram
+
+title Generate Weekly Report
+
+participant "SchedulerJob" as Job
+participant "ReportHandler" as Handler
+participant "CompletionRepository" as CompRepo
+participant "WeeklyReport" as Report
+participant "EventPublisher" as Events
+
+Job -> Handler: GenerateWeeklyReportCommand(userId, weekStart)
+activate Handler
+
+Handler -> CompRepo: GetCompletionsForWeek(userId, weekStart)
+activate CompRepo
+CompRepo --> Handler: List<Completion>
+deactivate CompRepo
+
+Handler -> Handler: Calculate metrics
+
+Handler -> Report: Generate(metrics)
+activate Report
+Report -> Report: Set all metrics
+Report -> Report: Generate recommendations
+Report --> Handler: WeeklyReport
+deactivate Report
+
+Handler -> Events: Publish(WeeklyProgressReportGenerated)
+activate Events
+Events --> Handler: Published
+deactivate Events
+
+Handler --> Job: Report generated
+deactivate Handler
+
+@enduml

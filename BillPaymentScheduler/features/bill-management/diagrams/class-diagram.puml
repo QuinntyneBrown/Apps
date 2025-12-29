@@ -1,0 +1,343 @@
+@startuml Bill Management Class Diagram
+
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+' Aggregates
+class Bill <<Aggregate Root>> {
+  - billId: Guid
+  - userId: Guid
+  - payee: string
+  - amount: decimal
+  - dueDate: DateTime
+  - category: Category
+  - recurrencePattern: RecurrencePattern
+  - description: string
+  - isActive: bool
+  - accountNumber: string
+  - tags: List<string>
+  - createdAt: DateTime
+  - updatedAt: DateTime
+  - createdBy: Guid
+  - updatedBy: Guid
+  --
+  + UpdateAmount(newAmount: decimal): void
+  + UpdateDueDate(newDueDate: DateTime): void
+  + UpdateDetails(payee, category, etc.): void
+  + Deactivate(): void
+  + Activate(): void
+  + AddTag(tag: string): void
+  + RemoveTag(tag: string): void
+  - RaiseBillAdded(): void
+  - RaiseBillAmountChanged(): void
+  - RaiseBillDueDateChanged(): void
+  - RaiseBillDeleted(): void
+}
+
+' Value Objects
+class Money <<Value Object>> {
+  - amount: decimal
+  - currency: string
+  --
+  + Add(other: Money): Money
+  + Subtract(other: Money): Money
+  + IsGreaterThan(other: Money): bool
+}
+
+' Enumerations
+enum Category {
+  Utilities
+  Housing
+  Insurance
+  Subscriptions
+  Healthcare
+  Transportation
+  Other
+}
+
+enum RecurrencePattern {
+  None
+  Weekly
+  BiWeekly
+  Monthly
+  Quarterly
+  Annually
+}
+
+' Commands
+class AddBillCommand {
+  + UserId: Guid
+  + Payee: string
+  + Amount: decimal
+  + DueDate: DateTime
+  + Category: Category
+  + RecurrencePattern: RecurrencePattern
+  + Description: string
+  + AccountNumber: string
+  + Tags: List<string>
+}
+
+class UpdateBillAmountCommand {
+  + BillId: Guid
+  + NewAmount: decimal
+}
+
+class UpdateBillDueDateCommand {
+  + BillId: Guid
+  + NewDueDate: DateTime
+}
+
+class UpdateBillCommand {
+  + BillId: Guid
+  + Payee: string
+  + Category: Category
+  + RecurrencePattern: RecurrencePattern
+  + Description: string
+  + AccountNumber: string
+  + Tags: List<string>
+}
+
+class DeleteBillCommand {
+  + BillId: Guid
+  + ConfirmDeletion: bool
+}
+
+' Command Handlers
+class AddBillCommandHandler {
+  - repository: IBillRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: AddBillCommand): Guid
+}
+
+class UpdateBillAmountCommandHandler {
+  - repository: IBillRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: UpdateBillAmountCommand): void
+}
+
+class UpdateBillDueDateCommandHandler {
+  - repository: IBillRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: UpdateBillDueDateCommand): void
+}
+
+class UpdateBillCommandHandler {
+  - repository: IBillRepository
+  --
+  + Handle(command: UpdateBillCommand): void
+}
+
+class DeleteBillCommandHandler {
+  - repository: IBillRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: DeleteBillCommand): void
+}
+
+' Queries
+class GetBillByIdQuery {
+  + BillId: Guid
+}
+
+class GetBillsByUserIdQuery {
+  + UserId: Guid
+  + Filter: BillFilter
+  + Sort: SortConfig
+  + Pagination: PaginationConfig
+}
+
+class GetUpcomingBillsQuery {
+  + UserId: Guid
+  + Days: int
+}
+
+class GetOverdueBillsQuery {
+  + UserId: Guid
+}
+
+class SearchBillsQuery {
+  + UserId: Guid
+  + SearchTerm: string
+  + Filter: BillFilter
+  + Pagination: PaginationConfig
+}
+
+' Query Handlers
+class GetBillByIdQueryHandler {
+  - repository: IBillRepository
+  --
+  + Handle(query: GetBillByIdQuery): BillDto
+}
+
+class GetBillsByUserIdQueryHandler {
+  - repository: IBillRepository
+  --
+  + Handle(query: GetBillsByUserIdQuery): PagedResult<BillDto>
+}
+
+class GetUpcomingBillsQueryHandler {
+  - repository: IBillRepository
+  --
+  + Handle(query: GetUpcomingBillsQuery): List<BillDto>
+}
+
+class GetOverdueBillsQueryHandler {
+  - repository: IBillRepository
+  --
+  + Handle(query: GetOverdueBillsQuery): List<BillDto>
+}
+
+class SearchBillsQueryHandler {
+  - repository: IBillRepository
+  --
+  + Handle(query: SearchBillsQuery): PagedResult<BillDto>
+}
+
+' DTOs
+class BillDto {
+  + BillId: Guid
+  + UserId: Guid
+  + Payee: string
+  + Amount: decimal
+  + DueDate: DateTime
+  + Category: string
+  + RecurrencePattern: string
+  + Description: string
+  + IsActive: bool
+  + AccountNumber: string
+  + Tags: List<string>
+  + CreatedAt: DateTime
+  + UpdatedAt: DateTime
+}
+
+' Domain Events
+class BillAdded <<Domain Event>> {
+  + BillId: Guid
+  + UserId: Guid
+  + Payee: string
+  + Amount: decimal
+  + DueDate: DateTime
+  + Category: string
+  + RecurrencePattern: string
+  + OccurredAt: DateTime
+}
+
+class BillAmountChanged <<Domain Event>> {
+  + BillId: Guid
+  + UserId: Guid
+  + OldAmount: decimal
+  + NewAmount: decimal
+  + OccurredAt: DateTime
+}
+
+class BillDueDateChanged <<Domain Event>> {
+  + BillId: Guid
+  + UserId: Guid
+  + OldDueDate: DateTime
+  + NewDueDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class BillDeleted <<Domain Event>> {
+  + BillId: Guid
+  + UserId: Guid
+  + Payee: string
+  + OccurredAt: DateTime
+}
+
+' Repository
+interface IBillRepository {
+  + Add(bill: Bill): void
+  + Update(bill: Bill): void
+  + Delete(billId: Guid): void
+  + GetById(billId: Guid): Bill
+  + GetByUserId(userId: Guid, filter, sort, pagination): PagedResult<Bill>
+  + GetUpcoming(userId: Guid, days: int): List<Bill>
+  + GetOverdue(userId: Guid): List<Bill>
+  + Search(userId: Guid, searchTerm: string, filter, pagination): PagedResult<Bill>
+}
+
+class BillRepository {
+  - dbContext: ApplicationDbContext
+  --
+  + Add(bill: Bill): void
+  + Update(bill: Bill): void
+  + Delete(billId: Guid): void
+  + GetById(billId: Guid): Bill
+  + GetByUserId(userId: Guid, filter, sort, pagination): PagedResult<Bill>
+  + GetUpcoming(userId: Guid, days: int): List<Bill>
+  + GetOverdue(userId: Guid): List<Bill>
+  + Search(userId: Guid, searchTerm: string, filter, pagination): PagedResult<Bill>
+}
+
+' Event Publisher
+interface IEventPublisher {
+  + Publish<T>(event: T): Task
+}
+
+' Relationships
+Bill *-- Money
+Bill *-- Category
+Bill *-- RecurrencePattern
+
+AddBillCommandHandler --> AddBillCommand
+AddBillCommandHandler --> IBillRepository
+AddBillCommandHandler --> IEventPublisher
+AddBillCommandHandler --> Bill
+AddBillCommandHandler ..> BillAdded: publishes
+
+UpdateBillAmountCommandHandler --> UpdateBillAmountCommand
+UpdateBillAmountCommandHandler --> IBillRepository
+UpdateBillAmountCommandHandler --> IEventPublisher
+UpdateBillAmountCommandHandler ..> BillAmountChanged: publishes
+
+UpdateBillDueDateCommandHandler --> UpdateBillDueDateCommand
+UpdateBillDueDateCommandHandler --> IBillRepository
+UpdateBillDueDateCommandHandler --> IEventPublisher
+UpdateBillDueDateCommandHandler ..> BillDueDateChanged: publishes
+
+UpdateBillCommandHandler --> UpdateBillCommand
+UpdateBillCommandHandler --> IBillRepository
+
+DeleteBillCommandHandler --> DeleteBillCommand
+DeleteBillCommandHandler --> IBillRepository
+DeleteBillCommandHandler --> IEventPublisher
+DeleteBillCommandHandler ..> BillDeleted: publishes
+
+GetBillByIdQueryHandler --> GetBillByIdQuery
+GetBillByIdQueryHandler --> IBillRepository
+GetBillByIdQueryHandler ..> BillDto: returns
+
+GetBillsByUserIdQueryHandler --> GetBillsByUserIdQuery
+GetBillsByUserIdQueryHandler --> IBillRepository
+GetBillsByUserIdQueryHandler ..> BillDto: returns
+
+GetUpcomingBillsQueryHandler --> GetUpcomingBillsQuery
+GetUpcomingBillsQueryHandler --> IBillRepository
+GetUpcomingBillsQueryHandler ..> BillDto: returns
+
+GetOverdueBillsQueryHandler --> GetOverdueBillsQuery
+GetOverdueBillsQueryHandler --> IBillRepository
+GetOverdueBillsQueryHandler ..> BillDto: returns
+
+SearchBillsQueryHandler --> SearchBillsQuery
+SearchBillsQueryHandler --> IBillRepository
+SearchBillsQueryHandler ..> BillDto: returns
+
+BillRepository ..|> IBillRepository
+
+note right of Bill
+  Aggregate root for bill management.
+  Enforces all business rules and
+  raises domain events for state changes.
+end note
+
+note right of IBillRepository
+  Repository pattern for
+  data access abstraction
+end note
+
+@enduml

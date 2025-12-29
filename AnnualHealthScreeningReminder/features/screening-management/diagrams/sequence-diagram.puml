@@ -1,0 +1,29 @@
+@startuml
+actor User
+participant "UI" as UI
+participant "API" as API
+participant "ScreeningService" as Service
+participant "Database" as DB
+participant "EventBus" as Events
+
+== Schedule Screening ==
+User -> UI: Fill screening form
+UI -> API: POST /api/screenings
+API -> Service: ScheduleScreening(dto)
+Service -> DB: Insert Screening
+Service -> Events: Publish(ScreeningScheduled)
+Events -> Service: Trigger reminder setup
+API --> UI: 201 Created
+UI --> User: Show confirmation
+
+== Complete Screening ==
+User -> UI: Mark as completed
+UI -> API: PUT /api/screenings/{id}/complete
+API -> Service: CompleteScreening(id, dto)
+Service -> DB: Update Status
+Service -> Service: CalculateNextDueDate()
+Service -> DB: Update NextDueDate
+Service -> Events: Publish(ScreeningCompleted)
+API --> UI: 200 OK
+UI --> User: Prompt for results
+@enduml

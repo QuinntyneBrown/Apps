@@ -1,0 +1,137 @@
+@startuml Domain Event Flow
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Fuel Economy Tracker - Domain Event Flow
+
+' Define events
+rectangle "Fuel Purchase Events" #LightBlue {
+    (FuelPurchased) as FP
+    (PartialFillUpRecorded) as PFU
+    (FuelStationRated) as FSR
+    (FuelPriceTracked) as FPT
+}
+
+rectangle "Economy Calculation Events" #LightGreen {
+    (FuelEconomyCalculated) as FEC
+    (RunningAverageUpdated) as RAU
+    (PersonalBestMPGAchieved) as PBA
+    (FuelEconomyDeclined) as FED
+}
+
+rectangle "Trip Events" #LightYellow {
+    (TripStarted) as TS
+    (TripCompleted) as TC
+    (LongDistanceTripLogged) as LDT
+}
+
+rectangle "Cost Events" #LightCoral {
+    (MonthlyFuelCostCalculated) as MFC
+    (FuelBudgetSet) as FBS
+    (BudgetThresholdReached) as BTR
+}
+
+rectangle "Alert Events" #LightPink {
+    (FuelPriceSpikeDetected) as FPSD
+    (LowFuelWarning) as LFW
+    (MilestoneAchieved) as MA
+}
+
+rectangle "Optimization Events" #LightCyan {
+    (DrivingHabitAnalyzed) as DHA
+    (EcoDrivingGoalSet) as EDGS
+    (EcoDrivingTipApplied) as EDTA
+}
+
+' Event Handlers
+rectangle "Event Handlers" #WhiteSmoke {
+    [MPG Calculator] as MPGCalc
+    [Average Updater] as AvgUpdate
+    [Budget Monitor] as BudgetMon
+    [Alert Generator] as AlertGen
+    [Report Generator] as ReportGen
+    [Goal Tracker] as GoalTrack
+    [Notification Service] as NotifySvc
+}
+
+' Event flows
+FP --> MPGCalc : triggers
+MPGCalc --> FEC : produces
+
+FEC --> AvgUpdate : triggers
+AvgUpdate --> RAU : produces
+
+FEC --> MPGCalc : check for best
+MPGCalc --> PBA : produces (if best)
+
+FEC --> MPGCalc : check for decline
+MPGCalc --> FED : produces (if decline)
+
+FP --> BudgetMon : triggers
+BudgetMon --> MFC : produces
+MFC --> BudgetMon : check budget
+BudgetMon --> BTR : produces (if threshold)
+
+TC --> MPGCalc : triggers calculation
+TC --> ReportGen : update stats
+
+PBA --> NotifySvc : triggers
+FED --> NotifySvc : triggers
+BTR --> NotifySvc : triggers
+BTR --> AlertGen : triggers
+
+FPT --> AlertGen : check spike
+AlertGen --> FPSD : produces (if spike)
+FPSD --> NotifySvc : triggers
+
+TC --> GoalTrack : update progress
+FEC --> GoalTrack : update progress
+RAU --> GoalTrack : check goal
+
+EDGS --> GoalTrack : register goal
+EDTA --> DHA : track effectiveness
+
+note right of MPGCalc
+    MPG Calculator:
+    - Calculates MPG from fuel purchases
+    - Detects personal bests
+    - Identifies economy declines
+    - Triggers related events
+end note
+
+note right of BudgetMon
+    Budget Monitor:
+    - Tracks cumulative spending
+    - Checks against budget limits
+    - Raises alerts at thresholds
+    - Calculates monthly costs
+end note
+
+note right of NotifySvc
+    Notification Service:
+    - Sends push notifications
+    - Creates in-app alerts
+    - Emails reports
+    - Celebrates achievements
+end note
+
+note bottom of AlertGen
+    Alert Generator:
+    - Monitors fuel prices
+    - Tracks fuel levels
+    - Detects milestones
+    - Maintenance reminders
+end note
+
+' Legend
+legend right
+    |<back:#LightBlue>   </back>| Fuel Purchase Events |
+    |<back:#LightGreen>   </back>| Economy Events |
+    |<back:#LightYellow>   </back>| Trip Events |
+    |<back:#LightCoral>   </back>| Cost Events |
+    |<back:#LightPink>   </back>| Alert Events |
+    |<back:#LightCyan>   </back>| Optimization Events |
+endlegend
+
+@enduml

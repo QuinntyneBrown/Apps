@@ -1,0 +1,96 @@
+@startuml Interviews - Class Diagram
+
+!define AGGREGATE_COLOR #FFE6CC
+!define VALUE_OBJECT_COLOR #F3E5F5
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #FFF9C4
+
+class Interview <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - ApplicationId: Guid
+  - InterviewType: string
+  - Status: InterviewStatus
+  - ScheduledAt: DateTime
+  - Duration: int
+  - Location: string?
+  - Interviewers: List<string>
+  - Timezone: string
+  - CompletedAt: DateTime?
+  - PerformanceRating: int?
+  - InterviewNotes: string?
+  - PreparationNotes: string?
+  - ThankYouNoteSent: bool
+  - RescheduleHistory: List<RescheduleEvent>
+  --
+  + Schedule(): void
+  + Prepare(notes): void
+  + Complete(rating, notes): void
+  + Reschedule(newDate, reason): void
+  + SendThankYouNote(recipients): void
+}
+
+class RescheduleEvent <<Value Object>> VALUE_OBJECT_COLOR {
+  + PreviousDateTime: DateTime
+  + NewDateTime: DateTime
+  + Reason: string?
+  + InitiatedBy: string
+}
+
+enum InterviewStatus {
+  Scheduled
+  Prepared
+  Completed
+  Cancelled
+}
+
+enum InterviewType {
+  PhoneScreen
+  Video
+  InPerson
+  Technical
+  Panel
+  Final
+}
+
+class InterviewScheduled <<Domain Event>> EVENT_COLOR {
+  + InterviewId: Guid
+  + ScheduledAt: DateTime
+  + InterviewType: string
+  + OccurredAt: DateTime
+}
+
+class InterviewCompleted <<Domain Event>> EVENT_COLOR {
+  + InterviewId: Guid
+  + CompletedAt: DateTime
+  + PerformanceRating: int?
+  + OccurredAt: DateTime
+}
+
+class InterviewRescheduled <<Domain Event>> EVENT_COLOR {
+  + InterviewId: Guid
+  + PreviousDateTime: DateTime
+  + NewDateTime: DateTime
+  + OccurredAt: DateTime
+}
+
+class InterviewService <<Service>> SERVICE_COLOR {
+  - repository: IInterviewRepository
+  - eventPublisher: IEventPublisher
+  --
+  + ScheduleInterview(command): Interview
+  + PrepareInterview(id, notes): void
+  + CompleteInterview(id, command): void
+  + RescheduleInterview(id, command): void
+  + GetUpcomingInterviews(): List<Interview>
+}
+
+Interview "1" *-- "*" RescheduleEvent
+Interview ..> InterviewStatus
+Interview ..> InterviewType
+
+InterviewService ..> InterviewScheduled : publishes
+InterviewService ..> InterviewCompleted : publishes
+InterviewService ..> InterviewRescheduled : publishes
+
+@enduml

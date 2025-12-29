@@ -1,0 +1,84 @@
+@startuml BucketListManager Sequence Diagram
+
+title Complete Bucket List Item and Document Experience
+
+actor User
+participant "UI" as UI
+participant "Item\nController" as IC
+participant "Item\nService" as IS
+participant "Experience\nService" as ES
+participant "Milestone\nService" as MS
+participant "Event\nBus" as EB
+participant "Database" as DB
+
+User -> UI: Click "Mark Complete"
+activate UI
+
+UI -> UI: Show completion form
+User -> UI: Enter completion details\n(date, satisfaction, notes)
+UI -> IC: POST /api/bucket-list/items/{id}/complete
+activate IC
+
+IC -> IS: completeItem(itemId, data)
+activate IS
+
+IS -> DB: UPDATE item SET status='completed'
+activate DB
+DB --> IS: updated
+deactivate DB
+
+IS -> EB: publish(ItemCompleted)
+activate EB
+EB --> IS: acknowledged
+deactivate EB
+
+IS -> MS: checkMilestones(itemId)
+activate MS
+MS -> MS: detectAchievements()
+MS -> EB: publish(MilestoneAchieved)
+activate EB
+EB --> MS: acknowledged
+deactivate EB
+MS --> IS: milestones
+deactivate MS
+
+IS --> IC: item completed
+deactivate IS
+
+IC --> UI: 200 OK
+deactivate IC
+
+UI -> UI: Show celebration screen
+UI -> User: Display confetti animation
+
+User -> UI: Click "Document Experience"
+UI -> UI: Show experience form
+
+User -> UI: Enter experience details\n(story, location, companions)
+UI -> IC: POST /api/bucket-list/items/{id}/experience
+activate IC
+
+IC -> ES: createExperience(itemId, data)
+activate ES
+
+ES -> DB: INSERT experience
+activate DB
+DB --> ES: experience created
+deactivate DB
+
+ES -> EB: publish(ExperienceDocumented)
+activate EB
+EB --> ES: acknowledged
+deactivate EB
+
+ES --> IC: experience saved
+deactivate ES
+
+IC --> UI: 201 Created
+deactivate IC
+
+UI -> UI: Show experience saved
+UI --> User: Display memory card
+deactivate UI
+
+@enduml

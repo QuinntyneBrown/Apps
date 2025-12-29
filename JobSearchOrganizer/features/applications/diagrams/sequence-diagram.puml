@@ -1,0 +1,347 @@
+@startuml Applications - Sequence Diagram
+
+title Application Lifecycle Management Flow
+
+actor "Job Seeker" as seeker
+participant "UI" as ui
+participant "ApplicationController" as controller
+participant "ApplicationService" as service
+participant "Application\nAggregate" as aggregate
+participant "ApplicationRepository" as repo
+participant "EventPublisher" as events
+database "Database" as db
+participant "NotificationService" as notify
+
+== Start Application ==
+
+seeker -> ui: Select job listing\nand start application
+activate ui
+
+ui -> ui: Show start application form
+seeker -> ui: Enter target date and notes
+ui -> controller: POST /api/applications
+activate controller
+
+controller -> controller: Validate request
+controller -> service: StartApplication(command)
+activate service
+
+service -> aggregate: Create new Application
+activate aggregate
+aggregate -> aggregate: Validate job listing exists
+aggregate -> aggregate: Set status to Draft
+aggregate --> service: Application created
+deactivate aggregate
+
+service -> repo: Add(application)
+activate repo
+repo -> db: INSERT INTO Applications
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Saved
+deactivate repo
+
+service -> events: Publish(ApplicationStarted)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+service --> controller: Application DTO
+deactivate service
+
+controller --> ui: 201 Created + Application
+deactivate controller
+
+ui --> seeker: Show "Application started" message
+deactivate ui
+
+== Submit Application ==
+
+seeker -> ui: Complete application\nand click submit
+activate ui
+
+ui -> ui: Show submission details form
+seeker -> ui: Enter submission details
+ui -> controller: POST /api/applications/{id}/submit
+activate controller
+
+controller -> service: SubmitApplication(id, command)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM Applications
+activate db
+db --> repo: Application data
+deactivate db
+repo --> service: Application
+deactivate repo
+
+service -> aggregate: Submit(method, confirmation, documents)
+activate aggregate
+aggregate -> aggregate: Validate can submit\n(status = Draft)
+aggregate -> aggregate: Set status to Submitted
+aggregate -> aggregate: Record submission details
+aggregate -> aggregate: Add to status history
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(application)
+activate repo
+repo -> db: UPDATE Applications
+activate db
+db --> repo: Success
+deactivate db
+repo -> db: INSERT INTO\nApplicationStatusHistory
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(ApplicationSubmitted)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+service -> notify: SendSubmissionConfirmation(application)
+activate notify
+notify --> service: Notification sent
+deactivate notify
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Application submitted" message
+deactivate ui
+
+== Update Application Status ==
+
+seeker -> ui: Receive update from company
+activate ui
+
+ui -> ui: Click "Update Status"
+seeker -> ui: Select new status and enter details
+ui -> controller: PUT /api/applications/{id}/status
+activate controller
+
+controller -> service: UpdateStatus(id, command)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM Applications
+activate db
+db --> repo: Application data
+deactivate db
+repo --> service: Application
+deactivate repo
+
+service -> aggregate: UpdateStatus(status, updatedBy, notes, nextSteps)
+activate aggregate
+aggregate -> aggregate: Validate status transition
+aggregate -> aggregate: Set new status
+aggregate -> aggregate: Update current stage
+aggregate -> aggregate: Add to status history
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(application)
+activate repo
+repo -> db: UPDATE Applications
+activate db
+db --> repo: Success
+deactivate db
+repo -> db: INSERT INTO\nApplicationStatusHistory
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(ApplicationStatusUpdated)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+service -> notify: SendStatusUpdateNotification(application)
+activate notify
+notify --> service: Notification sent
+deactivate notify
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Status updated" message
+ui -> ui: Update UI with new status
+deactivate ui
+
+== Mark as Rejected ==
+
+seeker -> ui: Receive rejection notice
+activate ui
+
+ui -> ui: Click "Mark as Rejected"
+seeker -> ui: Enter rejection details
+ui -> controller: POST /api/applications/{id}/reject
+activate controller
+
+controller -> service: RejectApplication(id, command)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM Applications
+activate db
+db --> repo: Application data
+deactivate db
+repo --> service: Application
+deactivate repo
+
+service -> aggregate: Reject(reason, feedback, eligible, reapplyDate)
+activate aggregate
+aggregate -> aggregate: Validate can reject\n(not already rejected/withdrawn)
+aggregate -> aggregate: Set status to Rejected
+aggregate -> aggregate: Record rejection details
+aggregate -> aggregate: Add to status history
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(application)
+activate repo
+repo -> db: UPDATE Applications
+activate db
+db --> repo: Success
+deactivate db
+repo -> db: INSERT INTO\nApplicationStatusHistory
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(ApplicationRejected)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+alt eligible for reapplication
+  service -> notify: ScheduleReapplicationReminder(application)
+  activate notify
+  notify --> service: Reminder scheduled
+  deactivate notify
+end
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Application marked as rejected"
+ui -> ui: Update UI, gray out card
+deactivate ui
+
+== Withdraw Application ==
+
+seeker -> ui: Decide to withdraw
+activate ui
+
+ui -> ui: Show withdrawal confirmation
+seeker -> ui: Confirm and enter reason
+ui -> controller: POST /api/applications/{id}/withdraw
+activate controller
+
+controller -> service: WithdrawApplication(id, reason)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM Applications
+activate db
+db --> repo: Application data
+deactivate db
+repo --> service: Application
+deactivate repo
+
+service -> aggregate: Withdraw(reason)
+activate aggregate
+aggregate -> aggregate: Validate can withdraw\n(not rejected)
+aggregate -> aggregate: Set status to Withdrawn
+aggregate -> aggregate: Record withdrawal details
+aggregate -> aggregate: Add to status history
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(application)
+activate repo
+repo -> db: UPDATE Applications
+activate db
+db --> repo: Success
+deactivate db
+repo -> db: INSERT INTO\nApplicationStatusHistory
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(ApplicationWithdrawn)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Application withdrawn"
+ui -> ui: Move to withdrawn column
+deactivate ui
+
+== View Applications (Kanban) ==
+
+seeker -> ui: Navigate to applications
+activate ui
+
+ui -> controller: GET /api/applications
+activate controller
+
+controller -> service: GetApplications(filters)
+activate service
+
+service -> repo: GetByUserId(userId, filters)
+activate repo
+repo -> db: SELECT FROM Applications\nORDER BY Status, SubmittedAt
+activate db
+db --> repo: Application records
+deactivate db
+repo --> service: List<Application>
+deactivate repo
+
+service --> controller: List<ApplicationDTO>
+deactivate service
+
+controller --> ui: 200 OK + Applications
+deactivate controller
+
+ui -> ui: Group by status
+ui -> ui: Render Kanban board
+ui --> seeker: Display applications in columns
+deactivate ui
+
+@enduml

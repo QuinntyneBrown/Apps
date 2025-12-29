@@ -1,0 +1,31 @@
+@startuml Freelance Project Manager Sequence
+
+actor Freelancer
+participant "UI" as UI
+participant "ProjectService" as PS
+participant "TimeService" as TS
+participant "InvoiceService" as IS
+participant "Database" as DB
+
+Freelancer -> UI: Log time entry
+UI -> TS: CreateTimeEntry(projectId, duration, description)
+TS -> DB: INSERT TimeEntry
+TS -> PS: AccumulateBillableHours(projectId)
+
+alt Hours reach threshold
+  PS -> IS: GenerateInvoice(projectId)
+  IS -> DB: INSERT Invoice
+  IS -> Freelancer: Invoice ready notification
+end
+
+Freelancer -> UI: Generate invoice
+UI -> IS: CreateInvoice(clientId, timeEntries)
+IS -> DB: INSERT Invoice
+IS --> UI: Invoice created
+
+Freelancer -> UI: Record payment
+UI -> IS: RecordPayment(invoiceId, amount)
+IS -> DB: UPDATE Invoice status
+IS --> Freelancer: Payment recorded
+
+@enduml

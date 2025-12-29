@@ -1,0 +1,209 @@
+@startuml Goal Management Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class Goal {
+        +Guid Id
+        +Guid UserId
+        +GoalType Type
+        +int TargetSessions
+        +int TargetMinutes
+        +int CurrentSessions
+        +int CurrentMinutes
+        +DateTime StartDate
+        +DateTime EndDate
+        +GoalStatus Status
+        +DateTime? AchievedAt
+        +decimal Progress
+        --
+        +SetTargets(sessions: int, minutes: int): void
+        +UpdateProgress(sessions: int, minutes: int): void
+        +CalculateProgress(): decimal
+        +CheckAchievement(): bool
+        +MarkAsAchieved(): void
+        +MarkAsFailed(): void
+        +Abandon(): void
+    }
+
+    class GoalAchievement {
+        +Guid Id
+        +Guid GoalId
+        +Guid UserId
+        +GoalType Type
+        +int TargetSessions
+        +int TargetMinutes
+        +int ActualSessions
+        +int ActualMinutes
+        +DateTime AchievedAt
+        +decimal CompletionRate
+        +int BonusPoints
+        --
+        +CalculateCompletionRate(): decimal
+        +CalculateBonusPoints(): int
+    }
+
+    class GoalStreak {
+        +Guid Id
+        +Guid UserId
+        +GoalType Type
+        +int StreakCount
+        +DateTime StartDate
+        +DateTime? EndDate
+        +bool IsActive
+        --
+        +Increment(): void
+        +Break(): void
+        +GetDuration(): int
+    }
+
+    enum GoalType {
+        Daily
+        Weekly
+    }
+
+    enum GoalStatus {
+        Active
+        Achieved
+        Failed
+        Abandoned
+    }
+
+    Goal --> GoalType
+    Goal --> GoalStatus
+    Goal "1" --> "*" GoalAchievement : achieved as
+    GoalStreak --> GoalType
+}
+
+package "Events" {
+    class DailyFocusGoalSet {
+        +Guid GoalId
+        +Guid UserId
+        +int TargetSessions
+        +int TargetMinutes
+        +DateTime Date
+        +DateTime Timestamp
+    }
+
+    class WeeklyFocusTargetSet {
+        +Guid GoalId
+        +Guid UserId
+        +int TargetSessions
+        +int TargetMinutes
+        +DateTime WeekStartDate
+        +DateTime WeekEndDate
+        +DateTime Timestamp
+    }
+
+    class GoalAchieved {
+        +Guid GoalId
+        +Guid UserId
+        +string GoalType
+        +int TargetSessions
+        +int TargetMinutes
+        +int ActualSessions
+        +int ActualMinutes
+        +decimal CompletionRate
+        +DateTime Timestamp
+    }
+
+    class GoalProgressUpdated {
+        +Guid GoalId
+        +Guid UserId
+        +int CurrentSessions
+        +int CurrentMinutes
+        +decimal Progress
+        +DateTime Timestamp
+    }
+
+    class GoalStreakAchieved {
+        +Guid UserId
+        +string GoalType
+        +int StreakCount
+        +DateTime Timestamp
+    }
+
+    class GoalFailed {
+        +Guid GoalId
+        +Guid UserId
+        +string GoalType
+        +int TargetSessions
+        +int ActualSessions
+        +decimal Progress
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class GoalService {
+        -IGoalRepository repository
+        -IEventPublisher eventPublisher
+        -ISessionRepository sessionRepository
+        --
+        +SetDailyGoal(command: SetDailyGoalCommand): Goal
+        +SetWeeklyGoal(command: SetWeeklyGoalCommand): Goal
+        +UpdateGoal(goalId: Guid, updates: UpdateGoalCommand): void
+        +DeleteGoal(goalId: Guid): void
+        +CheckGoalProgress(goalId: Guid): void
+        +ProcessSessionCompleted(sessionEvent: SessionCompleted): void
+        +ProcessDayEnded(date: DateTime): void
+        +ProcessWeekEnded(weekEnd: DateTime): void
+    }
+
+    class StreakService {
+        -IGoalRepository goalRepository
+        -IStreakRepository streakRepository
+        -IEventPublisher eventPublisher
+        --
+        +UpdateStreak(userId: Guid, goalType: GoalType): void
+        +GetCurrentStreak(userId: Guid, goalType: GoalType): GoalStreak
+        +BreakStreak(userId: Guid, goalType: GoalType): void
+        +CheckStreakMilestone(streak: GoalStreak): bool
+    }
+
+    interface IGoalRepository {
+        +GetById(id: Guid): Goal
+        +GetActiveByUserAndDate(userId: Guid, date: DateTime): Goal
+        +GetActiveWeeklyByUser(userId: Guid): Goal
+        +Save(goal: Goal): void
+        +GetHistory(userId: Guid, filters: GoalFilters): List<Goal>
+        +GetStatistics(userId: Guid): GoalStatistics
+    }
+
+    interface IStreakRepository {
+        +GetActiveStreak(userId: Guid, type: GoalType): GoalStreak
+        +Save(streak: GoalStreak): void
+        +GetLongestStreak(userId: Guid, type: GoalType): int
+    }
+
+    class GoalStatistics {
+        +int TotalGoalsSet
+        +int TotalAchieved
+        +decimal AchievementRate
+        +int CurrentStreak
+        +int LongestStreak
+        +decimal AverageProgress
+        --
+        +Calculate(goals: List<Goal>): void
+    }
+}
+
+GoalService --> Goal
+GoalService --> IGoalRepository
+GoalService --> GoalStatistics
+StreakService --> GoalStreak
+StreakService --> IStreakRepository
+
+Goal ..> DailyFocusGoalSet : publishes
+Goal ..> WeeklyFocusTargetSet : publishes
+Goal ..> GoalAchieved : publishes
+Goal ..> GoalProgressUpdated : publishes
+Goal ..> GoalFailed : publishes
+GoalStreak ..> GoalStreakAchieved : publishes
+
+@enduml

@@ -1,0 +1,117 @@
+@startuml Domain Event Flow
+
+title Domain Event Flow - Meal Planning Workflow
+
+participant "User" as User
+participant "MealPlan\nService" as MealPlan
+participant "Recipe\nService" as Recipe
+participant "Grocery\nService" as Grocery
+participant "Pantry\nService" as Pantry
+participant "Nutrition\nService" as Nutrition
+participant "Event Bus" as EventBus
+participant "Notification\nService" as Notify
+
+== Weekly Meal Plan Generation ==
+
+User -> MealPlan: Generate weekly plan
+activate MealPlan
+MealPlan -> Recipe: Get recipe suggestions
+Recipe --> MealPlan: Recipe list
+MealPlan -> Nutrition: Check nutritional balance
+Nutrition --> MealPlan: Balanced plan
+MealPlan -> EventBus: Publish MealPlanWeekGenerated
+activate EventBus
+MealPlan --> User: Weekly plan created
+deactivate MealPlan
+
+EventBus -> Grocery: MealPlanWeekGenerated event
+activate Grocery
+Grocery -> Recipe: Get ingredient lists
+Recipe --> Grocery: Ingredients
+Grocery -> Pantry: Check pantry inventory
+Pantry --> Grocery: Available items
+Grocery -> Grocery: Consolidate ingredients,\nexclude pantry items
+Grocery -> EventBus: Publish GroceryListGenerated
+Grocery --> User: Shopping list ready
+deactivate Grocery
+
+EventBus -> Nutrition: MealPlanWeekGenerated event
+activate Nutrition
+Nutrition -> Nutrition: Calculate weekly nutrition
+Nutrition -> EventBus: Publish DailyNutritionSummarized
+Nutrition -> Nutrition: Check dietary goals
+alt Dietary violation detected
+  Nutrition -> EventBus: Publish DietaryViolationDetected
+  EventBus -> Notify: Send alert
+  Notify --> User: Dietary alert notification
+end
+deactivate Nutrition
+deactivate EventBus
+
+== Shopping Trip ==
+
+User -> Grocery: Complete shopping trip
+activate Grocery
+Grocery -> EventBus: Publish ShoppingTripCompleted
+activate EventBus
+Grocery --> User: Trip completed
+deactivate Grocery
+
+EventBus -> Pantry: ShoppingTripCompleted event
+activate Pantry
+Pantry -> Pantry: Add purchased items to pantry
+loop For each item
+  Pantry -> EventBus: Publish PantryItemAdded
+end
+Pantry --> User: Pantry updated
+deactivate Pantry
+deactivate EventBus
+
+== Cooking Meal ==
+
+User -> MealPlan: Mark meal as completed
+activate MealPlan
+MealPlan -> EventBus: Publish MealCompleted
+activate EventBus
+MealPlan --> User: Meal marked complete
+deactivate MealPlan
+
+EventBus -> Pantry: MealCompleted event
+activate Pantry
+Pantry -> Recipe: Get ingredient list
+Recipe --> Pantry: Ingredients used
+loop For each ingredient
+  Pantry -> Pantry: Deduct from inventory
+  Pantry -> EventBus: Publish PantryItemUsed
+  alt Quantity below threshold
+    Pantry -> EventBus: Publish PantryStockLow
+    EventBus -> Grocery: Auto-add to shopping list
+    EventBus -> Notify: Send restock alert
+  end
+end
+deactivate Pantry
+
+EventBus -> Recipe: MealCompleted event
+activate Recipe
+Recipe -> Recipe: Update popularity stats
+Recipe --> User: Rate this recipe?
+deactivate Recipe
+deactivate EventBus
+
+== Background Jobs ==
+
+...Daily expiration check...
+
+Pantry -> Pantry: Scan for expiring items
+activate Pantry
+loop For items expiring soon
+  Pantry -> EventBus: Publish PantryItemExpiring
+  activate EventBus
+  EventBus -> Recipe: Suggest recipes using ingredient
+  EventBus -> Notify: Send expiration alert
+  Notify --> User: Item expiring notification
+  deactivate EventBus
+end
+deactivate Pantry
+
+@enduml

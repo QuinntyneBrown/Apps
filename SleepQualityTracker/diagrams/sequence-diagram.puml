@@ -1,0 +1,244 @@
+@startuml SleepQualityTracker_SequenceDiagram
+
+title Log Sleep Session and Receive Quality Analysis
+
+actor User
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "Sleep Session\nService" as SessionService
+participant "Sleep Quality\nService" as QualityService
+participant "Sleep Goal\nService" as GoalService
+participant "Sleep Debt\nService" as DebtService
+participant "Event Bus" as EventBus
+participant "Database" as DB
+participant "Notification\nService" as NotificationService
+
+== Log Sleep Session ==
+
+User -> UI: Enter sleep data\n(bedtime, wake time, rating)
+activate UI
+
+UI -> UI: Validate input
+UI -> API: POST /api/sleep-sessions
+activate API
+
+API -> SessionService: CreateSleepSession(request)
+activate SessionService
+
+SessionService -> SessionService: Validate session data
+SessionService -> SessionService: Calculate duration
+
+SessionService -> DB: Insert SleepSession
+activate DB
+DB --> SessionService: Session saved
+deactivate DB
+
+SessionService -> EventBus: Publish SleepSessionRecorded
+activate EventBus
+EventBus --> SessionService: Event published
+deactivate EventBus
+
+SessionService --> API: Session created (201)
+deactivate SessionService
+
+API --> UI: Success response
+deactivate API
+
+UI --> User: Display success message
+deactivate UI
+
+== Quality Score Calculation ==
+
+EventBus -> QualityService: SleepSessionRecorded event
+activate QualityService
+
+QualityService -> DB: Get session details
+activate DB
+DB --> QualityService: Session data
+deactivate DB
+
+QualityService -> QualityService: Calculate duration score
+QualityService -> QualityService: Calculate efficiency score
+QualityService -> QualityService: Calculate consistency score
+QualityService -> QualityService: Calculate overall score (0-100)
+
+QualityService -> DB: Insert SleepQualityScore
+activate DB
+DB --> QualityService: Score saved
+deactivate DB
+
+alt Quality Score < 40
+    QualityService -> EventBus: Publish PoorSleepDetected
+    activate EventBus
+    EventBus --> QualityService: Event published
+    deactivate EventBus
+else Quality Score > 85
+    QualityService -> EventBus: Publish ExceptionalSleepRecorded
+    activate EventBus
+    EventBus --> QualityService: Event published
+    deactivate EventBus
+else
+    QualityService -> EventBus: Publish SleepQualityScored
+    activate EventBus
+    EventBus --> QualityService: Event published
+    deactivate EventBus
+end
+
+deactivate QualityService
+
+== Goal Achievement Check ==
+
+EventBus -> GoalService: SleepSessionRecorded event
+activate GoalService
+
+GoalService -> DB: Get user's sleep goal
+activate DB
+DB --> GoalService: Goal data
+deactivate DB
+
+GoalService -> GoalService: Compare actual vs target hours
+GoalService -> GoalService: Calculate variance
+
+alt Sleep meets goal
+    GoalService -> DB: Insert GoalAchievement (Met)
+    activate DB
+    DB --> GoalService: Achievement saved
+    deactivate DB
+
+    GoalService -> GoalService: Update streak
+    GoalService -> EventBus: Publish SleepGoalMet
+    activate EventBus
+    EventBus --> GoalService: Event published
+    deactivate EventBus
+else Sleep misses goal
+    GoalService -> DB: Insert GoalAchievement (Missed)
+    activate DB
+    DB --> GoalService: Achievement saved
+    deactivate DB
+
+    GoalService -> GoalService: Reset streak
+    GoalService -> EventBus: Publish SleepGoalMissed
+    activate EventBus
+    EventBus --> GoalService: Event published
+    deactivate EventBus
+end
+
+deactivate GoalService
+
+== Sleep Debt Calculation ==
+
+EventBus -> DebtService: SleepSessionRecorded event
+activate DebtService
+
+DebtService -> DB: Get current sleep debt
+activate DB
+DB --> DebtService: Debt data
+deactivate DB
+
+DebtService -> DB: Get sleep goal
+activate DB
+DB --> DebtService: Goal data
+deactivate DB
+
+DebtService -> DebtService: Calculate shortfall/surplus
+
+alt Slept less than goal
+    DebtService -> DebtService: Accumulate debt
+    DebtService -> DB: Update SleepDebt
+    activate DB
+    DB --> DebtService: Debt updated
+    deactivate DB
+
+    DebtService -> EventBus: Publish SleepDebtAccumulated
+    activate EventBus
+    EventBus --> DebtService: Event published
+    deactivate EventBus
+
+    alt Total debt > 10 hours
+        DebtService -> EventBus: Publish CriticalSleepDebtReached
+        activate EventBus
+        EventBus --> DebtService: Event published
+        deactivate EventBus
+    end
+else Slept more than goal
+    DebtService -> DebtService: Repay debt (max 2 hours)
+    DebtService -> DB: Update SleepDebt
+    activate DB
+    DB --> DebtService: Debt updated
+    deactivate DB
+
+    DebtService -> EventBus: Publish SleepDebtRepaid
+    activate EventBus
+    EventBus --> DebtService: Event published
+    deactivate EventBus
+end
+
+deactivate DebtService
+
+== Send Notifications ==
+
+EventBus -> NotificationService: SleepGoalMet event
+activate NotificationService
+
+NotificationService -> NotificationService: Create celebration message
+NotificationService -> UI: Push notification
+UI --> User: "Congratulations! Sleep goal achieved!"
+
+deactivate NotificationService
+
+alt Critical Sleep Debt
+    EventBus -> NotificationService: CriticalSleepDebtReached event
+    activate NotificationService
+
+    NotificationService -> NotificationService: Create warning message
+    NotificationService -> UI: Push notification
+    UI --> User: "Warning: Critical sleep debt!"
+
+    deactivate NotificationService
+end
+
+== View Results ==
+
+User -> UI: Navigate to dashboard
+activate UI
+
+UI -> API: GET /api/sleep-sessions/{sessionId}
+activate API
+
+API -> SessionService: GetSession(sessionId)
+activate SessionService
+
+SessionService -> DB: Query session
+activate DB
+DB --> SessionService: Session data
+deactivate DB
+
+SessionService --> API: Session details
+deactivate SessionService
+
+API --> UI: Session data
+deactivate API
+
+UI -> API: GET /api/sleep-quality/{sessionId}
+activate API
+
+API -> QualityService: GetQualityScore(sessionId)
+activate QualityService
+
+QualityService -> DB: Query quality score
+activate DB
+DB --> QualityService: Quality data
+deactivate DB
+
+QualityService --> API: Quality score
+deactivate QualityService
+
+API --> UI: Quality data
+deactivate API
+
+UI -> UI: Render quality dashboard
+UI --> User: Display session with\nquality score and insights
+
+deactivate UI
+
+@enduml

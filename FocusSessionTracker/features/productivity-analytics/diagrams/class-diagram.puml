@@ -1,0 +1,273 @@
+@startuml Productivity Analytics Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class ProductivityMetrics {
+        +Guid Id
+        +Guid UserId
+        +DateTime Date
+        +int TotalSessions
+        +int TotalFocusTime
+        +decimal AverageFocusScore
+        +int HighQualitySessions
+        +int DeepWorkTime
+        --
+        +UpdateMetrics(session: Session): void
+        +CalculateAverageScore(): decimal
+        +IncrementSessionCount(): void
+    }
+
+    class FocusStreak {
+        +Guid Id
+        +Guid UserId
+        +DateTime StartDate
+        +DateTime? EndDate
+        +int Length
+        +StreakStatus Status
+        +int HighestMilestone
+        --
+        +Start(): void
+        +Continue(): void
+        +Break(): void
+        +CheckMilestone(): int?
+        +CalculateLength(): int
+    }
+
+    class StreakMilestone {
+        +Guid Id
+        +Guid StreakId
+        +int MilestoneValue
+        +DateTime ReachedAt
+        --
+        +Record(): void
+    }
+
+    class HighFocusSession {
+        +Guid Id
+        +Guid UserId
+        +Guid SessionId
+        +int FocusScore
+        +int Duration
+        +int QualityRating
+        +DateTime AchievedAt
+        --
+        +MeetsCriteria(session: Session): bool
+        +Record(): void
+    }
+
+    class DeepWorkThreshold {
+        +Guid Id
+        +Guid UserId
+        +int ThresholdMinutes
+        +int AccumulatedTime
+        +DateTime PeriodStart
+        +DateTime PeriodEnd
+        +DateTime ReachedAt
+        --
+        +CheckThreshold(minutes: int): bool
+        +Record(): void
+    }
+
+    class Achievement {
+        +Guid Id
+        +Guid UserId
+        +AchievementCategory Category
+        +string Name
+        +string Description
+        +bool Achieved
+        +DateTime? AchievedAt
+        +string? Metadata
+        --
+        +Unlock(): void
+        +CheckCriteria(): bool
+        +GetProgress(): decimal
+    }
+
+    enum StreakStatus {
+        Active
+        Completed
+        Broken
+    }
+
+    enum AchievementCategory {
+        HighFocus
+        Streak
+        DeepWork
+        Consistency
+        Special
+    }
+
+    FocusStreak "1" --> "*" StreakMilestone : has
+    FocusStreak --> StreakStatus
+    Achievement --> AchievementCategory
+}
+
+package "Events" {
+    class HighFocusSessionAchieved {
+        +Guid SessionId
+        +Guid UserId
+        +int FocusScore
+        +int Duration
+        +int QualityRating
+        +DateTime AchievedAt
+        +DateTime Timestamp
+    }
+
+    class FocusStreakStarted {
+        +Guid StreakId
+        +Guid UserId
+        +DateTime StartDate
+        +DateTime Timestamp
+    }
+
+    class FocusStreakMilestone {
+        +Guid StreakId
+        +Guid UserId
+        +int MilestoneValue
+        +int CurrentStreakLength
+        +DateTime ReachedAt
+        +DateTime Timestamp
+    }
+
+    class DeepWorkThresholdReached {
+        +Guid UserId
+        +int ThresholdMinutes
+        +int AccumulatedMinutes
+        +DateTime PeriodStart
+        +DateTime PeriodEnd
+        +DateTime ReachedAt
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class ProductivityAnalyticsService {
+        -IProductivityRepository repository
+        -IEventPublisher eventPublisher
+        -IStreakCalculator streakCalculator
+        --
+        +GetDashboard(userId: Guid, start: DateTime, end: DateTime): DashboardData
+        +GetAchievements(userId: Guid, filters: Filters): List<Achievement>
+        +GetStreakHistory(userId: Guid): StreakHistory
+        +GetDeepWorkStats(userId: Guid, period: Period): DeepWorkStats
+        +ExportData(userId: Guid, format: string): byte[]
+    }
+
+    class StreakManager {
+        -IStreakRepository repository
+        -IEventPublisher eventPublisher
+        --
+        +ProcessSessionCompleted(session: Session): void
+        +CheckMilestone(streak: FocusStreak): void
+        +StartStreak(userId: Guid): FocusStreak
+        +BreakStreak(streakId: Guid): void
+        +GetCurrentStreak(userId: Guid): FocusStreak?
+    }
+
+    class DeepWorkTracker {
+        -IDeepWorkRepository repository
+        -IEventPublisher eventPublisher
+        --
+        +TrackSession(session: Session): void
+        +CheckThresholds(userId: Guid): void
+        +GetAccumulatedTime(userId: Guid, period: Period): int
+        +RecordThreshold(userId: Guid, threshold: int): void
+    }
+
+    class AchievementEngine {
+        -IAchievementRepository repository
+        -IEventPublisher eventPublisher
+        --
+        +ProcessEvent(event: DomainEvent): void
+        +UnlockAchievement(userId: Guid, achievementId: Guid): void
+        +CheckHighFocusAchievements(session: Session): void
+        +CheckStreakAchievements(streak: FocusStreak): void
+        +CheckDeepWorkAchievements(time: int): void
+    }
+
+    class MetricsAggregator {
+        -IMetricsRepository repository
+        --
+        +AggregateDaily(userId: Guid, date: DateTime): void
+        +CalculateTrends(userId: Guid, period: Period): TrendData
+        +UpdateMetrics(session: Session): void
+    }
+
+    interface IProductivityRepository {
+        +GetMetrics(userId: Guid, start: DateTime, end: DateTime): ProductivityMetrics
+        +SaveMetrics(metrics: ProductivityMetrics): void
+        +GetAchievements(userId: Guid): List<Achievement>
+        +SaveAchievement(achievement: Achievement): void
+    }
+
+    interface IStreakRepository {
+        +GetCurrentStreak(userId: Guid): FocusStreak?
+        +GetStreakHistory(userId: Guid): List<FocusStreak>
+        +SaveStreak(streak: FocusStreak): void
+        +GetMilestones(streakId: Guid): List<StreakMilestone>
+    }
+
+    interface IDeepWorkRepository {
+        +GetAccumulatedTime(userId: Guid, period: Period): int
+        +GetThresholds(userId: Guid): List<DeepWorkThreshold>
+        +SaveThreshold(threshold: DeepWorkThreshold): void
+        +SaveSession(session: HighFocusSession): void
+    }
+}
+
+package "Event Handlers" {
+    class SessionCompletedHandler {
+        -ProductivityAnalyticsService analyticsService
+        -StreakManager streakManager
+        -DeepWorkTracker deepWorkTracker
+        -AchievementEngine achievementEngine
+        --
+        +Handle(event: SessionCompleted): void
+    }
+
+    class HighFocusSessionHandler {
+        -IAchievementEngine achievementEngine
+        --
+        +Handle(event: HighFocusSessionAchieved): void
+    }
+
+    class StreakMilestoneHandler {
+        -IAchievementEngine achievementEngine
+        --
+        +Handle(event: FocusStreakMilestone): void
+    }
+}
+
+ProductivityAnalyticsService --> IProductivityRepository
+ProductivityAnalyticsService --> ProductivityMetrics
+ProductivityAnalyticsService --> Achievement
+
+StreakManager --> IStreakRepository
+StreakManager --> FocusStreak
+StreakManager --> StreakMilestone
+
+DeepWorkTracker --> IDeepWorkRepository
+DeepWorkTracker --> DeepWorkThreshold
+DeepWorkTracker --> HighFocusSession
+
+AchievementEngine --> Achievement
+
+MetricsAggregator --> ProductivityMetrics
+
+SessionCompletedHandler --> ProductivityAnalyticsService
+SessionCompletedHandler --> StreakManager
+SessionCompletedHandler --> DeepWorkTracker
+SessionCompletedHandler --> AchievementEngine
+
+FocusStreak ..> FocusStreakStarted : publishes
+FocusStreak ..> FocusStreakMilestone : publishes
+HighFocusSession ..> HighFocusSessionAchieved : publishes
+DeepWorkThreshold ..> DeepWorkThresholdReached : publishes
+
+@enduml

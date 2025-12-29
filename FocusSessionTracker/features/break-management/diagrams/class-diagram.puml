@@ -1,0 +1,194 @@
+@startuml Break Management Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class Break {
+        +Guid Id
+        +Guid UserId
+        +Guid? SessionId
+        +BreakType Type
+        +int PlannedDuration
+        +int? ActualDuration
+        +DateTime StartTime
+        +DateTime? EndTime
+        +BreakStatus Status
+        +bool IsScheduled
+        +bool WasExtended
+        +int ExtensionMinutes
+        +string? ExtensionReason
+        +string? SkipReason
+        --
+        +Start(): void
+        +Extend(minutes: int, reason: string): void
+        +Complete(): void
+        +CalculateActualDuration(): int
+        +IsOvertime(): bool
+    }
+
+    class BreakActivity {
+        +Guid Id
+        +Guid BreakId
+        +ActivityType Activity
+        +string? Notes
+        +int? Effectiveness
+        +DateTime LoggedAt
+        --
+        +Validate(): bool
+        +GetEffectivenessRating(): string
+    }
+
+    class BreakPattern {
+        +Guid Id
+        +Guid UserId
+        +string PatternName
+        +int SessionsBeforeBreak
+        +int BreakDuration
+        +bool IsActive
+        +DateTime CreatedAt
+        --
+        +Activate(): void
+        +Deactivate(): void
+        +CalculateNextBreak(sessionCount: int): DateTime
+    }
+
+    class BreakSkip {
+        +Guid Id
+        +Guid UserId
+        +Guid? SessionId
+        +string? SkipReason
+        +DateTime SkippedAt
+        --
+        +GetConsecutiveSkips(userId: Guid): int
+        +IsBurnoutRisk(): bool
+    }
+
+    enum BreakType {
+        Short
+        Long
+        Custom
+    }
+
+    enum BreakStatus {
+        Active
+        Extended
+        Completed
+        Skipped
+    }
+
+    enum ActivityType {
+        Walk
+        Coffee
+        Meditation
+        Snack
+        Stretch
+        Water
+        Other
+    }
+
+    Break "1" --> "*" BreakActivity : has
+    Break --> BreakType
+    Break --> BreakStatus
+    BreakActivity --> ActivityType
+    BreakPattern --> Break : recommends
+}
+
+package "Events" {
+    class BreakStarted {
+        +Guid BreakId
+        +Guid UserId
+        +Guid? SessionId
+        +string BreakType
+        +int PlannedDuration
+        +bool IsScheduled
+        +DateTime Timestamp
+    }
+
+    class BreakActivityLogged {
+        +Guid BreakId
+        +Guid ActivityId
+        +string Activity
+        +string? Notes
+        +int? Effectiveness
+        +DateTime Timestamp
+    }
+
+    class BreakExtended {
+        +Guid BreakId
+        +int OriginalDuration
+        +int AdditionalMinutes
+        +int NewTotalDuration
+        +string? Reason
+        +DateTime Timestamp
+    }
+
+    class BreakSkipped {
+        +Guid UserId
+        +Guid? SessionId
+        +string? SkipReason
+        +DateTime SkippedAt
+        +DateTime Timestamp
+    }
+
+    class BreakCompleted {
+        +Guid BreakId
+        +int ActualDuration
+        +bool WasExtended
+        +int ActivityCount
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class BreakService {
+        -IBreakRepository repository
+        -IEventPublisher eventPublisher
+        -ITimerService timerService
+        -IRecommendationEngine recommendationEngine
+        --
+        +StartBreak(command: StartBreakCommand): Break
+        +ExtendBreak(breakId: Guid, minutes: int, reason: string): void
+        +LogActivity(command: LogActivityCommand): void
+        +CompleteBreak(breakId: Guid): void
+        +SkipBreak(userId: Guid, reason: string): void
+        +GetRecommendation(userId: Guid): BreakRecommendation
+    }
+
+    interface IBreakRepository {
+        +GetById(id: Guid): Break
+        +GetActiveByUser(userId: Guid): Break
+        +Save(break: Break): void
+        +GetByDateRange(userId: Guid, start: DateTime, end: DateTime): List<Break>
+        +GetSkipHistory(userId: Guid, days: int): List<BreakSkip>
+    }
+
+    interface IRecommendationEngine {
+        +GetBreakRecommendation(userId: Guid): BreakRecommendation
+        +GetActivitySuggestions(userId: Guid): List<string>
+        +AnalyzeBreakEffectiveness(userId: Guid): EffectivenessReport
+    }
+
+    class BreakRecommendation {
+        +BreakType RecommendedType
+        +int RecommendedDuration
+        +string Reason
+        +int SessionsSinceLastBreak
+        +DateTime? NextRecommendedTime
+    }
+}
+
+BreakService --> Break
+BreakService --> IBreakRepository
+BreakService --> IRecommendationEngine
+Break ..> BreakStarted : publishes
+Break ..> BreakActivityLogged : publishes
+Break ..> BreakExtended : publishes
+Break ..> BreakSkipped : publishes
+Break ..> BreakCompleted : publishes
+
+@enduml

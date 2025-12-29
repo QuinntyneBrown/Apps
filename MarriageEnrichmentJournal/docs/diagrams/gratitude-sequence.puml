@@ -1,0 +1,173 @@
+@startuml Gratitude Entry - Create and Share Sequence
+
+actor "Partner A" as PartnerA
+participant "Web App" as WebApp
+participant "API Gateway" as Gateway
+participant "Gratitude Service" as Service
+database "SQL Server" as DB
+participant "Event Bus" as EventBus
+participant "Event Handler" as Handler
+participant "Notification Service" as Notifier
+participant "WebSocket" as WS
+actor "Partner B" as PartnerB
+
+== Create Private Gratitude Entry ==
+
+PartnerA -> WebApp: Opens gratitude journal
+WebApp -> WebApp: Display create entry form
+
+PartnerA -> WebApp: Fills in gratitude\n(content, category, privacy=private)
+activate WebApp
+
+WebApp -> Gateway: POST /api/gratitude-entries
+activate Gateway
+Gateway -> Gateway: Validate JWT token
+Gateway -> Gateway: Check rate limit
+
+Gateway -> Service: CreateGratitudeEntry(data)
+activate Service
+
+Service -> Service: Validate input
+Service -> Service: Encrypt content
+Service -> DB: INSERT GratitudeEntry
+activate DB
+DB --> Service: Entry saved
+deactivate DB
+
+Service -> Service: Check for streak
+Service -> DB: UPDATE GratitudeStreak
+activate DB
+DB --> Service: Streak updated
+deactivate DB
+
+Service -> EventBus: Publish GratitudeEntryCreated
+activate EventBus
+EventBus --> Service: Event published
+deactivate EventBus
+
+Service --> Gateway: Return entry (201 Created)
+deactivate Service
+
+Gateway --> WebApp: Return entry
+deactivate Gateway
+
+WebApp -> WebApp: Update local state
+WebApp -> WebApp: Show success message
+WebApp --> PartnerA: Display new entry
+deactivate WebApp
+
+== Event Processing (Async) ==
+
+EventBus -> Handler: GratitudeEntryCreated event
+activate Handler
+Handler -> Handler: Check if streak milestone achieved
+Handler -> DB: Check streak count
+DB --> Handler: Streak data
+
+alt Streak Milestone Achieved
+    Handler -> EventBus: Publish GratitudeStreakAchieved
+    EventBus -> Handler: StreakAchieved event
+    Handler -> Notifier: Send achievement notification
+    Notifier -> WS: Push notification
+    WS -> WebApp: Streak achievement
+    WebApp -> PartnerA: Show celebration
+end
+
+Handler -> DB: Update analytics
+deactivate Handler
+
+== Share Gratitude with Spouse (Later) ==
+
+PartnerA -> WebApp: Clicks "Share with Spouse" on entry
+activate WebApp
+
+WebApp -> Gateway: PUT /api/gratitude-entries/{id}/share
+activate Gateway
+
+Gateway -> Service: ShareGratitudeEntry(id)
+activate Service
+
+Service -> DB: SELECT GratitudeEntry
+DB --> Service: Entry data
+
+Service -> Service: Verify ownership
+Service -> DB: UPDATE SharedAt = NOW()
+activate DB
+DB --> Service: Entry updated
+deactivate DB
+
+Service -> EventBus: Publish GratitudeSharedWithSpouse
+activate EventBus
+EventBus --> Service: Event published
+deactivate EventBus
+
+Service --> Gateway: Success (200 OK)
+deactivate Service
+
+Gateway --> WebApp: Success
+deactivate Gateway
+
+WebApp -> WebApp: Update entry status
+WebApp --> PartnerA: Show "Shared" indicator
+deactivate WebApp
+
+== Notification to Partner B ==
+
+EventBus -> Handler: GratitudeSharedWithSpouse event
+activate Handler
+
+Handler -> Notifier: Send notification to Partner B
+activate Notifier
+Notifier -> Notifier: Get Partner B notification preferences
+Notifier -> WS: Push real-time notification
+Notifier -> Notifier: Send email notification
+Notifier --> Handler: Notifications sent
+deactivate Notifier
+
+deactivate Handler
+
+WS -> WebApp: New gratitude shared
+WebApp -> PartnerB: Show notification
+
+== Partner B Views and Acknowledges ==
+
+PartnerB -> WebApp: Clicks notification
+WebApp -> Gateway: GET /api/gratitude-entries/{id}
+Gateway -> Service: GetGratitudeEntry(id)
+Service -> DB: SELECT entry
+DB --> Service: Entry data
+Service --> Gateway: Entry
+Gateway --> WebApp: Entry data
+WebApp --> PartnerB: Display full entry
+
+PartnerB -> WebApp: Clicks "Acknowledge"\nAdds response message
+WebApp -> Gateway: POST /api/gratitude-entries/{id}/acknowledge
+activate Gateway
+
+Gateway -> Service: AcknowledgeGratitudeEntry(id, data)
+activate Service
+
+Service -> DB: INSERT GratitudeAcknowledgment
+activate DB
+DB --> Service: Acknowledgment saved
+deactivate DB
+
+Service -> EventBus: Publish GratitudeAcknowledged
+EventBus --> Service: Event published
+
+Service --> Gateway: Success (201 Created)
+deactivate Service
+Gateway --> WebApp: Success
+deactivate Gateway
+
+WebApp --> PartnerB: Show "Acknowledged" confirmation
+
+== Notify Partner A of Acknowledgment ==
+
+EventBus -> Handler: GratitudeAcknowledged event
+Handler -> Notifier: Notify Partner A
+Notifier -> WS: Push notification
+WS -> WebApp: Gratitude acknowledged
+WebApp -> PartnerA: Show acknowledgment
+
+@enduml

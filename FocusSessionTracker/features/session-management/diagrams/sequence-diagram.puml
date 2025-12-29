@@ -1,0 +1,94 @@
+@startuml Session Management Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Focus Session Lifecycle
+
+actor User
+participant "Frontend" as FE
+participant "SessionController" as API
+participant "SessionService" as SVC
+participant "SessionRepository" as REPO
+participant "EventPublisher" as EVT
+participant "TimerService" as TIMER
+
+== Start Session ==
+
+User -> FE: Click Start Session
+FE -> FE: Show Setup Modal
+User -> FE: Select type, task
+FE -> API: POST /api/sessions
+API -> SVC: StartSession(command)
+SVC -> SVC: Validate no active session
+SVC -> REPO: Save(session)
+SVC -> EVT: Publish(FocusSessionStarted)
+SVC -> TIMER: StartTimer(sessionId, duration)
+API --> FE: 201 Created (session)
+FE -> FE: Start countdown display
+FE --> User: Show active timer
+
+== Pause Session ==
+
+User -> FE: Click Pause
+FE -> API: PUT /sessions/{id}/pause
+API -> SVC: PauseSession(id, reason)
+SVC -> REPO: GetById(id)
+SVC -> SVC: CreatePause()
+SVC -> REPO: Save(session)
+SVC -> EVT: Publish(SessionPaused)
+SVC -> TIMER: PauseTimer(sessionId)
+API --> FE: 200 OK
+FE -> FE: Freeze countdown
+FE --> User: Show paused state
+
+== Resume Session ==
+
+User -> FE: Click Resume
+FE -> API: PUT /sessions/{id}/resume
+API -> SVC: ResumeSession(id)
+SVC -> REPO: GetById(id)
+SVC -> SVC: EndPause()
+SVC -> REPO: Save(session)
+SVC -> EVT: Publish(SessionResumed)
+SVC -> TIMER: ResumeTimer(sessionId)
+API --> FE: 200 OK
+FE -> FE: Resume countdown
+FE --> User: Show active state
+
+== Complete Session ==
+
+TIMER -> FE: Timer expired
+FE -> FE: Show completion modal
+User -> FE: Rate quality, add notes
+FE -> API: PUT /sessions/{id}/complete
+API -> SVC: CompleteSession(command)
+SVC -> REPO: GetById(id)
+SVC -> SVC: CalculateFocusScore()
+SVC -> SVC: MarkCompleted()
+SVC -> REPO: Save(session)
+SVC -> EVT: Publish(SessionCompleted)
+API --> FE: 200 OK
+FE -> FE: Show success message
+FE --> User: Prompt for break
+
+== Abandon Session ==
+
+User -> FE: Click Stop
+FE -> FE: Show confirmation
+User -> FE: Confirm abandon
+FE -> API: PUT /sessions/{id}/abandon
+API -> SVC: AbandonSession(id, reason)
+SVC -> REPO: GetById(id)
+SVC -> SVC: MarkAbandoned()
+SVC -> REPO: Save(session)
+SVC -> EVT: Publish(SessionAbandoned)
+SVC -> TIMER: StopTimer(sessionId)
+API --> FE: 200 OK
+FE --> User: Return to idle state
+
+@enduml

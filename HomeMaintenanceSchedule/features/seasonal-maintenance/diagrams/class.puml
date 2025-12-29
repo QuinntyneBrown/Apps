@@ -1,0 +1,116 @@
+@startuml Seasonal Maintenance - Class Diagram
+
+!define ENTITY_COLOR #E8F4F8
+!define VALUE_COLOR #FFF9E6
+!define ENUM_COLOR #FFE6E6
+
+class SeasonalChecklist <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Season: Season
+    + Year: int
+    + PropertyId: Guid
+    + Location: string
+    + Items: List<ChecklistItem>
+    + TotalCount: int
+    + CompletedCount: int
+    + Status: ChecklistStatus
+    + GeneratedDate: DateTime
+    + CompletedDate: DateTime?
+    + CreatedAt: DateTime
+    + CreatedBy: Guid
+    --
+    + AddItem(item): void
+    + CompleteItem(itemId): void
+    + CalculateProgress(): int
+    + IsComplete(): bool
+}
+
+class ChecklistItem <<Value Object>> VALUE_COLOR {
+    + Id: Guid
+    + Title: string
+    + Description: string
+    + Category: TaskCategory
+    + IsCompleted: bool
+    + CompletedDate: DateTime?
+    + RelatedTaskId: Guid?
+    + SortOrder: int
+    --
+    + MarkComplete(): void
+}
+
+class Property <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Location: string
+}
+
+enum Season <<Enumeration>> ENUM_COLOR {
+    Spring
+    Summer
+    Fall
+    Winter
+}
+
+enum ChecklistStatus <<Enumeration>> ENUM_COLOR {
+    NotStarted
+    InProgress
+    Completed
+}
+
+class SeasonalChecklistGeneratedEvent <<Domain Event>> {
+    + ChecklistId: Guid
+    + Season: Season
+    + Year: int
+    + TaskCount: int
+    + Location: string
+    + OccurredAt: DateTime
+}
+
+class SeasonalPreparationCompletedEvent <<Domain Event>> {
+    + ChecklistId: Guid
+    + Season: Season
+    + Year: int
+    + CompletionDate: DateTime
+    + TasksCompleted: int
+    + OccurredAt: DateTime
+}
+
+class GenerateChecklistCommand <<Command>> {
+    + Season: Season
+    + Year: int
+    + PropertyId: Guid
+    + Location: string
+}
+
+class CompleteChecklistItemCommand <<Command>> {
+    + ChecklistId: Guid
+    + ItemId: Guid
+}
+
+class GetSeasonalChecklistQuery <<Query>> {
+    + Season: Season?
+    + Year: int?
+    + PropertyId: Guid?
+}
+
+interface ISeasonalChecklistRepository <<Repository>> {
+    + GetByIdAsync(id): SeasonalChecklist
+    + GetBySeasonAsync(season, year, propertyId): SeasonalChecklist
+    + CreateAsync(checklist): SeasonalChecklist
+    + UpdateAsync(checklist): void
+}
+
+class SeasonalChecklistService <<Service>> {
+    + GenerateChecklist(season, location): SeasonalChecklist
+    + GetTemplateForSeason(season): List<ChecklistItem>
+    + CalculateRecommendedDates(season): DateRange
+}
+
+SeasonalChecklist "1" *-- "*" ChecklistItem : contains
+SeasonalChecklist --> Season : has
+SeasonalChecklist --> ChecklistStatus : has
+SeasonalChecklist "*" --> "1" Property : belongs to
+
+GenerateChecklistCommand ..> SeasonalChecklistGeneratedEvent : publishes
+CompleteChecklistItemCommand ..> SeasonalPreparationCompletedEvent : publishes
+
+@enduml

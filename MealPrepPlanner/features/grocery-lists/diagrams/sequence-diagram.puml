@@ -1,0 +1,70 @@
+@startuml Grocery Lists - Sequence: Generate from Meal Plan
+
+actor User
+participant UI
+participant API
+participant Controller
+participant Service
+participant MealPlanRepo
+participant GroceryListRepo
+participant Consolidator
+participant EventBus
+database DB
+
+User -> UI: Activate meal plan
+UI -> API: POST /meal-plans/{id}/activate
+activate API
+API -> EventBus: Publish(MealPlanActivated)
+EventBus -> Service: Handle(MealPlanActivated)
+activate Service
+
+Service -> MealPlanRepo: GetByIdAsync(mealPlanId)
+MealPlanRepo -> DB: SELECT MealPlan with Meals
+DB --> MealPlanRepo: MealPlan data
+MealPlanRepo --> Service: MealPlan
+
+Service -> Service: Extract all ingredients\nfrom meal recipes
+
+Service -> Consolidator: ConsolidateIngredients(ingredients)
+activate Consolidator
+Consolidator -> Consolidator: Group by ingredient\nSum quantities\nConvert units
+Consolidator --> Service: Consolidated items
+deactivate Consolidator
+
+Service -> Service: Create GroceryList aggregate
+Service -> Service: Group by store category
+Service -> Service: Set priority/sort order
+
+Service -> GroceryListRepo: AddAsync(groceryList)
+GroceryListRepo -> DB: INSERT GroceryList\nINSERT GroceryItems
+DB --> GroceryListRepo: Success
+
+Service -> EventBus: Publish(GroceryListGenerated)
+EventBus -> EventBus: Notify user
+deactivate Service
+
+deactivate API
+
+User -> UI: Navigate to grocery lists
+UI -> API: GET /grocery-lists/active
+API -> GroceryListRepo: GetActiveByUserIdAsync(userId)
+GroceryListRepo -> DB: SELECT active lists
+DB --> GroceryListRepo: Lists
+GroceryListRepo --> API: GroceryListDto
+API --> UI: Response
+UI -> UI: Display grocery list\ngrouped by category
+
+User -> UI: Check off item as purchased
+UI -> API: PUT /grocery-lists/{listId}/items/{itemId}/purchased
+API -> Service: MarkItemPurchasedAsync(command)
+Service -> GroceryListRepo: GetByIdAsync(listId)
+GroceryListRepo -> DB: SELECT list
+DB --> GroceryListRepo: GroceryList
+Service -> Service: Mark item purchased
+Service -> GroceryListRepo: UpdateAsync(groceryList)
+GroceryListRepo -> DB: UPDATE item
+Service -> EventBus: Publish(GroceryItemPurchased)
+API --> UI: Success
+UI -> UI: Strikethrough item
+
+@enduml

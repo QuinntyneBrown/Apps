@@ -1,0 +1,242 @@
+@startuml Task Management Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class Task {
+        +Guid Id
+        +Guid UserId
+        +string Title
+        +string? Description
+        +TaskStatus Status
+        +int ProgressPercentage
+        +int SessionsCompleted
+        +int? EstimatedSessions
+        +int TotalTimeSpent
+        +Priority Priority
+        +DateTime? DueDate
+        +DateTime? CompletedAt
+        +DateTime? ArchivedAt
+        +Guid? ProjectId
+        --
+        +Create(title: string, userId: Guid): Task
+        +Update(title: string, description: string): void
+        +AssignToSession(sessionId: Guid): void
+        +UpdateProgress(percentage: int, notes: string): void
+        +Complete(notes: string): void
+        +Archive(): void
+        +AddTag(tag: string): void
+        +RemoveTag(tag: string): void
+        +CalculateProgress(): int
+        +IsOverdue(): bool
+    }
+
+    class TaskTag {
+        +Guid Id
+        +Guid TaskId
+        +string Tag
+        --
+        +Create(taskId: Guid, tag: string): TaskTag
+    }
+
+    class TaskSession {
+        +Guid Id
+        +Guid TaskId
+        +Guid SessionId
+        +DateTime AssignedAt
+        +string? ProgressNotes
+        +int? TimeSpent
+        +int ProgressBefore
+        +int ProgressAfter
+        --
+        +Create(taskId: Guid, sessionId: Guid): TaskSession
+        +RecordProgress(notes: string, percentage: int): void
+        +GetProgressDelta(): int
+    }
+
+    class TaskProgressHistory {
+        +Guid Id
+        +Guid TaskId
+        +Guid? SessionId
+        +int ProgressPercentage
+        +string? ProgressNotes
+        +DateTime RecordedAt
+        --
+        +Create(taskId: Guid, percentage: int): TaskProgressHistory
+    }
+
+    enum TaskStatus {
+        NotStarted
+        InProgress
+        Completed
+        Archived
+    }
+
+    enum Priority {
+        High
+        Medium
+        Low
+    }
+
+    Task "1" --> "*" TaskTag : has
+    Task "1" --> "*" TaskSession : assigned to
+    Task "1" --> "*" TaskProgressHistory : tracks
+    Task --> TaskStatus
+    Task --> Priority
+}
+
+package "Events" {
+    class TaskCreated {
+        +Guid TaskId
+        +Guid UserId
+        +string Title
+        +string? Description
+        +int? EstimatedSessions
+        +Priority Priority
+        +DateTime Timestamp
+    }
+
+    class TaskUpdated {
+        +Guid TaskId
+        +string Title
+        +string? Description
+        +Priority Priority
+        +DateTime Timestamp
+    }
+
+    class TaskAssignedToSession {
+        +Guid TaskId
+        +Guid SessionId
+        +Guid UserId
+        +string TaskTitle
+        +int CurrentProgress
+        +DateTime Timestamp
+    }
+
+    class TaskProgressUpdated {
+        +Guid TaskId
+        +Guid SessionId
+        +int ProgressPercentage
+        +int SessionsCompleted
+        +int TotalTimeSpent
+        +string? ProgressNotes
+        +TaskStatus Status
+        +DateTime Timestamp
+    }
+
+    class MultipleSessionTaskCompleted {
+        +Guid TaskId
+        +Guid UserId
+        +string TaskTitle
+        +int TotalSessions
+        +int TotalTimeSpent
+        +DateTime CompletedAt
+        +DateTime Timestamp
+    }
+
+    class TaskArchived {
+        +Guid TaskId
+        +TaskStatus Status
+        +DateTime ArchivedAt
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class TaskService {
+        -ITaskRepository repository
+        -ISessionRepository sessionRepository
+        -IEventPublisher eventPublisher
+        -INotificationService notificationService
+        --
+        +CreateTask(command: CreateTaskCommand): Task
+        +UpdateTask(taskId: Guid, command: UpdateTaskCommand): void
+        +AssignToSession(taskId: Guid, sessionId: Guid): void
+        +UpdateProgress(taskId: Guid, command: UpdateProgressCommand): void
+        +CompleteTask(taskId: Guid, notes: string): void
+        +ArchiveTask(taskId: Guid): void
+        +GetTask(taskId: Guid): Task
+        +GetTasks(filters: TaskFilters): List<Task>
+        +GetTaskSessions(taskId: Guid): List<TaskSession>
+    }
+
+    interface ITaskRepository {
+        +GetById(id: Guid): Task
+        +GetByUser(userId: Guid, filters: TaskFilters): List<Task>
+        +Save(task: Task): void
+        +Delete(id: Guid): void
+        +GetTaskSessions(taskId: Guid): List<TaskSession>
+        +SaveTaskSession(taskSession: TaskSession): void
+        +GetProgressHistory(taskId: Guid): List<TaskProgressHistory>
+    }
+
+    class CreateTaskCommand {
+        +string Title
+        +string? Description
+        +int? EstimatedSessions
+        +Priority Priority
+        +DateTime? DueDate
+        +List<string> Tags
+        +Guid? ProjectId
+    }
+
+    class UpdateTaskCommand {
+        +string Title
+        +string? Description
+        +int? EstimatedSessions
+        +Priority Priority
+        +DateTime? DueDate
+        +List<string> Tags
+    }
+
+    class UpdateProgressCommand {
+        +Guid SessionId
+        +int ProgressPercentage
+        +string? ProgressNotes
+        +int TimeSpent
+    }
+
+    class TaskFilters {
+        +TaskStatus? Status
+        +Priority? Priority
+        +Guid? ProjectId
+        +List<string> Tags
+        +DateTime? StartDate
+        +DateTime? EndDate
+        +string? SearchQuery
+    }
+}
+
+package "Integration" {
+    interface INotificationService {
+        +SendDueDateReminder(task: Task): void
+        +SendCompletionCelebration(task: Task): void
+    }
+
+    interface ISessionRepository {
+        +GetById(id: Guid): Session
+        +GetActiveByUser(userId: Guid): Session
+    }
+}
+
+TaskService --> Task
+TaskService --> ITaskRepository
+TaskService --> ISessionRepository
+TaskService --> INotificationService
+TaskService --> CreateTaskCommand
+TaskService --> UpdateTaskCommand
+TaskService --> UpdateProgressCommand
+
+Task ..> TaskCreated : publishes
+Task ..> TaskUpdated : publishes
+Task ..> TaskAssignedToSession : publishes
+Task ..> TaskProgressUpdated : publishes
+Task ..> MultipleSessionTaskCompleted : publishes
+Task ..> TaskArchived : publishes
+
+@enduml

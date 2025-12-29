@@ -1,0 +1,73 @@
+@startuml Offers - Class Diagram
+
+!define AGGREGATE_COLOR #FFE6CC
+!define VALUE_OBJECT_COLOR #F3E5F5
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #FFF9C4
+
+class Offer <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - ApplicationId: Guid
+  - Status: OfferStatus
+  - BaseSalary: decimal
+  - Currency: string
+  - BonusAmount: decimal?
+  - EquityAmount: string?
+  - Benefits: List<string>
+  - StartDate: DateTime?
+  - Deadline: DateTime?
+  - NegotiationHistory: List<NegotiationEvent>
+  --
+  + Receive(): void
+  + Negotiate(amount, notes): void
+  + Accept(): void
+  + Reject(reason): void
+  + IsExpired(): bool
+}
+
+class NegotiationEvent <<Value Object>> VALUE_OBJECT_COLOR {
+  + NegotiatedAt: DateTime
+  + RequestedSalary: decimal?
+  + Notes: string
+  + Status: string
+}
+
+enum OfferStatus {
+  Pending
+  UnderNegotiation
+  Accepted
+  Rejected
+  Expired
+}
+
+class OfferReceived <<Domain Event>> EVENT_COLOR {
+  + OfferId: Guid
+  + BaseSalary: decimal
+  + Benefits: string[]
+  + OccurredAt: DateTime
+}
+
+class OfferAccepted <<Domain Event>> EVENT_COLOR {
+  + OfferId: Guid
+  + FinalSalary: decimal
+  + StartDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class OfferService <<Service>> SERVICE_COLOR {
+  - repository: IOfferRepository
+  --
+  + RecordOffer(command): Offer
+  + NegotiateOffer(id, command): void
+  + AcceptOffer(id): void
+  + RejectOffer(id, reason): void
+  + CompareOffers(ids): ComparisonResult
+}
+
+Offer "1" *-- "*" NegotiationEvent
+Offer ..> OfferStatus
+OfferService ..> OfferReceived : publishes
+OfferService ..> OfferAccepted : publishes
+
+@enduml

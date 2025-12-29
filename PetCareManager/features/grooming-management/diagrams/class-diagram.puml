@@ -1,0 +1,550 @@
+@startuml Grooming Management - Class Diagram
+
+!define ENTITY_COLOR #E1F5FF
+!define VALUE_OBJECT_COLOR #FFF9E1
+!define AGGREGATE_COLOR #E8F5E9
+!define SERVICE_COLOR #F3E5F5
+
+' Aggregates and Entities
+package "GroomingAppointment Aggregate" <<Rectangle>> AGGREGATE_COLOR {
+
+    class GroomingAppointment <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid petId
+        - DateTime appointmentDate
+        - Guid groomerId
+        - string groomerName
+        - string serviceType
+        - List<string> services
+        - int estimatedDuration
+        - decimal? price
+        - GroomingLocation location
+        - string notes
+        - AppointmentStatus status
+        - DateTime? reminderTime
+        - Guid bookedBy
+        - DateTime createdAt
+        - DateTime? completedAt
+        - DateTime? cancelledAt
+        - string cancellationReason
+        --
+        + Schedule(data) : void
+        + Complete(data) : void
+        + Cancel(reason) : void
+        + Reschedule(newDate) : void
+        + UpdateServices(services) : void
+        + SendReminder() : void
+        - ValidateAppointment() : void
+        - CalculateReminder() : DateTime
+    }
+
+    class AppointmentService <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid appointmentId
+        + string serviceName
+        + int estimatedMinutes
+        + decimal? price
+        + bool isCompleted
+        + DateTime createdAt
+    }
+
+    class AppointmentReminder <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid appointmentId
+        + DateTime reminderTime
+        + bool isSent
+        + DateTime? sentAt
+        + string notificationChannel
+        + DateTime createdAt
+    }
+}
+
+package "GroomingSession Aggregate" <<Rectangle>> AGGREGATE_COLOR {
+
+    class GroomingSession <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid petId
+        - DateTime completionDate
+        - SessionType sessionType
+        - Guid? groomerId
+        - string groomerName
+        - List<string> servicesPerformed
+        - int durationMinutes
+        - decimal? cost
+        - string paymentMethod
+        - DateTime? nextRecommendedDate
+        - string behaviorNotes
+        - string conditionNotes
+        - List<string> photoUrls
+        - int? rating
+        - Guid? appointmentId
+        - DateTime createdAt
+        --
+        + RecordCompletion(data) : void
+        + AddPhotos(urls) : void
+        + RateSession(rating) : void
+        + UpdateConditionNotes(notes) : void
+        + CalculateNextRecommendedDate() : DateTime
+        - ValidateSession() : void
+    }
+
+    class ServiceRecord <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid sessionId
+        + string serviceName
+        + int actualMinutes
+        + string notes
+        + DateTime createdAt
+    }
+
+    class PhotoGallery <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid sessionId
+        + string photoUrl
+        + string photoType
+        + DateTime uploadedAt
+        + string caption
+    }
+}
+
+package "Groomer Aggregate" <<Rectangle>> AGGREGATE_COLOR {
+
+    class Groomer <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - string name
+        - string businessName
+        - string phone
+        - string email
+        - string address
+        - bool isMobile
+        - List<string> specialties
+        - List<string> servicesOffered
+        - string priceRange
+        - decimal averageRating
+        - int reviewCount
+        - string certifications
+        - int yearsExperience
+        - bool isActive
+        - DateTime createdAt
+        --
+        + UpdateProfile(data) : void
+        + AddService(service) : void
+        + RemoveService(service) : void
+        + UpdateRating(newRating) : void
+        + Deactivate() : void
+        - ValidateContact() : void
+    }
+
+    class GroomerReview <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid groomerId
+        + Guid userId
+        + int rating
+        + string reviewText
+        + DateTime reviewDate
+        + DateTime createdAt
+    }
+
+    class GroomerAvailability <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid groomerId
+        + DayOfWeek dayOfWeek
+        + TimeSpan startTime
+        + TimeSpan endTime
+        + bool isAvailable
+    }
+}
+
+' Value Objects
+package "Value Objects" <<Rectangle>> VALUE_OBJECT_COLOR {
+
+    class GroomingLocation <<Value Object>> VALUE_OBJECT_COLOR {
+        + string salonName
+        + string address
+        + string phone
+        + bool isMobile
+        --
+        + ToString() : string
+        + Equals(other) : bool
+        + Validate() : bool
+    }
+
+    class AppointmentStatus <<Value Object>> VALUE_OBJECT_COLOR {
+        + string status
+        --
+        + IsScheduled() : bool
+        + IsCompleted() : bool
+        + IsCancelled() : bool
+        + CanModify() : bool
+        + Validate() : bool
+    }
+
+    class GroomingDuration <<Value Object>> VALUE_OBJECT_COLOR {
+        + DateTime startTime
+        + DateTime endTime
+        + int totalMinutes
+        --
+        + ToString() : string
+        + CalculateDuration() : int
+        + Validate() : bool
+    }
+
+    class GroomerDetails <<Value Object>> VALUE_OBJECT_COLOR {
+        + Guid groomerId
+        + string name
+        + string specialty
+        + decimal rating
+        --
+        + ToString() : string
+        + Equals(other) : bool
+        + Validate() : bool
+    }
+
+    class PetCondition <<Value Object>> VALUE_OBJECT_COLOR {
+        + string coatCondition
+        + string skinCondition
+        + string nailsCondition
+        + string earsCondition
+        --
+        + ToString() : string
+        + HasIssues() : bool
+        + Validate() : bool
+    }
+
+    class GroomingCost <<Value Object>> VALUE_OBJECT_COLOR {
+        + decimal amount
+        + string currency
+        + string paymentMethod
+        + bool isPaid
+        + DateTime? paidDate
+        --
+        + ToString() : string
+        + MarkAsPaid(date) : void
+        + Validate() : bool
+    }
+
+    class GroomingPreferences <<Value Object>> VALUE_OBJECT_COLOR {
+        + int recommendedFrequencyDays
+        + string coatType
+        + Guid? preferredGroomerId
+        + List<string> specialNeeds
+        + List<string> sensitivities
+        --
+        + ToString() : string
+        + Validate() : bool
+    }
+}
+
+' Enums
+enum SessionType {
+    Professional
+    Home
+}
+
+enum AppointmentStatusEnum {
+    Scheduled
+    Confirmed
+    InProgress
+    Completed
+    Cancelled
+    NoShow
+}
+
+enum PaymentMethod {
+    Cash
+    Credit
+    Debit
+    Check
+    Online
+    Other
+}
+
+enum NotificationChannel {
+    Push
+    Email
+    SMS
+}
+
+enum RecommendationPriority {
+    Low
+    Medium
+    High
+    Overdue
+}
+
+enum CoatType {
+    Short
+    Medium
+    Long
+    Curly
+    Wire
+    Hairless
+}
+
+' Domain Events
+package "Domain Events" <<Rectangle>> #FFE0E0 {
+
+    class GroomingAppointmentScheduled <<Domain Event>> {
+        + Guid appointmentId
+        + Guid petId
+        + DateTime appointmentDate
+        + Guid groomerId
+        + string groomerName
+        + string serviceType
+        + List<string> services
+        + int estimatedDuration
+        + decimal? price
+        + string notes
+        + DateTime reminderTime
+        + Guid bookedBy
+        + string location
+        + DateTime occurredAt
+    }
+
+    class GroomingCompleted <<Domain Event>> {
+        + Guid sessionId
+        + Guid petId
+        + DateTime completionDate
+        + string sessionType
+        + Guid? groomerId
+        + string groomerName
+        + List<string> servicesPerformed
+        + int durationMinutes
+        + decimal? cost
+        + string paymentMethod
+        + DateTime? nextRecommendedDate
+        + string behaviorNotes
+        + string conditionNotes
+        + List<string> photoUrls
+        + int? rating
+        + Guid? appointmentId
+        + DateTime occurredAt
+    }
+
+    class HomeGroomingLogged <<Domain Event>> {
+        + Guid homeGroomingId
+        + Guid petId
+        + DateTime groomingDate
+        + string performedBy
+        + List<string> activitiesPerformed
+        + int durationMinutes
+        + List<string> productsUsed
+        + string notes
+        + List<string> photoUrls
+        + DateTime? nextPlannedDate
+        + DateTime occurredAt
+    }
+
+    class GroomingAppointmentCancelled <<Domain Event>> {
+        + Guid appointmentId
+        + Guid petId
+        + DateTime cancellationDate
+        + Guid cancelledBy
+        + string reason
+        + decimal? cancellationFee
+        + DateTime? rescheduledTo
+        + DateTime occurredAt
+    }
+
+    class GroomingRecommended <<Domain Event>> {
+        + Guid recommendationId
+        + Guid petId
+        + DateTime recommendedDate
+        + string reason
+        + RecommendationPriority priority
+        + DateTime lastGroomingDate
+        + int daysSinceLastGrooming
+        + List<string> suggestedServices
+        + bool notificationSent
+        + DateTime occurredAt
+    }
+}
+
+' Services
+package "Domain Services" <<Rectangle>> SERVICE_COLOR {
+
+    class AppointmentSchedulingService <<Service>> SERVICE_COLOR {
+        + ScheduleAppointment(data) : GroomingAppointment
+        + CheckAvailability(groomerId, date) : bool
+        + CalculateEstimatedDuration(services) : int
+        + CalculatePrice(services) : decimal
+        - ValidateAppointmentTime(date) : bool
+        - CheckDoubleBooking(petId, date) : bool
+    }
+
+    class GroomingRecommendationService <<Service>> SERVICE_COLOR {
+        + CalculateNextGroomingDate(pet, lastDate) : DateTime
+        + DeterminePriority(daysSince, breed) : RecommendationPriority
+        + GenerateRecommendation(petId) : GroomingRecommendation
+        + GetSuggestedServices(pet) : List<string>
+        - CalculateFrequencyByBreed(breed) : int
+        - CalculateFrequencyByCoat(coatType) : int
+    }
+
+    class GroomingAnalyticsService <<Service>> SERVICE_COLOR {
+        + CalculateStatistics(petId, period) : GroomingStatistics
+        + CalculateAverageFrequency(petId) : decimal
+        + CalculateTotalSpent(petId, period) : decimal
+        + IdentifyPreferredGroomer(petId) : Groomer
+        + AnalyzeTrends(petId) : GroomingTrends
+    }
+
+    class AppointmentReminderService <<Service>> SERVICE_COLOR {
+        + ScheduleReminder(appointment) : void
+        + SendReminder(appointmentId) : void
+        + CancelReminder(appointmentId) : void
+        + GetUpcomingReminders() : List<Reminder>
+        - DetermineReminderTime(appointment) : DateTime
+    }
+
+    class GroomingNotificationService <<Service>> SERVICE_COLOR {
+        + NotifyAppointmentScheduled(appointment) : void
+        + NotifyAppointmentCancelled(appointment) : void
+        + NotifyGroomingDue(recommendation) : void
+        + SendAppointmentReminder(appointment) : void
+        - SendNotification(message, channel) : void
+    }
+}
+
+' Repositories
+package "Repositories" <<Rectangle>> #E0E0E0 {
+
+    interface IGroomingAppointmentRepository {
+        + GetById(id) : GroomingAppointment
+        + GetByPetId(petId) : List<GroomingAppointment>
+        + GetUpcoming(petId) : List<GroomingAppointment>
+        + Save(appointment) : void
+        + Delete(id) : void
+        + GetByDateRange(petId, start, end) : List<GroomingAppointment>
+    }
+
+    interface IGroomingSessionRepository {
+        + GetById(id) : GroomingSession
+        + GetByPetId(petId) : List<GroomingSession>
+        + GetHistory(petId, filters) : List<GroomingSession>
+        + Save(session) : void
+        + GetLastSession(petId) : GroomingSession
+    }
+
+    interface IGroomerRepository {
+        + GetById(id) : Groomer
+        + GetAll(filters) : List<Groomer>
+        + Search(query, location) : List<Groomer>
+        + Save(groomer) : void
+        + Delete(id) : void
+        + GetFavorites(userId) : List<Groomer>
+    }
+}
+
+' Application Services
+package "Application Services" <<Rectangle>> #E3F2FD {
+
+    class GroomingCommandHandler {
+        - IGroomingAppointmentRepository _appointmentRepo
+        - IGroomingSessionRepository _sessionRepo
+        - IEventPublisher _eventPublisher
+        --
+        + HandleScheduleAppointment(command) : Guid
+        + HandleCompleteAppointment(command) : void
+        + HandleCancelAppointment(command) : void
+        + HandleLogHomeGrooming(command) : Guid
+        + HandleUpdateAppointment(command) : void
+    }
+
+    class GroomingQueryHandler {
+        - IGroomingAppointmentRepository _appointmentRepo
+        - IGroomingSessionRepository _sessionRepo
+        - IGroomerRepository _groomerRepo
+        --
+        + GetAppointments(petId) : List<AppointmentDTO>
+        + GetGroomingHistory(petId) : List<SessionDTO>
+        + GetUpcomingAppointments(petId) : List<AppointmentDTO>
+        + GetStatistics(petId, period) : StatisticsDTO
+        + GetGroomers(filters) : List<GroomerDTO>
+        + GetRecommendation(petId) : RecommendationDTO
+    }
+}
+
+' Relationships
+GroomingAppointment "1" *-- "many" AppointmentService
+GroomingAppointment "1" *-- "many" AppointmentReminder
+GroomingAppointment "1" *-- "1" GroomingLocation
+GroomingAppointment "1" -- "1" AppointmentStatus
+
+GroomingSession "1" *-- "many" ServiceRecord
+GroomingSession "1" *-- "many" PhotoGallery
+GroomingSession "1" *-- "1" GroomingDuration
+GroomingSession "1" *-- "1" PetCondition
+GroomingSession "1" *-- "1" GroomingCost
+
+Groomer "1" *-- "many" GroomerReview
+Groomer "1" *-- "many" GroomerAvailability
+Groomer "1" *-- "1" GroomerDetails
+
+GroomingSession -- SessionType
+GroomingAppointment -- AppointmentStatusEnum
+GroomingCost -- PaymentMethod
+AppointmentReminder -- NotificationChannel
+GroomingRecommended -- RecommendationPriority
+GroomingPreferences -- CoatType
+
+' Events triggered by Aggregates
+GroomingAppointment ..> GroomingAppointmentScheduled : raises
+GroomingAppointment ..> GroomingAppointmentCancelled : raises
+GroomingSession ..> GroomingCompleted : raises
+GroomingSession ..> HomeGroomingLogged : raises
+GroomingRecommendationService ..> GroomingRecommended : triggers
+
+' Services use entities
+AppointmentSchedulingService ..> GroomingAppointment : creates
+GroomingRecommendationService ..> GroomingSession : uses
+GroomingAnalyticsService ..> GroomingSession : analyzes
+AppointmentReminderService ..> GroomingAppointment : uses
+AppointmentReminderService ..> AppointmentReminder : manages
+GroomingNotificationService ..> GroomingAppointment : uses
+
+' Repository implementations
+GroomingCommandHandler ..> IGroomingAppointmentRepository : uses
+GroomingCommandHandler ..> IGroomingSessionRepository : uses
+GroomingQueryHandler ..> IGroomingAppointmentRepository : uses
+GroomingQueryHandler ..> IGroomingSessionRepository : uses
+GroomingQueryHandler ..> IGroomerRepository : uses
+
+' Command Handler creates events
+GroomingCommandHandler ..> GroomingAppointmentScheduled : publishes
+GroomingCommandHandler ..> GroomingCompleted : publishes
+GroomingCommandHandler ..> HomeGroomingLogged : publishes
+GroomingCommandHandler ..> GroomingAppointmentCancelled : publishes
+
+note right of GroomingAppointment
+    Aggregate Root for
+    Grooming Appointments
+
+    Enforces invariants:
+    - Scheduled date must be in future
+    - Cannot modify completed appointments
+    - Services list cannot be empty
+    - Valid groomer required
+end note
+
+note right of GroomingSession
+    Aggregate Root for
+    Grooming Sessions
+
+    Tracks both professional
+    and home grooming activities
+    with complete history
+end note
+
+note bottom of GroomingRecommendationService
+    Domain Service responsible for
+    calculating when pets need grooming
+
+    Considers:
+    - Breed-specific requirements
+    - Coat type and length
+    - Last grooming date
+    - Owner preferences
+end note
+
+@enduml

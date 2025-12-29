@@ -1,0 +1,468 @@
+@startuml Medication Management - Class Diagram
+
+!define ENTITY_COLOR #E1F5FF
+!define VALUE_OBJECT_COLOR #FFF9E1
+!define AGGREGATE_COLOR #E8F5E9
+!define SERVICE_COLOR #F3E5F5
+
+' Aggregates and Entities
+package "Medication Aggregate" <<Rectangle>> AGGREGATE_COLOR {
+
+    class Medication <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid petId
+        - string name
+        - string route
+        - Dosage dosage
+        - Frequency frequency
+        - DateTime startDate
+        - DateTime? endDate
+        - Guid veterinarianId
+        - string instructions
+        - MedicationSupply supply
+        - MedicationStatus status
+        - DateTime createdAt
+        - DateTime? discontinuedAt
+        - string discontinuationReason
+        - PrescriptionDetails prescriptionDetails
+        --
+        + Prescribe(data) : void
+        + RecordAdministration(data) : AdministrationRecord
+        + MarkDoseMissed(scheduledTime, reason) : void
+        + AddRefill(quantity, source) : void
+        + Discontinue(reason, category) : void
+        + GenerateSchedule(startDate, endDate) : List<ScheduledDose>
+        + CalculateAdherence(period) : decimal
+        + CheckRefillNeeded() : bool
+        - ValidatePrescription() : void
+        - UpdateSupply(quantity) : void
+    }
+
+    class AdministrationSchedule <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid medicationId
+        - List<ScheduledDose> scheduledDoses
+        - DateTime generatedThrough
+        --
+        + GenerateSchedule(startDate, endDate) : void
+        + GetUpcomingDoses(count) : List<ScheduledDose>
+        + GetDosesByDate(date) : List<ScheduledDose>
+        + MarkDoseAdministered(doseId) : void
+        + MarkDoseMissed(doseId, reason) : void
+        - CalculateNextDoseTime() : DateTime
+    }
+
+    class AdministrationHistory <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid medicationId
+        - List<AdministrationRecord> records
+        --
+        + AddRecord(record) : void
+        + GetRecords(startDate, endDate) : List<AdministrationRecord>
+        + CalculateAdherence(period) : decimal
+        + GetMissedDoses(period) : List<MissedDose>
+        + GetLastAdministration() : AdministrationRecord
+    }
+
+    class RefillHistory <<Entity>> ENTITY_COLOR {
+        - Guid id
+        - Guid medicationId
+        - List<RefillRecord> refills
+        --
+        + AddRefill(record) : void
+        + GetRefills() : List<RefillRecord>
+        + GetLastRefill() : RefillRecord
+        + CalculateTotalCost() : decimal
+    }
+
+    class AdministrationRecord <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid medicationId
+        + DateTime scheduledTime
+        + DateTime actualTime
+        + string administeredBy
+        + string dosageGiven
+        + string notes
+        + int remainingQuantity
+        + AdministrationStatus status
+        + DateTime createdAt
+    }
+
+    class MissedDose <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid medicationId
+        + DateTime scheduledTime
+        + DateTime missedTime
+        + string reason
+        + bool notificationSent
+        + DateTime createdAt
+    }
+
+    class RefillRecord <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid medicationId
+        + DateTime refillDate
+        + int quantityAdded
+        + string refillSource
+        + decimal? cost
+        + DateTime createdAt
+    }
+
+    class ScheduledDose <<Entity>> ENTITY_COLOR {
+        + Guid id
+        + Guid medicationId
+        + DateTime scheduledTime
+        + DoseStatus status
+        + DateTime? administeredAt
+        + DateTime createdAt
+    }
+}
+
+' Value Objects
+package "Value Objects" <<Rectangle>> VALUE_OBJECT_COLOR {
+
+    class Dosage <<Value Object>> VALUE_OBJECT_COLOR {
+        + string amount
+        + string unit
+        --
+        + ToString() : string
+        + Equals(other) : bool
+        + Validate() : bool
+    }
+
+    class Frequency <<Value Object>> VALUE_OBJECT_COLOR {
+        + FrequencyType type
+        + int? interval
+        + int? timesPerDay
+        + List<TimeSpan> specificTimes
+        --
+        + ToString() : string
+        + CalculateNextDoseTime(lastDose) : DateTime
+        + GenerateDoseTimes(startDate, endDate) : List<DateTime>
+        + Validate() : bool
+    }
+
+    class MedicationSupply <<Value Object>> VALUE_OBJECT_COLOR {
+        + int currentQuantity
+        + int refillThreshold
+        + string unit
+        + DateTime lastUpdated
+        --
+        + DeductDose(amount) : void
+        + AddRefill(amount) : void
+        + NeedsRefill() : bool
+        + CalculateDaysRemaining(dosesPerDay) : int
+        + Validate() : bool
+    }
+
+    class PrescriptionDetails <<Value Object>> VALUE_OBJECT_COLOR {
+        + Guid veterinarianId
+        + string prescriptionNumber
+        + DateTime prescriptionDate
+        + string veterinarianName
+        + string clinicName
+        --
+        + ToString() : string
+        + Validate() : bool
+    }
+
+    class AdherenceStatistics <<Value Object>> VALUE_OBJECT_COLOR {
+        + int totalScheduledDoses
+        + int administeredDoses
+        + int missedDoses
+        + decimal adherenceRate
+        + DateTime periodStart
+        + DateTime periodEnd
+        --
+        + Calculate() : void
+        + GetAdherencePercentage() : decimal
+    }
+}
+
+' Enums
+enum MedicationStatus {
+    Active
+    Discontinued
+    Completed
+    OnHold
+}
+
+enum FrequencyType {
+    Daily
+    Hourly
+    Weekly
+    Custom
+    AsNeeded
+}
+
+enum AdministrationStatus {
+    Pending
+    Administered
+    Missed
+    Skipped
+}
+
+enum DoseStatus {
+    Scheduled
+    Administered
+    Missed
+    Skipped
+}
+
+enum RefillPriority {
+    Low
+    Medium
+    High
+    Critical
+}
+
+enum DiscontinuationReason {
+    Completed
+    AdverseReaction
+    Ineffective
+    Other
+}
+
+' Domain Events
+package "Domain Events" <<Rectangle>> #FFE0E0 {
+
+    class MedicationPrescribed <<Domain Event>> {
+        + Guid medicationId
+        + Guid petId
+        + DateTime prescriptionDate
+        + string medicationName
+        + string dosage
+        + string frequency
+        + string route
+        + DateTime startDate
+        + DateTime? endDate
+        + Guid veterinarianId
+        + string instructions
+        + int initialQuantity
+        + int refillThreshold
+        + DateTime occurredAt
+    }
+
+    class MedicationAdministered <<Domain Event>> {
+        + Guid administrationId
+        + Guid medicationId
+        + Guid petId
+        + DateTime scheduledTime
+        + DateTime actualTime
+        + string administeredBy
+        + string dosageGiven
+        + string notes
+        + int remainingQuantity
+        + DateTime occurredAt
+    }
+
+    class MedicationMissed <<Domain Event>> {
+        + Guid missedDoseId
+        + Guid medicationId
+        + Guid petId
+        + DateTime scheduledTime
+        + DateTime missedTime
+        + string reason
+        + bool notificationSent
+        + DateTime occurredAt
+    }
+
+    class MedicationRefillNeeded <<Domain Event>> {
+        + Guid refillAlertId
+        + Guid medicationId
+        + Guid petId
+        + int currentQuantity
+        + int refillThreshold
+        + int estimatedDaysRemaining
+        + string refillSource
+        + string refillInstructions
+        + RefillPriority priority
+        + bool notificationSent
+        + DateTime occurredAt
+    }
+
+    class MedicationDiscontinued <<Domain Event>> {
+        + Guid medicationId
+        + Guid petId
+        + DateTime discontinuedDate
+        + Guid discontinuedBy
+        + string reason
+        + DiscontinuationReason reasonCategory
+        + bool wasCompletedAsScheduled
+        + string finalNotes
+        + DateTime occurredAt
+    }
+}
+
+' Services
+package "Domain Services" <<Rectangle>> SERVICE_COLOR {
+
+    class MedicationScheduleService <<Service>> SERVICE_COLOR {
+        + GenerateSchedule(medication, startDate, endDate) : List<ScheduledDose>
+        + CalculateNextDoseTime(medication, lastDose) : DateTime
+        + AdjustForTimezone(schedule, timezone) : List<ScheduledDose>
+        - ValidateSchedule(schedule) : bool
+    }
+
+    class AdherenceCalculationService <<Service>> SERVICE_COLOR {
+        + CalculateAdherence(medicationId, period) : AdherenceStatistics
+        + CalculateOverallAdherence(petId, period) : AdherenceStatistics
+        + GetAdherenceByMedication(petId, period) : Dictionary<Guid, decimal>
+        + IdentifyAdherencePatterns(medicationId) : AdherencePattern
+    }
+
+    class RefillMonitorService <<Service>> SERVICE_COLOR {
+        + CheckRefillStatus(medication) : RefillStatus
+        + CalculateDaysRemaining(medication) : int
+        + DetermineRefillPriority(medication) : RefillPriority
+        + CreateRefillAlert(medication) : RefillAlert
+        - ProjectUsageRate(medication) : decimal
+    }
+
+    class DoseReminderService <<Service>> SERVICE_COLOR {
+        + ScheduleReminder(scheduledDose) : void
+        + SendReminder(scheduledDose) : void
+        + CancelReminder(scheduledDoseId) : void
+        + GetUpcomingReminders(petId) : List<Reminder>
+    }
+
+    class MissedDoseDetectionService <<Service>> SERVICE_COLOR {
+        + DetectMissedDoses() : List<ScheduledDose>
+        + MarkAsMissed(scheduledDoseId, reason) : void
+        + EscalateCriticalMissedDose(medicationId) : void
+        - IsWithinGracePeriod(scheduledTime) : bool
+    }
+}
+
+' Repositories
+package "Repositories" <<Rectangle>> #E0E0E0 {
+
+    interface IMedicationRepository {
+        + GetById(id) : Medication
+        + GetByPetId(petId) : List<Medication>
+        + GetActive(petId) : List<Medication>
+        + Save(medication) : void
+        + Delete(id) : void
+        + GetSchedule(petId, startDate, endDate) : List<ScheduledDose>
+    }
+
+    interface IAdministrationRepository {
+        + GetById(id) : AdministrationRecord
+        + GetByMedicationId(medicationId) : List<AdministrationRecord>
+        + Save(record) : void
+        + GetByDateRange(medicationId, start, end) : List<AdministrationRecord>
+    }
+
+    interface IRefillRepository {
+        + GetByMedicationId(medicationId) : List<RefillRecord>
+        + Save(record) : void
+        + GetRefillsNeeded(userId) : List<Medication>
+    }
+}
+
+' Application Services
+package "Application Services" <<Rectangle>> #E3F2FD {
+
+    class MedicationCommandHandler {
+        - IMedicationRepository _medicationRepo
+        - IEventPublisher _eventPublisher
+        --
+        + HandlePrescribeMedication(command) : Guid
+        + HandleRecordAdministration(command) : void
+        + HandleMarkMissed(command) : void
+        + HandleAddRefill(command) : void
+        + HandleDiscontinueMedication(command) : void
+    }
+
+    class MedicationQueryHandler {
+        - IMedicationRepository _medicationRepo
+        - IAdministrationRepository _administrationRepo
+        --
+        + GetActiveMedications(petId) : List<MedicationDTO>
+        + GetMedicationSchedule(petId, start, end) : ScheduleDTO
+        + GetAdministrationHistory(medicationId) : List<AdministrationDTO>
+        + GetAdherenceStatistics(petId, period) : AdherenceDTO
+        + GetRefillsNeeded(userId) : List<RefillAlertDTO>
+    }
+}
+
+' Relationships
+Medication "1" *-- "1" Dosage
+Medication "1" *-- "1" Frequency
+Medication "1" *-- "1" MedicationSupply
+Medication "1" *-- "1" PrescriptionDetails
+Medication "1" -- "1" MedicationStatus
+Medication "1" o-- "1" AdministrationSchedule
+Medication "1" o-- "1" AdministrationHistory
+Medication "1" o-- "1" RefillHistory
+
+AdministrationSchedule "1" *-- "many" ScheduledDose
+AdministrationHistory "1" *-- "many" AdministrationRecord
+AdministrationHistory "1" *-- "many" MissedDose
+RefillHistory "1" *-- "many" RefillRecord
+
+Frequency -- FrequencyType
+AdministrationRecord -- AdministrationStatus
+ScheduledDose -- DoseStatus
+MedicationRefillNeeded -- RefillPriority
+MedicationDiscontinued -- DiscontinuationReason
+
+' Events triggered by Medication
+Medication ..> MedicationPrescribed : raises
+Medication ..> MedicationAdministered : raises
+Medication ..> MedicationMissed : raises
+Medication ..> MedicationRefillNeeded : raises
+Medication ..> MedicationDiscontinued : raises
+
+' Services use entities
+MedicationScheduleService ..> Medication : uses
+MedicationScheduleService ..> AdministrationSchedule : uses
+AdherenceCalculationService ..> AdministrationHistory : uses
+AdherenceCalculationService ..> AdherenceStatistics : creates
+RefillMonitorService ..> Medication : uses
+RefillMonitorService ..> MedicationRefillNeeded : triggers
+DoseReminderService ..> ScheduledDose : uses
+MissedDoseDetectionService ..> ScheduledDose : uses
+MissedDoseDetectionService ..> MedicationMissed : triggers
+
+' Repository implementations
+MedicationCommandHandler ..> IMedicationRepository : uses
+MedicationQueryHandler ..> IMedicationRepository : uses
+MedicationQueryHandler ..> IAdministrationRepository : uses
+
+' Command Handler creates events
+MedicationCommandHandler ..> MedicationPrescribed : publishes
+MedicationCommandHandler ..> MedicationAdministered : publishes
+MedicationCommandHandler ..> MedicationDiscontinued : publishes
+
+note right of Medication
+    Aggregate Root for
+    Medication Management
+
+    Enforces invariants:
+    - Active medications have valid schedules
+    - Cannot administer > available supply
+    - Discontinued meds cannot be modified
+end note
+
+note right of MedicationSupply
+    Value Object ensures
+    supply tracking integrity
+
+    Automatically triggers
+    refill alerts when
+    quantity <= threshold
+end note
+
+note bottom of MedicationScheduleService
+    Domain Service responsible for
+    generating medication schedules
+    based on frequency patterns
+
+    Handles complex scheduling logic:
+    - Specific times
+    - Interval-based
+    - Day-of-week patterns
+end note
+
+@enduml

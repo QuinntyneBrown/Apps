@@ -1,0 +1,260 @@
+@startuml Workout Plans - Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define VALUE_OBJECT_COLOR #FFF9C4
+!define AGGREGATE_COLOR #C8E6C9
+!define EVENT_COLOR #FFCCBC
+
+' Aggregate Root
+class WorkoutPlan <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id : Guid
+  - Name : string
+  - Description : string
+  - UserId : Guid
+  - CreatedDate : DateTime
+  - ModifiedDate : DateTime?
+  - Status : WorkoutPlanStatus
+  - DurationWeeks : int
+  - IsPublic : bool
+  - StartedDate : DateTime?
+  - CompletedDate : DateTime?
+  - _workouts : List<Workout>
+  --
+  + <<static>> Create(name, description, userId, durationWeeks, isPublic) : WorkoutPlan
+  + AddWorkout(workout : Workout) : void
+  + RemoveWorkout(workoutId : Guid) : void
+  + Start() : void
+  + Complete(totalCompleted, totalSkipped) : void
+  + Update(name, description, durationWeeks, isPublic) : void
+  + Archive() : void
+  + Clone(newUserId : Guid) : WorkoutPlan
+  + GetEstimatedTotalDuration() : TimeSpan
+}
+
+' Entity
+class Workout <<Entity>> ENTITY_COLOR {
+  - Id : Guid
+  - WorkoutPlanId : Guid
+  - Name : string
+  - DayOfWeek : DayOfWeek?
+  - OrderIndex : int
+  - EstimatedDuration : TimeSpan
+  - Notes : string
+  - _exercises : List<WorkoutExercise>
+  --
+  + <<static>> Create(workoutPlanId, name, orderIndex) : Workout
+  + AddExercise(exercise : WorkoutExercise) : void
+  + RemoveExercise(exerciseId : Guid) : void
+  + UpdateExerciseOrder(exerciseId, newOrder) : void
+  + RecalculateEstimatedDuration() : void
+}
+
+' Entity
+class WorkoutExercise <<Entity>> ENTITY_COLOR {
+  - Id : Guid
+  - WorkoutId : Guid
+  - ExerciseId : Guid
+  - OrderIndex : int
+  - TargetSets : int
+  - TargetReps : string
+  - TargetWeight : decimal?
+  - WeightUnit : WeightUnit?
+  - RestSeconds : int
+  - Notes : string
+  --
+  + <<static>> Create(workoutId, exerciseId, orderIndex, sets, reps, rest) : WorkoutExercise
+  + UpdateTargets(sets, reps, weight, unit) : void
+  + GetEstimatedDuration() : TimeSpan
+}
+
+' Enumerations
+enum WorkoutPlanStatus {
+  Draft = 0
+  Active = 1
+  Completed = 2
+  Archived = 3
+}
+
+enum WeightUnit {
+  Pounds = 0
+  Kilograms = 1
+}
+
+enum DayOfWeek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+}
+
+' Domain Events
+class WorkoutPlanCreatedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutPlanId : Guid
+  + UserId : Guid
+  + PlanName : string
+  + DurationWeeks : int
+  + CreatedDate : DateTime
+}
+
+class WorkoutPlanStartedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutPlanId : Guid
+  + UserId : Guid
+  + StartDate : DateTime
+}
+
+class WorkoutPlanCompletedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutPlanId : Guid
+  + UserId : Guid
+  + CompletedDate : DateTime
+  + TotalWorkoutsCompleted : int
+  + TotalWorkoutsSkipped : int
+}
+
+class WorkoutPlanModifiedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutPlanId : Guid
+  + UserId : Guid
+  + ModificationType : string
+  + ModifiedDate : DateTime
+}
+
+' Commands
+class CreateWorkoutPlanCommand {
+  + Name : string
+  + Description : string
+  + DurationWeeks : int
+  + IsPublic : bool
+}
+
+class UpdateWorkoutPlanCommand {
+  + WorkoutPlanId : Guid
+  + Name : string
+  + Description : string
+  + DurationWeeks : int
+  + IsPublic : bool
+}
+
+class StartWorkoutPlanCommand {
+  + WorkoutPlanId : Guid
+}
+
+class CompleteWorkoutPlanCommand {
+  + WorkoutPlanId : Guid
+}
+
+class AddWorkoutCommand {
+  + WorkoutPlanId : Guid
+  + Name : string
+  + DayOfWeek : DayOfWeek?
+  + OrderIndex : int
+  + Exercises : List<WorkoutExerciseDto>
+}
+
+class DeleteWorkoutPlanCommand {
+  + WorkoutPlanId : Guid
+}
+
+' Queries
+class GetWorkoutPlanByIdQuery {
+  + WorkoutPlanId : Guid
+}
+
+class GetUserWorkoutPlansQuery {
+  + Status : WorkoutPlanStatus?
+  + PageNumber : int
+  + PageSize : int
+}
+
+class GetPublicWorkoutPlansQuery {
+  + SearchTerm : string
+  + PageNumber : int
+  + PageSize : int
+}
+
+' DTOs
+class WorkoutPlanDetailDto {
+  + Id : Guid
+  + Name : string
+  + Description : string
+  + UserId : Guid
+  + Status : string
+  + DurationWeeks : int
+  + Workouts : List<WorkoutDto>
+  + TotalWorkouts : int
+  + EstimatedTotalDuration : TimeSpan
+}
+
+class WorkoutDto {
+  + Id : Guid
+  + Name : string
+  + DayOfWeek : string
+  + OrderIndex : int
+  + EstimatedDuration : TimeSpan
+  + Exercises : List<WorkoutExerciseDetailDto>
+}
+
+class WorkoutExerciseDto {
+  + ExerciseId : Guid
+  + OrderIndex : int
+  + TargetSets : int
+  + TargetReps : string
+  + TargetWeight : decimal?
+  + WeightUnit : WeightUnit?
+  + RestSeconds : int
+  + Notes : string
+}
+
+' Repository
+interface IWorkoutPlanRepository {
+  + GetByIdAsync(id : Guid) : Task<WorkoutPlan>
+  + GetByIdWithWorkoutsAsync(id : Guid) : Task<WorkoutPlan>
+  + GetUserPlansAsync(userId : Guid, status : WorkoutPlanStatus?) : Task<List<WorkoutPlan>>
+  + GetPublicPlansAsync(searchTerm : string) : Task<List<WorkoutPlan>>
+  + AddAsync(plan : WorkoutPlan) : Task
+  + UpdateAsync(plan : WorkoutPlan) : Task
+  + DeleteAsync(id : Guid) : Task
+  + UserOwnsPlanAsync(userId : Guid, planId : Guid) : Task<bool>
+  + SaveChangesAsync() : Task
+}
+
+' Relationships
+WorkoutPlan "1" *-- "0..*" Workout : contains
+Workout "1" *-- "0..*" WorkoutExercise : contains
+WorkoutPlan --> WorkoutPlanStatus : has
+WorkoutExercise --> WeightUnit : uses
+Workout --> DayOfWeek : scheduled on
+
+WorkoutPlan ..> WorkoutPlanCreatedEvent : raises
+WorkoutPlan ..> WorkoutPlanStartedEvent : raises
+WorkoutPlan ..> WorkoutPlanCompletedEvent : raises
+WorkoutPlan ..> WorkoutPlanModifiedEvent : raises
+
+CreateWorkoutPlanCommand ..> WorkoutPlan : creates
+UpdateWorkoutPlanCommand ..> WorkoutPlan : updates
+StartWorkoutPlanCommand ..> WorkoutPlan : starts
+CompleteWorkoutPlanCommand ..> WorkoutPlan : completes
+AddWorkoutCommand ..> Workout : creates
+
+GetWorkoutPlanByIdQuery ..> WorkoutPlanDetailDto : returns
+GetUserWorkoutPlansQuery ..> WorkoutPlanDetailDto : returns list
+WorkoutPlanDetailDto *-- WorkoutDto
+WorkoutDto *-- WorkoutExerciseDto
+
+IWorkoutPlanRepository ..> WorkoutPlan : manages
+
+note right of WorkoutPlan
+  Aggregate root manages all
+  workout plan operations and
+  raises domain events for
+  important state changes
+end note
+
+note right of IWorkoutPlanRepository
+  Repository provides data
+  access abstraction using
+  the Repository pattern
+end note
+
+@enduml

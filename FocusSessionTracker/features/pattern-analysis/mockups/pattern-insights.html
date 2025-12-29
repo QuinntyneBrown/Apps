@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Session Tracker - Pattern Insights</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .header-btn.active {
+            background: rgba(74, 222, 128, 0.3);
+            border: 1px solid #4ade80;
+        }
+
+        /* Main Content */
+        .main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border: none;
+            color: #000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Pattern Cards Grid */
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .pattern-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .pattern-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(74, 222, 128, 0.5);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .pattern-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .pattern-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .confidence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .confidence-badge.medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .pattern-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .pattern-icon.optimal {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+        }
+
+        .pattern-icon.peak {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .pattern-icon.distraction {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .pattern-icon.trend {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        .pattern-content {
+            margin: 1rem 0;
+        }
+
+        .pattern-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4ade80;
+            margin-bottom: 0.5rem;
+        }
+
+        .pattern-description {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .pattern-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+        .pattern-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+            font-size: 0.875rem;
+        }
+
+        .pattern-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pattern-action {
+            background: rgba(74, 222, 128, 0.2);
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            color: #4ade80;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .pattern-action:hover {
+            background: rgba(74, 222, 128, 0.3);
+        }
+
+        .pattern-action.secondary {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        /* Trend Chart */
+        .trend-chart {
+            height: 120px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .chart-line {
+            display: flex;
+            align-items: flex-end;
+            height: 80px;
+            gap: 4px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #4ade80, #22c55e);
+            border-radius: 4px 4px 0 0;
+            min-height: 20%;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        /* Insights Section */
+        .insights-section {
+            margin-top: 2rem;
+        }
+
+        .section-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .insight-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .insight-card.high {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .insight-card.medium {
+            border-left: 4px solid #fbbf24;
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .insight-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .insight-icon.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .insight-icon.medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .insight-content {
+            flex: 1;
+        }
+
+        .insight-priority {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-priority.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .insight-priority.medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .insight-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .insight-description {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .insight-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .insight-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .insight-btn.primary {
+            background: #4ade80;
+            color: #000;
+        }
+
+        .insight-btn.primary:hover {
+            background: #22c55e;
+        }
+
+        .insight-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .insight-btn.secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .progress-ring-circle.bg {
+            stroke: rgba(255,255,255,0.1);
+        }
+
+        .progress-ring-circle.progress {
+            stroke: #4ade80;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s;
+        }
+
+        .progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4ade80;
+        }
+
+        /* Distraction Badge */
+        .distraction-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .impact-high {
+            color: #ef4444;
+        }
+
+        .impact-medium {
+            color: #fbbf24;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pattern-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Focus Session Tracker</div>
+        <div class="header-actions">
+            <button class="header-btn active">Insights</button>
+            <button class="header-btn">History</button>
+            <button class="header-btn">Settings</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Pattern Insights</h1>
+            <button class="analyze-btn">Analyze Now</button>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span>Total Patterns Detected:</span>
+                <span class="stat-value">8</span>
+            </div>
+            <div class="stat-item">
+                <span>Sessions Analyzed:</span>
+                <span class="stat-value">156</span>
+            </div>
+            <div class="stat-item">
+                <span>Analysis Window:</span>
+                <span class="stat-value">30 days</span>
+            </div>
+            <div class="stat-item">
+                <span>Last Analyzed:</span>
+                <span class="stat-value">5 minutes ago</span>
+            </div>
+        </div>
+
+        <!-- Pattern Cards Grid -->
+        <div class="pattern-grid">
+            <!-- Optimal Session Length Card -->
+            <div class="pattern-card">
+                <div class="pattern-card-header">
+                    <div>
+                        <div class="pattern-title">Optimal Session Length</div>
+                        <span class="confidence-badge">87% Confidence</span>
+                    </div>
+                </div>
+                <div class="pattern-icon optimal">⏱️</div>
+                <div class="pattern-content">
+                    <div class="pattern-value">35 min</div>
+                    <div class="pattern-description">
+                        Based on 105 completed sessions, 35-minute sessions show the highest completion rate at 92%.
+                    </div>
+                    <div class="pattern-description">
+                        <strong>Success by duration:</strong>
+                    </div>
+                    <ul class="pattern-list">
+                        <li>25 min: 75% (45 sessions)</li>
+                        <li>35 min: 92% (38 sessions) ⭐</li>
+                        <li>45 min: 68% (22 sessions)</li>
+                    </ul>
+                </div>
+                <button class="pattern-action">Apply Recommendation</button>
+            </div>
+
+            <!-- Peak Focus Times Card -->
+            <div class="pattern-card">
+                <div class="pattern-card-header">
+                    <div>
+                        <div class="pattern-title">Peak Focus Times</div>
+                        <span class="confidence-badge medium">82% Confidence</span>
+                    </div>
+                </div>
+                <div class="pattern-icon peak">🌟</div>
+                <div class="pattern-content">
+                    <div class="pattern-description">
+                        Your most productive time windows:
+                    </div>
+                    <ul class="pattern-list">
+                        <li><strong>9:00 AM - 11:00 AM</strong><br>Avg Focus: 88 | 42 sessions</li>
+                        <li><strong>2:00 PM - 4:00 PM</strong><br>Avg Focus: 82 | 35 sessions</li>
+                    </ul>
+                    <div class="pattern-description" style="margin-top: 1rem;">
+                        Schedule deep work during morning hours for best results.
+                    </div>
+                </div>
+                <button class="pattern-action">Schedule Session</button>
+            </div>
+
+            <!-- Distraction Patterns Card -->
+            <div class="pattern-card">
+                <div class="pattern-card-header">
+                    <div>
+                        <div class="pattern-title">Distraction Patterns</div>
+                        <span class="confidence-badge">3 Patterns Found</span>
+                    </div>
+                </div>
+                <div class="pattern-icon distraction">🚫</div>
+                <div class="pattern-content">
+                    <div class="pattern-description">
+                        Top distractors in the last 30 days:
+                    </div>
+                    <ul class="pattern-list">
+                        <li>
+                            <div class="distraction-badge">
+                                <span class="impact-high">HIGH</span>
+                                Email notifications (12x)
+                            </div>
+                        </li>
+                        <li>
+                            <div class="distraction-badge">
+                                <span class="impact-medium">MED</span>
+                                Slack messages (8x)
+                            </div>
+                        </li>
+                        <li>
+                            <div class="distraction-badge">
+                                <span class="impact-medium">MED</span>
+                                Mind wandering (6x)
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <button class="pattern-action">View Mitigation Tips</button>
+            </div>
+
+            <!-- Productivity Trends Card -->
+            <div class="pattern-card">
+                <div class="pattern-card-header">
+                    <div>
+                        <div class="pattern-title">Productivity Trends</div>
+                        <span class="confidence-badge">Upward Trend</span>
+                    </div>
+                </div>
+                <div class="pattern-icon trend">📈</div>
+                <div class="pattern-content">
+                    <div class="pattern-value">+21%</div>
+                    <div class="pattern-description">
+                        Moderate improvement over 3 weeks
+                    </div>
+                    <div class="pattern-description">
+                        Focus Score: 72 → 87
+                    </div>
+                    <div class="trend-chart">
+                        <div class="chart-line">
+                            <div class="chart-bar" style="height: 50%;"></div>
+                            <div class="chart-bar" style="height: 55%;"></div>
+                            <div class="chart-bar" style="height: 60%;"></div>
+                            <div class="chart-bar" style="height: 58%;"></div>
+                            <div class="chart-bar" style="height: 65%;"></div>
+                            <div class="chart-bar" style="height: 70%;"></div>
+                            <div class="chart-bar" style="height: 75%;"></div>
+                            <div class="chart-bar" style="height: 80%;"></div>
+                            <div class="chart-bar" style="height: 85%;"></div>
+                        </div>
+                    </div>
+                    <div class="pattern-description">
+                        Contributing factors: Consistent morning sessions, reduced distractions, optimal duration
+                    </div>
+                </div>
+                <button class="pattern-action secondary">View Details</button>
+            </div>
+        </div>
+
+        <!-- Actionable Insights Section -->
+        <div class="insights-section">
+            <h2 class="section-header">Actionable Insights</h2>
+
+            <!-- High Priority Insight -->
+            <div class="insight-card high">
+                <div class="insight-icon high">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <span class="insight-priority high">HIGH PRIORITY</span>
+                    <div class="insight-title">Schedule sessions during peak hours</div>
+                    <div class="insight-description">
+                        You're 23% more productive between 9-11 AM. Block your calendar for deep work during this time window to maximize focus quality.
+                    </div>
+                    <div class="insight-actions">
+                        <button class="insight-btn primary">Schedule Now</button>
+                        <button class="insight-btn secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medium Priority Insight -->
+            <div class="insight-card medium">
+                <div class="insight-icon medium">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <span class="insight-priority medium">MEDIUM PRIORITY</span>
+                    <div class="insight-title">Email notifications disrupt focus</div>
+                    <div class="insight-description">
+                        12 distractions from email in the last week, typically occurring between 10:30-11:00 AM. Enable focus mode or batch email checks to reduce interruptions.
+                    </div>
+                    <div class="insight-actions">
+                        <button class="insight-btn primary">Enable Focus Mode</button>
+                        <button class="insight-btn secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medium Priority Insight -->
+            <div class="insight-card medium">
+                <div class="insight-icon medium">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <span class="insight-priority medium">MEDIUM PRIORITY</span>
+                    <div class="insight-title">Adopt 35-minute session default</div>
+                    <div class="insight-description">
+                        Analysis shows 35-minute sessions have a 92% completion rate, significantly higher than your current default of 25 minutes (75% completion).
+                    </div>
+                    <div class="insight-actions">
+                        <button class="insight-btn primary">Update Default</button>
+                        <button class="insight-btn secondary">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simple animation for chart bars
+        document.addEventListener('DOMContentLoaded', function() {
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach((bar, index) => {
+                bar.style.animation = `growBar 0.5s ease-out ${index * 0.1}s forwards`;
+                bar.style.height = '0%';
+            });
+        });
+
+        // Add keyframe animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes growBar {
+                to {
+                    height: var(--target-height);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Set target heights
+        const bars = document.querySelectorAll('.chart-bar');
+        bars.forEach(bar => {
+            bar.style.setProperty('--target-height', bar.style.height);
+        });
+    </script>
+</body>
+</html>

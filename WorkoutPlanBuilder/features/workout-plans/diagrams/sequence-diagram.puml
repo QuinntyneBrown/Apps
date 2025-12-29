@@ -1,0 +1,294 @@
+@startuml Workout Plans - Sequence Diagram
+
+title Create and Start Workout Plan Sequence
+
+actor User
+participant "Frontend\nApp" as Frontend
+participant "API\nController" as API
+participant "MediatR" as Mediator
+participant "Command\nHandler" as Handler
+participant "Workout\nPlan" as Plan
+participant "Repository" as Repo
+participant "Database" as DB
+participant "Event\nDispatcher" as Events
+participant "Event\nHandler" as EventHandler
+participant "Notification\nService" as Notify
+
+== Create Workout Plan ==
+
+User -> Frontend: Click "Create Plan"
+activate Frontend
+
+Frontend -> Frontend: Show create plan form
+
+User -> Frontend: Fill plan details\n(name, description, duration)
+User -> Frontend: Add workouts and exercises
+User -> Frontend: Click "Save Plan"
+
+Frontend -> Frontend: Validate form data
+Frontend -> API: POST /api/workout-plans\n{CreateWorkoutPlanCommand}
+activate API
+
+API -> API: Validate request
+API -> Mediator: Send(CreateWorkoutPlanCommand)
+activate Mediator
+
+Mediator -> Handler: Handle(CreateWorkoutPlanCommand)
+activate Handler
+
+Handler -> Handler: Validate command
+Handler -> Plan: Create(name, description,\nuserId, duration, isPublic)
+activate Plan
+
+Plan -> Plan: Set initial properties
+Plan -> Plan: Generate unique Id
+Plan -> Plan: Set Status = Draft
+Plan -> Plan: AddDomainEvent(\nWorkoutPlanCreatedEvent)
+
+Plan --> Handler: WorkoutPlan instance
+deactivate Plan
+
+Handler -> Repo: AddAsync(plan)
+activate Repo
+
+Repo -> DB: INSERT INTO WorkoutPlans
+activate DB
+DB --> Repo: Success
+deactivate DB
+
+Repo -> Repo: Get domain events\nfrom plan
+Repo -> Events: Dispatch(WorkoutPlanCreatedEvent)
+activate Events
+
+Events -> EventHandler: Handle(WorkoutPlanCreatedEvent)
+activate EventHandler
+
+EventHandler -> Notify: Track analytics\n"plan_created"
+EventHandler -> Notify: Send welcome notification
+deactivate EventHandler
+
+deactivate Events
+
+Repo -> DB: COMMIT transaction
+Repo --> Handler: Success
+deactivate Repo
+
+Handler --> Mediator: planId (Guid)
+deactivate Handler
+
+Mediator --> API: planId
+deactivate Mediator
+
+API --> Frontend: 201 Created\n{id: planId}
+deactivate API
+
+Frontend -> Frontend: Show success message
+Frontend -> Frontend: Navigate to plan details
+deactivate Frontend
+
+== Add Workouts to Plan ==
+
+User -> Frontend: Click "Add Workout"
+activate Frontend
+
+Frontend -> Frontend: Show workout form
+
+User -> Frontend: Enter workout details\n(name, day, exercises)
+User -> Frontend: Click "Save Workout"
+
+Frontend -> API: POST /api/workout-plans/{id}/workouts\n{AddWorkoutCommand}
+activate API
+
+API -> Mediator: Send(AddWorkoutCommand)
+activate Mediator
+
+Mediator -> Handler: Handle(AddWorkoutCommand)
+activate Handler
+
+Handler -> Repo: GetByIdAsync(planId)
+activate Repo
+Repo -> DB: SELECT * FROM WorkoutPlans\nWHERE Id = @planId
+DB --> Repo: WorkoutPlan data
+Repo --> Handler: WorkoutPlan
+deactivate Repo
+
+Handler -> Plan: AddWorkout(workout)
+activate Plan
+
+Plan -> Plan: Validate workout
+Plan -> Plan: Add to _workouts collection
+Plan -> Plan: Set ModifiedDate
+Plan -> Plan: AddDomainEvent(\nWorkoutPlanModifiedEvent)
+
+Plan --> Handler: Success
+deactivate Plan
+
+Handler -> Repo: UpdateAsync(plan)
+activate Repo
+
+Repo -> DB: INSERT INTO Workouts
+Repo -> DB: INSERT INTO WorkoutExercises
+Repo -> DB: UPDATE WorkoutPlans\nSET ModifiedDate = @date
+
+Repo -> Events: Dispatch(WorkoutPlanModifiedEvent)
+Repo --> Handler: Success
+deactivate Repo
+
+Handler --> Mediator: workoutId
+deactivate Handler
+
+Mediator --> API: workoutId
+deactivate Mediator
+
+API --> Frontend: 200 OK {workoutId}
+deactivate API
+
+Frontend -> Frontend: Update plan view
+Frontend -> Frontend: Show success message
+deactivate Frontend
+
+== Start Workout Plan ==
+
+User -> Frontend: Click "Start Plan"
+activate Frontend
+
+Frontend -> Frontend: Show confirmation dialog
+
+User -> Frontend: Confirm start
+
+Frontend -> API: POST /api/workout-plans/{id}/start\n{StartWorkoutPlanCommand}
+activate API
+
+API -> Mediator: Send(StartWorkoutPlanCommand)
+activate Mediator
+
+Mediator -> Handler: Handle(StartWorkoutPlanCommand)
+activate Handler
+
+Handler -> Repo: GetByIdAsync(planId)
+activate Repo
+Repo -> DB: SELECT from WorkoutPlans
+DB --> Repo: WorkoutPlan
+Repo --> Handler: WorkoutPlan
+deactivate Repo
+
+Handler -> Plan: Start()
+activate Plan
+
+Plan -> Plan: Validate status\n(must be Draft or Active)
+Plan -> Plan: Set Status = Active
+Plan -> Plan: Set StartedDate = now
+Plan -> Plan: AddDomainEvent(\nWorkoutPlanStartedEvent)
+
+Plan --> Handler: Success
+deactivate Plan
+
+Handler -> Repo: UpdateAsync(plan)
+activate Repo
+
+Repo -> DB: UPDATE WorkoutPlans\nSET Status = Active,\nStartedDate = @date
+
+Repo -> Events: Dispatch(WorkoutPlanStartedEvent)
+activate Events
+
+Events -> EventHandler: Handle(WorkoutPlanStartedEvent)
+activate EventHandler
+
+EventHandler -> Notify: Send notification:\n"Your plan has started!"
+EventHandler -> Notify: Track analytics:\n"plan_started"
+EventHandler -> Notify: Schedule workout reminders
+
+deactivate EventHandler
+deactivate Events
+
+Repo --> Handler: Success
+deactivate Repo
+
+Handler --> Mediator: Success
+deactivate Handler
+
+Mediator --> API: Success
+deactivate Mediator
+
+API --> Frontend: 204 No Content
+deactivate API
+
+Frontend -> Frontend: Update plan status
+Frontend -> Frontend: Show success message:\n"Plan started!"
+Frontend -> Frontend: Enable workout logging
+
+deactivate Frontend
+
+== Complete Workout Plan ==
+
+note over User, Notify
+  After user completes all workouts
+  in the plan over several weeks...
+end note
+
+User -> Frontend: Complete final workout
+Frontend -> Frontend: Detect plan completion
+
+Frontend -> API: POST /api/workout-plans/{id}/complete\n{CompleteWorkoutPlanCommand}
+activate API
+
+API -> Mediator: Send(CompleteWorkoutPlanCommand)
+activate Mediator
+
+Mediator -> Handler: Handle(CompleteWorkoutPlanCommand)
+activate Handler
+
+Handler -> Repo: GetByIdAsync(planId)
+activate Repo
+Repo -> DB: SELECT from WorkoutPlans
+Repo -> DB: SELECT COUNT completed sessions
+DB --> Repo: WorkoutPlan + stats
+Repo --> Handler: WorkoutPlan, stats
+deactivate Repo
+
+Handler -> Plan: Complete(totalCompleted,\ntotalSkipped)
+activate Plan
+
+Plan -> Plan: Validate status\n(must be Active)
+Plan -> Plan: Set Status = Completed
+Plan -> Plan: Set CompletedDate = now
+Plan -> Plan: AddDomainEvent(\nWorkoutPlanCompletedEvent)
+
+Plan --> Handler: Success
+deactivate Plan
+
+Handler -> Repo: UpdateAsync(plan)
+activate Repo
+
+Repo -> DB: UPDATE WorkoutPlans\nSET Status = Completed,\nCompletedDate = @date
+
+Repo -> Events: Dispatch(WorkoutPlanCompletedEvent)
+activate Events
+
+Events -> EventHandler: Handle(WorkoutPlanCompletedEvent)
+activate EventHandler
+
+EventHandler -> Notify: Send congratulations:\n"Plan completed! 🎉"
+EventHandler -> Notify: Track analytics:\n"plan_completed"
+EventHandler -> Notify: Calculate achievements
+
+deactivate EventHandler
+deactivate Events
+
+Repo --> Handler: Success
+deactivate Repo
+
+Handler --> Mediator: Success
+deactivate Handler
+
+Mediator --> API: Success
+deactivate Mediator
+
+API --> Frontend: 204 No Content
+deactivate API
+
+Frontend -> Frontend: Update UI
+Frontend -> Frontend: Show celebration:\n"Congratulations!"
+Frontend -> Frontend: Show completion stats
+
+@enduml

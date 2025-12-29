@@ -1,0 +1,241 @@
+@startuml Job Listings - Class Diagram
+
+!define AGGREGATE_COLOR #FFE6CC
+!define ENTITY_COLOR #E1F5FE
+!define VALUE_OBJECT_COLOR #F3E5F5
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #FFF9C4
+
+' Aggregates
+class JobListing <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - Title: string
+  - Company: string
+  - Location: string
+  - Description: string
+  - SourceUrl: string
+  - DiscoveredAt: DateTime
+  - Salary: SalaryRange?
+  - EmploymentType: string
+  - ExperienceLevel: string
+  - Tags: List<string>
+  - Status: JobListingStatus
+  - SavedAt: DateTime?
+  - Notes: string?
+  - Priority: Priority?
+  - Deadline: DateTime?
+  - Category: string?
+  - ArchivedAt: DateTime?
+  - ArchiveReason: string?
+  - CreatedAt: DateTime
+  - UpdatedAt: DateTime
+  --
+  + Discover(): void
+  + Save(notes, priority, deadline, category): void
+  + Archive(reason): void
+  + UpdateDetails(updates): void
+  + AddTag(tag): void
+  + RemoveTag(tag): void
+  + ChangePriority(priority): void
+  + UpdateDeadline(deadline): void
+  + CanSave(): bool
+  + CanArchive(): bool
+}
+
+' Value Objects
+class SalaryRange <<Value Object>> VALUE_OBJECT_COLOR {
+  + Min: decimal
+  + Max: decimal
+  + Currency: string
+  + Period: string
+  --
+  + IsValid(): bool
+  + Format(): string
+  + ConvertTo(currency): SalaryRange
+}
+
+' Enums
+enum JobListingStatus {
+  Discovered
+  Saved
+  Archived
+}
+
+enum Priority {
+  High
+  Medium
+  Low
+}
+
+enum EmploymentType {
+  FullTime
+  PartTime
+  Contract
+  Temporary
+  Internship
+}
+
+enum ExperienceLevel {
+  Entry
+  Mid
+  Senior
+  Lead
+  Executive
+}
+
+' Domain Events
+class JobListingDiscovered <<Domain Event>> EVENT_COLOR {
+  + JobListingId: Guid
+  + UserId: Guid
+  + Title: string
+  + Company: string
+  + Location: string
+  + Description: string
+  + SourceUrl: string
+  + DiscoveredAt: DateTime
+  + Salary: SalaryRange?
+  + EmploymentType: string
+  + ExperienceLevel: string
+  + Tags: string[]
+  + OccurredAt: DateTime
+}
+
+class JobListingSaved <<Domain Event>> EVENT_COLOR {
+  + JobListingId: Guid
+  + UserId: Guid
+  + SavedAt: DateTime
+  + Notes: string?
+  + Priority: string
+  + Deadline: DateTime?
+  + Category: string?
+  + OccurredAt: DateTime
+}
+
+class JobListingArchived <<Domain Event>> EVENT_COLOR {
+  + JobListingId: Guid
+  + UserId: Guid
+  + ArchivedAt: DateTime
+  + Reason: string?
+  + OccurredAt: DateTime
+}
+
+' Services
+class JobListingService <<Service>> SERVICE_COLOR {
+  - repository: IJobListingRepository
+  - eventPublisher: IEventPublisher
+  - userContext: IUserContext
+  --
+  + DiscoverJobListing(command): JobListing
+  + SaveJobListing(jobListingId, command): void
+  + ArchiveJobListing(jobListingId, reason): void
+  + GetJobListings(filters): PagedResult<JobListing>
+  + GetJobListingById(id): JobListing
+  + UpdateJobListing(id, updates): void
+  + DeleteJobListing(id): void
+  + GetStatistics(): JobListingStats
+  + SearchJobListings(query): List<JobListing>
+}
+
+class JobListingRepository <<Repository>> SERVICE_COLOR {
+  - dbContext: DbContext
+  --
+  + GetById(id): JobListing
+  + GetByUserId(userId, filters): PagedResult<JobListing>
+  + Add(jobListing): void
+  + Update(jobListing): void
+  + Delete(id): void
+  + GetByStatus(userId, status): List<JobListing>
+  + GetByPriority(userId, priority): List<JobListing>
+  + GetByCategory(userId, category): List<JobListing>
+  + Search(userId, query): List<JobListing>
+  + GetStatistics(userId): JobListingStats
+}
+
+' DTOs
+class JobListingStats VALUE_OBJECT_COLOR {
+  + Total: int
+  + Discovered: int
+  + Saved: int
+  + Archived: int
+  + ByPriority: Dictionary<string, int>
+  + WithDeadlines: int
+  + UpcomingDeadlines: int
+}
+
+class PagedResult<T> VALUE_OBJECT_COLOR {
+  + Items: List<T>
+  + TotalCount: int
+  + PageSize: int
+  + PageNumber: int
+  + TotalPages: int
+  --
+  + HasNextPage(): bool
+  + HasPreviousPage(): bool
+}
+
+' Commands
+class DiscoverJobListingCommand {
+  + Title: string
+  + Company: string
+  + Location: string
+  + Description: string
+  + SourceUrl: string
+  + Salary: SalaryRange?
+  + EmploymentType: string
+  + ExperienceLevel: string
+  + Tags: string[]
+}
+
+class SaveJobListingCommand {
+  + JobListingId: Guid
+  + Notes: string?
+  + Priority: string
+  + Deadline: DateTime?
+  + Category: string?
+}
+
+class ArchiveJobListingCommand {
+  + JobListingId: Guid
+  + Reason: string?
+}
+
+' Relationships
+JobListing "1" *-- "0..1" SalaryRange : contains
+JobListing ..> JobListingStatus : uses
+JobListing ..> Priority : uses
+JobListing ..> EmploymentType : uses
+JobListing ..> ExperienceLevel : uses
+
+JobListingService --> JobListingRepository : uses
+JobListingService ..> JobListingDiscovered : publishes
+JobListingService ..> JobListingSaved : publishes
+JobListingService ..> JobListingArchived : publishes
+JobListingService ..> DiscoverJobListingCommand : handles
+JobListingService ..> SaveJobListingCommand : handles
+JobListingService ..> ArchiveJobListingCommand : handles
+
+JobListingRepository --> JobListing : manages
+JobListingRepository ..> PagedResult : returns
+
+JobListingDiscovered ..> JobListing : created from
+JobListingSaved ..> JobListing : created from
+JobListingArchived ..> JobListing : created from
+
+note right of JobListing
+  Aggregate root for Job Listing domain.
+  Enforces business rules and status transitions.
+  Emits domain events on state changes.
+end note
+
+note right of SalaryRange
+  Immutable value object.
+  Ensures min <= max invariant.
+end note
+
+note bottom of JobListingService
+  Application service that coordinates
+  job listing operations and publishes events.
+end note
+
+@enduml

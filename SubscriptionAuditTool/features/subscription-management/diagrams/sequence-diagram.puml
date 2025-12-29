@@ -1,0 +1,52 @@
+@startuml Subscription Management Sequence Diagram
+
+actor User
+participant "UI" as UI
+participant "Controller" as Controller
+participant "Handler" as Handler
+participant "Subscription" as Sub
+participant "Repository" as Repo
+participant "EventBus" as Events
+
+== Add Subscription ==
+User -> UI: Fill subscription form
+UI -> Controller: POST /api/subscriptions
+activate Controller
+Controller -> Handler: Handle(AddSubscriptionCommand)
+activate Handler
+Handler -> Sub: Create()
+activate Sub
+Sub -> Sub: Calculate next renewal date
+Sub --> Handler: Subscription created
+deactivate Sub
+Handler -> Repo: AddAsync(subscription)
+Handler -> Events: Publish(SubscriptionAdded)
+Handler --> Controller: Subscription DTO
+deactivate Handler
+Controller --> UI: 201 Created
+deactivate Controller
+UI -> User: Show success
+
+== Cancel Subscription ==
+User -> UI: Click "Cancel"
+UI -> Controller: DELETE /api/subscriptions/{id}
+activate Controller
+Controller -> Handler: Handle(CancelSubscriptionCommand)
+activate Handler
+Handler -> Repo: GetByIdAsync(id)
+Repo --> Handler: Subscription
+Handler -> Sub: Cancel(reason)
+activate Sub
+Sub -> Sub: Calculate total paid
+Sub -> Sub: Calculate savings
+Sub --> Handler: Cancelled
+deactivate Sub
+Handler -> Repo: UpdateAsync(subscription)
+Handler -> Events: Publish(SubscriptionCancelled)
+Handler --> Controller: Success
+deactivate Handler
+Controller --> UI: 204 No Content
+deactivate Controller
+UI -> User: Show cancellation confirmation
+
+@enduml

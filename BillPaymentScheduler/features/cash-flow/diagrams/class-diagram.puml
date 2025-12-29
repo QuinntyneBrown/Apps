@@ -1,0 +1,76 @@
+@startuml Cash Flow Class Diagram
+
+!theme plain
+
+class CashFlowProjection <<Aggregate Root>> {
+  - projectionId: Guid
+  - userId: Guid
+  - month: DateTime
+  - totalIncome: decimal
+  - totalExpenses: decimal
+  - netCashFlow: decimal
+  - projectionData: string
+  --
+  + Calculate(): void
+  + AddBillPayment(amount, category): void
+  + UpdateIncome(amount): void
+}
+
+class BudgetCategory <<Entity>> {
+  - categoryId: Guid
+  - userId: Guid
+  - categoryName: string
+  - budgetAmount: decimal
+  - actualAmount: decimal
+  - month: DateTime
+  --
+  + UpdateActual(amount): void
+  + IsOverBudget(): bool
+  + GetVariance(): decimal
+}
+
+class FinancialHealthScore <<Value Object>> {
+  - score: int
+  - rating: string
+  - savingsRate: decimal
+  - debtToIncome: decimal
+  - recommendations: List<string>
+}
+
+class GenerateCashFlowProjectionCommand {
+  + UserId: Guid
+  + Month: DateTime
+}
+
+class SetBudgetCategoryCommand {
+  + UserId: Guid
+  + CategoryName: string
+  + BudgetAmount: decimal
+  + Month: DateTime
+}
+
+class GetCashFlowProjectionQuery {
+  + UserId: Guid
+  + Month: DateTime
+}
+
+class GetFinancialHealthScoreQuery {
+  + UserId: Guid
+}
+
+class CashFlowProjectionDto {
+  + ProjectionId: Guid
+  + Month: DateTime
+  + TotalIncome: decimal
+  + TotalExpenses: decimal
+  + NetCashFlow: decimal
+  + CategoryBreakdown: List<CategorySpending>
+}
+
+interface ICashFlowRepository {
+  + GetProjection(userId, month): CashFlowProjection
+  + SaveProjection(projection): void
+  + GetBudgets(userId, month): List<BudgetCategory>
+}
+
+@enduml

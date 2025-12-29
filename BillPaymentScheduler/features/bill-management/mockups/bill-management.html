@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Management - BillPaymentScheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            width: 300px;
+        }
+
+        .nav {
+            background-color: white;
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav li {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav li:hover {
+            background-color: #f3f4f6;
+        }
+
+        .nav li.active {
+            border-bottom-color: #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .stat-value.danger {
+            color: #ef4444;
+        }
+
+        .stat-value.success {
+            color: #10b981;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f9fafb;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-utilities {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-housing {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-insurance {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .badge-subscriptions {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .badge-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-overdue {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-upcoming {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .amount {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #6b7280;
+            transition: color 0.2s;
+            font-size: 1.25rem;
+        }
+
+        .btn-icon:hover {
+            color: #2563eb;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .page-info {
+            color: #6b7280;
+        }
+
+        .page-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        .page-btn.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .upcoming-bills {
+            padding: 1.5rem;
+        }
+
+        .bill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            background-color: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .bill-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(4px);
+        }
+
+        .bill-info {
+            flex: 1;
+        }
+
+        .bill-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .bill-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .bill-amount {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .due-indicator {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .due-soon {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .due-today {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .overdue-alert {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            font-size: 2rem;
+            color: #ef4444;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #991b1b;
+        }
+
+        .alert-message {
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 0.875rem;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">💰 BillPaymentScheduler</div>
+        <div class="user-menu">
+            <input type="text" class="search-box" placeholder="Search bills...">
+            <span>👤 John Doe</span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <ul>
+            <li>Dashboard</li>
+            <li class="active">Bills</li>
+            <li>Payments</li>
+            <li>Reminders</li>
+            <li>Autopay</li>
+            <li>Reports</li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Bill Management</h1>
+            <button class="btn btn-primary">➕ Add New Bill</button>
+        </div>
+
+        <!-- Overdue Alert -->
+        <div class="overdue-alert">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">You have 2 overdue bills</div>
+                <div class="alert-message">Please review and pay your overdue bills to avoid late fees.</div>
+            </div>
+            <button class="btn btn-danger">View Overdue</button>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Bills</div>
+                <div class="stat-value">24</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Upcoming (Next 30 Days)</div>
+                <div class="stat-value">8</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Overdue</div>
+                <div class="stat-value danger">2</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Amount Due</div>
+                <div class="stat-value">$2,450.00</div>
+            </div>
+        </div>
+
+        <!-- Upcoming Bills Widget -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📅 Upcoming Bills (Next 7 Days)</h2>
+                <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 500;">View All →</a>
+            </div>
+            <div class="upcoming-bills">
+                <div class="bill-item">
+                    <div class="bill-info">
+                        <div class="bill-name">Electric Company</div>
+                        <div class="bill-meta">Utilities • Monthly • Account #123456789</div>
+                    </div>
+                    <div class="due-indicator due-soon">In 3 days</div>
+                    <div class="bill-amount">$145.00</div>
+                    <button class="btn btn-success" style="padding: 0.5rem 1rem;">Quick Pay</button>
+                </div>
+                <div class="bill-item">
+                    <div class="bill-info">
+                        <div class="bill-name">Netflix Subscription</div>
+                        <div class="bill-meta">Subscriptions • Monthly</div>
+                    </div>
+                    <div class="due-indicator due-soon">In 2 days</div>
+                    <div class="bill-amount">$15.99</div>
+                    <button class="btn btn-success" style="padding: 0.5rem 1rem;">Quick Pay</button>
+                </div>
+                <div class="bill-item">
+                    <div class="bill-info">
+                        <div class="bill-name">Car Insurance</div>
+                        <div class="bill-meta">Insurance • Monthly • Account #CAR-789</div>
+                    </div>
+                    <div class="due-indicator due-today">Due Tomorrow</div>
+                    <div class="bill-amount">$125.50</div>
+                    <button class="btn btn-success" style="padding: 0.5rem 1rem;">Quick Pay</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">All Bills</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem;">📊 Export</button>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem;">📅 Calendar View</button>
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select class="filter-select">
+                        <option>All Bills</option>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>Overdue</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select class="filter-select">
+                        <option>All Categories</option>
+                        <option>Utilities</option>
+                        <option>Housing</option>
+                        <option>Insurance</option>
+                        <option>Subscriptions</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range:</label>
+                    <select class="filter-select">
+                        <option>Next 30 Days</option>
+                        <option>Next 60 Days</option>
+                        <option>Next 90 Days</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By:</label>
+                    <select class="filter-select">
+                        <option>Due Date (Ascending)</option>
+                        <option>Due Date (Descending)</option>
+                        <option>Amount (High to Low)</option>
+                        <option>Amount (Low to High)</option>
+                        <option>Payee (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payee</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Category</th>
+                            <th>Recurrence</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">Rent - Main Street Apartment</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">Account #RENT-2024</div>
+                            </td>
+                            <td><span class="amount">$1,200.00</span></td>
+                            <td>
+                                <div>Jan 1, 2025</div>
+                                <div style="font-size: 0.75rem; color: #ef4444; font-weight: 600;">OVERDUE</div>
+                            </td>
+                            <td><span class="badge badge-housing">Housing</span></td>
+                            <td>Monthly</td>
+                            <td><span class="badge badge-overdue">Overdue</span></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-icon" title="View Details">👁️</button>
+                                    <button class="btn-icon" title="Edit">✏️</button>
+                                    <button class="btn-icon" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">Car Insurance</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">Account #CAR-789</div>
+                            </td>
+                            <td><span class="amount">$125.50</span></td>
+                            <td>
+                                <div>Jan 10, 2025</div>
+                                <div style="font-size: 0.75rem; color: #92400e; font-weight: 600;">Due in 1 day</div>
+                            </td>
+                            <td><span class="badge badge-insurance">Insurance</span></td>
+                            <td>Monthly</td>
+                            <td><span class="badge badge-upcoming">Upcoming</span></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-icon" title="View Details">👁️</button>
+                                    <button class="btn-icon" title="Edit">✏️</button>
+                                    <button class="btn-icon" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">Electric Company</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">Account #123456789</div>
+                            </td>
+                            <td><span class="amount">$145.00</span></td>
+                            <td>
+                                <div>Jan 15, 2025</div>
+                                <div style="font-size: 0.75rem; color: #6b7280;">Due in 3 days</div>
+                            </td>
+                            <td><span class="badge badge-utilities">Utilities</span></td>
+                            <td>Monthly</td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-icon" title="View Details">👁️</button>
+                                    <button class="btn-icon" title="Edit">✏️</button>
+                                    <button class="btn-icon" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">Netflix Subscription</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;"></div>
+                            </td>
+                            <td><span class="amount">$15.99</span></td>
+                            <td>
+                                <div>Jan 5, 2025</div>
+                                <div style="font-size: 0.75rem; color: #ef4444; font-weight: 600;">OVERDUE</div>
+                            </td>
+                            <td><span class="badge badge-subscriptions">Subscriptions</span></td>
+                            <td>Monthly</td>
+                            <td><span class="badge badge-overdue">Overdue</span></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-icon" title="View Details">👁️</button>
+                                    <button class="btn-icon" title="Edit">✏️</button>
+                                    <button class="btn-icon" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">Water & Sewer Bill</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">Account #WATER-456</div>
+                            </td>
+                            <td><span class="amount">$45.00</span></td>
+                            <td>
+                                <div>Jan 20, 2025</div>
+                                <div style="font-size: 0.75rem; color: #6b7280;">Due in 8 days</div>
+                            </td>
+                            <td><span class="badge badge-utilities">Utilities</span></td>
+                            <td>Monthly</td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-icon" title="View Details">👁️</button>
+                                    <button class="btn-icon" title="Edit">✏️</button>
+                                    <button class="btn-icon" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="page-info">Showing 1-5 of 24 bills</div>
+                <div class="page-controls">
+                    <button class="page-btn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

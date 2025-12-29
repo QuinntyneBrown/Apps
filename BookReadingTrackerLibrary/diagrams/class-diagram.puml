@@ -1,0 +1,265 @@
+@startuml BookReadingTrackerLibrary_ClassDiagram
+
+!define ENTITY_COLOR #E3F2FD
+!define AGGREGATE_COLOR #FFF3E0
+!define VALUE_OBJECT_COLOR #F3E5F5
+
+' Aggregates
+package "Library Management" <<AGGREGATE_COLOR>> {
+  class Book <<ENTITY_COLOR>> {
+    +Guid Id
+    +string Title
+    +List<string> Authors
+    +string ISBN
+    +int PublicationYear
+    +string Publisher
+    +BookFormat Format
+    +DateTime AcquisitionDate
+    +string AcquisitionSource
+    +decimal PurchasePrice
+    +string ShelfLocation
+    +List<string> Genres
+    +List<string> Categories
+    +List<string> Tags
+    +BookStatus Status
+    --
+    +Categorize(categorization)
+    +Lend(loanInfo)
+    +Return(returnInfo)
+    +Remove(reason)
+  }
+
+  class Loan <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +string BorrowerName
+    +DateTime LoanDate
+    +DateTime ExpectedReturnDate
+    +DateTime ActualReturnDate
+    +string ConditionNotes
+    +LoanStatus Status
+    --
+    +MarkReturned(returnDate)
+    +IsOverdue()
+  }
+
+  enum BookFormat {
+    Physical
+    Digital
+    Audiobook
+  }
+
+  enum BookStatus {
+    Available
+    Loaned
+    Reading
+    Removed
+  }
+
+  enum LoanStatus {
+    Active
+    Returned
+    Overdue
+  }
+}
+
+package "Reading Activity" <<AGGREGATE_COLOR>> {
+  class ReadingSession <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +DateTime StartDate
+    +int CurrentPage
+    +int TotalPages
+    +decimal PercentageComplete
+    +decimal ReadingPace
+    +ReadingContext Context
+    +ReadingStatus Status
+    --
+    +UpdateProgress(currentPage)
+    +Complete(completionInfo)
+    +Abandon(reason)
+  }
+
+  class ProgressUpdate <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid ReadingSessionId
+    +int CurrentPage
+    +DateTime UpdateTimestamp
+    +int PagesReadSinceLastUpdate
+  }
+
+  class ReadingStreak <<ENTITY_COLOR>> {
+    +Guid UserId
+    +int CurrentStreak
+    +int LongestStreak
+    +DateTime LastReadDate
+    +StreakStatus Status
+    --
+    +UpdateStreak()
+    +BreakStreak()
+  }
+
+  enum ReadingStatus {
+    CurrentlyReading
+    Completed
+    Abandoned
+  }
+
+  enum ReadingContext {
+    Leisure
+    Study
+    BookClub
+    Work
+  }
+}
+
+package "Review and Rating" <<AGGREGATE_COLOR>> {
+  class Review <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +string ReviewText
+    +int Rating
+    +DateTime ReviewDate
+    +bool HasSpoilers
+    +List<string> ThemesDiscussed
+    +bool WouldRecommend
+  }
+
+  class Highlight <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +string PassageText
+    +int PageNumber
+    +DateTime HighlightDate
+    +string Category
+    +string PersonalNote
+  }
+
+  class Note <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +string NoteContent
+    +int PageReference
+    +NoteType NoteType
+    +DateTime Timestamp
+  }
+
+  enum NoteType {
+    Analysis
+    Question
+    Connection
+  }
+}
+
+package "Reading Goals" <<AGGREGATE_COLOR>> {
+  class ReadingGoal <<ENTITY_COLOR>> {
+    +Guid Id
+    +GoalType GoalType
+    +int TargetNumber
+    +Timeframe Timeframe
+    +DateTime StartDate
+    +DateTime EndDate
+    +int CurrentProgress
+    +GoalStatus Status
+    --
+    +UpdateProgress()
+    +CheckCompletion()
+  }
+
+  class ReadingChallenge <<ENTITY_COLOR>> {
+    +Guid Id
+    +string ChallengeName
+    +string Rules
+    +DateTime StartDate
+    +DateTime EndDate
+    +List<Guid> RequiredBookIds
+  }
+
+  class Milestone <<ENTITY_COLOR>> {
+    +Guid Id
+    +MilestoneType MilestoneType
+    +DateTime AchievementDate
+    +int MetricAchieved
+    +CelebrationTier Tier
+  }
+
+  enum GoalType {
+    BooksCount
+    PagesCount
+    GenreExploration
+  }
+
+  enum GoalStatus {
+    Active
+    Completed
+    Cancelled
+  }
+}
+
+package "Discovery" <<AGGREGATE_COLOR>> {
+  class WishlistItem <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +DateTime AddedDate
+    +int PriorityLevel
+    +string InterestReason
+  }
+
+  class ReadingList <<ENTITY_COLOR>> {
+    +Guid Id
+    +string ListName
+    +string Description
+    +List<Guid> BookIds
+    +bool IsPublic
+    +string Theme
+  }
+
+  class BookRecommendation <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookId
+    +string Recommender
+    +string Recipient
+    +string RecommendationReason
+    +AcceptanceStatus Status
+  }
+}
+
+package "Social Reading" <<AGGREGATE_COLOR>> {
+  class BookClub <<ENTITY_COLOR>> {
+    +Guid Id
+    +string ClubName
+    +string Description
+    +List<string> Members
+    +string Organizer
+  }
+
+  class BookClubSession <<ENTITY_COLOR>> {
+    +Guid Id
+    +Guid BookClubId
+    +Guid BookId
+    +DateTime ScheduledDate
+    +List<string> Participants
+    +List<string> DiscussionTopics
+    +SessionStatus Status
+  }
+
+  enum SessionStatus {
+    Scheduled
+    InProgress
+    Completed
+    Cancelled
+  }
+}
+
+' Relationships
+Book "1" -- "0..*" Loan : has
+Book "1" -- "0..*" ReadingSession : tracked in
+Book "1" -- "0..*" Review : has
+Book "1" -- "0..*" Highlight : contains
+Book "1" -- "0..*" Note : has
+Book "1" -- "0..*" WishlistItem : appears in
+ReadingSession "1" -- "0..*" ProgressUpdate : contains
+BookClub "1" -- "0..*" BookClubSession : organizes
+ReadingList "1" -- "0..*" Book : includes
+
+@enduml

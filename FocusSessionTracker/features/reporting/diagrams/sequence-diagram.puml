@@ -1,0 +1,182 @@
+@startuml Reporting Sequence Diagram
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Report Generation and Viewing Lifecycle
+
+actor User
+participant "Frontend" as FE
+participant "ReportController" as API
+participant "ReportingService" as SVC
+participant "ReportGenerator" as GEN
+participant "SessionAggregator" as AGG
+participant "InsightEngine" as INS
+participant "WeeklyReportRepo" as WREPO
+participant "MonthlyInsightRepo" as MREPO
+participant "SessionRepo" as SREPO
+participant "EventPublisher" as EVT
+
+== Generate Weekly Report ==
+
+User -> FE: Click "Generate Weekly Report"
+FE -> FE: Show week selection modal
+User -> FE: Select week range
+FE -> API: POST /api/reports/weekly/generate
+API -> SVC: GenerateWeeklyReport(userId, weekStart)
+SVC -> WREPO: GetByWeek(userId, weekStart)
+alt Report already exists
+    WREPO --> SVC: Existing report
+    SVC --> API: 200 OK (existing report)
+else Report doesn't exist
+    SVC -> GEN: GenerateWeeklyData(userId, weekStart)
+    GEN -> AGG: AggregateWeeklyData(userId, weekStart)
+    AGG -> SREPO: GetSessionsByDateRange(userId, weekStart, weekEnd)
+    SREPO --> AGG: Sessions list
+    AGG -> AGG: Calculate totals and averages
+    AGG --> GEN: WeeklyStats
+
+    GEN -> AGG: CalculateDailyBreakdown(sessions)
+    AGG -> AGG: Group by day and calculate
+    AGG --> GEN: List<DailyBreakdown>
+
+    GEN -> GEN: Create WeeklyReport entity
+    GEN --> SVC: WeeklyReport
+
+    SVC -> WREPO: Save(weeklyReport)
+    SVC -> EVT: Publish(WeeklyReportGenerated)
+    SVC --> API: 201 Created (weeklyReport)
+end
+API --> FE: Report data
+FE -> FE: Show success notification
+FE --> User: Display report summary
+
+== Generate Monthly Insight ==
+
+User -> FE: Click "Generate Monthly Insight"
+FE -> FE: Show month/year selection
+User -> FE: Select month and year
+FE -> API: POST /api/reports/monthly/generate
+API -> SVC: GenerateMonthlyInsight(userId, month, year)
+SVC -> MREPO: GetByMonth(userId, month, year)
+
+alt Insight already exists
+    MREPO --> SVC: Existing insight
+    SVC --> API: 200 OK (existing insight)
+else Insight doesn't exist
+    SVC -> GEN: GenerateMonthlyData(userId, month, year)
+    GEN -> AGG: AggregateMonthlyData(userId, month, year)
+    AGG -> SREPO: GetSessionsByMonth(userId, month, year)
+    SREPO --> AGG: Monthly sessions
+    AGG -> AGG: Calculate monthly metrics
+    AGG --> GEN: MonthlyStats
+
+    GEN -> INS: GenerateInsights(monthlyStats)
+    INS -> INS: AnalyzeProductivityPatterns()
+    INS -> INS: IdentifyMostProductiveTime()
+    INS -> INS: AnalyzeDistractionPatterns()
+    INS -> INS: CompareToPreviousPeriod()
+    INS --> GEN: List<InsightDetail>
+
+    GEN -> INS: AnalyzeDistractionPatterns(sessions)
+    INS --> GEN: List<TopDistraction>
+
+    GEN -> GEN: CalculateTrend(weeklyData)
+    GEN -> GEN: Create MonthlyInsight entity
+    GEN --> SVC: MonthlyInsight
+
+    SVC -> MREPO: Save(monthlyInsight)
+    SVC -> EVT: Publish(MonthlyInsightCreated)
+    SVC --> API: 201 Created (monthlyInsight)
+end
+
+API --> FE: Insight data
+FE -> FE: Show success notification
+FE --> User: Display insight summary
+
+== View Weekly Report Details ==
+
+User -> FE: Click weekly report card
+FE -> API: GET /api/reports/weekly/{reportId}
+API -> SVC: GetWeeklyReportDetails(reportId)
+SVC -> WREPO: GetById(reportId)
+WREPO -> WREPO: Include daily breakdowns
+WREPO --> SVC: WeeklyReport with breakdowns
+SVC --> API: 200 OK (full report)
+API --> FE: Report details
+FE -> FE: Render charts and stats
+FE --> User: Show detailed report view
+
+== View Monthly Insight Details ==
+
+User -> FE: Click monthly insight card
+FE -> API: GET /api/reports/monthly/{insightId}
+API -> SVC: GetMonthlyInsightDetails(insightId)
+SVC -> MREPO: GetById(insightId)
+MREPO -> MREPO: Include insights and distractions
+MREPO --> SVC: MonthlyInsight with details
+SVC --> API: 200 OK (full insight)
+API --> FE: Insight details
+FE -> FE: Render heat map, charts, insights
+FE --> User: Show detailed insight view
+
+== Export Report ==
+
+User -> FE: Click "Export Report"
+FE -> FE: Show export modal
+User -> FE: Select format, date range
+FE -> API: GET /api/reports/export?format=pdf&type=monthly
+API -> SVC: ExportReport(config)
+SVC -> WREPO: GetByDateRange(userId, startDate, endDate)
+alt Weekly export
+    WREPO --> SVC: Weekly reports
+else Monthly export
+    SVC -> MREPO: GetByYear(userId, year)
+    MREPO --> SVC: Monthly insights
+end
+
+SVC -> SVC: PrepareExportData(reports)
+SVC -> SVC: GenerateExportFile(data, format)
+
+alt PDF format
+    SVC -> SVC: GeneratePDF(data, includeCharts)
+else CSV format
+    SVC -> SVC: GenerateCSV(data)
+else JSON format
+    SVC -> SVC: GenerateJSON(data)
+end
+
+SVC -> EVT: Publish(ReportExported)
+SVC --> API: File stream
+API --> FE: File download
+FE --> User: Download starts
+
+User -> User: View exported file
+
+== View Dashboard Summary ==
+
+User -> FE: Navigate to Reports Dashboard
+FE -> API: GET /api/reports/dashboard
+API -> SVC: GetDashboardData(userId)
+
+par Parallel data fetching
+    SVC -> WREPO: GetCurrentWeek(userId)
+    WREPO --> SVC: Current week report
+
+    SVC -> MREPO: GetCurrentMonth(userId)
+    MREPO --> SVC: Current month insight
+
+    SVC -> SVC: CalculateTrends()
+end
+
+SVC -> SVC: BuildDashboardSummary()
+SVC --> API: 200 OK (dashboard data)
+API --> FE: Dashboard summary
+FE -> FE: Render summary cards and charts
+FE --> User: Show reports dashboard
+
+@enduml

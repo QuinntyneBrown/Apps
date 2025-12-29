@@ -1,0 +1,71 @@
+@startuml Interviews - Sequence Diagram
+
+title Interview Scheduling and Completion Flow
+
+actor "Job Seeker" as seeker
+participant "UI" as ui
+participant "InterviewController" as controller
+participant "InterviewService" as service
+participant "Interview\nAggregate" as aggregate
+participant "InterviewRepository" as repo
+participant "EventPublisher" as events
+participant "CalendarService" as calendar
+
+== Schedule Interview ==
+
+seeker -> ui: Schedule interview for application
+ui -> controller: POST /api/interviews
+activate controller
+
+controller -> service: ScheduleInterview(command)
+activate service
+
+service -> aggregate: Create Interview
+activate aggregate
+aggregate -> aggregate: Validate schedule time
+aggregate --> service: Interview created
+deactivate aggregate
+
+service -> repo: Add(interview)
+repo --> service: Saved
+
+service -> events: Publish(InterviewScheduled)
+service -> calendar: AddToCalendar(interview)
+calendar --> service: Added
+
+service --> controller: Interview DTO
+deactivate service
+
+controller --> ui: 201 Created
+deactivate controller
+ui --> seeker: Interview scheduled
+
+== Complete Interview ==
+
+seeker -> ui: Mark interview as completed
+ui -> controller: PUT /api/interviews/{id}/complete
+activate controller
+
+controller -> service: CompleteInterview(id, command)
+activate service
+
+service -> repo: GetById(id)
+repo --> service: Interview
+
+service -> aggregate: Complete(rating, notes)
+activate aggregate
+aggregate -> aggregate: Update status
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(interview)
+service -> events: Publish(InterviewCompleted)
+
+service --> controller: Success
+deactivate service
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Interview completed, send thank you?
+
+@enduml

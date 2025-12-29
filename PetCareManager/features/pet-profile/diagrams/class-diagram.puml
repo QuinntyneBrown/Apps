@@ -1,0 +1,337 @@
+@startuml Pet Profile - Class Diagram
+
+!define ENTITY_COLOR #E8F5E9
+!define VALUE_OBJECT_COLOR #FFF3E0
+!define EVENT_COLOR #E3F2FD
+!define ENUM_COLOR #F3E5F5
+
+skinparam class {
+    BackgroundColor<<Entity>> ENTITY_COLOR
+    BackgroundColor<<ValueObject>> VALUE_OBJECT_COLOR
+    BackgroundColor<<Event>> EVENT_COLOR
+    BackgroundColor<<Enum>> ENUM_COLOR
+    BorderColor #333333
+    ArrowColor #333333
+}
+
+skinparam packageStyle rectangle
+
+package "Aggregate Root" {
+    class Pet <<Entity>> {
+        - Id : Guid
+        - HouseholdId : Guid
+        - Name : string
+        - Species : Species
+        - Breed : string
+        - DateOfBirth : DateTime?
+        - Gender : Gender
+        - Color : string
+        - MicrochipNumber : string
+        - CurrentWeight : decimal?
+        - PhotoUrl : string
+        - IsDeceased : bool
+        - DateOfDeath : DateTime?
+        - MedicalNotes : string
+        - SpecialNeeds : string
+        - CreatedAt : DateTime
+        - UpdatedAt : DateTime
+        - CreatedBy : string
+        - UpdatedBy : string
+        --
+        + GetAge() : PetAge?
+        + UpdateProfile(data) : void
+        + RecordWeight(weight, date) : WeightRecord
+        + MarkAsDeceased(date) : void
+        + CanRecordWeight() : bool
+        + ValidateMicrochip() : bool
+        --
+        Events Raised:
+        • PetRegistered
+        • PetProfileUpdated
+        • PetWeightRecorded
+        • PetPassedAway
+    }
+}
+
+package "Entities" {
+    class WeightRecord <<Entity>> {
+        - Id : Guid
+        - PetId : Guid
+        - Weight : decimal
+        - RecordedAt : DateTime
+        - RecordedBy : string
+        - Notes : string
+        - CreatedAt : DateTime
+        --
+        + GetWeightChange(previous) : decimal
+        + GetPercentageChange(previous) : decimal
+        + IsAnomalous(previous) : bool
+    }
+}
+
+package "Value Objects" {
+    class PetAge <<ValueObject>> {
+        - Years : int
+        - Months : int
+        --
+        + ToString() : string
+        + TotalMonths() : int
+        + IsAdult() : bool
+        + IsSenior() : bool
+    }
+
+    class WeightTrend <<ValueObject>> {
+        - CurrentWeight : decimal
+        - AverageWeight : decimal
+        - ChangePercentage : decimal
+        - Direction : TrendDirection
+        --
+        + IsHealthy() : bool
+        + NeedsAttention() : bool
+    }
+}
+
+package "Enumerations" {
+    enum Species <<Enum>> {
+        Dog = 1
+        Cat = 2
+        Bird = 3
+        Fish = 4
+        Reptile = 5
+        SmallMammal = 6
+        Other = 99
+    }
+
+    enum Gender <<Enum>> {
+        Male = 1
+        Female = 2
+        Unknown = 0
+    }
+
+    enum TrendDirection <<Enum>> {
+        Increasing
+        Decreasing
+        Stable
+    }
+}
+
+package "Domain Events" {
+    abstract class DomainEvent <<Event>> {
+        + EventId : Guid
+        + OccurredAt : DateTime
+        + AggregateId : Guid
+    }
+
+    class PetRegistered <<Event>> {
+        + PetId : Guid
+        + HouseholdId : Guid
+        + Name : string
+        + Species : Species
+        + Breed : string
+        + DateOfBirth : DateTime?
+        + Gender : Gender
+        + RegisteredAt : DateTime
+        + RegisteredBy : string
+    }
+
+    class PetProfileUpdated <<Event>> {
+        + PetId : Guid
+        + HouseholdId : Guid
+        + UpdatedFields : Dictionary<string, object>
+        + UpdatedAt : DateTime
+        + UpdatedBy : string
+    }
+
+    class PetWeightRecorded <<Event>> {
+        + PetId : Guid
+        + HouseholdId : Guid
+        + WeightRecordId : Guid
+        + Weight : decimal
+        + PreviousWeight : decimal?
+        + RecordedAt : DateTime
+        + RecordedBy : string
+    }
+
+    class PetPassedAway <<Event>> {
+        + PetId : Guid
+        + HouseholdId : Guid
+        + PetName : string
+        + DateOfDeath : DateTime
+        + RecordedAt : DateTime
+        + RecordedBy : string
+    }
+}
+
+package "Repository Interfaces" {
+    interface IPetRepository {
+        + GetByIdAsync(id) : Task<Pet?>
+        + GetByHouseholdIdAsync(householdId) : Task<IEnumerable<Pet>>
+        + GetByMicrochipAsync(microchip) : Task<Pet?>
+        + AddAsync(pet) : Task
+        + UpdateAsync(pet) : Task
+        + DeleteAsync(id) : Task
+        + ExistsAsync(id) : Task<bool>
+    }
+
+    interface IWeightRecordRepository {
+        + GetByPetIdAsync(petId) : Task<IEnumerable<WeightRecord>>
+        + GetByDateRangeAsync(petId, from, to) : Task<IEnumerable<WeightRecord>>
+        + AddAsync(record) : Task
+        + GetLatestAsync(petId) : Task<WeightRecord?>
+        + GetTrendAsync(petId) : Task<WeightTrend>
+    }
+
+    interface IDomainEventRepository {
+        + SaveEventAsync(event) : Task
+        + GetUnprocessedEventsAsync() : Task<IEnumerable<DomainEvent>>
+        + MarkAsProcessedAsync(eventId) : Task
+    }
+}
+
+package "Services" {
+    class PetService {
+        - petRepository : IPetRepository
+        - weightRepository : IWeightRecordRepository
+        - eventRepository : IDomainEventRepository
+        --
+        + RegisterPetAsync(command) : Task<Guid>
+        + UpdatePetProfileAsync(command) : Task
+        + RecordWeightAsync(command) : Task<Guid>
+        + MarkAsDeceasedAsync(command) : Task
+        + GetPetByIdAsync(id) : Task<PetDto>
+        + GetHouseholdPetsAsync(householdId) : Task<List<PetDto>>
+    }
+
+    class WeightAnalyticsService {
+        - weightRepository : IWeightRecordRepository
+        --
+        + CalculateTrendAsync(petId) : Task<WeightTrend>
+        + DetectAnomaliesAsync(petId) : Task<List<WeightRecord>>
+        + PredictWeightAsync(petId, days) : Task<decimal>
+        + GetAverageWeightAsync(petId) : Task<decimal>
+    }
+}
+
+package "Event Handlers" {
+    interface IDomainEventHandler<T> {
+        + Handle(event, cancellationToken) : Task
+    }
+
+    class PetRegisteredHandler {
+        + Handle(event) : Task
+        --
+        Responsibilities:
+        • Send welcome notification
+        • Create health record template
+        • Initialize vaccination schedule
+        • Update household statistics
+    }
+
+    class PetProfileUpdatedHandler {
+        + Handle(event) : Task
+        --
+        Responsibilities:
+        • Notify household members
+        • Log audit trail
+        • Update search index
+        • Recalculate age if DOB changed
+    }
+
+    class PetWeightRecordedHandler {
+        + Handle(event) : Task
+        --
+        Responsibilities:
+        • Update Pet.CurrentWeight
+        • Check weight thresholds
+        • Send alerts if abnormal
+        • Update analytics
+    }
+
+    class PetPassedAwayHandler {
+        + Handle(event) : Task
+        --
+        Responsibilities:
+        • Send condolence notification
+        • Archive active reminders
+        • Update household statistics
+        • Generate memorial record
+    }
+}
+
+' Relationships - Aggregate
+Pet "1" *-- "0..*" WeightRecord : contains
+Pet --> Species : has
+Pet --> Gender : has
+Pet ..> PetAge : calculates
+
+' Relationships - Events
+Pet ..> PetRegistered : raises
+Pet ..> PetProfileUpdated : raises
+Pet ..> PetWeightRecorded : raises
+Pet ..> PetPassedAway : raises
+
+DomainEvent <|-- PetRegistered
+DomainEvent <|-- PetProfileUpdated
+DomainEvent <|-- PetWeightRecorded
+DomainEvent <|-- PetPassedAway
+
+' Relationships - Value Objects
+WeightRecord ..> WeightTrend : analyzed to create
+WeightTrend --> TrendDirection : has
+
+' Relationships - Repositories
+PetService --> IPetRepository : uses
+PetService --> IWeightRecordRepository : uses
+PetService --> IDomainEventRepository : uses
+WeightAnalyticsService --> IWeightRecordRepository : uses
+
+IPetRepository ..> Pet : manages
+IWeightRecordRepository ..> WeightRecord : manages
+IDomainEventRepository ..> DomainEvent : manages
+
+' Relationships - Event Handlers
+IDomainEventHandler <|.. PetRegisteredHandler
+IDomainEventHandler <|.. PetProfileUpdatedHandler
+IDomainEventHandler <|.. PetWeightRecordedHandler
+IDomainEventHandler <|.. PetPassedAwayHandler
+
+PetRegisteredHandler ..> PetRegistered : handles
+PetProfileUpdatedHandler ..> PetProfileUpdated : handles
+PetWeightRecordedHandler ..> PetWeightRecorded : handles
+PetPassedAwayHandler ..> PetPassedAway : handles
+
+' Notes
+note right of Pet
+    Aggregate Root that ensures
+    consistency and raises domain
+    events for all state changes.
+
+    Business Rules:
+    • Cannot record weight if deceased
+    • Microchip must be unique
+    • DateOfDeath >= DateOfBirth
+end note
+
+note right of WeightRecord
+    Entity owned by Pet aggregate.
+    Changes > 20% from previous
+    weight are flagged as anomalous.
+end note
+
+note bottom of DomainEvent
+    All domain events are persisted
+    in event store and processed
+    asynchronously by handlers.
+
+    Retry policy: 3 attempts with
+    exponential backoff (1s, 5s, 30s)
+end note
+
+note top of PetService
+    Application service that coordinates
+    aggregate operations and event
+    publication. All mutations go
+    through this service.
+end note
+
+@enduml

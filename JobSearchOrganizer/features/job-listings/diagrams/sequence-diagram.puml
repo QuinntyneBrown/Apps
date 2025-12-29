@@ -1,0 +1,250 @@
+@startuml Job Listings - Sequence Diagram
+
+title Job Listing Discovery and Management Flow
+
+actor "Job Seeker" as seeker
+participant "UI" as ui
+participant "JobListingController" as controller
+participant "JobListingService" as service
+participant "JobListing\nAggregate" as aggregate
+participant "JobListingRepository" as repo
+participant "EventPublisher" as events
+database "Database" as db
+participant "NotificationService" as notify
+
+== Discover Job Listing ==
+
+seeker -> ui: Enter job details
+activate ui
+
+ui -> ui: Validate form data
+ui -> controller: POST /api/job-listings
+activate controller
+
+controller -> controller: Validate request
+controller -> service: DiscoverJobListing(command)
+activate service
+
+service -> aggregate: Create new JobListing
+activate aggregate
+aggregate -> aggregate: Validate business rules
+aggregate -> aggregate: Set status to Discovered
+aggregate --> service: JobListing created
+deactivate aggregate
+
+service -> repo: Add(jobListing)
+activate repo
+repo -> db: INSERT INTO JobListings
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Saved
+deactivate repo
+
+service -> events: Publish(JobListingDiscovered)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+service --> controller: JobListing DTO
+deactivate service
+
+controller --> ui: 201 Created + JobListing
+deactivate controller
+
+ui --> seeker: Show success message
+deactivate ui
+
+== Save Job Listing ==
+
+seeker -> ui: Click "Save" on listing
+activate ui
+
+ui -> ui: Show save dialog\n(priority, notes, deadline)
+seeker -> ui: Enter save details
+ui -> controller: POST /api/job-listings/{id}/save
+activate controller
+
+controller -> service: SaveJobListing(id, command)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM JobListings
+activate db
+db --> repo: JobListing data
+deactivate db
+repo --> service: JobListing
+deactivate repo
+
+service -> aggregate: Save(notes, priority, deadline, category)
+activate aggregate
+aggregate -> aggregate: Validate can save\n(not archived)
+aggregate -> aggregate: Set status to Saved
+aggregate -> aggregate: Update saved metadata
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(jobListing)
+activate repo
+repo -> db: UPDATE JobListings
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(JobListingSaved)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+alt deadline is set
+  service -> notify: ScheduleDeadlineReminder(jobListing)
+  activate notify
+  notify -> notify: Create reminder task
+  notify --> service: Reminder scheduled
+  deactivate notify
+end
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Listing saved" message
+deactivate ui
+
+== View Job Listings with Filters ==
+
+seeker -> ui: Navigate to listings page
+activate ui
+
+ui -> controller: GET /api/job-listings\n?status=Saved&priority=High
+activate controller
+
+controller -> service: GetJobListings(filters)
+activate service
+
+service -> repo: GetByUserId(userId, filters)
+activate repo
+repo -> db: SELECT FROM JobListings\nWHERE UserId = ? AND Status = ?\nAND Priority = ?
+activate db
+db --> repo: JobListing records
+deactivate db
+repo --> service: PagedResult<JobListing>
+deactivate repo
+
+service --> controller: PagedResult<JobListingDTO>
+deactivate service
+
+controller --> ui: 200 OK + Listings
+deactivate controller
+
+ui -> ui: Render job listing cards
+ui --> seeker: Display filtered listings
+deactivate ui
+
+== Archive Job Listing ==
+
+seeker -> ui: Click "Archive" on listing
+activate ui
+
+ui -> ui: Show archive reason dialog
+seeker -> ui: Enter reason (optional)
+ui -> controller: POST /api/job-listings/{id}/archive
+activate controller
+
+controller -> service: ArchiveJobListing(id, reason)
+activate service
+
+service -> repo: GetById(id)
+activate repo
+repo -> db: SELECT FROM JobListings
+activate db
+db --> repo: JobListing data
+deactivate db
+repo --> service: JobListing
+deactivate repo
+
+service -> aggregate: Archive(reason)
+activate aggregate
+aggregate -> aggregate: Validate can archive
+aggregate -> aggregate: Set status to Archived
+aggregate -> aggregate: Set archived metadata
+aggregate --> service: Updated
+deactivate aggregate
+
+service -> repo: Update(jobListing)
+activate repo
+repo -> db: UPDATE JobListings
+activate db
+db --> repo: Success
+deactivate db
+repo --> service: Updated
+deactivate repo
+
+service -> events: Publish(JobListingArchived)
+activate events
+events -> events: Store event
+events --> service: Event published
+deactivate events
+
+alt had deadline reminder
+  service -> notify: CancelDeadlineReminder(jobListing)
+  activate notify
+  notify -> notify: Remove reminder task
+  notify --> service: Reminder cancelled
+  deactivate notify
+end
+
+service --> controller: Success
+deactivate service
+
+controller --> ui: 200 OK
+deactivate controller
+
+ui --> seeker: Show "Listing archived" message
+ui -> ui: Remove from current view
+deactivate ui
+
+== Get Statistics ==
+
+seeker -> ui: Navigate to stats page
+activate ui
+
+ui -> controller: GET /api/job-listings/statistics
+activate controller
+
+controller -> service: GetStatistics()
+activate service
+
+service -> repo: GetStatistics(userId)
+activate repo
+repo -> db: SELECT COUNT(*), Status\nFROM JobListings\nGROUP BY Status
+activate db
+db --> repo: Aggregated data
+deactivate db
+
+repo -> db: SELECT COUNT(*), Priority\nFROM JobListings\nGROUP BY Priority
+activate db
+db --> repo: Priority counts
+deactivate db
+
+repo --> service: JobListingStats
+deactivate repo
+
+service --> controller: JobListingStatsDTO
+deactivate service
+
+controller --> ui: 200 OK + Statistics
+deactivate controller
+
+ui -> ui: Render charts and graphs
+ui --> seeker: Display statistics dashboard
+deactivate ui
+
+@enduml

@@ -1,0 +1,66 @@
+@startuml Budget Management Class Diagram
+
+class Budget <<Aggregate Root>> {
+    - BudgetId: Guid
+    - HouseholdId: Guid
+    - BudgetPeriod: string
+    - StartDate: DateTime
+    - EndDate: DateTime
+    - TotalBudgetAmount: decimal
+    - Status: BudgetStatus
+    - Categories: List<CategoryAllocation>
+    --
+    + CreateBudget()
+    + AllocateCategory()
+    + AmendBudget()
+    + ClosePeriod()
+}
+
+class CategoryAllocation <<Entity>> {
+    - AllocationId: Guid
+    - CategoryId: Guid
+    - CategoryName: string
+    - AllocatedAmount: decimal
+    - SpentAmount: decimal
+    - PercentageOfTotal: decimal
+    --
+    + UpdateAllocation()
+    + RecordSpending()
+    + CheckLimit()
+}
+
+enum BudgetStatus {
+    Active
+    Closed
+    Archived
+}
+
+class CreateBudgetCommand <<Command>> {
+    + HouseholdId: Guid
+    + BudgetPeriod: string
+    + TotalBudgetAmount: decimal
+    + StartDate: DateTime
+    + EndDate: DateTime
+}
+
+class BudgetCreated <<Domain Event>> {
+    + BudgetId: Guid
+    + HouseholdId: Guid
+    + TotalBudgetAmount: decimal
+    + BudgetPeriod: string
+}
+
+class BudgetCategoryAllocated <<Domain Event>> {
+    + BudgetId: Guid
+    + CategoryId: Guid
+    + AllocatedAmount: decimal
+    + PercentageOfTotal: decimal
+}
+
+Budget "1" *-- "*" CategoryAllocation
+Budget ..> BudgetStatus
+CreateBudgetCommand ..> Budget : creates
+Budget ..> BudgetCreated : raises
+Budget ..> BudgetCategoryAllocated : raises
+
+@enduml

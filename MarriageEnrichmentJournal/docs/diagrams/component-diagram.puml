@@ -1,0 +1,108 @@
+@startuml Component Diagram - Marriage Enrichment Journal
+
+!include <C4/C4_Component>
+
+Container_Boundary(webapp, "Web Application") {
+    Component(ui, "UI Components", "React", "User interface components")
+    Component(state, "State Management", "Redux", "Application state and actions")
+    Component(api_client, "API Client", "Axios", "HTTP client for API calls")
+    Component(ws_client, "WebSocket Client", "SignalR", "Real-time communication")
+    Component(router, "Router", "React Router", "Client-side routing")
+}
+
+Container_Boundary(api, "API Services") {
+    Component(auth, "Auth Controller", "ASP.NET Core", "Authentication & authorization")
+    Component(gratitude_api, "Gratitude API", "ASP.NET Core", "Gratitude entry endpoints")
+    Component(appreciation_api, "Appreciation API", "ASP.NET Core", "Appreciation endpoints")
+    Component(reflection_api, "Reflection API", "ASP.NET Core", "Reflection journal endpoints")
+    Component(communication_api, "Communication API", "ASP.NET Core", "Communication tools endpoints")
+    Component(health_api, "Health API", "ASP.NET Core", "Relationship health endpoints")
+    Component(milestone_api, "Milestone API", "ASP.NET Core", "Milestone management endpoints")
+    Component(privacy_api, "Privacy API", "ASP.NET Core", "Privacy & security endpoints")
+}
+
+Container_Boundary(domain, "Domain Layer") {
+    Component(gratitude_svc, "Gratitude Service", "C#", "Gratitude business logic")
+    Component(appreciation_svc, "Appreciation Service", "C#", "Appreciation business logic")
+    Component(reflection_svc, "Reflection Service", "C#", "Reflection business logic")
+    Component(communication_svc, "Communication Service", "C#", "Communication business logic")
+    Component(health_svc, "Health Service", "C#", "Health monitoring logic")
+    Component(milestone_svc, "Milestone Service", "C#", "Milestone management logic")
+    Component(privacy_svc, "Privacy Service", "C#", "Privacy & encryption logic")
+}
+
+Container_Boundary(events, "Event Processing") {
+    Component(event_publisher, "Event Publisher", "C#", "Publishes domain events")
+    Component(event_handlers, "Event Handlers", "C#", "Processes domain events")
+    Component(notification_svc, "Notification Service", "C#", "Sends notifications")
+}
+
+Container_Boundary(data, "Data Access") {
+    Component(repositories, "Repositories", "Entity Framework", "Data access layer")
+    Component(cache_manager, "Cache Manager", "StackExchange.Redis", "Caching layer")
+    Component(blob_manager, "Blob Manager", "Azure Storage", "Photo storage")
+}
+
+Container_Boundary(infrastructure, "Infrastructure") {
+    Component(encryption, "Encryption Service", "C#", "AES-256 encryption")
+    Component(analytics, "Analytics", "Application Insights", "Monitoring & logging")
+    Component(email_sender, "Email Sender", "SendGrid", "Email notifications")
+}
+
+' UI to API Client
+Rel(ui, state, "Updates/Reads")
+Rel(ui, router, "Navigates")
+Rel(state, api_client, "Dispatches API calls")
+Rel(state, ws_client, "Real-time updates")
+
+' API Client to APIs
+Rel(api_client, auth, "Authenticates")
+Rel(api_client, gratitude_api, "HTTPS")
+Rel(api_client, appreciation_api, "HTTPS")
+Rel(api_client, reflection_api, "HTTPS")
+Rel(api_client, communication_api, "HTTPS")
+Rel(api_client, health_api, "HTTPS")
+Rel(api_client, milestone_api, "HTTPS")
+Rel(api_client, privacy_api, "HTTPS")
+
+' APIs to Services
+Rel(gratitude_api, gratitude_svc, "Uses")
+Rel(appreciation_api, appreciation_svc, "Uses")
+Rel(reflection_api, reflection_svc, "Uses")
+Rel(communication_api, communication_svc, "Uses")
+Rel(health_api, health_svc, "Uses")
+Rel(milestone_api, milestone_svc, "Uses")
+Rel(privacy_api, privacy_svc, "Uses")
+
+' Services to Data
+Rel(gratitude_svc, repositories, "Persists data")
+Rel(appreciation_svc, repositories, "Persists data")
+Rel(reflection_svc, repositories, "Persists data")
+Rel(communication_svc, repositories, "Persists data")
+Rel(health_svc, repositories, "Persists data")
+Rel(milestone_svc, repositories, "Persists data")
+Rel(privacy_svc, repositories, "Persists data")
+
+' Services to Events
+Rel(gratitude_svc, event_publisher, "Publishes events")
+Rel(appreciation_svc, event_publisher, "Publishes events")
+Rel(reflection_svc, event_publisher, "Publishes events")
+Rel(communication_svc, event_publisher, "Publishes events")
+Rel(health_svc, event_publisher, "Publishes events")
+Rel(milestone_svc, event_publisher, "Publishes events")
+
+' Event Processing
+Rel(event_publisher, event_handlers, "Triggers")
+Rel(event_handlers, notification_svc, "Sends notifications")
+Rel(notification_svc, email_sender, "Uses")
+Rel(notification_svc, ws_client, "Pushes updates")
+
+' Infrastructure
+Rel(repositories, cache_manager, "Caches")
+Rel(milestone_svc, blob_manager, "Stores photos")
+Rel(privacy_svc, encryption, "Encrypts/Decrypts")
+Rel_Back(analytics, gratitude_svc, "Tracks")
+Rel_Back(analytics, appreciation_svc, "Tracks")
+Rel_Back(analytics, health_svc, "Tracks")
+
+@enduml

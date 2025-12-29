@@ -1,0 +1,72 @@
+@startuml Golf Score Tracker - Domain Model
+
+skinparam classAttributeIconSize 0
+
+abstract class AggregateRoot
+
+class Round << AggregateRoot >> {
+    + Guid Id
+    + Guid UserId
+    + Guid CourseId
+    + DateTime StartTime
+    + int TotalScore
+    + RoundStatus Status
+    + List<HoleScore> HoleScores
+    --
+    + void Complete()
+    + void Abandon()
+}
+
+class HoleScore << Entity >> {
+    + int HoleNumber
+    + int Strokes
+    + int Par
+    + int? Putts
+    + bool? FairwayHit
+    + bool? GIR
+    --
+    + void RecordScore()
+}
+
+class HandicapIndex << AggregateRoot >> {
+    + Guid UserId
+    + decimal CurrentIndex
+    + decimal PreviousIndex
+    + DateTime CalculationDate
+    --
+    + void Calculate()
+}
+
+class Course << Entity >> {
+    + string Name
+    + decimal Rating
+    + int Slope
+    + int Par
+    + List<Hole> Holes
+}
+
+class ScoringGoal << AggregateRoot >> {
+    + GoalType Type
+    + int TargetScore
+    + DateTime Deadline
+    + GoalStatus Status
+    --
+    + void CheckAchievement()
+}
+
+class PlayerStatistics << Entity >> {
+    + decimal ScoringAverage
+    + decimal FairwaysHitPct
+    + decimal GIRPct
+    + decimal AvgPutts
+}
+
+AggregateRoot <|-- Round
+AggregateRoot <|-- HandicapIndex
+AggregateRoot <|-- ScoringGoal
+
+Round "1" *-- "many" HoleScore
+Round "1" --> "1" Course
+HandicapIndex --> Round : uses best 8 of 20
+
+@enduml

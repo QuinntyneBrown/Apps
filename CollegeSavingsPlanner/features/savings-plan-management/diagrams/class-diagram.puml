@@ -1,0 +1,71 @@
+@startuml Savings Plan Management Class Diagram
+
+class SavingsPlan <<Aggregate Root>> {
+    - PlanId: Guid
+    - UserId: Guid
+    - PlanType: PlanType
+    - StatePlan: string
+    - CurrentBalance: decimal
+    - BeneficiaryId: Guid
+    - Status: PlanStatus
+    --
+    + CreatePlan()
+    + AddBeneficiary()
+    + ChangeBeneficiary()
+    + UpdateBalance()
+    + ClosePlan()
+}
+
+class Beneficiary <<Entity>> {
+    - BeneficiaryId: Guid
+    - Name: string
+    - BirthDate: DateTime
+    - Relationship: string
+    - ExpectedEnrollmentYear: int
+    --
+    + CalculateAge()
+    + CalculateYearsUntilCollege()
+}
+
+enum PlanType {
+    Plan529
+    ESA
+    UTMA
+    UGMA
+    Other
+}
+
+enum PlanStatus {
+    Active
+    Closed
+    Transferred
+}
+
+class CreateSavingsPlanCommand <<Command>> {
+    + PlanType: PlanType
+    + BeneficiaryId: Guid
+    + StatePlan: string
+    + InitialBalance: decimal
+}
+
+class SavingsPlanCreated <<Domain Event>> {
+    + PlanId: Guid
+    + PlanType: string
+    + BeneficiaryId: Guid
+    + CurrentBalance: decimal
+}
+
+class BeneficiaryAdded <<Domain Event>> {
+    + BeneficiaryId: Guid
+    + Name: string
+    + ExpectedEnrollmentYear: int
+}
+
+SavingsPlan "1" --> "1" Beneficiary
+SavingsPlan ..> PlanType
+SavingsPlan ..> PlanStatus
+CreateSavingsPlanCommand ..> SavingsPlan : creates
+SavingsPlan ..> SavingsPlanCreated : raises
+SavingsPlan ..> BeneficiaryAdded : raises
+
+@enduml

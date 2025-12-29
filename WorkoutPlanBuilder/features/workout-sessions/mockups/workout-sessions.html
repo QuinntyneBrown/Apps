@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Workout Session - WorkoutPlanBuilder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Session Info */
+        .session-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px 30px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .status-badge {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .session-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .meta-label {
+            font-weight: 600;
+        }
+
+        .timer {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .progress-bar-container {
+            height: 12px;
+            background: #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .exercise-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .exercise-card.active {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .exercise-card.completed {
+            background: #f8f9fa;
+            border-color: #28a745;
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .exercise-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .status-icon {
+            font-size: 24px;
+        }
+
+        .exercise-targets {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .target-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Sets Table */
+        .sets-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .sets-table th {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .sets-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .sets-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .set-completed {
+            color: #28a745;
+        }
+
+        .pr-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Quick Entry */
+        .quick-entry {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+
+        .entry-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .entry-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            text-align: center;
+        }
+
+        .control-label {
+            font-size: 12px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .number-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: white;
+        }
+
+        .number-display {
+            font-size: 32px;
+            font-weight: 700;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .entry-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Rest Timer */
+        .rest-timer {
+            background: #ffc107;
+            color: #212529;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .rest-timer-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .rest-timer-display {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 15px 0;
+        }
+
+        .rest-timer-bar {
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .rest-timer-progress {
+            height: 100%;
+            background: #212529;
+            border-radius: 10px;
+            transition: width 1s linear;
+        }
+
+        .rest-timer-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .rest-btn {
+            padding: 10px 20px;
+            background: #212529;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .rest-btn:hover {
+            background: #000;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-finish {
+            background: #28a745;
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-finish:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .session-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .entry-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .entry-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Active Workout</h1>
+            <div class="header-actions">
+                <button class="icon-btn">⏸️</button>
+                <button class="icon-btn">⏹️</button>
+                <button class="icon-btn">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Session Info -->
+        <div class="session-info">
+            <div class="session-header">
+                <div class="session-title">Upper Body Push</div>
+                <div class="status-badge">● In Progress</div>
+            </div>
+
+            <div class="session-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Started:</span>
+                    <span>3:45 PM</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Exercises:</span>
+                    <span>2 of 6 completed</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Sets:</span>
+                    <span>11 of 22 completed</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Volume:</span>
+                    <span>8,645 lbs</span>
+                </div>
+            </div>
+
+            <div class="timer">00:42:18</div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 50%"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Completed Exercise -->
+            <div class="exercise-card completed">
+                <div class="exercise-header">
+                    <div class="exercise-title">
+                        <span class="status-icon">✅</span>
+                        1. Barbell Bench Press
+                    </div>
+                </div>
+
+                <div class="exercise-targets">
+                    <div class="target-item">
+                        <span>💪</span>
+                        <span>Chest, Triceps</span>
+                    </div>
+                    <div class="target-item">
+                        <span>Target:</span>
+                        <span>4 sets × 8-12 reps</span>
+                    </div>
+                    <div class="target-item">
+                        <span>Rest:</span>
+                        <span>90s</span>
+                    </div>
+                </div>
+
+                <table class="sets-table">
+                    <thead>
+                        <tr>
+                            <th>Set</th>
+                            <th>Reps</th>
+                            <th>Weight</th>
+                            <th>Volume</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="set-completed">
+                            <td>1</td>
+                            <td>10</td>
+                            <td>185 lbs</td>
+                            <td>1,850 lbs</td>
+                            <td>✅ <span class="pr-badge">PR!</span></td>
+                        </tr>
+                        <tr class="set-completed">
+                            <td>2</td>
+                            <td>10</td>
+                            <td>185 lbs</td>
+                            <td>1,850 lbs</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr class="set-completed">
+                            <td>3</td>
+                            <td>9</td>
+                            <td>185 lbs</td>
+                            <td>1,665 lbs</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr class="set-completed">
+                            <td>4</td>
+                            <td>8</td>
+                            <td>185 lbs</td>
+                            <td>1,480 lbs</td>
+                            <td>✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="text-align: center; color: #6c757d; font-size: 13px; margin-top: 10px;">
+                    Total: 37 reps • 740 lbs • 6,845 lbs volume
+                </div>
+            </div>
+
+            <!-- Active Exercise -->
+            <div class="exercise-card active">
+                <div class="exercise-header">
+                    <div class="exercise-title">
+                        <span class="status-icon">🏃</span>
+                        2. Overhead Press
+                    </div>
+                </div>
+
+                <div class="exercise-targets">
+                    <div class="target-item">
+                        <span>💪</span>
+                        <span>Shoulders, Triceps</span>
+                    </div>
+                    <div class="target-item">
+                        <span>Target:</span>
+                        <span>3 sets × 10-12 reps</span>
+                    </div>
+                    <div class="target-item">
+                        <span>Rest:</span>
+                        <span>60s</span>
+                    </div>
+                    <div class="target-item">
+                        <span>PR:</span>
+                        <span>135 lbs</span>
+                    </div>
+                </div>
+
+                <table class="sets-table">
+                    <thead>
+                        <tr>
+                            <th>Set</th>
+                            <th>Reps</th>
+                            <th>Weight</th>
+                            <th>Volume</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="set-completed">
+                            <td>1</td>
+                            <td>12</td>
+                            <td>115 lbs</td>
+                            <td>1,380 lbs</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr class="set-completed">
+                            <td>2</td>
+                            <td>11</td>
+                            <td>115 lbs</td>
+                            <td>1,265 lbs</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td colspan="4" style="text-align: center; color: #6c757d;">Next set...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Quick Entry -->
+                <div class="quick-entry">
+                    <div class="entry-title">Quick Entry - Set 3</div>
+
+                    <div class="entry-controls">
+                        <div class="control-group">
+                            <div class="control-label">Weight (lbs)</div>
+                            <div class="number-control">
+                                <button class="control-btn">-</button>
+                                <div class="number-display">115</div>
+                                <button class="control-btn">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Reps</div>
+                            <div class="number-control">
+                                <button class="control-btn">-</button>
+                                <div class="number-display">11</div>
+                                <button class="control-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-actions">
+                        <button class="btn btn-primary">LOG SET & REST</button>
+                        <button class="btn btn-secondary">JUST LOG</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rest Timer -->
+            <div class="rest-timer" style="display: none;">
+                <div class="rest-timer-label">⏱️ Rest Timer</div>
+                <div class="rest-timer-display">00:42</div>
+                <div class="rest-timer-bar">
+                    <div class="rest-timer-progress" style="width: 70%"></div>
+                </div>
+                <div class="rest-timer-actions">
+                    <button class="rest-btn">+15s</button>
+                    <button class="rest-btn">SKIP REST</button>
+                    <button class="rest-btn">-15s</button>
+                </div>
+            </div>
+
+            <!-- Upcoming Exercise -->
+            <div class="exercise-card">
+                <div class="exercise-header">
+                    <div class="exercise-title">
+                        <span class="status-icon">⏳</span>
+                        3. Incline Dumbbell Press
+                    </div>
+                </div>
+                <div class="exercise-targets">
+                    <div class="target-item">
+                        <span>Target:</span>
+                        <span>3 sets × 10-12 reps</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div style="color: #6c757d; font-size: 14px;">
+                <strong>4 exercises remaining</strong>
+            </div>
+            <button class="btn-finish">FINISH WORKOUT ✅</button>
+        </div>
+    </div>
+</body>
+</html>

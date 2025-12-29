@@ -1,0 +1,37 @@
+@startuml CryptoPortfolioManager_SequenceDiagram
+
+title Add Wallet and Sync Transactions
+
+actor User
+participant UI
+participant API
+participant WalletService
+participant BlockchainAPI
+participant TransactionService
+participant EventBus
+participant Database
+
+User -> UI: Add wallet address
+UI -> API: POST /api/wallets
+API -> WalletService: CreateWallet(address)
+WalletService -> Database: Insert Wallet
+WalletService -> EventBus: Publish WalletAdded
+WalletService --> API: Wallet created
+API --> UI: Success
+
+UI -> API: POST /api/wallets/{id}/sync
+API -> WalletService: SyncWallet(id)
+WalletService -> BlockchainAPI: GetBalance(address)
+BlockchainAPI --> WalletService: Balance data
+WalletService -> Database: Update WalletBalance
+WalletService -> BlockchainAPI: GetTransactions(address)
+BlockchainAPI --> WalletService: Transaction list
+WalletService -> TransactionService: ImportTransactions(list)
+TransactionService -> Database: Insert Transactions
+TransactionService -> EventBus: Publish TransactionDetected (for each)
+WalletService -> EventBus: Publish WalletSynced
+WalletService --> API: Sync complete
+API --> UI: Success
+UI --> User: Display updated portfolio
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml Create and Assign Chore Sequence
+
+actor Parent
+participant UI
+participant API
+participant ChoreService
+participant EventBus
+participant NotificationService
+
+Parent -> UI: Create new chore
+UI -> UI: Display chore form
+Parent -> UI: Enter chore details
+UI -> API: POST /api/chores
+API -> ChoreService: CreateChore(command)
+ChoreService -> ChoreService: Calculate point value
+ChoreService -> EventBus: Raise ChoreCreated
+ChoreService --> API: ChoreId
+API --> UI: 201 Created
+UI --> Parent: Success + prompt to assign
+
+Parent -> UI: Assign chore to child
+UI -> API: POST /api/chores/{id}/assign
+API -> ChoreService: AssignChore(command)
+ChoreService -> EventBus: Raise ChoreAssigned
+ChoreService --> API: AssignmentId
+API --> UI: 201 Created
+
+EventBus -> NotificationService: ChoreAssigned event
+NotificationService -> NotificationService: Send notification to child
+NotificationService --> EventBus: Notification sent
+
+UI --> Parent: Assignment confirmed
+
+@enduml

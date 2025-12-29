@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Score Tracker - Active Scorecard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .back-button { font-size: 24px; cursor: pointer; color: #22c55e; }
+        .course-name { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+        .hole-indicator {
+            background: #22c55e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .score-summary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            padding: 24px 30px;
+            text-align: center;
+        }
+        .score-text { font-size: 16px; margin-bottom: 8px; opacity: 0.9; }
+        .score-value { font-size: 48px; font-weight: 700; }
+        .scorecard {
+            padding: 30px;
+        }
+        .scorecard-grid {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .scorecard-row {
+            display: grid;
+            grid-template-columns: 60px repeat(9, 1fr);
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .scorecard-row:last-child { border-bottom: none; }
+        .scorecard-cell {
+            padding: 12px;
+            text-align: center;
+            border-right: 1px solid #e0e0e0;
+            font-weight: 600;
+        }
+        .scorecard-cell:last-child { border-right: none; }
+        .label-cell { background: #f9fafb; color: #666; font-size: 12px; }
+        .hole-number { background: #f9fafb; }
+        .par-cell { background: #fef3c7; }
+        .score-cell { font-size: 18px; }
+        .score-birdie { background: #d1fae5; color: #065f46; }
+        .score-par { background: #e0f2fe; color: #075985; }
+        .score-bogey { background: #fed7aa; color: #92400e; }
+        .score-empty { background: #f3f4f6; color: #d1d5db; }
+        .score-active { background: #22c55e; color: white; font-size: 24px; }
+        .current-hole {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .hole-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .score-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .score-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .score-btn:hover { background: #f9fafb; }
+        .score-btn.selected {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-group { display: flex; flex-direction: column; gap: 12px; }
+        .stat-label { font-size: 14px; color: #666; font-weight: 600; }
+        .putt-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .putt-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .putt-btn.selected {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: white;
+            color: #22c55e;
+            border: 2px solid #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="back-button">←</div>
+                <div class="course-name">Round at Pine Valley Golf Club</div>
+            </div>
+            <div class="hole-indicator">Hole 5 of 18</div>
+        </header>
+
+        <div class="score-summary">
+            <div class="score-text">Current Score</div>
+            <div class="score-value">38 (+2)</div>
+        </div>
+
+        <div class="scorecard">
+            <div class="scorecard-grid">
+                <div class="scorecard-row">
+                    <div class="scorecard-cell label-cell">Hole</div>
+                    <div class="scorecard-cell hole-number">1</div>
+                    <div class="scorecard-cell hole-number">2</div>
+                    <div class="scorecard-cell hole-number">3</div>
+                    <div class="scorecard-cell hole-number">4</div>
+                    <div class="scorecard-cell hole-number">5</div>
+                    <div class="scorecard-cell hole-number">6</div>
+                    <div class="scorecard-cell hole-number">7</div>
+                    <div class="scorecard-cell hole-number">8</div>
+                    <div class="scorecard-cell hole-number">9</div>
+                </div>
+                <div class="scorecard-row">
+                    <div class="scorecard-cell label-cell">Par</div>
+                    <div class="scorecard-cell par-cell">4</div>
+                    <div class="scorecard-cell par-cell">3</div>
+                    <div class="scorecard-cell par-cell">5</div>
+                    <div class="scorecard-cell par-cell">4</div>
+                    <div class="scorecard-cell par-cell">4</div>
+                    <div class="scorecard-cell par-cell">3</div>
+                    <div class="scorecard-cell par-cell">5</div>
+                    <div class="scorecard-cell par-cell">4</div>
+                    <div class="scorecard-cell par-cell">4</div>
+                </div>
+                <div class="scorecard-row">
+                    <div class="scorecard-cell label-cell">Score</div>
+                    <div class="scorecard-cell score-cell score-par">4</div>
+                    <div class="scorecard-cell score-cell score-birdie">2</div>
+                    <div class="scorecard-cell score-cell score-par">5</div>
+                    <div class="scorecard-cell score-cell score-bogey">5</div>
+                    <div class="scorecard-cell score-cell score-active">5</div>
+                    <div class="scorecard-cell score-cell score-empty">-</div>
+                    <div class="scorecard-cell score-cell score-empty">-</div>
+                    <div class="scorecard-cell score-cell score-empty">-</div>
+                    <div class="scorecard-cell score-cell score-empty">-</div>
+                </div>
+            </div>
+
+            <div class="current-hole">
+                <div class="hole-title">
+                    <span>Hole 5 - Par 4</span>
+                    <span>Edit Score</span>
+                </div>
+
+                <div class="stat-label">Score</div>
+                <div class="score-buttons">
+                    <button class="score-btn">3</button>
+                    <button class="score-btn">4</button>
+                    <button class="score-btn selected">5</button>
+                    <button class="score-btn">6</button>
+                    <button class="score-btn">7+</button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-group">
+                        <div class="stat-label">Putts</div>
+                        <div class="putt-buttons">
+                            <button class="putt-btn">1</button>
+                            <button class="putt-btn selected">2</button>
+                            <button class="putt-btn">3+</button>
+                        </div>
+                    </div>
+                    <div class="stat-group">
+                        <div class="stat-label">Statistics</div>
+                        <label class="checkbox-group">
+                            <input type="checkbox" class="checkbox">
+                            <span>Fairway Hit</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="stat-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" class="checkbox">
+                        <span>Green in Regulation (GIR)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn btn-secondary">← Previous Hole</button>
+                <button class="nav-btn btn-primary">Save & Next Hole →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

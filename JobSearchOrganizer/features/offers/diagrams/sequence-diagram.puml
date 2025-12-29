@@ -1,0 +1,45 @@
+@startuml Offers - Sequence Diagram
+
+title Offer Management Flow
+
+actor "Job Seeker" as seeker
+participant "UI" as ui
+participant "OfferController" as controller
+participant "OfferService" as service
+participant "OfferRepository" as repo
+
+== Record Offer ==
+
+seeker -> ui: Enter offer details
+ui -> controller: POST /api/offers
+controller -> service: RecordOffer(command)
+service -> repo: Add(offer)
+service --> controller: Offer created
+controller --> ui: 201 Created
+ui --> seeker: Offer recorded successfully
+
+== Compare Offers ==
+
+seeker -> ui: Select offers to compare
+ui -> controller: GET /api/offers/compare?ids=...
+controller -> service: CompareOffers(ids)
+service -> repo: GetByIds(ids)
+service -> service: Calculate comparisons
+service --> controller: Comparison result
+controller --> ui: 200 OK
+ui -> ui: Render comparison table
+ui --> seeker: Display side-by-side comparison
+
+== Accept Offer ==
+
+seeker -> ui: Click accept offer
+ui -> controller: POST /api/offers/{id}/accept
+controller -> service: AcceptOffer(id)
+service -> repo: GetById(id)
+service -> service: Update status
+service -> repo: Update(offer)
+service --> controller: Accepted
+controller --> ui: 200 OK
+ui --> seeker: Offer accepted
+
+@enduml

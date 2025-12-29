@@ -1,0 +1,93 @@
+@startuml DigitalLegacyPlanner_Architecture
+!define RECTANGLE class
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor<<UI>> #E3F2FD
+    BackgroundColor<<API>> #FFF3E0
+    BackgroundColor<<Service>> #F3E5F5
+    BackgroundColor<<Data>> #E8F5E9
+    BorderColor #666666
+}
+
+package "Frontend Layer" {
+    component [Web Application] <<UI>> as WebApp
+    component [Mobile App] <<UI>> as MobileApp
+    component [Executor Portal] <<UI>> as ExecutorPortal
+}
+
+package "API Gateway Layer" {
+    component [API Gateway] <<API>> as Gateway
+    component [Authentication] <<API>> as Auth
+    component [Authorization] <<API>> as AuthZ
+}
+
+package "Business Logic Layer" {
+    component [Account Service] <<Service>> as AccountSvc
+    component [Instruction Service] <<Service>> as InstructionSvc
+    component [Emergency Service] <<Service>> as EmergencySvc
+    component [Will Service] <<Service>> as WillSvc
+    component [Asset Service] <<Service>> as AssetSvc
+    component [Notification Service] <<Service>> as NotifySvc
+    component [Dead Man's Switch] <<Service>> as DeadManSvc
+}
+
+package "Data Layer" {
+    database [PostgreSQL] <<Data>> as DB
+    database [Encrypted Vault] <<Data>> as Vault
+    database [Document Store] <<Data>> as DocStore
+    component [Event Store] <<Data>> as EventStore
+}
+
+package "External Services" {
+    component [Email Service] as Email
+    component [SMS Service] as SMS
+    component [Encryption Service] as Encrypt
+}
+
+WebApp --> Gateway
+MobileApp --> Gateway
+ExecutorPortal --> Gateway
+
+Gateway --> Auth
+Gateway --> AuthZ
+Gateway --> AccountSvc
+Gateway --> InstructionSvc
+Gateway --> EmergencySvc
+Gateway --> WillSvc
+Gateway --> AssetSvc
+
+AccountSvc --> DB
+InstructionSvc --> DB
+EmergencySvc --> DB
+WillSvc --> DocStore
+AssetSvc --> Vault
+
+DeadManSvc --> EmergencySvc
+EmergencySvc --> NotifySvc
+NotifySvc --> Email
+NotifySvc --> SMS
+
+AccountSvc --> Encrypt
+AssetSvc --> Encrypt
+
+AccountSvc --> EventStore
+InstructionSvc --> EventStore
+EmergencySvc --> EventStore
+WillSvc --> EventStore
+AssetSvc --> EventStore
+
+note right of Vault
+  Encrypted storage for
+  credentials and sensitive
+  asset information
+end note
+
+note right of DeadManSvc
+  Monitors user activity
+  Triggers emergency access
+  Sends warnings
+end note
+
+@enduml

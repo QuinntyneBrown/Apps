@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Savings Calculator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .scenario-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid #667eea;
+        }
+        .scenario-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .scenario-card.success { border-top-color: #10b981; }
+        .scenario-card.warning { border-top-color: #f59e0b; }
+        .scenario-card.info { border-top-color: #3b82f6; }
+        .scenario-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.75rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .metric-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .gap-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .gap-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .gap-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .success-rate {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .success-rate.high { color: #10b981; }
+        .success-rate.medium { color: #f59e0b; }
+        .scenario-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            flex: 1;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        .income-bar {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .income-visual {
+            height: 30px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-right: 1rem;
+            transition: width 0.5s ease;
+        }
+        .income-amount {
+            font-weight: 700;
+            min-width: 80px;
+            color: #1f2937;
+        }
+        .income-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .recommendation-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .recommendation-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+        .new-scenario-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border: 2px dashed #9ca3af;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .new-scenario-card:hover {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            border-color: #667eea;
+        }
+        .new-scenario-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1 class="header-title">💰 Retirement Savings Calculator</h1>
+                <p style="color: #6b7280; margin-top: 0.25rem;">Plan your financial future with confidence</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span style="color: #6b7280;">👤 John Doe</span>
+                <button class="btn btn-primary">+ New Scenario</button>
+            </div>
+        </div>
+
+        <h2 style="color: white; margin-bottom: 1rem; font-size: 1.5rem;">My Retirement Scenarios</h2>
+
+        <div class="scenarios-grid">
+            <!-- Scenario 1: Success -->
+            <div class="scenario-card success">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div class="scenario-name">🟢 Retire at 65</div>
+                    <span style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">PRIMARY</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Target Age</span>
+                    <span class="metric-value">65 (30 years)</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Projected Savings</span>
+                    <span class="metric-value">$1.2M</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Monthly Income</span>
+                    <span class="metric-value">$5,000</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Savings Gap</span>
+                    <span class="gap-badge gap-success">✓ On Track</span>
+                </div>
+                <div class="success-rate high">92% Success</div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary btn-small">View</button>
+                    <button class="btn btn-small" style="background: #f3f4f6; color: #1f2937;">Edit</button>
+                    <button class="btn btn-small" style="background: #f3f4f6; color: #1f2937;">Duplicate</button>
+                </div>
+            </div>
+
+            <!-- Scenario 2: Warning -->
+            <div class="scenario-card warning">
+                <div class="scenario-name">🟡 Early at 60</div>
+                <div class="metric-row">
+                    <span class="metric-label">Target Age</span>
+                    <span class="metric-value">60 (25 years)</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Projected Savings</span>
+                    <span class="metric-value">$850K</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Monthly Income</span>
+                    <span class="metric-value">$3,500</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Savings Gap</span>
+                    <span class="gap-badge gap-warning">⚠️ -$150K</span>
+                </div>
+                <div class="success-rate medium">68% Success</div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary btn-small">View</button>
+                    <button class="btn btn-small" style="background: #f3f4f6; color: #1f2937;">Edit</button>
+                    <button class="btn btn-small" style="background: #fee2e2; color: #991b1b;">Delete</button>
+                </div>
+            </div>
+
+            <!-- Scenario 3: Info -->
+            <div class="scenario-card info">
+                <div class="scenario-name">🔵 Aggressive Growth</div>
+                <div class="metric-row">
+                    <span class="metric-label">Target Age</span>
+                    <span class="metric-value">67 (32 years)</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Projected Savings</span>
+                    <span class="metric-value">$1.8M</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Monthly Income</span>
+                    <span class="metric-value">$7,500</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Savings Gap</span>
+                    <span class="gap-badge gap-success">✓ +$200K</span>
+                </div>
+                <div class="success-rate high">96% Success</div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary btn-small">View</button>
+                    <button class="btn btn-small" style="background: #f3f4f6; color: #1f2937;">Edit</button>
+                    <button class="btn btn-small" style="background: #f3f4f6; color: #1f2937;">Duplicate</button>
+                </div>
+            </div>
+
+            <!-- New Scenario Card -->
+            <div class="scenario-card new-scenario-card">
+                <div class="new-scenario-icon">+</div>
+                <h3 style="color: #6b7280; margin-bottom: 0.5rem;">Create New Scenario</h3>
+                <p style="color: #9ca3af; font-size: 0.875rem; text-align: center; padding: 0 2rem;">
+                    Compare different strategies and find what works best
+                </p>
+            </div>
+        </div>
+
+        <!-- Income Breakdown -->
+        <div class="chart-card">
+            <h2 class="chart-title">💵 Retirement Income Breakdown (Monthly)</h2>
+            <div style="max-width: 800px;">
+                <div class="income-bar">
+                    <div class="income-visual" style="width: 50%;"></div>
+                    <span class="income-amount">$3,200</span>
+                    <span class="income-label">Savings Withdrawal (4% rule)</span>
+                </div>
+                <div class="income-bar">
+                    <div class="income-visual" style="width: 38%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                    <span class="income-amount">$2,400</span>
+                    <span class="income-label">Social Security (claim at 67)</span>
+                </div>
+                <div class="income-bar">
+                    <div class="income-visual" style="width: 12%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+                    <span class="income-amount">$800</span>
+                    <span class="income-label">Part-time Work (ages 65-70)</span>
+                </div>
+                <div style="border-top: 2px solid #e5e7eb; margin-top: 1.5rem; padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700;">
+                        <span>Total Monthly Income:</span>
+                        <span style="color: #10b981;">$6,400</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #6b7280;">
+                        <span>Estimated Expenses:</span>
+                        <span>$5,500</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-weight: 700;">
+                        <span>Monthly Surplus:</span>
+                        <span style="color: #10b981;">$900 ✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="chart-card">
+            <h2 class="chart-title">💡 Recommendations & Actions</h2>
+            <div class="recommendation-card">
+                <div style="display: flex; align-items: center;">
+                    <span class="recommendation-icon">✅</span>
+                    <div>
+                        <strong>Great job!</strong> You're on track to meet your retirement goals.
+                        Keep contributing $500/month consistently.
+                    </div>
+                </div>
+            </div>
+            <div class="recommendation-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #f59e0b;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        <span class="recommendation-icon">💡</span>
+                        <div>
+                            <strong>Consider delaying Social Security to age 70</strong><br>
+                            <span style="font-size: 0.875rem; color: #92400e;">Impact: +$576/month for life (24% higher benefits)</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-small" style="white-space: nowrap;">Create Scenario</button>
+                </div>
+            </div>
+            <div class="recommendation-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        <span class="recommendation-icon">📊</span>
+                        <div>
+                            <strong>Run Monte Carlo simulation</strong><br>
+                            <span style="font-size: 0.875rem; color: #1e40af;">See success probability across 10,000 market scenarios</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-small" style="white-space: nowrap;">Run Simulation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

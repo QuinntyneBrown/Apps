@@ -1,0 +1,41 @@
+@startuml Reminders - Sequence Diagram
+
+title Send and Act on Reminder
+
+participant "SchedulerJob" as Job
+participant "ReminderRepository" as Repo
+participant "Reminder" as Rem
+participant "NotificationService" as Notif
+participant "User" as User
+
+Job -> Repo: GetPendingReminders(now)
+activate Repo
+Repo --> Job: List<Reminder>
+deactivate Repo
+
+loop For each reminder
+  Job -> Rem: MarkSent()
+  activate Rem
+  Rem -> Rem: Set status = Sent
+  Rem --> Job: Updated
+  deactivate Rem
+
+  Job -> Notif: SendNotification(reminder)
+  activate Notif
+  Notif -> User: Push notification
+  Notif --> Job: Sent
+  deactivate Notif
+end
+
+User -> Notif: Clicks "Complete Now"
+activate Notif
+Notif -> Rem: MarkActedUpon(now)
+activate Rem
+Rem -> Rem: Calculate response time
+Rem -> Rem: Set status = ActedUpon
+Rem --> Notif: Updated
+deactivate Rem
+Notif --> User: Completion flow
+deactivate Notif
+
+@enduml

@@ -1,0 +1,98 @@
+@startuml RelationshipStrength_Calculation
+
+skinparam activityBackgroundColor #WhiteSmoke
+skinparam activityBorderColor #Black
+
+start
+
+:Trigger: Daily background job\nor Interaction logged;
+
+:Get all contacts for user;
+
+partition "For each contact" {
+
+  :Load interaction history;
+  :Load value exchanges;
+  :Load contact metadata;
+
+  partition "Calculate Interaction Frequency (40%)" {
+    :Count interactions in last 90 days;
+    :Calculate frequency score;
+    note right
+      Weekly = 100
+      Bi-weekly = 80
+      Monthly = 60
+      Quarterly = 40
+      Less = 20
+    end note
+    :Frequency Score = Score * 0.4;
+  }
+
+  partition "Calculate Recency (30%)" {
+    :Get last interaction date;
+    :Calculate days since;
+    :Calculate recency score;
+    note right
+      <= 7 days = 100
+      <= 30 days = 80
+      <= 90 days = 60
+      <= 180 days = 40
+      > 180 days = 20 * decay
+    end note
+    :Recency Score = Score * 0.3;
+  }
+
+  partition "Calculate Quality (20%)" {
+    :Analyze interaction types;
+    :Weight by quality\n(In-person=100, Video=80, Call=60, Email=40);
+    :Calculate weighted average;
+    :Quality Score = Average * 0.2;
+  }
+
+  partition "Calculate Value Exchange (10%)" {
+    :Count value provided;
+    :Count value received;
+    :Calculate balance;
+    :Calculate value score;
+    note right
+      Mutual = 100
+      Slightly imbalanced = 80
+      One-sided = 50
+    end note
+    :Value Score = Score * 0.1;
+  }
+
+  :Total Score = Sum of all factors;
+
+  :Get previous score;
+  :Calculate trend;
+
+  if (Current Score >= 75) then (yes)
+    :Classify as Strong Tie;
+    if (Was not strong tie before?) then (yes)
+      :Emit StrongTieIdentified event;
+    endif
+  else if (Current Score < 40) then (yes)
+    :Classify as Weak Tie;
+    if (Was not weak tie before?) then (yes)
+      :Emit WeakTieDetected event;
+    endif
+  endif
+
+  if (Score dropped > 15 points in 30 days?) then (yes)
+    :Flag as at-risk;
+    :Generate re-engagement suggestion;
+  endif
+
+  :Save relationship strength;
+  :Emit RelationshipStrengthCalculated event;
+
+  :Check for milestones;
+  if (Anniversary or milestone reached?) then (yes)
+    :Emit RelationshipMilestoneReached event;
+  endif
+}
+
+stop
+
+@enduml

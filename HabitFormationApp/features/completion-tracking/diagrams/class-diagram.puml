@@ -1,0 +1,280 @@
+@startuml Completion Tracking - Class Diagram
+
+!define AGGREGATE_COLOR #FFE5B4
+!define ENTITY_COLOR #B4D7FF
+!define VALUE_OBJECT_COLOR #D7FFB4
+!define SERVICE_COLOR #FFB4D7
+
+' Aggregate Root
+class HabitCompletion <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - HabitId: Guid
+  - UserId: Guid
+  - CompletedAt: DateTime
+  - LoggedAt: DateTime
+  - ScheduledFor: DateTime
+  - IsLate: bool
+  - Notes: string?
+  - Location: string?
+  - Duration: int?
+  - IsDeleted: bool
+  - DeletedAt: DateTime?
+  --
+  + Create(habitId, userId, completedAt, ...): HabitCompletion
+  + Undo(reason): void
+  + UpdateMetadata(notes, location, duration): void
+  + IsWithinUndoWindow(): bool
+  - ValidateCompletionDate(date, habitStartDate): void
+  - DetermineIfLate(completedAt, scheduledFor): bool
+  - CalculateScheduledTime(habit): DateTime
+}
+
+' Value Objects
+class CompletionMetadata <<Value Object>> VALUE_OBJECT_COLOR {
+  + Notes: string?
+  + Location: string?
+  + Duration: int?
+  --
+  + CompletionMetadata(notes, location, duration)
+  + IsEmpty(): bool
+}
+
+class StreakInfo <<Value Object>> VALUE_OBJECT_COLOR {
+  + CurrentStreak: int
+  + BestStreak: int
+  + LastCompletionDate: DateTime?
+  --
+  + StreakInfo(current, best, lastDate)
+}
+
+class CompletionStats <<Value Object>> VALUE_OBJECT_COLOR {
+  + TotalCompletions: int
+  + CompletionRate: double
+  + CurrentStreak: int
+  + BestStreak: int
+  + AverageCompletionTime: TimeSpan?
+  --
+  + CompletionStats(...)
+}
+
+' Commands
+class LogHabitCompletionCommand <<Command>> {
+  + HabitId: Guid
+  + UserId: Guid
+  + CompletedAt: DateTime
+  + Notes: string?
+  + Location: string?
+  + Duration: int?
+}
+
+class UndoHabitCompletionCommand <<Command>> {
+  + CompletionId: Guid
+  + UserId: Guid
+  + Reason: string?
+}
+
+class LogLateCompletionCommand <<Command>> {
+  + HabitId: Guid
+  + UserId: Guid
+  + CompletedAt: DateTime
+  + ScheduledFor: DateTime
+  + Notes: string?
+  + Location: string?
+  + Duration: int?
+}
+
+' Events
+class HabitCompletionLogged <<Domain Event>> {
+  + CompletionId: Guid
+  + HabitId: Guid
+  + UserId: Guid
+  + CompletedAt: DateTime
+  + IsLate: bool
+  + OccurredAt: DateTime
+}
+
+class HabitCompletionUndone <<Domain Event>> {
+  + CompletionId: Guid
+  + HabitId: Guid
+  + UserId: Guid
+  + Reason: string?
+  + OccurredAt: DateTime
+}
+
+class LateCompletionLogged <<Domain Event>> {
+  + CompletionId: Guid
+  + HabitId: Guid
+  + UserId: Guid
+  + CompletedAt: DateTime
+  + ScheduledFor: DateTime
+  + MinutesLate: int
+  + OccurredAt: DateTime
+}
+
+' Command Handlers
+class LogHabitCompletionCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - completionRepository: IHabitCompletionRepository
+  - habitRepository: IHabitRepository
+  - eventPublisher: IEventPublisher
+  - timeProvider: ITimeProvider
+  --
+  + Handle(command): Task<Guid>
+  - ValidateHabitOwnership(habitId, userId): Task
+  - CheckDuplicateCompletion(habitId, date): Task<bool>
+  - DetermineScheduledTime(habit, completedAt): DateTime
+}
+
+class UndoHabitCompletionCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - completionRepository: IHabitCompletionRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command): Task
+  - ValidateOwnership(completion, userId): void
+  - ValidateUndoWindow(completion): void
+}
+
+' Repositories
+interface IHabitCompletionRepository {
+  + GetByIdAsync(id): Task<HabitCompletion?>
+  + GetByHabitIdAsync(habitId, params): Task<PagedList<HabitCompletion>>
+  + GetByUserAndDateAsync(userId, date): Task<List<HabitCompletion>>
+  + GetTodayCompletionsAsync(userId): Task<List<HabitCompletion>>
+  + AddAsync(completion): Task
+  + UpdateAsync(completion): Task
+  + HasCompletionForDateAsync(habitId, date): Task<bool>
+}
+
+' Query Models
+class CompletionDto <<DTO>> ENTITY_COLOR {
+  + Id: Guid
+  + HabitId: Guid
+  + HabitName: string
+  + HabitIcon: string
+  + UserId: Guid
+  + CompletedAt: DateTime
+  + LoggedAt: DateTime
+  + ScheduledFor: DateTime
+  + IsLate: bool
+  + Notes: string?
+  + Location: string?
+  + Duration: int?
+}
+
+class StreakDto <<DTO>> ENTITY_COLOR {
+  + HabitId: Guid
+  + CurrentStreak: int
+  + BestStreak: int
+  + LastCompletionDate: DateTime?
+}
+
+class CompletionStatsDto <<DTO>> ENTITY_COLOR {
+  + HabitId: Guid
+  + TotalCompletions: int
+  + CompletionRate: double
+  + CurrentStreak: int
+  + BestStreak: int
+  + AverageCompletionTime: string?
+  + LateCompletionPercentage: double
+}
+
+' Queries
+class GetCompletionByIdQuery <<Query>> {
+  + CompletionId: Guid
+}
+
+class GetCompletionsByHabitQuery <<Query>> {
+  + HabitId: Guid
+  + Page: int
+  + PageSize: int
+  + StartDate: DateTime?
+  + EndDate: DateTime?
+}
+
+class GetTodayCompletionsQuery <<Query>> {
+  + UserId: Guid
+}
+
+class GetCompletionStreakQuery <<Query>> {
+  + HabitId: Guid
+}
+
+class GetCompletionStatsQuery <<Query>> {
+  + HabitId: Guid
+}
+
+' Query Handlers
+class CompletionQueryHandler <<Query Handler>> SERVICE_COLOR {
+  - dbContext: ICompletionDbContext
+  --
+  + Handle(GetCompletionByIdQuery): Task<CompletionDto?>
+  + Handle(GetCompletionsByHabitQuery): Task<PagedList<CompletionDto>>
+  + Handle(GetTodayCompletionsQuery): Task<List<CompletionDto>>
+}
+
+class StreakCalculationService <<Domain Service>> SERVICE_COLOR {
+  - completionRepository: IHabitCompletionRepository
+  - habitRepository: IHabitRepository
+  --
+  + CalculateStreak(habitId): Task<StreakInfo>
+  - GetConsecutiveCompletions(habit, completions): int
+  - CheckDailyHabitStreak(completions): int
+  - CheckWeeklyHabitStreak(habit, completions): int
+}
+
+class CompletionStatsService <<Domain Service>> SERVICE_COLOR {
+  - completionRepository: IHabitCompletionRepository
+  - habitRepository: IHabitRepository
+  --
+  + CalculateStats(habitId): Task<CompletionStats>
+  - CalculateCompletionRate(habit, completions): double
+  - CalculateAverageTime(completions): TimeSpan?
+}
+
+' Relationships
+HabitCompletion *-- CompletionMetadata
+HabitCompletion ..> HabitCompletionLogged: publishes
+HabitCompletion ..> HabitCompletionUndone: publishes
+HabitCompletion ..> LateCompletionLogged: publishes
+
+LogHabitCompletionCommand ..> LogHabitCompletionCommandHandler
+UndoHabitCompletionCommand ..> UndoHabitCompletionCommandHandler
+
+LogHabitCompletionCommandHandler --> IHabitCompletionRepository
+LogHabitCompletionCommandHandler ..> HabitCompletion: creates
+UndoHabitCompletionCommandHandler --> IHabitCompletionRepository
+UndoHabitCompletionCommandHandler ..> HabitCompletion: modifies
+
+CompletionQueryHandler ..> CompletionDto: returns
+CompletionQueryHandler ..> CompletionStatsDto: returns
+
+GetCompletionByIdQuery ..> CompletionQueryHandler
+GetCompletionsByHabitQuery ..> CompletionQueryHandler
+GetTodayCompletionsQuery ..> CompletionQueryHandler
+
+GetCompletionStreakQuery ..> StreakCalculationService
+StreakCalculationService ..> StreakDto: returns
+StreakCalculationService --> IHabitCompletionRepository
+
+GetCompletionStatsQuery ..> CompletionStatsService
+CompletionStatsService ..> CompletionStatsDto: returns
+CompletionStatsService --> IHabitCompletionRepository
+
+note right of HabitCompletion
+  Aggregate ensures completion
+  validity and publishes events
+  for streak updates
+end note
+
+note bottom of StreakCalculationService
+  Domain service for complex
+  streak calculation logic
+  across multiple completions
+end note
+
+note bottom of LogHabitCompletionCommandHandler
+  Validates habit ownership,
+  checks for duplicates,
+  determines if late
+end note
+
+@enduml

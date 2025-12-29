@@ -1,0 +1,238 @@
+@startuml Habit Management - Class Diagram
+
+!define AGGREGATE_COLOR #FFE5B4
+!define ENTITY_COLOR #B4D7FF
+!define VALUE_OBJECT_COLOR #D7FFB4
+!define SERVICE_COLOR #FFB4D7
+
+' Aggregate Root
+class Habit <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - Name: string
+  - Description: string
+  - Frequency: FrequencyType
+  - FrequencyDetails: FrequencyDetails
+  - Category: string
+  - StartDate: DateTime
+  - TargetDuration: int?
+  - ReminderEnabled: bool
+  - IsArchived: bool
+  - CreatedAt: DateTime
+  - UpdatedAt: DateTime
+  - ArchivedAt: DateTime?
+  --
+  + Create(userId, name, description, ...): Habit
+  + Modify(name, description, frequency, ...): void
+  + Archive(reason): void
+  + Reactivate(newStartDate): void
+  - ValidateName(name): void
+  - ValidateStartDate(date): void
+  - EnsureNotArchived(): void
+}
+
+' Value Objects
+class FrequencyDetails <<Value Object>> VALUE_OBJECT_COLOR {
+  + DaysOfWeek: int[]
+  + TimesPerWeek: int
+  + PreferredTime: TimeSpan?
+  --
+  + FrequencyDetails(days, times, time)
+  + IsValidForFrequencyType(type): bool
+}
+
+enum FrequencyType VALUE_OBJECT_COLOR {
+  Daily
+  Weekly
+  Custom
+}
+
+' Commands
+class CreateHabitCommand <<Command>> {
+  + UserId: Guid
+  + Name: string
+  + Description: string
+  + Frequency: FrequencyType
+  + FrequencyDetails: FrequencyDetails
+  + Category: string
+  + StartDate: DateTime
+  + TargetDuration: int?
+  + ReminderEnabled: bool
+}
+
+class ModifyHabitCommand <<Command>> {
+  + HabitId: Guid
+  + Name: string
+  + Description: string
+  + Frequency: FrequencyType
+  + FrequencyDetails: FrequencyDetails
+  + Category: string
+  + TargetDuration: int?
+  + ReminderEnabled: bool
+}
+
+class ArchiveHabitCommand <<Command>> {
+  + HabitId: Guid
+  + Reason: string
+}
+
+class ReactivateHabitCommand <<Command>> {
+  + HabitId: Guid
+  + NewStartDate: DateTime
+}
+
+' Events
+class HabitCreated <<Domain Event>> {
+  + HabitId: Guid
+  + UserId: Guid
+  + Name: string
+  + Category: string
+  + Frequency: FrequencyType
+  + StartDate: DateTime
+  + ReminderEnabled: bool
+  + OccurredAt: DateTime
+}
+
+class HabitModified <<Domain Event>> {
+  + HabitId: Guid
+  + ModifiedFields: Dictionary<string, object>
+  + OccurredAt: DateTime
+}
+
+class HabitArchived <<Domain Event>> {
+  + HabitId: Guid
+  + Reason: string
+  + ArchivedAt: DateTime
+  + OccurredAt: DateTime
+}
+
+class HabitReactivated <<Domain Event>> {
+  + HabitId: Guid
+  + NewStartDate: DateTime
+  + OccurredAt: DateTime
+}
+
+' Command Handlers
+class CreateHabitCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - habitRepository: IHabitRepository
+  - eventPublisher: IEventPublisher
+  - userService: IUserService
+  --
+  + Handle(command): Task<Guid>
+}
+
+class ModifyHabitCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - habitRepository: IHabitRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command): Task
+}
+
+class ArchiveHabitCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - habitRepository: IHabitRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command): Task
+}
+
+class ReactivateHabitCommandHandler <<Command Handler>> SERVICE_COLOR {
+  - habitRepository: IHabitRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command): Task
+}
+
+' Repository
+interface IHabitRepository {
+  + GetByIdAsync(id): Task<Habit?>
+  + GetByUserIdAsync(userId): Task<List<Habit>>
+  + GetArchivedByUserIdAsync(userId): Task<List<Habit>>
+  + AddAsync(habit): Task
+  + UpdateAsync(habit): Task
+  + ExistsAsync(userId, name): Task<bool>
+}
+
+' Query Models
+class HabitDto <<DTO>> ENTITY_COLOR {
+  + Id: Guid
+  + UserId: Guid
+  + Name: string
+  + Description: string
+  + Frequency: string
+  + FrequencyDetails: object
+  + Category: string
+  + StartDate: DateTime
+  + TargetDuration: int?
+  + ReminderEnabled: bool
+  + IsArchived: bool
+  + CurrentStreak: int
+  + CreatedAt: DateTime
+}
+
+' Queries
+class GetHabitByIdQuery <<Query>> {
+  + HabitId: Guid
+}
+
+class GetActiveHabitsByUserQuery <<Query>> {
+  + UserId: Guid
+  + Category: string?
+  + SortBy: string
+  + SortOrder: string
+}
+
+class GetArchivedHabitsByUserQuery <<Query>> {
+  + UserId: Guid
+}
+
+' Query Handlers
+class HabitQueryHandler <<Query Handler>> SERVICE_COLOR {
+  - dbContext: IHabitDbContext
+  --
+  + Handle(GetHabitByIdQuery): Task<HabitDto?>
+  + Handle(GetActiveHabitsByUserQuery): Task<List<HabitDto>>
+  + Handle(GetArchivedHabitsByUserQuery): Task<List<HabitDto>>
+}
+
+' Relationships
+Habit *-- FrequencyDetails
+Habit ..> FrequencyType
+Habit ..> HabitCreated: publishes
+Habit ..> HabitModified: publishes
+Habit ..> HabitArchived: publishes
+Habit ..> HabitReactivated: publishes
+
+CreateHabitCommand ..> CreateHabitCommandHandler
+ModifyHabitCommand ..> ModifyHabitCommandHandler
+ArchiveHabitCommand ..> ArchiveHabitCommandHandler
+ReactivateHabitCommand ..> ReactivateHabitCommandHandler
+
+CreateHabitCommandHandler --> IHabitRepository
+ModifyHabitCommandHandler --> IHabitRepository
+ArchiveHabitCommandHandler --> IHabitRepository
+ReactivateHabitCommandHandler --> IHabitRepository
+
+CreateHabitCommandHandler ..> Habit: creates
+ModifyHabitCommandHandler ..> Habit: modifies
+ArchiveHabitCommandHandler ..> Habit: archives
+ReactivateHabitCommandHandler ..> Habit: reactivates
+
+HabitQueryHandler ..> HabitDto: returns
+
+GetHabitByIdQuery ..> HabitQueryHandler
+GetActiveHabitsByUserQuery ..> HabitQueryHandler
+GetArchivedHabitsByUserQuery ..> HabitQueryHandler
+
+note right of Habit
+  Aggregate Root enforces
+  all business rules and
+  publishes domain events
+end note
+
+note bottom of FrequencyDetails
+  Value Object ensures
+  frequency configuration
+  validity
+end note
+
+@enduml

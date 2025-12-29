@@ -1,0 +1,96 @@
+@startuml Networking - Class Diagram
+
+!define AGGREGATE_COLOR #FFE6CC
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #FFF9C4
+
+class Contact <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - Name: string
+  - Title: string?
+  - Company: string?
+  - Email: string?
+  - Phone: string?
+  - LinkedInUrl: string?
+  - Relationship: string
+  - Notes: string?
+  - Tags: List<string>
+  - LastContactedAt: DateTime?
+  --
+  + AddTag(tag): void
+  + UpdateContactInfo(info): void
+  + RecordInteraction(): void
+}
+
+class Referral <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - ContactId: Guid
+  - JobListingId: Guid?
+  - Status: ReferralStatus
+  - RequestedAt: DateTime
+  - RequestMessage: string
+  - ReceivedAt: DateTime?
+  - ApplicationId: Guid?
+  --
+  + Request(): void
+  + MarkReceived(): void
+  + Decline(): void
+}
+
+class InformationalInterview <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - ContactId: Guid
+  - ConductedAt: DateTime?
+  - Notes: string?
+  - Insights: List<string>
+  - ThankYouSent: bool
+  --
+  + Schedule(date): void
+  + Complete(notes): void
+  + AddInsight(insight): void
+  + SendThankYou(): void
+}
+
+enum ReferralStatus {
+  Pending
+  Provided
+  Declined
+  Expired
+}
+
+class ReferralRequested <<Event>> EVENT_COLOR {
+  + ReferralId: Guid
+  + ContactId: Guid
+  + RequestedAt: DateTime
+}
+
+class ReferralReceived <<Event>> EVENT_COLOR {
+  + ReferralId: Guid
+  + ReceivedAt: DateTime
+  + ApplicationId: Guid?
+}
+
+class InformationalInterviewConducted <<Event>> EVENT_COLOR {
+  + InterviewId: Guid
+  + ConductedAt: DateTime
+  + Insights: string[]
+}
+
+class NetworkingService <<Service>> SERVICE_COLOR {
+  - contactRepo: IContactRepository
+  - referralRepo: IReferralRepository
+  --
+  + AddContact(command): Contact
+  + RequestReferral(contactId, jobListingId): Referral
+  + RecordInformationalInterview(command): InformationalInterview
+}
+
+Referral ..> ReferralStatus
+NetworkingService ..> ReferralRequested : publishes
+NetworkingService ..> ReferralReceived : publishes
+NetworkingService ..> InformationalInterviewConducted : publishes
+
+@enduml

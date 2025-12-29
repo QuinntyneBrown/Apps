@@ -1,0 +1,262 @@
+@startuml Meal Planning - Class Diagram
+
+!define ENTITY_COLOR #E3F2FD
+!define VALUEOBJECT_COLOR #FFF9C4
+!define AGGREGATE_COLOR #C8E6C9
+!define SERVICE_COLOR #FFE0B2
+!define EVENT_COLOR #F8BBD0
+
+package "Meal Planning Aggregate" {
+
+    class MealPlan <<Aggregate Root>> AGGREGATE_COLOR {
+        - Id : Guid
+        - UserId : Guid
+        - Name : string
+        - StartDate : DateTime
+        - EndDate : DateTime
+        - Status : MealPlanStatus
+        - CreatedDate : DateTime
+        - LastModifiedDate : DateTime
+        - Meals : List<Meal>
+        --
+        + Create(userId, name, startDate, endDate) : MealPlan
+        + Activate() : void
+        + Complete() : void
+        + AddMeal(recipe, mealType, scheduledDate, servings) : Meal
+        + RemoveMeal(mealId) : void
+        + UpdateDetails(name, startDate, endDate) : void
+        + CanActivate() : bool
+        + CanComplete() : bool
+        --
+        Domain Events:
+        + MealPlanCreated
+        + MealPlanActivated
+        + MealPlanCompleted
+        + MealAssigned
+    }
+
+    class Meal <<Entity>> ENTITY_COLOR {
+        - Id : Guid
+        - MealPlanId : Guid
+        - RecipeId : Guid?
+        - MealType : MealType
+        - ScheduledDate : DateTime
+        - Servings : int
+        - Notes : string
+        - IsCompleted : bool
+        --
+        + Create(recipeId, mealType, scheduledDate, servings) : Meal
+        + MarkCompleted() : void
+        + UpdateServings(servings) : void
+        + UpdateNotes(notes) : void
+        + IsWithinDateRange(startDate, endDate) : bool
+    }
+
+    MealPlan "1" *-- "0..*" Meal : contains
+}
+
+package "Value Objects" {
+
+    class DateRange <<Value Object>> VALUEOBJECT_COLOR {
+        - StartDate : DateTime
+        - EndDate : DateTime
+        --
+        + Create(startDate, endDate) : DateRange
+        + IsValid() : bool
+        + Contains(date) : bool
+        + GetDays() : int
+        + Overlaps(other) : bool
+    }
+
+    enum MealType VALUEOBJECT_COLOR {
+        Breakfast
+        Lunch
+        Dinner
+        Snack
+        Dessert
+    }
+
+    enum MealPlanStatus VALUEOBJECT_COLOR {
+        Draft
+        Active
+        Completed
+        Archived
+    }
+
+    MealPlan -- DateRange : uses
+    Meal -- MealType : has
+    MealPlan -- MealPlanStatus : has
+}
+
+package "Domain Events" {
+
+    abstract class DomainEvent EVENT_COLOR {
+        + EventId : Guid
+        + OccurredOn : DateTime
+    }
+
+    class MealPlanCreated EVENT_COLOR {
+        + MealPlanId : Guid
+        + UserId : Guid
+        + Name : string
+        + StartDate : DateTime
+        + EndDate : DateTime
+    }
+
+    class MealPlanActivated EVENT_COLOR {
+        + MealPlanId : Guid
+        + UserId : Guid
+        + ActivatedDate : DateTime
+    }
+
+    class MealPlanCompleted EVENT_COLOR {
+        + MealPlanId : Guid
+        + UserId : Guid
+        + CompletedDate : DateTime
+        + TotalMeals : int
+        + CompletedMeals : int
+    }
+
+    class MealAssigned EVENT_COLOR {
+        + MealId : Guid
+        + MealPlanId : Guid
+        + RecipeId : Guid
+        + MealType : MealType
+        + ScheduledDate : DateTime
+        + Servings : int
+    }
+
+    DomainEvent <|-- MealPlanCreated
+    DomainEvent <|-- MealPlanActivated
+    DomainEvent <|-- MealPlanCompleted
+    DomainEvent <|-- MealAssigned
+}
+
+package "Commands" {
+
+    interface ICommand {
+    }
+
+    class CreateMealPlanCommand {
+        + UserId : Guid
+        + Name : string
+        + StartDate : DateTime
+        + EndDate : DateTime
+    }
+
+    class ActivateMealPlanCommand {
+        + MealPlanId : Guid
+        + UserId : Guid
+    }
+
+    class AssignMealToSlotCommand {
+        + MealPlanId : Guid
+        + RecipeId : Guid
+        + MealType : MealType
+        + ScheduledDate : DateTime
+        + Servings : int
+        + Notes : string
+    }
+
+    class CompleteMealPlanCommand {
+        + MealPlanId : Guid
+        + UserId : Guid
+    }
+
+    ICommand <|.. CreateMealPlanCommand
+    ICommand <|.. ActivateMealPlanCommand
+    ICommand <|.. AssignMealToSlotCommand
+    ICommand <|.. CompleteMealPlanCommand
+}
+
+package "Queries" {
+
+    interface IQuery<TResult> {
+    }
+
+    class GetMealPlanByIdQuery {
+        + MealPlanId : Guid
+        + UserId : Guid
+    }
+
+    class GetActiveMealPlanQuery {
+        + UserId : Guid
+    }
+
+    class GetMealPlansForUserQuery {
+        + UserId : Guid
+        + Status : MealPlanStatus?
+        + FromDate : DateTime?
+        + ToDate : DateTime?
+        + PageNumber : int
+        + PageSize : int
+    }
+
+    IQuery <|.. GetMealPlanByIdQuery
+    IQuery <|.. GetActiveMealPlanQuery
+    IQuery <|.. GetMealPlansForUserQuery
+}
+
+package "Services" {
+
+    interface IMealPlanRepository {
+        + GetByIdAsync(id) : Task<MealPlan>
+        + GetActiveByUserIdAsync(userId) : Task<MealPlan>
+        + GetByUserIdAsync(userId, status) : Task<IEnumerable<MealPlan>>
+        + AddAsync(mealPlan) : Task
+        + UpdateAsync(mealPlan) : Task
+        + DeleteAsync(id) : Task
+    }
+
+    interface IMealPlanService SERVICE_COLOR {
+        + CreateMealPlanAsync(command) : Task<MealPlanDto>
+        + ActivateMealPlanAsync(command) : Task
+        + CompleteMealPlanAsync(command) : Task
+        + AssignMealAsync(command) : Task<MealDto>
+        + RemoveMealAsync(planId, mealId) : Task
+    }
+
+    class MealPlanService SERVICE_COLOR {
+        - repository : IMealPlanRepository
+        - eventBus : IEventBus
+        --
+        + CreateMealPlanAsync(command) : Task<MealPlanDto>
+        + ActivateMealPlanAsync(command) : Task
+        + CompleteMealPlanAsync(command) : Task
+        + AssignMealAsync(command) : Task<MealDto>
+        + RemoveMealAsync(planId, mealId) : Task
+    }
+
+    IMealPlanService <|.. MealPlanService
+    MealPlanService --> IMealPlanRepository : uses
+    MealPlanService --> MealPlan : manages
+}
+
+package "DTOs" {
+
+    class MealPlanDto {
+        + Id : Guid
+        + Name : string
+        + StartDate : DateTime
+        + EndDate : DateTime
+        + Status : string
+        + Meals : List<MealDto>
+        + TotalMeals : int
+        + CompletedMeals : int
+    }
+
+    class MealDto {
+        + Id : Guid
+        + RecipeId : Guid?
+        + RecipeName : string
+        + MealType : string
+        + ScheduledDate : DateTime
+        + Servings : int
+        + Notes : string
+        + IsCompleted : bool
+    }
+
+    MealPlanDto "1" *-- "0..*" MealDto : contains
+}
+
+@enduml

@@ -1,0 +1,133 @@
+@startuml Workout Sessions - Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define AGGREGATE_COLOR #C8E6C9
+!define EVENT_COLOR #FFCCBC
+
+class WorkoutSession <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id : Guid
+  - WorkoutPlanId : Guid?
+  - WorkoutId : Guid?
+  - UserId : Guid
+  - StartTime : DateTime
+  - EndTime : DateTime?
+  - Status : WorkoutSessionStatus
+  - Notes : string
+  - ActualDuration : TimeSpan
+  - _sets : List<ExerciseSet>
+  --
+  + <<static>> Start(userId, planId, workoutId) : WorkoutSession
+  + LogSet(set : ExerciseSet) : void
+  + Complete(notes : string) : void
+  + Skip(reason : string) : void
+  + GetTotalVolume() : decimal
+  + GetExercisesCompleted() : int
+}
+
+class ExerciseSet <<Entity>> ENTITY_COLOR {
+  - Id : Guid
+  - WorkoutSessionId : Guid
+  - ExerciseId : Guid
+  - SetNumber : int
+  - Reps : int
+  - Weight : decimal
+  - WeightUnit : WeightUnit
+  - IsWarmup : bool
+  - CompletedAt : DateTime
+  - Notes : string
+  --
+  + <<static>> Create(sessionId, exerciseId, setNum, reps, weight, unit) : ExerciseSet
+  + CalculateVolume() : decimal
+}
+
+enum WorkoutSessionStatus {
+  InProgress = 0
+  Completed = 1
+  Skipped = 2
+}
+
+enum WeightUnit {
+  Pounds = 0
+  Kilograms = 1
+}
+
+class WorkoutSessionStartedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutSessionId : Guid
+  + UserId : Guid
+  + WorkoutPlanId : Guid?
+  + StartTime : DateTime
+}
+
+class WorkoutSessionCompletedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutSessionId : Guid
+  + UserId : Guid
+  + CompletedTime : DateTime
+  + Duration : TimeSpan
+  + ExercisesCompleted : int
+  + TotalSets : int
+  + TotalVolume : decimal
+}
+
+class WorkoutSessionSkippedEvent <<Domain Event>> EVENT_COLOR {
+  + WorkoutSessionId : Guid
+  + UserId : Guid
+  + SkippedDate : DateTime
+  + Reason : string
+}
+
+class ExercisePerformedEvent <<Domain Event>> EVENT_COLOR {
+  + ExerciseId : Guid
+  + UserId : Guid
+  + WorkoutSessionId : Guid
+  + TotalSets : int
+  + MaxWeight : decimal
+  + TotalVolume : decimal
+  + PerformedDate : DateTime
+}
+
+class StartWorkoutSessionCommand {
+  + WorkoutPlanId : Guid?
+  + WorkoutId : Guid?
+}
+
+class LogExerciseSetCommand {
+  + WorkoutSessionId : Guid
+  + ExerciseId : Guid
+  + SetNumber : int
+  + Reps : int
+  + Weight : decimal
+  + WeightUnit : WeightUnit
+  + IsWarmup : bool
+  + Notes : string
+}
+
+class CompleteWorkoutSessionCommand {
+  + WorkoutSessionId : Guid
+  + Notes : string
+}
+
+interface IWorkoutSessionRepository {
+  + GetByIdAsync(id : Guid) : Task<WorkoutSession>
+  + GetByIdWithSetsAsync(id : Guid) : Task<WorkoutSession>
+  + GetActiveSessionAsync(userId : Guid) : Task<WorkoutSession>
+  + GetUserSessionsAsync(userId, status, fromDate, toDate) : Task<List<WorkoutSession>>
+  + AddAsync(session : WorkoutSession) : Task
+  + UpdateAsync(session : WorkoutSession) : Task
+}
+
+WorkoutSession "1" *-- "0..*" ExerciseSet : contains
+WorkoutSession --> WorkoutSessionStatus : has
+ExerciseSet --> WeightUnit : uses
+
+WorkoutSession ..> WorkoutSessionStartedEvent : raises
+WorkoutSession ..> WorkoutSessionCompletedEvent : raises
+WorkoutSession ..> WorkoutSessionSkippedEvent : raises
+WorkoutSession ..> ExercisePerformedEvent : raises
+
+StartWorkoutSessionCommand ..> WorkoutSession : creates
+LogExerciseSetCommand ..> ExerciseSet : creates
+CompleteWorkoutSessionCommand ..> WorkoutSession : completes
+
+IWorkoutSessionRepository ..> WorkoutSession : manages
+
+@enduml

@@ -1,0 +1,95 @@
+@startuml GiftIdeaTracker Sequence Diagram
+
+title Share and Claim Gift Idea
+
+actor User
+actor FamilyMember as FM
+participant "UI" as UI
+participant "Idea\nController" as IC
+participant "Idea\nService" as IS
+participant "Sharing\nService" as SS
+participant "Notification\nService" as NS
+participant "Event\nBus" as EB
+participant "Database" as DB
+
+User -> UI: Select gift idea
+User -> UI: Click "Share"
+activate UI
+
+UI -> UI: Show sharing form
+User -> UI: Select family members
+UI -> IC: POST /api/gift-ideas/{id}/share
+activate IC
+
+IC -> IS: shareIdea(ideaId, recipients)
+activate IS
+
+IS -> DB: INSERT shared_ideas
+activate DB
+DB --> IS: shared
+deactivate DB
+
+IS -> EB: publish(GiftIdeaShared)
+activate EB
+EB --> IS: acknowledged
+deactivate EB
+
+IS -> SS: notifyRecipients(recipients)
+activate SS
+SS -> NS: sendNotifications()
+activate NS
+NS --> SS: sent
+deactivate NS
+SS --> IS: notified
+deactivate SS
+
+IS --> IC: idea shared
+deactivate IS
+
+IC --> UI: 200 OK
+deactivate IC
+
+UI --> User: "Idea shared with family"
+deactivate UI
+
+== Family Member Receives Notification ==
+
+NS -> FM: Email/Push notification
+FM -> UI: Click notification link
+activate UI
+
+UI -> UI: Show shared idea
+FM -> UI: Click "I'll buy this"
+UI -> IC: POST /api/gift-ideas/{id}/claim
+activate IC
+
+IC -> IS: claimIdea(ideaId, userId)
+activate IS
+
+IS -> DB: UPDATE gift_idea SET claimed_by
+activate DB
+DB --> IS: updated
+deactivate DB
+
+IS -> EB: publish(GiftIdeaClaimed)
+activate EB
+EB --> IS: acknowledged
+deactivate EB
+
+IS -> NS: notifyOriginalUser()
+activate NS
+NS --> IS: notified
+deactivate NS
+
+IS --> IC: idea claimed
+deactivate IS
+
+IC --> UI: 200 OK
+deactivate IC
+
+UI --> FM: "You claimed this gift idea"
+deactivate UI
+
+NS -> User: Notification: "John claimed your shared idea"
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml Nutrition Tracking - Log Meal Sequence
+
+actor User
+participant UI
+participant API
+participant Service
+participant DailyNutritionRepo
+participant NutritionGoalRepo
+database DB
+
+User -> UI: Select recipe to log
+User -> UI: Choose meal type, servings
+User -> UI: Click "Log Meal"
+
+UI -> API: POST /api/nutrition/log
+API -> Service: LogMealAsync(command)
+
+Service -> DailyNutritionRepo: GetByDateAsync(userId, date)
+alt Daily record exists
+    DailyNutritionRepo -> DB: SELECT
+    DB --> DailyNutritionRepo: DailyNutrition
+else No record
+    Service -> Service: Create new DailyNutrition
+end
+
+Service -> Service: Add MealEntry
+Service -> Service: Calculate nutrition from recipe
+Service -> Service: Update daily totals
+
+Service -> DailyNutritionRepo: SaveAsync(dailyNutrition)
+DailyNutritionRepo -> DB: INSERT/UPDATE
+
+Service -> NutritionGoalRepo: GetActiveByUserIdAsync(userId)
+NutritionGoalRepo -> DB: SELECT active goal
+DB --> NutritionGoalRepo: NutritionGoal
+
+Service -> Service: Compare to goal
+Service --> API: DailyNutritionDto + GoalComparison
+API --> UI: Response
+
+UI -> UI: Update dashboard
+UI -> UI: Show progress bars
+UI -> UI: Display macro breakdown
+
+@enduml

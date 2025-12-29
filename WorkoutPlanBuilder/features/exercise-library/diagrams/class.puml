@@ -1,0 +1,89 @@
+@startuml Exercise Library - Class Diagram
+
+class Exercise <<Aggregate Root>> {
+  - Id : Guid
+  - Name : string
+  - Description : string
+  - Category : ExerciseCategory
+  - PrimaryMuscleGroup : MuscleGroup
+  - SecondaryMuscleGroups : List<MuscleGroup>
+  - Equipment : EquipmentType
+  - Difficulty : DifficultyLevel
+  - Instructions : string
+  - VideoUrl : string
+  - ImageUrl : string
+  - IsCustom : bool
+  - CreatedBy : Guid?
+  - CreatedDate : DateTime
+  --
+  + Create(...) : Exercise
+  + Update(...) : void
+  + AddSecondaryMuscle(muscle) : void
+}
+
+enum ExerciseCategory {
+  Strength
+  Cardio
+  Flexibility
+  Plyometrics
+  Olympic
+  Strongman
+}
+
+enum MuscleGroup {
+  Chest
+  Back
+  Shoulders
+  Arms
+  Core
+  Legs
+  FullBody
+}
+
+enum EquipmentType {
+  Barbell
+  Dumbbell
+  Machine
+  Bodyweight
+  Other
+}
+
+enum DifficultyLevel {
+  Beginner
+  Intermediate
+  Advanced
+}
+
+class ExerciseAddedToLibraryEvent {
+  + ExerciseId : Guid
+  + ExerciseName : string
+  + Category : string
+  + IsCustom : bool
+  + CreatedBy : Guid?
+  + CreatedDate : DateTime
+}
+
+class CreateExerciseCommand {
+  + Name : string
+  + Description : string
+  + Category : ExerciseCategory
+  + MuscleGroups : List<MuscleGroup>
+  + Equipment : EquipmentType
+  + Difficulty : DifficultyLevel
+}
+
+interface IExerciseRepository {
+  + GetByIdAsync(id) : Task<Exercise>
+  + SearchAsync(filters) : Task<List<Exercise>>
+  + GetByMuscleGroupAsync(group) : Task<List<Exercise>>
+}
+
+Exercise --> ExerciseCategory
+Exercise --> MuscleGroup
+Exercise --> EquipmentType
+Exercise --> DifficultyLevel
+Exercise ..> ExerciseAddedToLibraryEvent : raises
+CreateExerciseCommand ..> Exercise : creates
+IExerciseRepository ..> Exercise : manages
+
+@enduml

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Library - WorkoutPlanBuilder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .search-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            padding: 10px 35px 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23495057' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .view-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 5px;
+            background: white;
+            padding: 5px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .results-count {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .sort-by {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-by select {
+            padding: 8px 30px 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            appearance: none;
+            background: white;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23495057' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .exercise-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .exercise-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 64px;
+            font-weight: bold;
+        }
+
+        .exercise-info {
+            padding: 20px;
+        }
+
+        .exercise-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 10px;
+        }
+
+        .exercise-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-category {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .badge-muscle {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .badge-equipment {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-difficulty {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-difficulty.advanced {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .badge-difficulty.intermediate {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .exercise-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .popularity {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .star {
+            color: #ffc107;
+        }
+
+        .custom-badge {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            padding: 0 20px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .exercise-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #212529;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: #f8f9fa;
+            color: #212529;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💪 Exercise Library</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openAddExerciseModal()">+ Add Custom Exercise</button>
+                <button class="btn btn-secondary">My Exercises</button>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-bar">
+                <input type="text" placeholder="Search exercises by name, muscle group, or equipment...">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select>
+                        <option>All Categories</option>
+                        <option>Strength</option>
+                        <option>Cardio</option>
+                        <option>Flexibility</option>
+                        <option>Plyometric</option>
+                        <option>Olympic</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Muscle:</label>
+                    <select>
+                        <option>All Muscles</option>
+                        <option>Chest</option>
+                        <option>Back</option>
+                        <option>Shoulders</option>
+                        <option>Arms</option>
+                        <option>Legs</option>
+                        <option>Core</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Equipment:</label>
+                    <select>
+                        <option>All Equipment</option>
+                        <option>Barbell</option>
+                        <option>Dumbbell</option>
+                        <option>Machine</option>
+                        <option>Cable</option>
+                        <option>Bodyweight</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Difficulty:</label>
+                    <select>
+                        <option>All Levels</option>
+                        <option>Beginner</option>
+                        <option>Intermediate</option>
+                        <option>Advanced</option>
+                    </select>
+                </div>
+
+                <div class="view-toggle">
+                    <button class="active">Grid</button>
+                    <button>List</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="content-header">
+                <div class="results-count">Showing 8 of 500+ exercises</div>
+                <div class="sort-by">
+                    <label>Sort by:</label>
+                    <select>
+                        <option>Popularity</option>
+                        <option>Alphabetical (A-Z)</option>
+                        <option>Alphabetical (Z-A)</option>
+                        <option>Recently Added</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="exercise-grid">
+                <!-- Exercise Card 1 -->
+                <div class="exercise-card">
+                    <div class="exercise-image">🏋️</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Barbell Bench Press</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Chest</span>
+                            <span class="badge badge-equipment">Barbell</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div>4,523 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 2 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">🦵</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Barbell Squat</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Quads</span>
+                            <span class="badge badge-equipment">Barbell</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div>5,821 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 3 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🎯</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Deadlift</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Back</span>
+                            <span class="badge badge-equipment">Barbell</span>
+                            <span class="badge badge-difficulty advanced">Advanced</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div>4,102 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 4 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💪</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Pull-ups</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Back</span>
+                            <span class="badge badge-equipment">Bodyweight</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★★☆</span>
+                            </div>
+                            <div>3,456 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 5 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">🏃</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Overhead Press</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Shoulders</span>
+                            <span class="badge badge-equipment">Barbell</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★★☆</span>
+                            </div>
+                            <div>2,987 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 6 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">💪</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Bicep Curls</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Biceps</span>
+                            <span class="badge badge-equipment">Dumbbell</span>
+                            <span class="badge badge-difficulty">Beginner</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★☆☆</span>
+                            </div>
+                            <div>2,134 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 7 -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">🔥</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Tricep Dips</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Triceps</span>
+                            <span class="badge badge-equipment">Bodyweight</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="star">★★★☆☆</span>
+                            </div>
+                            <div>1,876 uses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Card 8 (Custom) -->
+                <div class="exercise-card">
+                    <div class="exercise-image" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">⚡</div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">Cable Crossover Variation</div>
+                        <div class="exercise-badges">
+                            <span class="badge badge-category">Strength</span>
+                            <span class="badge badge-muscle">Chest</span>
+                            <span class="badge badge-equipment">Cable</span>
+                            <span class="badge badge-difficulty intermediate">Intermediate</span>
+                        </div>
+                        <div class="exercise-stats">
+                            <div class="popularity">
+                                <span class="custom-badge">CUSTOM</span>
+                            </div>
+                            <div>12 uses</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination">
+                <button disabled>← Previous</button>
+                <div class="page-info">Page 1 of 25</div>
+                <button>Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Exercise Modal -->
+    <div class="modal" id="addExerciseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Custom Exercise</h2>
+                <button class="close-modal" onclick="closeAddExerciseModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Exercise Name *</label>
+                        <input type="text" placeholder="e.g., Cable Crossover Variation" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea placeholder="Brief description of the exercise..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select required>
+                            <option value="">Select category</option>
+                            <option>Strength</option>
+                            <option>Cardio</option>
+                            <option>Flexibility</option>
+                            <option>Plyometric</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Primary Muscle Group *</label>
+                        <select required>
+                            <option value="">Select muscle group</option>
+                            <option>Chest</option>
+                            <option>Back</option>
+                            <option>Shoulders</option>
+                            <option>Biceps</option>
+                            <option>Triceps</option>
+                            <option>Quads</option>
+                            <option>Hamstrings</option>
+                            <option>Glutes</option>
+                            <option>Calves</option>
+                            <option>Core</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Equipment *</label>
+                        <select required>
+                            <option value="">Select equipment</option>
+                            <option>Barbell</option>
+                            <option>Dumbbell</option>
+                            <option>Machine</option>
+                            <option>Cable</option>
+                            <option>Bodyweight</option>
+                            <option>Kettlebell</option>
+                            <option>Bands</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Difficulty *</label>
+                        <select required>
+                            <option value="">Select difficulty</option>
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Advanced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Instructions *</label>
+                        <textarea placeholder="Step-by-step instructions..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Video URL (Optional)</label>
+                        <input type="url" placeholder="https://youtube.com/watch?v=...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddExerciseModal()">Cancel</button>
+                <button class="btn btn-primary">Save Exercise</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openAddExerciseModal() {
+            document.getElementById('addExerciseModal').classList.add('active');
+        }
+
+        function closeAddExerciseModal() {
+            document.getElementById('addExerciseModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addExerciseModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddExerciseModal();
+            }
+        });
+    </script>
+</body>
+</html>

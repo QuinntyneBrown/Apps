@@ -1,0 +1,102 @@
+@startuml Portfolio Management Class Diagram
+
+class Portfolio <<Aggregate Root>> {
+  - portfolioId: Guid
+  - userId: Guid
+  - name: string
+  - description: string
+  - strategyType: StrategyType
+  - riskTolerance: RiskLevel
+  - targetAllocation: Dictionary<AssetClass, decimal>
+  - currentValue: decimal
+  - cashBalance: decimal
+  - createdAt: DateTime
+  - updatedAt: DateTime
+  --
+  + UpdateAllocation(newAllocation): void
+  + Rebalance(): List<TradeOrder>
+  + CalculateDrift(): Dictionary<AssetClass, decimal>
+}
+
+enum StrategyType {
+  Growth
+  Income
+  Balanced
+  Conservative
+  Aggressive
+}
+
+enum RiskLevel {
+  Low
+  Medium
+  High
+}
+
+enum AssetClass {
+  Stocks
+  Bonds
+  Cash
+  RealEstate
+  Commodities
+  Crypto
+}
+
+class AssetAllocation <<Value Object>> {
+  - assetClass: AssetClass
+  - targetPercentage: decimal
+  - currentPercentage: decimal
+  - driftPercentage: decimal
+  --
+  + IsWithinTolerance(tolerance): bool
+}
+
+class CreatePortfolioCommand {
+  + Name: string
+  + StrategyType: StrategyType
+  + RiskTolerance: RiskLevel
+  + TargetAllocation: Dictionary<AssetClass, decimal>
+}
+
+class RebalancePortfolioCommand {
+  + PortfolioId: Guid
+  + ExecuteTrades: bool
+}
+
+class PortfolioCreated <<Domain Event>> {
+  + PortfolioId: Guid
+  + UserId: Guid
+  + Name: string
+  + StrategyType: string
+  + TargetAllocation: Dictionary<string, decimal>
+  + OccurredAt: DateTime
+}
+
+class PortfolioRebalanced <<Domain Event>> {
+  + PortfolioId: Guid
+  + PreviousAllocation: Dictionary<string, decimal>
+  + NewAllocation: Dictionary<string, decimal>
+  + TradesExecuted: List<TradeOrder>
+  + RebalanceDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class PortfolioValueUpdated <<Domain Event>> {
+  + PortfolioId: Guid
+  + PreviousValue: decimal
+  + NewValue: decimal
+  + ChangeAmount: decimal
+  + ChangePercentage: decimal
+  + OccurredAt: DateTime
+}
+
+Portfolio *-- StrategyType
+Portfolio *-- RiskLevel
+Portfolio *-- AssetAllocation
+AssetAllocation *-- AssetClass
+CreatePortfolioCommand --> Portfolio : creates
+RebalancePortfolioCommand --> Portfolio : rebalances
+Portfolio ..> PortfolioCreated : raises
+Portfolio ..> PortfolioRebalanced : raises
+Portfolio ..> PortfolioValueUpdated : raises
+
+@enduml

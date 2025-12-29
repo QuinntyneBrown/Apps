@@ -1,0 +1,194 @@
+@startuml List Management - Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define VALUE_OBJECT_COLOR #FFF9C4
+!define SERVICE_COLOR #C8E6C9
+!define EVENT_COLOR #FFCCBC
+
+package "List Management Domain" {
+
+    class ShoppingList <<Entity>> ENTITY_COLOR {
+        - listId: UUID
+        - ownerId: UUID
+        - name: String
+        - status: ListStatus
+        - tags: List<String>
+        - isRecurring: Boolean
+        - recurringPattern: RecurringPattern
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        - completedAt: DateTime
+        - archivedAt: DateTime
+        - totalSpent: Decimal
+        + create(name, ownerId, tags): ShoppingList
+        + share(userId, permissionLevel): void
+        + complete(): void
+        + archive(reason): void
+        + reopen(): void
+        + updateName(name): void
+        + addTag(tag): void
+        + removeTag(tag): void
+    }
+
+    enum ListStatus ENTITY_COLOR {
+        ACTIVE
+        COMPLETED
+        ARCHIVED
+        DELETED
+    }
+
+    enum RecurringPattern VALUE_OBJECT_COLOR {
+        DAILY
+        WEEKLY
+        MONTHLY
+        NONE
+    }
+
+    class ListShare <<Entity>> ENTITY_COLOR {
+        - shareId: UUID
+        - listId: UUID
+        - userId: UUID
+        - permissionLevel: PermissionLevel
+        - sharedAt: DateTime
+        + create(listId, userId, permission): ListShare
+        + updatePermission(permission): void
+        + revoke(): void
+    }
+
+    enum PermissionLevel VALUE_OBJECT_COLOR {
+        VIEW
+        EDIT
+        ADMIN
+    }
+
+    class ListOwner <<Value Object>> VALUE_OBJECT_COLOR {
+        - userId: UUID
+        - userName: String
+        - email: String
+    }
+
+    class ListMetadata <<Value Object>> VALUE_OBJECT_COLOR {
+        - itemCount: Integer
+        - purchasedCount: Integer
+        - totalValue: Decimal
+        + getProgress(): Decimal
+        + isComplete(): Boolean
+    }
+}
+
+package "Services" {
+
+    class ListManagementService <<Service>> SERVICE_COLOR {
+        - listRepository: IListRepository
+        - eventPublisher: IEventPublisher
+        - userService: IUserService
+        + createList(request): ShoppingList
+        + updateList(listId, updates): ShoppingList
+        + shareList(listId, shareRequest): void
+        + completeList(listId): void
+        + archiveList(listId, reason): void
+        + deleteList(listId): void
+        + getListById(listId): ShoppingList
+        + getListsForUser(userId, filters): List<ShoppingList>
+    }
+
+    interface IListRepository {
+        + save(list): void
+        + findById(listId): ShoppingList
+        + findByOwnerId(ownerId): List<ShoppingList>
+        + findSharedWithUser(userId): List<ShoppingList>
+        + delete(listId): void
+    }
+
+    interface IEventPublisher {
+        + publish(event): void
+    }
+}
+
+package "Domain Events" {
+
+    abstract class DomainEvent EVENT_COLOR {
+        - eventId: UUID
+        - occurredAt: DateTime
+        - aggregateId: UUID
+    }
+
+    class ShoppingListCreated EVENT_COLOR {
+        - listId: UUID
+        - userId: UUID
+        - listName: String
+        - tags: List<String>
+        - isRecurring: Boolean
+        - recurringPattern: RecurringPattern
+    }
+
+    class ListShared EVENT_COLOR {
+        - listId: UUID
+        - ownerId: UUID
+        - sharedWithUserIds: List<UUID>
+        - permissionLevel: PermissionLevel
+        - sharedAt: DateTime
+    }
+
+    class ListCompleted EVENT_COLOR {
+        - listId: UUID
+        - userId: UUID
+        - completedAt: DateTime
+        - totalItems: Integer
+        - totalSpent: Decimal
+    }
+
+    class ListArchived EVENT_COLOR {
+        - listId: UUID
+        - userId: UUID
+        - archivedAt: DateTime
+        - reason: String
+    }
+}
+
+package "DTOs" {
+
+    class CreateListRequest {
+        + name: String
+        + tags: List<String>
+        + isRecurring: Boolean
+        + recurringPattern: String
+    }
+
+    class ShareListRequest {
+        + userIds: List<UUID>
+        + permissionLevel: String
+    }
+
+    class ListResponse {
+        + listId: UUID
+        + name: String
+        + ownerId: UUID
+        + status: String
+        + itemCount: Integer
+        + createdAt: DateTime
+    }
+}
+
+' Relationships
+ShoppingList "1" -- "0..*" ListShare : has
+ShoppingList -- ListStatus
+ShoppingList -- RecurringPattern
+ShoppingList "1" -- "1" ListOwner
+ShoppingList "1" -- "1" ListMetadata
+ListShare -- PermissionLevel
+
+ListManagementService --> IListRepository : uses
+ListManagementService --> IEventPublisher : uses
+ListManagementService --> ShoppingList : manages
+
+DomainEvent <|-- ShoppingListCreated
+DomainEvent <|-- ListShared
+DomainEvent <|-- ListCompleted
+DomainEvent <|-- ListArchived
+
+ListManagementService ..> CreateListRequest : receives
+ListManagementService ..> ShareListRequest : receives
+ListManagementService ..> ListResponse : returns
+
+@enduml

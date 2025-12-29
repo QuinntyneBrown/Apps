@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings - JobSearchOrganizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            width: 300px;
+            font-size: 0.9rem;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2563eb;
+            border: 1px solid #2563eb;
+        }
+
+        .btn-secondary:hover {
+            background: #eff6ff;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-toggle button {
+            padding: 0.5rem;
+            border: 1px solid #cbd5e0;
+            background: white;
+            cursor: pointer;
+            border-radius: 0.25rem;
+        }
+
+        .view-toggle button.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .stats-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tab-count {
+            background: #e2e8f0;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .tab.active .tab-count {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .filters-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .filter-group select {
+            padding: 0.375rem 2rem 0.375rem 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .sort-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .listing-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .listing-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .priority-low {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-discovered {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-saved {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-archived {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .card-company {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-more {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .card-salary {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-deadline {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #fef3c7;
+            border-radius: 0.375rem;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .card-deadline.urgent {
+            background: #fee2e2;
+            border-left-color: #dc2626;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.875rem;
+            font-size: 0.85rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .bulk-actions {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 1.125rem;
+            height: 1.125rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JobSearchOrganizer</h1>
+        <div class="header-actions">
+            <div class="search-box">
+                <input type="text" placeholder="Search jobs...">
+            </div>
+            <button class="btn btn-primary">+ New Job</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-title">
+            <h2>Job Listings</h2>
+            <div class="view-toggle">
+                <button class="active" title="Grid view">⊞</button>
+                <button title="List view">☰</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <strong>Stats:</strong> 150 Total | 45 Discovered | 82 Saved | 23 Archived
+        </div>
+
+        <div class="tabs">
+            <button class="tab active">
+                All <span class="tab-count">150</span>
+            </button>
+            <button class="tab">
+                Discovered <span class="tab-count">45</span>
+            </button>
+            <button class="tab">
+                Saved <span class="tab-count">82</span>
+            </button>
+            <button class="tab">
+                Archived <span class="tab-count">23</span>
+            </button>
+        </div>
+
+        <div class="filters-bar">
+            <div class="filters-row">
+                <span style="font-weight: 600;">Filters:</span>
+                <div class="filter-group">
+                    <label>Priority:</label>
+                    <select>
+                        <option>All</option>
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select>
+                        <option>All</option>
+                        <option>Dream Jobs</option>
+                        <option>Backend Roles</option>
+                        <option>Remote Only</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tags:</label>
+                    <select>
+                        <option>Select tags...</option>
+                        <option>.NET</option>
+                        <option>Azure</option>
+                        <option>React</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary btn-sm">Clear Filters</button>
+                <label style="margin-left: auto;">
+                    <input type="checkbox" class="checkbox"> Select All
+                </label>
+            </div>
+        </div>
+
+        <div class="sort-bar">
+            <div class="filter-group">
+                <label>Sort by:</label>
+                <select>
+                    <option>Discovery Date</option>
+                    <option>Deadline</option>
+                    <option>Priority</option>
+                    <option>Company</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bulk-actions">
+            <strong>Bulk Actions:</strong>
+            <button class="btn btn-secondary btn-sm">Archive Selected (0)</button>
+            <button class="btn btn-danger btn-sm">Delete Selected (0)</button>
+        </div>
+
+        <div class="listings-grid">
+            <!-- Card 1: High Priority, Saved -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-high">High</span>
+                    <span class="status-badge status-saved">Saved</span>
+                </div>
+                <h3 class="card-title">Senior Software Engineer</h3>
+                <div class="card-company">
+                    <span>🏢 Tech Corp</span>
+                    <span>•</span>
+                    <span>📍 San Francisco, CA</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">.NET</span>
+                    <span class="tag">Azure</span>
+                    <span class="tag">Microservices</span>
+                    <span class="tag">C#</span>
+                    <span class="tag tag-more">+2</span>
+                </div>
+                <div class="card-salary">💰 $120,000 - $180,000/year</div>
+                <div class="card-meta">Saved 2 days ago</div>
+                <div class="card-deadline urgent">
+                    ⚠️ Deadline: Jan 15, 2026 (18 days left)
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+
+            <!-- Card 2: Medium Priority, Saved -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-medium">Medium</span>
+                    <span class="status-badge status-saved">Saved</span>
+                </div>
+                <h3 class="card-title">Full Stack Developer</h3>
+                <div class="card-company">
+                    <span>🏢 StartupXYZ</span>
+                    <span>•</span>
+                    <span>📍 Remote</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">C#</span>
+                    <span class="tag">React</span>
+                    <span class="tag">Docker</span>
+                </div>
+                <div class="card-salary">💰 $100,000 - $140,000/year</div>
+                <div class="card-meta">Discovered 1 week ago</div>
+                <div class="card-meta">No deadline set</div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+
+            <!-- Card 3: Low Priority, Discovered -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-low">Low</span>
+                    <span class="status-badge status-discovered">Discovered</span>
+                </div>
+                <h3 class="card-title">Backend Engineer</h3>
+                <div class="card-company">
+                    <span>🏢 MegaCorp Inc</span>
+                    <span>•</span>
+                    <span>📍 Austin, TX</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">Java</span>
+                    <span class="tag">AWS</span>
+                    <span class="tag">Spring</span>
+                </div>
+                <div class="card-salary">💰 $110,000 - $150,000/year</div>
+                <div class="card-meta">Discovered 3 days ago</div>
+                <div class="card-deadline">
+                    📅 Deadline: Feb 1, 2026 (35 days left)
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-success btn-sm">Save</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+
+            <!-- Card 4: High Priority, Saved -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-high">High</span>
+                    <span class="status-badge status-saved">Saved</span>
+                </div>
+                <h3 class="card-title">DevOps Engineer</h3>
+                <div class="card-company">
+                    <span>🏢 CloudTech</span>
+                    <span>•</span>
+                    <span>📍 Seattle, WA</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">Docker</span>
+                    <span class="tag">AWS</span>
+                    <span class="tag">Terraform</span>
+                </div>
+                <div class="card-salary">💰 $130,000 - $170,000/year</div>
+                <div class="card-meta">Saved 5 days ago</div>
+                <div class="card-deadline">
+                    📅 Deadline: Jan 8, 2026 (11 days left)
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+
+            <!-- Card 5: Medium Priority, Saved -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-medium">Medium</span>
+                    <span class="status-badge status-saved">Saved</span>
+                </div>
+                <h3 class="card-title">Frontend Developer</h3>
+                <div class="card-company">
+                    <span>🏢 WebCo</span>
+                    <span>•</span>
+                    <span>📍 New York, NY</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">React</span>
+                    <span class="tag">TypeScript</span>
+                    <span class="tag">Next.js</span>
+                </div>
+                <div class="card-salary">💰 $105,000 - $145,000/year</div>
+                <div class="card-meta">Saved 1 week ago</div>
+                <div class="card-meta">No deadline set</div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+
+            <!-- Card 6: Medium Priority, Discovered -->
+            <div class="listing-card">
+                <div class="card-header">
+                    <span class="priority-badge priority-medium">Medium</span>
+                    <span class="status-badge status-discovered">Discovered</span>
+                </div>
+                <h3 class="card-title">Data Engineer</h3>
+                <div class="card-company">
+                    <span>🏢 DataInc</span>
+                    <span>•</span>
+                    <span>📍 Boston, MA</span>
+                </div>
+                <div class="tags">
+                    <span class="tag">Python</span>
+                    <span class="tag">SQL</span>
+                    <span class="tag">Spark</span>
+                    <span class="tag tag-more">+3</span>
+                </div>
+                <div class="card-salary">💰 $115,000 - $155,000/year</div>
+                <div class="card-meta">Discovered today</div>
+                <div class="card-deadline">
+                    📅 Deadline: Jan 28, 2026 (31 days left)
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-sm">View Details</button>
+                    <button class="btn btn-success btn-sm">Save</button>
+                    <button class="btn btn-secondary btn-sm">Archive</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button class="btn btn-secondary">← Previous</button>
+            <span>Page 1 of 5</span>
+            <button class="btn btn-primary">Next →</button>
+        </div>
+    </div>
+</body>
+</html>

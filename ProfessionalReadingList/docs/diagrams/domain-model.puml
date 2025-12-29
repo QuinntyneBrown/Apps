@@ -1,0 +1,101 @@
+@startuml ProfessionalReadingList_DomainModel
+
+class ReadingMaterial <<AggregateRoot>> {
+  - Id: Guid
+  - Title: string
+  - Author: string
+  - Type: MaterialType
+  - SourceUrl: string
+  - Categories: List<string>
+  - Tags: List<string>
+  - Archived: bool
+  --
+  + Categorize(categories)
+  + Archive()
+}
+
+class ReadingSession <<AggregateRoot>> {
+  - Id: Guid
+  - MaterialId: Guid
+  - StartedAt: DateTime
+  - ProgressPercentage: int
+  - TotalReadingTime: TimeSpan
+  - Status: ReadingStatus
+  --
+  + UpdateProgress(percentage)
+  + Complete()
+  + Abandon(reason)
+}
+
+class Highlight <<Entity>> {
+  - Id: Guid
+  - MaterialId: Guid
+  - HighlightedText: string
+  - PageLocation: string
+  - Color: string
+}
+
+class Note <<Entity>> {
+  - Id: Guid
+  - MaterialId: Guid
+  - Content: string
+  - Type: NoteType
+  - SectionReference: string
+}
+
+class Insight <<ValueObject>> {
+  - Text: string
+  - Category: string
+  - PracticalApplication: string
+}
+
+class ReadingGoal <<AggregateRoot>> {
+  - Id: Guid
+  - Type: GoalType
+  - TargetMetric: int
+  - StartDate: DateTime
+  - EndDate: DateTime
+  - CurrentProgress: int
+  --
+  + UpdateProgress()
+  + Complete()
+}
+
+class Recommendation <<Entity>> {
+  - Id: Guid
+  - MaterialId: Guid
+  - RecommenderId: Guid
+  - RecipientIds: List<Guid>
+  - Reason: string
+}
+
+enum MaterialType {
+  Article
+  Book
+  Paper
+  Video
+}
+
+enum ReadingStatus {
+  NotStarted
+  InProgress
+  Completed
+  Abandoned
+}
+
+enum NoteType {
+  Summary
+  Question
+  Insight
+  ActionItem
+}
+
+ReadingMaterial "1" -- "0..*" ReadingSession
+ReadingMaterial "1" -- "0..*" Highlight
+ReadingMaterial "1" -- "0..*" Note
+ReadingMaterial --> MaterialType
+ReadingSession --> ReadingStatus
+Note --> NoteType
+ReadingMaterial "1" -- "0..*" Recommendation
+
+@enduml

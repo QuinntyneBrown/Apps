@@ -1,0 +1,180 @@
+@startuml Task Management Use Case Diagram
+
+left to right direction
+
+' Actors
+actor "Homeowner" as homeowner
+actor "Property Manager" as manager
+actor "Service Provider" as provider
+actor "System Scheduler" as scheduler #LightBlue
+
+' System Boundary
+rectangle "Task Management System" {
+
+  ' Primary Use Cases
+  usecase "Schedule Task" as UC1
+  usecase "View Task List" as UC2
+  usecase "View Task Details" as UC3
+  usecase "Complete Task" as UC4
+  usecase "Postpone Task" as UC5
+  usecase "Cancel Task" as UC6
+  usecase "Edit Task" as UC7
+  usecase "Delete Task" as UC8
+
+  ' Task Management Use Cases
+  usecase "Create One-Time Task" as UC9
+  usecase "Create Recurring Task" as UC10
+  usecase "Assign Task to Provider" as UC11
+  usecase "Upload Task Photos" as UC12
+  usecase "Add Task Notes" as UC13
+
+  ' Task Monitoring Use Cases
+  usecase "View Overdue Tasks" as UC14
+  usecase "View Upcoming Tasks" as UC15
+  usecase "Filter Tasks" as UC16
+  usecase "Search Tasks" as UC17
+  usecase "View Calendar" as UC18
+
+  ' Task Completion Use Cases
+  usecase "Mark Task Complete" as UC19
+  usecase "Record Actual Cost" as UC20
+  usecase "Upload Before/After Photos" as UC21
+  usecase "Add Completion Notes" as UC22
+  usecase "Rate Service Provider" as UC23
+
+  ' System Use Cases
+  usecase "Check for Overdue Tasks" as UC24
+  usecase "Generate Recurring Tasks" as UC25
+  usecase "Send Task Reminders" as UC26
+  usecase "Update Task Status" as UC27
+
+  ' Notifications
+  usecase "Receive Task Reminder" as UC28
+  usecase "Receive Overdue Alert" as UC29
+  usecase "Receive Completion Notification" as UC30
+
+  ' Reporting
+  usecase "View Task History" as UC31
+  usecase "View Cost Analysis" as UC32
+  usecase "Export Task Report" as UC33
+}
+
+' Relationships - Homeowner
+homeowner --> UC1
+homeowner --> UC2
+homeowner --> UC3
+homeowner --> UC4
+homeowner --> UC5
+homeowner --> UC6
+homeowner --> UC7
+homeowner --> UC8
+homeowner --> UC11
+homeowner --> UC12
+homeowner --> UC13
+homeowner --> UC14
+homeowner --> UC15
+homeowner --> UC16
+homeowner --> UC17
+homeowner --> UC18
+homeowner --> UC28
+homeowner --> UC29
+homeowner --> UC30
+homeowner --> UC31
+homeowner --> UC32
+homeowner --> UC33
+
+' Relationships - Property Manager (inherits from Homeowner)
+manager --> UC1
+manager --> UC2
+manager --> UC3
+manager --> UC4
+manager --> UC5
+manager --> UC14
+manager --> UC32
+manager --> UC33
+
+' Relationships - Service Provider
+provider --> UC3
+provider --> UC4
+provider --> UC19
+provider --> UC21
+provider --> UC22
+
+' Relationships - System Scheduler
+scheduler --> UC24
+scheduler --> UC25
+scheduler --> UC26
+scheduler --> UC27
+
+' Include Relationships
+UC1 .> UC9 : <<include>>
+UC1 .> UC10 : <<include>>
+UC4 .> UC19 : <<include>>
+UC4 .> UC20 : <<extend>>
+UC4 .> UC21 : <<extend>>
+UC4 .> UC22 : <<extend>>
+UC4 .> UC23 : <<extend>>
+
+UC19 .> UC27 : <<include>>
+UC5 .> UC27 : <<include>>
+UC6 .> UC27 : <<include>>
+
+' Extend Relationships
+UC9 ..> UC11 : <<extend>>
+UC10 ..> UC11 : <<extend>>
+UC19 ..> UC25 : <<extend>>\n(if recurring)
+
+UC24 .> UC27 : <<include>>
+UC24 .> UC29 : <<include>>
+UC25 .> UC1 : <<include>>
+UC26 .> UC28 : <<include>>
+
+UC2 ..> UC16 : <<extend>>
+UC2 ..> UC17 : <<extend>>
+
+' Notes
+note right of UC24
+  Scheduled Job
+  Runs daily at midnight
+  Raises TaskOverdueEvent
+end note
+
+note right of UC25
+  Scheduled Job
+  Runs daily at 1 AM
+  Creates next instance
+  Raises TaskScheduledEvent
+end note
+
+note right of UC26
+  Scheduled Job
+  Runs hourly
+  Sends notifications based
+  on user preferences
+end note
+
+note bottom of UC4
+  Raises TaskCompletedEvent
+  Updates task status
+  May trigger next recurring task
+end note
+
+note bottom of UC5
+  Raises TaskPostponedEvent
+  Requires reason
+  Updates due date
+end note
+
+note bottom of UC6
+  Raises TaskCancelledEvent
+  Can cancel future recurrences
+  Requires reason
+end note
+
+note bottom of UC1
+  Raises TaskScheduledEvent
+  Validates dates and business rules
+  Creates task in system
+end note
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml Batch Cooking - Create Session Sequence
+
+actor User
+participant UI
+participant API
+participant Service
+participant RecipeRepo
+participant SessionRepo
+participant Consolidator
+database DB
+
+User -> UI: Create batch cooking session
+UI -> UI: Show session form
+
+User -> UI: Add recipes with multipliers
+User -> UI: Set session date
+User -> UI: Click "Create Session"
+
+UI -> API: POST /api/batch-cooking/sessions
+API -> Service: CreateSessionAsync(command)
+
+Service -> Service: Create BatchCookingSession aggregate
+
+loop For each recipe
+    Service -> RecipeRepo: GetByIdAsync(recipeId)
+    RecipeRepo -> DB: SELECT recipe
+    DB --> RecipeRepo: Recipe data
+    RecipeRepo --> Service: Recipe
+
+    Service -> Service: Create BatchRecipe entity
+    Service -> Service: Scale ingredients by multiplier
+    Service -> Service: Add to session
+end
+
+Service -> Consolidator: ConsolidateIngredients(batchRecipes)
+Consolidator -> Consolidator: Group ingredients
+Consolidator -> Consolidator: Sum quantities
+Consolidator --> Service: Consolidated list
+
+Service -> Service: Calculate total prep time
+Service -> Service: Calculate total servings
+
+Service -> SessionRepo: AddAsync(session)
+SessionRepo -> DB: INSERT session and recipes
+DB --> SessionRepo: Success
+
+Service --> API: BatchSessionDto
+API --> UI: Response
+
+UI -> UI: Display session details
+UI -> UI: Show consolidated shopping list
+
+@enduml

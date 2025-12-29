@@ -1,0 +1,275 @@
+@startuml Distraction Tracking Sequence Diagrams
+
+title Log Distraction During Active Session - Complete Flow
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor User
+participant "UI\n(Session Page)" as UI
+participant "Distraction\nLogger Modal" as Modal
+participant "Distraction\nStore" as Store
+participant "API\nGateway" as API
+participant "Distraction\nTracking\nService" as Service
+participant "Session\nService" as SessionSvc
+participant "Focus Score\nCalculator" as Calculator
+database "Database" as DB
+participant "Event\nPublisher" as Events
+participant "Analytics\nEngine" as Analytics
+
+== Distraction Occurs ==
+
+User -> UI: Clicks "Log Distraction"
+activate UI
+
+UI -> Modal: Open logger modal
+activate Modal
+
+Modal -> Modal: Start duration timer
+Modal --> User: Display quick-log form
+
+== User Logs Distraction ==
+
+User -> Modal: Selects type (Internal/External)
+User -> Modal: Clicks source button\n(e.g., "Mind Wandering")
+User -> Modal: Adjusts impact slider (1-5)
+User -> Modal: Optionally adds description
+User -> Modal: Clicks "Log" button
+
+Modal -> Modal: Stop duration timer
+Modal -> Store: dispatch(logDistraction)
+activate Store
+
+Store -> API: POST /api/distractions
+activate API
+
+API -> API: Validate request\n(auth, session active)
+
+API -> Service: LogDistraction(command)
+activate Service
+
+Service -> Service: Validate business rules\n(impact 1-5, duration < 600s)
+
+Service -> DB: INSERT INTO Distractions
+activate DB
+DB --> Service: Distraction record created
+deactivate DB
+
+Service -> Events: Publish DistractionLogged
+activate Events
+
+alt Distraction Type = Internal
+    Service -> Events: Publish InternalDistractionRecorded
+else Distraction Type = External
+    Service -> Events: Publish ExternalDistractionRecorded
+end
+
+Events --> Service: Events published
+deactivate Events
+
+== Update Session Focus Score ==
+
+Service -> SessionSvc: RequestFocusScoreUpdate(sessionId)
+activate SessionSvc
+
+SessionSvc -> DB: SELECT Session & Distractions
+activate DB
+DB --> SessionSvc: Session data
+deactivate DB
+
+SessionSvc -> Calculator: Calculate(session)
+activate Calculator
+
+Calculator -> Calculator: BaseScore = 100
+Calculator -> Calculator: DistractionPenalty =\nSUM(impactLevel × 5)
+Calculator -> Calculator: ResistanceBonus =\nresistanceCount × 3
+Calculator -> Calculator: FinalScore =\nBaseScore - Penalty + Bonus
+
+Calculator --> SessionSvc: FocusScore
+deactivate Calculator
+
+SessionSvc -> DB: UPDATE Sessions\nSET FocusScore = X
+activate DB
+DB --> SessionSvc: Updated
+deactivate DB
+
+SessionSvc --> Service: Score updated
+deactivate SessionSvc
+
+Service --> API: DistractionId, Success
+deactivate Service
+
+API --> Store: 201 Created + Distraction
+deactivate API
+
+== Update UI ==
+
+Store -> Store: Add to currentSessionDistractions
+Store -> UI: Notify state changed
+deactivate Store
+
+UI -> UI: Increment distraction counter
+UI -> UI: Update focus score display
+UI -> Modal: Close modal
+deactivate Modal
+
+UI --> User: Show success feedback\n"Distraction logged"
+deactivate UI
+
+== Background Pattern Detection ==
+
+Events -> Analytics: DistractionLogged event
+activate Analytics
+
+Analytics -> DB: SELECT recent distractions\nFOR user
+activate DB
+DB --> Analytics: Distraction history
+deactivate DB
+
+Analytics -> Analytics: Analyze patterns\n(frequency, timing, sources)
+
+alt Pattern Detected
+    Analytics -> DB: INSERT DistractionPattern
+    activate DB
+    DB --> Analytics: Pattern saved
+    deactivate DB
+
+    Analytics -> Events: Publish PatternIdentified
+    activate Events
+    Events -> UI: Send push notification
+    activate UI
+    UI --> User: "Pattern detected:\nNotifications at 2pm daily"
+    deactivate UI
+    deactivate Events
+end
+
+deactivate Analytics
+
+|||
+
+== Alternative Flow: Log Resistance ==
+
+autonumber
+
+User -> UI: Feels distraction urge
+User -> UI: Resists successfully
+User -> UI: Clicks "Resisted!" button
+activate UI
+
+UI -> Modal: Open resistance logger
+activate Modal
+
+Modal --> User: Display resistance form
+
+User -> Modal: Selects what resisted\n(e.g., "Phone Notification")
+User -> Modal: Selects strategy\n(e.g., "Noted for Later")
+User -> Modal: Clicks "Log Resistance"
+
+Modal -> Store: dispatch(logResistance)
+activate Store
+
+Store -> API: POST /api/distractions/resistance
+activate API
+
+API -> Service: LogResistance(command)
+activate Service
+
+Service -> DB: INSERT DistractionResistance
+activate DB
+DB --> Service: Resistance recorded
+deactivate DB
+
+Service -> Events: Publish DistractionResisted
+activate Events
+Events --> Service: Event published
+deactivate Events
+
+Service -> SessionSvc: AddResistanceBonus(sessionId)
+activate SessionSvc
+SessionSvc -> Calculator: Recalculate score
+activate Calculator
+Calculator --> SessionSvc: Updated score
+deactivate Calculator
+SessionSvc -> DB: UPDATE FocusScore
+activate DB
+DB --> SessionSvc: Updated
+deactivate DB
+deactivate SessionSvc
+
+Service --> API: Success
+deactivate Service
+
+API --> Store: 201 Created
+deactivate API
+
+Store -> UI: Update resistance count
+deactivate Store
+
+UI -> UI: Show celebration animation\n"Great willpower! +3 points"
+
+UI --> User: Positive reinforcement
+deactivate UI
+
+|||
+
+== Error Handling Flow ==
+
+autonumber
+
+User -> UI: Clicks "Log Distraction"
+activate UI
+
+UI -> Modal: Open modal
+activate Modal
+
+User -> Modal: Fills form
+User -> Modal: Clicks "Log"
+
+Modal -> Store: dispatch(logDistraction)
+activate Store
+
+Store -> API: POST /api/distractions
+activate API
+
+API -> Service: LogDistraction(command)
+activate Service
+
+Service -> Service: Validate
+
+alt Session Not Active
+    Service --> API: 400 Bad Request\n"Session not active"
+    API --> Store: Error response
+    Store --> UI: Error state
+    UI -> Modal: Show error message
+    Modal --> User: "Please start a session first"
+else Impact Level Invalid
+    Service --> API: 400 Bad Request\n"Impact must be 1-5"
+    API --> Store: Error response
+    Store --> UI: Error state
+    UI -> Modal: Highlight impact field
+    Modal --> User: "Select impact level (1-5)"
+else Database Error
+    Service -> DB: INSERT
+    activate DB
+    DB --> Service: Connection timeout
+    deactivate DB
+    Service --> API: 500 Internal Error
+    API --> Store: Error response
+    Store --> UI: Error state
+    UI -> Modal: Show retry option
+    Modal --> User: "Failed to save.\nRetry or save for later?"
+
+    User -> Modal: Clicks "Save for later"
+    Modal -> Store: saveToLocalStorage(distraction)
+    Store -> Store: Queue for background sync
+    Store --> UI: Queued
+    UI --> User: "Will sync when online"
+end
+
+deactivate Service
+deactivate API
+deactivate Store
+deactivate Modal
+deactivate UI
+
+@enduml

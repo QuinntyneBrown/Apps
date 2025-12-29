@@ -1,0 +1,184 @@
+@startuml ProfessionalNetworkCRM_DomainModel
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class Contact <<AggregateRoot>> {
+  - Id: Guid
+  - Name: string
+  - Title: string
+  - Company: string
+  - Industry: string
+  - Email: string
+  - Phone: string
+  - LinkedInUrl: string
+  - MetDate: DateTime
+  - MetLocation: string
+  - ConnectionSource: string
+  - RelationshipType: string
+  - Tags: List<string>
+  - Active: bool
+  --
+  + AddTag(tag: string)
+  + UpdateRelationship(type: string)
+  + Deactivate(reason: string)
+  + Reactivate()
+}
+
+class Interaction <<AggregateRoot>> {
+  - Id: Guid
+  - ContactId: Guid
+  - Type: InteractionType
+  - Date: DateTime
+  - Duration: int
+  - Location: string
+  - TopicsDiscussed: List<string>
+  - Notes: string
+  - Sentiment: Sentiment
+  - FollowUpNeeded: bool
+  --
+  + UpdateNotes(notes: string)
+}
+
+class Meeting <<AggregateRoot>> {
+  - Id: Guid
+  - ContactId: Guid
+  - ScheduledDateTime: DateTime
+  - Location: string
+  - Purpose: string
+  - AgendaItems: List<string>
+  - Status: MeetingStatus
+  --
+  + Complete(outcome: MeetingOutcome)
+  + Cancel(reason: string)
+}
+
+class FollowUp <<AggregateRoot>> {
+  - Id: Guid
+  - ContactId: Guid
+  - ScheduledDate: DateTime
+  - FollowUpType: string
+  - Reason: string
+  - Priority: Priority
+  - Status: FollowUpStatus
+  --
+  + Complete(outcome: string)
+  + Snooze(newDate: DateTime)
+  + MarkMissed()
+}
+
+class NetworkingEvent <<AggregateRoot>> {
+  - Id: Guid
+  - Name: string
+  - EventType: string
+  - Date: DateTime
+  - Location: string
+  - ConnectionsMade: int
+  --
+  + AddContact(contactId: Guid)
+  + GenerateFollowUps()
+}
+
+class Opportunity <<AggregateRoot>> {
+  - Id: Guid
+  - ContactId: Guid
+  - Type: OpportunityType
+  - Description: string
+  - Status: OpportunityStatus
+  - Value: decimal
+  --
+  + UpdateStatus(status: OpportunityStatus)
+  + MarkWon()
+  + MarkLost(reason: string)
+}
+
+class ValueExchange <<Entity>> {
+  - Id: Guid
+  - ContactId: Guid
+  - Type: ValueType
+  - Direction: ValueDirection
+  - Description: string
+  - Date: DateTime
+}
+
+class ContactNote <<Entity>> {
+  - Id: Guid
+  - ContactId: Guid
+  - Content: string
+  - Type: NoteType
+  - Privacy: PrivacyLevel
+  - Tags: List<string>
+  - CreatedAt: DateTime
+}
+
+class RelationshipStrength <<ValueObject>> {
+  - Score: int
+  - CalculatedAt: DateTime
+  - Factors: Dictionary
+  - Trend: RelationshipTrend
+  --
+  + Calculate()
+}
+
+class ContactTag <<ValueObject>> {
+  - Tag: string
+  - Category: string
+  - TaggedDate: DateTime
+  - AutoTagged: bool
+}
+
+enum InteractionType {
+  Meeting
+  Call
+  Email
+  Message
+  Coffee
+  Lunch
+  Conference
+}
+
+enum Sentiment {
+  Positive
+  Neutral
+  Negative
+}
+
+enum Priority {
+  Low
+  Medium
+  High
+  Urgent
+}
+
+enum FollowUpStatus {
+  Pending
+  Completed
+  Missed
+  Snoozed
+}
+
+enum OpportunityType {
+  Job
+  Client
+  Partnership
+  Speaking
+  Collaboration
+}
+
+' Relationships
+Contact "1" -- "0..*" Interaction : has >
+Contact "1" -- "0..*" Meeting : has >
+Contact "1" -- "0..*" FollowUp : has >
+Contact "1" -- "0..*" Opportunity : has >
+Contact "1" -- "0..*" ValueExchange : has >
+Contact "1" -- "0..*" ContactNote : has >
+Contact "1" -- "1" RelationshipStrength : calculated >
+Contact "1" *-- "0..*" ContactTag : contains >
+NetworkingEvent "1" -- "0..*" Contact : attendees >
+Interaction --> InteractionType
+Interaction --> Sentiment
+FollowUp --> Priority
+FollowUp --> FollowUpStatus
+Opportunity --> OpportunityType
+
+@enduml

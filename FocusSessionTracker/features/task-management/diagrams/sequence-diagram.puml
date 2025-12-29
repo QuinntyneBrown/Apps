@@ -1,0 +1,134 @@
+@startuml Task Management Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Task Management Lifecycle - Multi-Session Task
+
+actor User
+participant "Frontend" as FE
+participant "TaskController" as API
+participant "TaskService" as SVC
+participant "TaskRepository" as REPO
+participant "SessionRepository" as SREPO
+participant "EventPublisher" as EVT
+participant "NotificationService" as NOTIF
+
+== Create Task ==
+
+User -> FE: Click "New Task"
+FE -> FE: Show task form
+User -> FE: Fill details & save
+FE -> API: POST /api/tasks
+API -> SVC: CreateTask(command)
+SVC -> SVC: Validate task data
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskCreated)
+API --> FE: 201 Created (task)
+FE -> FE: Show success & redirect
+FE --> User: Display task in list
+
+== Assign Task to First Session ==
+
+User -> FE: Start new session
+FE -> FE: Show session setup
+User -> FE: Select task
+FE -> API: POST /api/tasks/{id}/assign-to-session
+API -> SVC: AssignToSession(taskId, sessionId)
+SVC -> REPO: GetById(taskId)
+SVC -> SREPO: GetById(sessionId)
+SVC -> SVC: Update task status to InProgress
+SVC -> REPO: SaveTaskSession(taskSession)
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskAssignedToSession)
+API --> FE: 200 OK
+FE --> User: Session starts with task
+
+== Update Progress After Session 1 ==
+
+User -> FE: Complete session
+FE -> FE: Show completion modal
+User -> FE: Add progress notes
+FE -> API: PUT /api/tasks/{id}/update-progress
+API -> SVC: UpdateProgress(command)
+SVC -> REPO: GetById(taskId)
+SVC -> SVC: Calculate progress (33%)
+SVC -> REPO: SaveProgressHistory()
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskProgressUpdated)
+API --> FE: 200 OK (progress: 33%)
+FE --> User: Show updated progress
+
+== Assign Task to Second Session ==
+
+note over User, FE: Next day...
+User -> FE: Start new session
+User -> FE: Select same task
+FE -> API: POST /api/tasks/{id}/assign-to-session
+API -> SVC: AssignToSession(taskId, sessionId)
+SVC -> REPO: SaveTaskSession(taskSession)
+SVC -> EVT: Publish(TaskAssignedToSession)
+API --> FE: 200 OK
+FE --> User: Session starts
+
+== Update Progress After Session 2 ==
+
+User -> FE: Complete session
+FE -> API: PUT /api/tasks/{id}/update-progress
+API -> SVC: UpdateProgress(command)
+SVC -> SVC: Calculate progress (66%)
+SVC -> REPO: SaveProgressHistory()
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskProgressUpdated)
+API --> FE: 200 OK (progress: 66%)
+FE --> User: Show updated progress
+
+== Complete Task in Third Session ==
+
+note over User, FE: Final session...
+User -> FE: Start session with task
+User -> FE: Complete session
+FE -> API: PUT /api/tasks/{id}/update-progress
+API -> SVC: UpdateProgress(command)
+SVC -> SVC: Calculate progress (100%)
+SVC -> SVC: Auto-complete task
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskProgressUpdated)
+SVC -> EVT: Publish(MultipleSessionTaskCompleted)
+EVT -> NOTIF: Send completion notification
+API --> FE: 200 OK (status: completed)
+FE -> FE: Show completion modal
+FE -> FE: Trigger confetti animation
+FE --> User: "Task completed! 3 sessions, 75 minutes"
+
+== View Task Details ==
+
+User -> FE: Click completed task
+FE -> API: GET /api/tasks/{id}
+API -> SVC: GetTask(taskId)
+SVC -> REPO: GetById(taskId)
+SVC -> REPO: GetTaskSessions(taskId)
+SVC -> REPO: GetProgressHistory(taskId)
+API --> FE: 200 OK (task with sessions)
+FE -> FE: Render task detail page
+FE --> User: Show full task history
+
+== Archive Task ==
+
+User -> FE: Click "Archive"
+FE -> FE: Show confirmation
+User -> FE: Confirm
+FE -> API: PUT /api/tasks/{id}/archive
+API -> SVC: ArchiveTask(taskId)
+SVC -> REPO: GetById(taskId)
+SVC -> SVC: Mark as archived
+SVC -> REPO: Save(task)
+SVC -> EVT: Publish(TaskArchived)
+API --> FE: 200 OK
+FE --> User: Task archived
+
+@enduml

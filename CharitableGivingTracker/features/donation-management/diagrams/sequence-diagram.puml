@@ -1,0 +1,286 @@
+@startuml Donation Management Sequence Diagram
+
+skinparam participantPadding 20
+skinparam boxPadding 10
+
+actor User
+participant "Web UI" as UI
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "Donation" as Aggregate
+participant "Repository" as Repo
+participant "Event Publisher" as Events
+participant "Background Job" as Job
+database "SQL Server" as DB
+
+== Record One-Time Donation ==
+
+User -> UI: Click "Record Donation"
+activate UI
+
+UI -> UI: Display donation form
+User -> UI: Enter donation details\n(org, amount, date, method)
+UI -> UI: Validate input
+UI -> API: POST /api/donations
+activate API
+
+API -> Handler: RecordDonationCommand
+activate Handler
+
+Handler -> Repo: GetOrganizationById(orgId)
+activate Repo
+Repo -> DB: SELECT organization
+DB --> Repo: Organization data
+Repo --> Handler: Organization
+deactivate Repo
+
+Handler -> Handler: Validate organization\nis verified 501(c)(3)
+
+Handler -> Aggregate: new Donation(details)
+activate Aggregate
+Aggregate -> Aggregate: Validate business rules
+Aggregate -> Aggregate: Calculate tax deductibility
+Aggregate -> Aggregate: Check acknowledgment requirement\n(amount >= $250)
+Aggregate -> Aggregate: RaiseDonationMade()
+Aggregate --> Handler: Donation created
+deactivate Aggregate
+
+Handler -> Repo: Add(donation)
+activate Repo
+Repo -> DB: INSERT donation
+DB --> Repo: Success
+deactivate Repo
+
+Handler -> Events: Publish(DonationMade)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+
+Handler --> API: DonationId
+deactivate Handler
+
+API --> UI: 201 Created
+deactivate API
+
+UI -> UI: Show success message
+UI -> UI: Display tax receipt option
+UI --> User: "Donation recorded!\nTax deductible: $X"
+deactivate UI
+
+== Schedule Recurring Donation ==
+
+User -> UI: Click "Setup Recurring"
+activate UI
+
+UI -> UI: Display recurring form
+User -> UI: Enter schedule details\n(org, amount, frequency)
+UI -> API: POST /api/donations/recurring
+activate API
+
+API -> Handler: ScheduleRecurringDonationCommand
+activate Handler
+
+Handler -> Aggregate: new RecurringDonation(details)
+activate Aggregate
+Aggregate -> Aggregate: Validate schedule
+Aggregate -> Aggregate: CalculateNextScheduledDate()
+Aggregate -> Aggregate: RaiseRecurringDonationScheduled()
+Aggregate --> Handler: RecurringDonation created
+deactivate Aggregate
+
+Handler -> Repo: Add(recurringDonation)
+activate Repo
+Repo -> DB: INSERT recurring_donation
+DB --> Repo: Success
+deactivate Repo
+
+Handler -> Events: Publish(RecurringDonationScheduled)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+
+Handler --> API: RecurringDonationId
+deactivate Handler
+
+API --> UI: 201 Created
+deactivate API
+
+UI -> UI: Show success with\nnext execution date
+UI --> User: "Recurring donation scheduled!\nFirst donation: [date]"
+deactivate UI
+
+== Execute Recurring Donation (Background Job) ==
+
+Job -> Job: Timer triggers daily
+activate Job
+
+Job -> Repo: GetDueForExecution()
+activate Repo
+Repo -> DB: SELECT recurring_donations\nWHERE next_date <= today
+DB --> Repo: Recurring donations list
+Repo --> Job: RecurringDonations
+deactivate Repo
+
+loop For each due recurring donation
+
+  Job -> Handler: ExecuteRecurringDonationCommand
+  activate Handler
+
+  Handler -> Repo: GetRecurringById(id)
+  activate Repo
+  Repo -> DB: SELECT recurring_donation
+  DB --> Repo: RecurringDonation
+  Repo --> Handler: RecurringDonation
+  deactivate Repo
+
+  Handler -> Aggregate: Execute()
+  activate Aggregate
+  Aggregate -> Aggregate: Create donation from schedule
+  Aggregate -> Aggregate: CalculateNextScheduledDate()
+  Aggregate -> Aggregate: IncrementDonationsMade()
+  Aggregate -> Aggregate: UpdateTotalDonated()
+  Aggregate -> Aggregate: RaiseRecurringDonationExecuted()
+  Aggregate --> Handler: Donation created
+  deactivate Aggregate
+
+  Handler -> Repo: Add(donation)
+  activate Repo
+  Repo -> DB: INSERT donation
+  DB --> Repo: Success
+  deactivate Repo
+
+  Handler -> Repo: Update(recurringDonation)
+  activate Repo
+  Repo -> DB: UPDATE recurring_donation
+  DB --> Repo: Success
+  deactivate Repo
+
+  Handler -> Events: Publish(RecurringDonationExecuted)
+  activate Events
+  Events --> Handler: Event published
+  deactivate Events
+
+  Handler --> Job: Success
+  deactivate Handler
+
+end
+
+Job -> Job: Log execution results
+deactivate Job
+
+== Upload Acknowledgment Letter ==
+
+User -> UI: View donation details
+activate UI
+UI -> API: GET /api/donations/{id}
+activate API
+API -> Repo: GetById(donationId)
+activate Repo
+Repo -> DB: SELECT donation
+DB --> Repo: Donation
+Repo --> API: Donation
+deactivate Repo
+API --> UI: DonationDto
+deactivate API
+
+UI --> User: Show donation details\nwith upload option
+User -> UI: Click "Upload Acknowledgment"
+UI -> UI: Display file picker
+User -> UI: Select PDF file
+UI -> API: POST /api/donations/{id}/acknowledgment
+activate API
+
+API -> Handler: UploadAcknowledgmentLetterCommand
+activate Handler
+
+Handler -> Repo: GetById(donationId)
+activate Repo
+Repo -> DB: SELECT donation
+DB --> Repo: Donation
+Repo --> Handler: Donation
+deactivate Repo
+
+Handler -> Handler: Validate file (PDF, < 5MB)
+
+Handler -> Handler: Upload to storage
+note right: Store in secure\ncloud storage
+
+Handler -> Aggregate: UploadAcknowledgment(url)
+activate Aggregate
+Aggregate -> Aggregate: Set acknowledgmentLetterUrl
+Aggregate -> Aggregate: Set acknowledgmentReceived = true
+Aggregate -> Aggregate: RaiseAcknowledgmentReceived()
+Aggregate --> Handler: Updated
+deactivate Aggregate
+
+Handler -> Repo: Update(donation)
+activate Repo
+Repo -> DB: UPDATE donation
+DB --> Repo: Success
+deactivate Repo
+
+Handler -> Events: Publish(AcknowledgmentLetterReceived)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+
+Handler --> API: Document URL
+deactivate Handler
+
+API --> UI: 200 OK
+deactivate API
+
+UI -> UI: Update UI with checkmark
+UI --> User: "Acknowledgment uploaded!"
+deactivate UI
+
+== Request Donation Refund ==
+
+User -> UI: View donation details
+activate UI
+User -> UI: Click "Request Refund"
+UI -> UI: Show refund reason modal
+User -> UI: Enter refund reason
+UI -> API: POST /api/donations/{id}/refund
+activate API
+
+API -> Handler: RefundDonationCommand
+activate Handler
+
+Handler -> Repo: GetById(donationId)
+activate Repo
+Repo -> DB: SELECT donation
+DB --> Repo: Donation
+Repo --> Handler: Donation
+deactivate Repo
+
+Handler -> Aggregate: RecordRefund(amount, reason)
+activate Aggregate
+Aggregate -> Aggregate: Validate not already refunded
+Aggregate -> Aggregate: Set refund details
+Aggregate -> Aggregate: RaiseDonationRefunded()
+Aggregate --> Handler: Updated
+deactivate Aggregate
+
+Handler -> Repo: Update(donation)
+activate Repo
+Repo -> DB: UPDATE donation
+DB --> Repo: Success
+deactivate Repo
+
+Handler -> Events: Publish(DonationRefunded)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+
+Handler --> API: Success
+deactivate Handler
+
+API --> UI: 200 OK
+deactivate API
+
+UI -> UI: Update status to "Refunded"
+UI --> User: "Refund recorded.\nTax deduction adjusted."
+deactivate UI
+
+@enduml

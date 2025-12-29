@@ -1,0 +1,85 @@
+@startuml BookReadingTrackerLibrary_SequenceDiagram
+
+title Complete Reading Flow - From Start to Review
+
+actor Reader
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "Reading Service" as ReadingSvc
+participant "Review Service" as ReviewSvc
+participant "Goal Service" as GoalSvc
+participant "Event Bus" as Events
+participant "Database" as DB
+
+== Start Reading ==
+Reader -> UI: Click "Start Reading"
+UI -> API: POST /api/books/{id}/reading/start
+API -> ReadingSvc: StartReading(bookId, startInfo)
+ReadingSvc -> DB: Insert ReadingSession
+DB --> ReadingSvc: ReadingSession Created
+ReadingSvc -> Events: Publish ReadingStartedEvent
+Events --> GoalSvc: ReadingStartedEvent
+GoalSvc -> DB: Update active goals
+ReadingSvc --> API: ReadingSessionDTO
+API --> UI: 201 Created
+UI --> Reader: Show "Currently Reading" status
+
+== Update Progress ==
+Reader -> UI: Enter current page (150/300)
+UI -> API: PUT /api/reading-sessions/{id}/progress
+API -> ReadingSvc: UpdateProgress(sessionId, currentPage)
+ReadingSvc -> DB: Insert ProgressUpdate
+ReadingSvc -> DB: Update ReadingSession\n(currentPage, percentage, pace)
+DB --> ReadingSvc: Updated
+ReadingSvc -> Events: Publish ReadingProgressUpdatedEvent
+Events --> GoalSvc: ReadingProgressUpdatedEvent
+ReadingSvc --> API: Updated ReadingSessionDTO
+API --> UI: 200 OK
+UI --> Reader: Show progress: 50% complete\nEstimated completion: 5 days
+
+== Complete Reading ==
+Reader -> UI: Mark as "Completed"
+UI -> UI: Show Completion Modal
+Reader -> UI: Enter rating (4 stars) + notes
+UI -> API: PUT /api/reading-sessions/{id}/complete
+API -> ReadingSvc: CompleteReading(sessionId, completionInfo)
+ReadingSvc -> DB: Update ReadingSession\n(status=Completed, completionDate)
+DB --> ReadingSvc: Updated
+ReadingSvc -> Events: Publish ReadingCompletedEvent
+Events --> GoalSvc: ReadingCompletedEvent
+GoalSvc -> DB: Update goal progress
+GoalSvc -> GoalSvc: Check if goal achieved
+alt Goal Achieved
+  GoalSvc -> Events: Publish ReadingMilestoneAchievedEvent
+  Events --> UI: Push notification
+  UI --> Reader: "Goal achieved! 50 books this year!"
+end
+ReadingSvc --> API: CompletedSessionDTO
+API --> UI: 200 OK
+UI --> Reader: Show completion confirmation
+
+== Write Review ==
+Reader -> UI: Click "Write Review"
+UI -> UI: Show Review Modal
+Reader -> UI: Write review text + select themes
+UI -> API: POST /api/books/{id}/reviews
+API -> ReviewSvc: CreateReview(bookId, reviewDTO)
+ReviewSvc -> DB: Insert Review
+DB --> ReviewSvc: Review Created
+ReviewSvc -> Events: Publish BookReviewWrittenEvent
+Events --> ReadingSvc: Update book metadata
+ReviewSvc --> API: ReviewDTO
+API --> UI: 201 Created
+UI --> Reader: "Review saved successfully"
+
+== View Statistics ==
+Reader -> UI: Navigate to "Reading Statistics"
+UI -> API: GET /api/reading/statistics
+API -> ReadingSvc: GetStatistics(userId)
+ReadingSvc -> DB: Query ReadingSessions,\nProgressUpdates
+DB --> ReadingSvc: Statistics data
+ReadingSvc --> API: ReadingStatisticsDTO
+API --> UI: 200 OK
+UI --> Reader: Display:\n- 45 books read this year\n- 12,500 pages\n- 42 pages/day average\n- Current streak: 15 days
+
+@enduml

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Pressure Monitor - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .notification-bell {
+            position: relative;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #F44336;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(245, 124, 0, 0.3);
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            font-size: 2rem;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #FF9800;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-record {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf0 100%);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .goal-progress {
+            margin-top: 1.5rem;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .readings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .reading-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .reading-card:hover {
+            border-color: #2196F3;
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .reading-card.normal {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%);
+        }
+
+        .reading-card.elevated {
+            border-color: #FFC107;
+            background: linear-gradient(135deg, #fffbf0 0%, #fff9e6 100%);
+        }
+
+        .reading-card.high {
+            border-color: #FF9800;
+            background: linear-gradient(135deg, #fff5eb 0%, #ffebe0 100%);
+        }
+
+        .reading-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .reading-value.normal { color: #4CAF50; }
+        .reading-value.elevated { color: #FFC107; }
+        .reading-value.high { color: #FF9800; }
+
+        .reading-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .reading-meta {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+
+        .reading-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            justify-content: center;
+        }
+
+        .btn-icon {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-icon:hover {
+            background: #2196F3;
+            color: white;
+            border-color: #2196F3;
+        }
+
+        .risk-card {
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
+            border-left: 4px solid #FFC107;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .risk-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .risk-badge {
+            background: #FFC107;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .risk-score {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #F57C00;
+        }
+
+        .nav {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #666;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+
+        .nav-item:hover:not(.active) {
+            background: #f5f7fa;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+        }
+
+        .streak {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .advanced-toggle {
+            color: #2196F3;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        .advanced-toggle:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <span style="font-size: 1.5rem;">☰</span>
+            <h1 class="header-title">Blood Pressure Monitor</h1>
+        </div>
+        <div class="header-right">
+            <div class="notification-bell">
+                🔔
+                <div class="notification-badge">3</div>
+            </div>
+            <span>👤 John Doe</span>
+            <button class="btn btn-secondary">Settings</button>
+        </div>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner">
+        <div class="alert-content">
+            <span class="alert-icon">⚠️</span>
+            <div>
+                <strong>High Blood Pressure Detected</strong><br>
+                <span style="font-size: 0.9rem;">Your reading of 145/92 mmHg indicates Stage 1 Hypertension</span>
+            </div>
+        </div>
+        <div class="alert-actions">
+            <button class="btn btn-primary">View Details</button>
+            <button class="btn btn-secondary">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Top Grid: Reading Entry & Summary -->
+        <div class="grid">
+            <!-- Quick Reading Entry -->
+            <div class="card">
+                <h2 class="card-header">📊 Quick Reading Entry</h2>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Systolic (mmHg)</label>
+                        <input type="number" class="form-input" value="120" placeholder="e.g., 120">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Diastolic (mmHg)</label>
+                        <input type="number" class="form-input" value="80" placeholder="e.g., 80">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pulse (bpm)</label>
+                        <input type="number" class="form-input" value="72" placeholder="e.g., 72">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="text" class="form-input" value="Now (8:30 AM)" readonly>
+                    </div>
+                    <a class="advanced-toggle">▶ Advanced Options</a>
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-record" style="width: 100%;">Record Reading</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Today's Summary -->
+            <div class="card">
+                <h2 class="card-header">📈 Today's Summary</h2>
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Average BP</div>
+                        <div class="stat-value" style="color: #4CAF50;">125/82</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trend</div>
+                        <div class="stat-value" style="color: #2196F3;">→ Stable</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Readings</div>
+                        <div class="stat-value">2</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">In Goal</div>
+                        <div class="stat-value" style="color: #4CAF50;">100%</div>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button class="btn btn-primary">View Detailed Trends</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Progress -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2 class="card-header">🎯 Goal Progress</h2>
+            <p style="color: #666; margin-bottom: 1rem;">Target Range: 110-120 / 70-80 mmHg</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar">80%</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>45/56 readings in goal range</span>
+                <span class="streak">🔥 7-day streak</span>
+                <button class="btn btn-primary">View Details</button>
+            </div>
+        </div>
+
+        <!-- Recent Readings -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="card-header" style="margin: 0;">Recent Readings</h2>
+                <a href="#" style="color: #2196F3; text-decoration: none;">View All →</a>
+            </div>
+            <div class="readings-grid">
+                <!-- Normal Reading -->
+                <div class="reading-card normal">
+                    <div class="reading-label">Normal</div>
+                    <div class="reading-value normal">120/80</div>
+                    <div style="font-size: 0.875rem; color: #666;">♥ 72 bpm</div>
+                    <div class="reading-meta">Today 8:00 AM<br>Resting</div>
+                    <div class="reading-actions">
+                        <button class="btn btn-icon">👁 View</button>
+                        <button class="btn btn-icon">✏️ Edit</button>
+                    </div>
+                </div>
+
+                <!-- Elevated Reading -->
+                <div class="reading-card elevated">
+                    <div class="reading-label">Elevated</div>
+                    <div class="reading-value elevated">130/85</div>
+                    <div style="font-size: 0.875rem; color: #666;">♥ 75 bpm</div>
+                    <div class="reading-meta">Yesterday 8:00 AM<br>Resting</div>
+                    <div class="reading-actions">
+                        <button class="btn btn-icon">👁 View</button>
+                        <button class="btn btn-icon">✏️ Edit</button>
+                    </div>
+                </div>
+
+                <!-- High Reading -->
+                <div class="reading-card high">
+                    <div class="reading-label">Stage 1 High</div>
+                    <div class="reading-value high">145/92</div>
+                    <div style="font-size: 0.875rem; color: #666;">♥ 78 bpm</div>
+                    <div class="reading-meta">Dec 27, 6:00 PM<br>Post-exercise</div>
+                    <div class="reading-actions">
+                        <button class="btn btn-icon">👁 View</button>
+                        <button class="btn btn-icon">⚠️ Alert</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cardiovascular Risk -->
+        <div class="risk-card">
+            <div class="risk-header">
+                <span style="font-size: 2rem;">🫀</span>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <h3 style="margin: 0;">Cardiovascular Risk</h3>
+                        <span class="risk-badge">MODERATE RISK</span>
+                        <span class="risk-score">Score: 6.5/10</span>
+                    </div>
+                    <p style="margin-top: 0.5rem; color: #666;">Your BP increases your cardiovascular risk. Follow recommendations to improve.</p>
+                </div>
+                <button class="btn btn-primary">Learn More</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav" style="margin-top: 2rem;">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>Trends</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🎯</span>
+                <span>Goals</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">💊</span>
+                <span>Medications</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Reports</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

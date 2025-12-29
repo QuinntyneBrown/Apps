@@ -1,0 +1,241 @@
+@startuml Reporting Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class WeeklyReport {
+        +Guid Id
+        +Guid UserId
+        +DateTime WeekStartDate
+        +DateTime WeekEndDate
+        +int TotalSessions
+        +int CompletedSessions
+        +int AbandonedSessions
+        +int TotalFocusMinutes
+        +decimal AverageFocusScore
+        +int AverageSessionDuration
+        +int TotalDistractionsLogged
+        +string MostProductiveDay
+        +DateTime GeneratedAt
+        --
+        +Generate(): void
+        +AddDailyBreakdown(breakdown: DailyBreakdown): void
+        +CalculateCompletionRate(): decimal
+        +GetDailyBreakdowns(): List<DailyBreakdown>
+    }
+
+    class DailyBreakdown {
+        +Guid Id
+        +Guid WeeklyReportId
+        +DateTime Date
+        +int SessionCount
+        +int FocusMinutes
+        +decimal AverageScore
+        +int CompletedSessions
+        --
+        +CalculateProductivity(): decimal
+    }
+
+    class MonthlyInsight {
+        +Guid Id
+        +Guid UserId
+        +int Month
+        +int Year
+        +int TotalSessions
+        +int CompletedSessions
+        +decimal TotalFocusHours
+        +decimal AverageFocusScore
+        +string MostProductiveDay
+        +int MostProductiveHour
+        +string WeeklyTrend
+        +decimal CompletionRate
+        +DateTime GeneratedAt
+        --
+        +Generate(): void
+        +AddInsightDetail(insight: InsightDetail): void
+        +AddTopDistraction(distraction: TopDistraction): void
+        +CalculateTrend(): string
+        +GetKeyInsights(): List<string>
+    }
+
+    class InsightDetail {
+        +Guid Id
+        +Guid MonthlyInsightId
+        +string InsightType
+        +string InsightText
+        +string Category
+        +int Priority
+        --
+        +FormatForDisplay(): string
+    }
+
+    class TopDistraction {
+        +Guid Id
+        +Guid MonthlyInsightId
+        +string DistractionType
+        +int Count
+        +int Rank
+        --
+        +GetPercentage(total: int): decimal
+    }
+
+    enum TrendType {
+        Improving
+        Stable
+        Declining
+    }
+
+    enum ReportStatus {
+        Pending
+        Generating
+        Complete
+        Failed
+    }
+
+    WeeklyReport "1" --> "*" DailyBreakdown : has
+    MonthlyInsight "1" --> "*" InsightDetail : has
+    MonthlyInsight "1" --> "*" TopDistraction : has
+    MonthlyInsight --> TrendType
+}
+
+package "Events" {
+    class WeeklyReportGenerated {
+        +Guid ReportId
+        +Guid UserId
+        +DateTime WeekStartDate
+        +DateTime WeekEndDate
+        +int TotalSessions
+        +int CompletedSessions
+        +int TotalFocusMinutes
+        +decimal AverageFocusScore
+        +DateTime Timestamp
+    }
+
+    class MonthlyInsightCreated {
+        +Guid InsightId
+        +Guid UserId
+        +int Month
+        +int Year
+        +int TotalSessions
+        +decimal TotalFocusHours
+        +decimal AverageFocusScore
+        +string WeeklyTrend
+        +List<string> KeyInsights
+        +DateTime Timestamp
+    }
+
+    class ReportExported {
+        +Guid UserId
+        +string ReportType
+        +string Format
+        +DateTime StartDate
+        +DateTime EndDate
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class ReportingService {
+        -IWeeklyReportRepository weeklyReportRepo
+        -IMonthlyInsightRepository monthlyInsightRepo
+        -ISessionRepository sessionRepo
+        -IEventPublisher eventPublisher
+        -IReportGenerator reportGenerator
+        --
+        +GenerateWeeklyReport(userId: Guid, weekStart: DateTime): WeeklyReport
+        +GenerateMonthlyInsight(userId: Guid, month: int, year: int): MonthlyInsight
+        +GetWeeklyReports(userId: Guid, filters: ReportFilters): List<WeeklyReport>
+        +GetMonthlyInsights(userId: Guid, year: int): List<MonthlyInsight>
+        +ExportReport(config: ExportConfig): Stream
+    }
+
+    class ReportGenerator {
+        -ISessionAggregator sessionAggregator
+        -IInsightEngine insightEngine
+        --
+        +GenerateWeeklyData(userId: Guid, weekStart: DateTime): WeeklyReportData
+        +GenerateDailyBreakdowns(sessions: List<Session>): List<DailyBreakdown>
+        +GenerateMonthlyData(userId: Guid, month: int, year: int): MonthlyInsightData
+        +CalculateTrends(data: MonthlyData): string
+        +IdentifyPatterns(sessions: List<Session>): List<InsightDetail>
+    }
+
+    class InsightEngine {
+        -IPatternAnalyzer patternAnalyzer
+        -IProductivityCalculator productivityCalc
+        --
+        +GenerateInsights(data: MonthlyData): List<string>
+        +IdentifyMostProductiveTime(sessions: List<Session>): ProductivityPeak
+        +AnalyzeDistractionPatterns(distractions: List<Distraction>): List<TopDistraction>
+        +CompareToPreviousPeriod(current: MonthlyData, previous: MonthlyData): Comparison
+    }
+
+    interface IWeeklyReportRepository {
+        +GetById(id: Guid): WeeklyReport
+        +GetByUserId(userId: Guid, filters: ReportFilters): List<WeeklyReport>
+        +GetByWeek(userId: Guid, weekStart: DateTime): WeeklyReport
+        +Save(report: WeeklyReport): void
+        +Delete(id: Guid): void
+    }
+
+    interface IMonthlyInsightRepository {
+        +GetById(id: Guid): MonthlyInsight
+        +GetByUserId(userId: Guid, year: int): List<MonthlyInsight>
+        +GetByMonth(userId: Guid, month: int, year: int): MonthlyInsight
+        +Save(insight: MonthlyInsight): void
+        +Delete(id: Guid): void
+    }
+
+    interface IExportService {
+        +ExportToCsv(data: ReportData): Stream
+        +ExportToPdf(data: ReportData, includeCharts: bool): Stream
+        +ExportToJson(data: ReportData): Stream
+    }
+}
+
+package "Infrastructure" {
+    class SessionAggregator {
+        -ISessionRepository sessionRepo
+        -IDistractionRepository distractionRepo
+        --
+        +AggregateWeeklyData(userId: Guid, weekStart: DateTime): WeeklyStats
+        +AggregateMonthlyData(userId: Guid, month: int, year: int): MonthlyStats
+        +CalculateDailyBreakdown(sessions: List<Session>): List<DailyStats>
+        +GetProductivityMetrics(sessions: List<Session>): ProductivityMetrics
+    }
+
+    class ExportService {
+        -IPdfGenerator pdfGenerator
+        -ICsvWriter csvWriter
+        --
+        +ExportToCsv(data: ReportData): Stream
+        +ExportToPdf(data: ReportData, includeCharts: bool): Stream
+        +ExportToJson(data: ReportData): Stream
+    }
+}
+
+ReportingService --> WeeklyReport
+ReportingService --> MonthlyInsight
+ReportingService --> IWeeklyReportRepository
+ReportingService --> IMonthlyInsightRepository
+ReportingService --> ReportGenerator
+ReportingService --> IExportService
+
+ReportGenerator --> InsightEngine
+ReportGenerator --> SessionAggregator
+
+SessionAggregator ..> DailyBreakdown : creates
+InsightEngine ..> InsightDetail : creates
+InsightEngine ..> TopDistraction : creates
+
+ExportService ..|> IExportService
+
+WeeklyReport ..> WeeklyReportGenerated : publishes
+MonthlyInsight ..> MonthlyInsightCreated : publishes
+
+@enduml

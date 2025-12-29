@@ -1,0 +1,160 @@
+@startuml Item Management Class Diagram
+
+class Item <<Aggregate Root>> {
+  - itemId: Guid
+  - userId: Guid
+  - name: string
+  - description: string
+  - categoryId: Guid
+  - purchaseDate: DateTime?
+  - purchasePrice: decimal?
+  - currentValue: decimal
+  - locationId: Guid
+  - serialNumber: string?
+  - condition: Condition
+  - status: ItemStatus
+  - photos: List<PhotoReference>
+  - receiptId: Guid?
+  - notes: string
+  - createdAt: DateTime
+  - updatedAt: DateTime
+  --
+  + UpdateDetails(updates): void
+  + Relocate(newLocation): void
+  + Remove(reason, method): void
+  + AddPhoto(photo): void
+  + UpdateValue(newValue): void
+}
+
+enum Condition {
+  Excellent
+  Good
+  Fair
+  Poor
+}
+
+enum ItemStatus {
+  Active
+  Disposed
+  Sold
+  Donated
+  Lost
+  Stolen
+}
+
+class Category <<Entity>> {
+  - categoryId: Guid
+  - name: string
+  - parentCategoryId: Guid?
+  - depreciationRate: decimal
+  - insuranceClassification: string
+  - iconName: string
+  --
+  + GetFullPath(): string
+  + CalculateDepreciation(purchasePrice, age): decimal
+}
+
+class PhotoReference <<Value Object>> {
+  - photoId: Guid
+  - url: string
+  - uploadedAt: DateTime
+  - isPrimary: bool
+  - caption: string
+  --
+  + SetAsPrimary(): void
+}
+
+class AddItemCommand {
+  + Name: string
+  + Description: string
+  + CategoryId: Guid
+  + PurchaseDate: DateTime?
+  + PurchasePrice: decimal?
+  + CurrentValue: decimal
+  + LocationId: Guid
+  + SerialNumber: string?
+  + Condition: Condition
+  + Photos: List<PhotoUpload>
+}
+
+class UpdateItemCommand {
+  + ItemId: Guid
+  + UpdatedFields: Dictionary<string, object>
+  + UpdateReason: string
+}
+
+class RemoveItemCommand {
+  + ItemId: Guid
+  + RemovalReason: string
+  + DisposalMethod: string
+}
+
+class RelocateItemCommand {
+  + ItemId: Guid
+  + NewLocationId: Guid
+  + ReasonForMove: string
+}
+
+class ItemAdded <<Domain Event>> {
+  + ItemId: Guid
+  + UserId: Guid
+  + Name: string
+  + CategoryId: Guid
+  + CurrentValue: decimal
+  + LocationId: Guid
+  + SerialNumber: string
+  + OccurredAt: DateTime
+}
+
+class ItemUpdated <<Domain Event>> {
+  + ItemId: Guid
+  + PreviousValues: Dictionary<string, object>
+  + NewValues: Dictionary<string, object>
+  + UpdateTimestamp: DateTime
+  + UpdateReason: string
+  + OccurredAt: DateTime
+}
+
+class ItemRemoved <<Domain Event>> {
+  + ItemId: Guid
+  + ItemName: string
+  + RemovalDate: DateTime
+  + RemovalReason: string
+  + DisposalMethod: string
+  + FinalValue: decimal
+  + OwnershipDuration: TimeSpan
+  + OccurredAt: DateTime
+}
+
+class ItemRelocated <<Domain Event>> {
+  + ItemId: Guid
+  + PreviousLocationId: Guid
+  + NewLocationId: Guid
+  + RelocationDate: DateTime
+  + ReasonForMove: string
+  + OccurredAt: DateTime
+}
+
+interface IItemRepository {
+  + GetByIdAsync(itemId): Task<Item>
+  + GetByUserIdAsync(userId): Task<List<Item>>
+  + AddAsync(item): Task
+  + UpdateAsync(item): Task
+  + DeleteAsync(itemId): Task
+  + SearchAsync(query): Task<List<Item>>
+}
+
+Item *-- Condition
+Item *-- ItemStatus
+Item *-- PhotoReference
+Item --> Category
+AddItemCommand --> Item : creates
+UpdateItemCommand --> Item : updates
+RemoveItemCommand --> Item : removes
+RelocateItemCommand --> Item : relocates
+Item ..> ItemAdded : raises
+Item ..> ItemUpdated : raises
+Item ..> ItemRemoved : raises
+Item ..> ItemRelocated : raises
+
+@enduml

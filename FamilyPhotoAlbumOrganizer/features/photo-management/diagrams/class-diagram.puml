@@ -1,0 +1,190 @@
+@startuml Photo Management Class Diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classAttributeIconSize 0
+
+class Photo {
+  - PhotoId: Guid
+  - UserId: Guid
+  - FileName: string
+  - FilePath: string
+  - FileSize: long
+  - MimeType: string
+  - Width: int
+  - Height: int
+  - ThumbnailPath: string
+  - UploadDate: DateTime
+  - CaptureDate: DateTime?
+  - Camera: string
+  - ISO: int?
+  - Aperture: string
+  - ShutterSpeed: string
+  - FocalLength: string
+  - Latitude: decimal?
+  - Longitude: decimal?
+  - IsEdited: bool
+  - OriginalPhotoId: Guid?
+  - IsDeleted: bool
+  - DeletedAt: DateTime?
+  - CreatedAt: DateTime
+  - UpdatedAt: DateTime
+  --
+  + Upload(file: FileUpload): Photo
+  + Edit(parameters: EditParameters): Photo
+  + Delete(): void
+  + Restore(): void
+  + ExtractMetadata(): PhotoMetadata
+  + GenerateThumbnail(): string
+}
+
+class PhotoMetadata {
+  - PhotoId: Guid
+  - Camera: string
+  - Lens: string
+  - ISO: int
+  - Aperture: string
+  - ShutterSpeed: string
+  - FocalLength: string
+  - FlashUsed: bool
+  - WhiteBalance: string
+  - ExposureCompensation: string
+  - MeteringMode: string
+  - GPSLatitude: decimal?
+  - GPSLongitude: decimal?
+  - GPSAltitude: decimal?
+  - DateTimeOriginal: DateTime
+}
+
+class UploadPhotoCommand {
+  + File: FileUpload
+  + UserId: Guid
+  + SourceDevice: string
+  --
+  + Validate(): ValidationResult
+}
+
+class EditPhotoCommand {
+  + PhotoId: Guid
+  + UserId: Guid
+  + EditType: EditType
+  + Parameters: EditParameters
+  --
+  + Validate(): ValidationResult
+}
+
+class DeletePhotoCommand {
+  + PhotoId: Guid
+  + UserId: Guid
+  + Reason: string
+  --
+  + Validate(): ValidationResult
+}
+
+class RestorePhotoCommand {
+  + PhotoId: Guid
+  + UserId: Guid
+  --
+  + Validate(): ValidationResult
+}
+
+class PhotoUploaded {
+  + PhotoId: Guid
+  + UserId: Guid
+  + FileName: string
+  + FileSize: long
+  + Width: int
+  + Height: int
+  + UploadDate: DateTime
+  + CaptureDate: DateTime?
+  + SourceDevice: string
+  + OccurredAt: DateTime
+}
+
+class PhotoEdited {
+  + PhotoId: Guid
+  + OriginalPhotoId: Guid
+  + UserId: Guid
+  + EditType: string
+  + EditParameters: Dictionary
+  + EditTimestamp: DateTime
+  + OccurredAt: DateTime
+}
+
+class PhotoDeleted {
+  + PhotoId: Guid
+  + UserId: Guid
+  + FileName: string
+  + SoftDelete: bool
+  + DeletionReason: string
+  + AlbumsAffected: List<Guid>
+  + OccurredAt: DateTime
+}
+
+class PhotoRestored {
+  + PhotoId: Guid
+  + UserId: Guid
+  + OriginalDeletionDate: DateTime
+  + AlbumsToRestoreTo: List<Guid>
+  + OccurredAt: DateTime
+}
+
+class PhotoCommandHandler {
+  - photoRepository: IPhotoRepository
+  - storageService: IBlobStorageService
+  - thumbnailService: IThumbnailService
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(UploadPhotoCommand): PhotoDto
+  + Handle(EditPhotoCommand): PhotoDto
+  + Handle(DeletePhotoCommand): void
+  + Handle(RestorePhotoCommand): PhotoDto
+}
+
+class PhotoQueryHandler {
+  - photoRepository: IPhotoRepository
+  --
+  + Handle(GetPhotoByIdQuery): PhotoDto
+  + Handle(GetPhotosByUserIdQuery): List<PhotoDto>
+  + Handle(GetRecentPhotosQuery): List<PhotoDto>
+  + Handle(GetDeletedPhotosQuery): List<PhotoDto>
+}
+
+interface IPhotoRepository {
+  + Add(photo: Photo): void
+  + Update(photo: Photo): void
+  + GetById(id: Guid): Photo
+  + GetByUserId(userId: Guid): List<Photo>
+  + GetDeleted(userId: Guid): List<Photo>
+  + Delete(id: Guid): void
+}
+
+interface IBlobStorageService {
+  + Upload(file: Stream, path: string): string
+  + Download(path: string): Stream
+  + Delete(path: string): void
+  + GetUrl(path: string): string
+}
+
+interface IThumbnailService {
+  + Generate(photo: Stream, size: int): Stream
+  + GenerateMultipleSizes(photo: Stream): Dictionary
+}
+
+' Relationships
+Photo "1" -- "0..1" Photo : original/edited
+Photo "1" *-- "1" PhotoMetadata : contains
+PhotoCommandHandler ..> UploadPhotoCommand : handles
+PhotoCommandHandler ..> EditPhotoCommand : handles
+PhotoCommandHandler ..> DeletePhotoCommand : handles
+PhotoCommandHandler ..> RestorePhotoCommand : handles
+PhotoCommandHandler ..> Photo : creates/updates
+PhotoCommandHandler ..> PhotoUploaded : publishes
+PhotoCommandHandler ..> PhotoEdited : publishes
+PhotoCommandHandler ..> PhotoDeleted : publishes
+PhotoCommandHandler ..> PhotoRestored : publishes
+PhotoCommandHandler --> IPhotoRepository : uses
+PhotoCommandHandler --> IBlobStorageService : uses
+PhotoCommandHandler --> IThumbnailService : uses
+PhotoQueryHandler --> IPhotoRepository : uses
+
+@enduml

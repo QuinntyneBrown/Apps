@@ -1,0 +1,129 @@
+@startuml Appliance Tracking - Class Diagram
+
+!define ENTITY_COLOR #E8F4F8
+!define ENUM_COLOR #FFE6E6
+
+class Appliance <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+    + Category: ApplianceCategory
+    + Brand: string
+    + Model: string
+    + SerialNumber: string
+    + PurchaseDate: DateTime
+    + PurchaseCost: decimal
+    + PurchaseLocation: string
+    + WarrantyExpiration: DateTime?
+    + ManualUrl: string
+    + Location: string
+    + InstallationDate: DateTime?
+    + ExpectedLifespanYears: int
+    + Condition: ApplianceCondition
+    + Notes: string
+    + PhotoUrls: List<string>
+    + PropertyId: Guid
+    --
+    + CalculateAge(): int
+    + IsWarrantyExpiring(): bool
+    + IsReplacementRecommended(): bool
+    + GetLifecyclePercentage(): decimal
+}
+
+class ApplianceService <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + ApplianceId: Guid
+    + ServiceDate: DateTime
+    + Description: string
+    + Cost: decimal
+    + ServiceProviderId: Guid?
+    + Notes: string
+    --
+    + Validate(): bool
+}
+
+class Property <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+}
+
+class ServiceProvider <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+}
+
+enum ApplianceCategory <<Enumeration>> ENUM_COLOR {
+    HVAC
+    Kitchen
+    Laundry
+    WaterHeater
+    Refrigeration
+    Cooking
+    Dishwashing
+    SmallAppliance
+    Other
+}
+
+enum ApplianceCondition <<Enumeration>> ENUM_COLOR {
+    Excellent
+    Good
+    Fair
+    Poor
+    NeedsReplacement
+}
+
+class AddApplianceCommand <<Command>> {
+    + Name: string
+    + Category: ApplianceCategory
+    + Brand: string
+    + Model: string
+    + PurchaseDate: DateTime
+    + PurchaseCost: decimal
+    + WarrantyExpiration: DateTime?
+    + ExpectedLifespanYears: int
+}
+
+class RecordApplianceServiceCommand <<Command>> {
+    + ApplianceId: Guid
+    + ServiceDate: DateTime
+    + Description: string
+    + Cost: decimal
+    + ServiceProviderId: Guid?
+}
+
+class GetAppliancesQuery <<Query>> {
+    + Category: ApplianceCategory?
+    + PropertyId: Guid?
+    + WarrantyStatus: string?
+}
+
+class GetExpiringWarrantiesQuery <<Query>> {
+    + Days: int
+}
+
+interface IApplianceRepository <<Repository>> {
+    + GetByIdAsync(id): Appliance
+    + GetAllAsync(filters): List<Appliance>
+    + GetExpiringWarrantiesAsync(days): List<Appliance>
+    + GetReplacementCandidatesAsync(): List<Appliance>
+    + CreateAsync(appliance): Appliance
+    + UpdateAsync(appliance): void
+}
+
+class WarrantyExpirationService <<Service>> {
+    + CheckExpiringWarranties(): void
+    + SendWarrantyExpirationAlerts(): void
+}
+
+class ReplacementPlanningService <<Service>> {
+    + CalculateReplacementScore(appliance): int
+    + GetReplacementRecommendations(): List<Appliance>
+    + EstimateReplacementCost(appliance): decimal
+}
+
+Appliance --> ApplianceCategory : has
+Appliance --> ApplianceCondition : has
+Appliance "*" --> "1" Property : belongs to
+Appliance "1" --> "*" ApplianceService : has
+ApplianceService "*" --> "0..1" ServiceProvider : serviced by
+
+@enduml

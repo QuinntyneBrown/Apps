@@ -1,0 +1,90 @@
+@startuml Photo Management Sequence Diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+
+actor User
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "PhotoController" as Controller
+participant "CommandHandler" as CommandHandler
+participant "PhotoAggregate" as Aggregate
+participant "EventPublisher" as Events
+participant "BlobStorage" as Storage
+participant "ThumbnailService" as Thumbnail
+
+== Upload Photo ==
+User -> UI: Select photo to upload
+UI -> UI: Validate file (type, size)
+UI -> API: POST /api/photos/upload\n(multipart/form-data)
+API -> Controller: UploadPhotoCommand
+Controller -> CommandHandler: Handle(UploadPhotoCommand)
+CommandHandler -> Storage: Upload original photo
+Storage --> CommandHandler: FilePath
+CommandHandler -> Thumbnail: Generate thumbnail
+Thumbnail --> CommandHandler: ThumbnailPath
+CommandHandler -> Aggregate: Create Photo entity
+Aggregate -> Aggregate: Extract EXIF metadata
+Aggregate --> CommandHandler: Photo created
+CommandHandler -> Events: Publish PhotoUploaded event
+Events --> CommandHandler: Event published
+CommandHandler --> Controller: PhotoDto
+Controller --> API: 201 Created
+API --> UI: PhotoDto
+UI --> User: Display uploaded photo
+
+== Edit Photo ==
+User -> UI: Click Edit on photo
+UI -> UI: Open photo editor
+User -> UI: Apply edits (crop, filter)
+UI -> API: PUT /api/photos/{id}/edit\n(edit parameters)
+API -> Controller: EditPhotoCommand
+Controller -> CommandHandler: Handle(EditPhotoCommand)
+CommandHandler -> Aggregate: Load original photo
+CommandHandler -> Storage: Create edited version
+Storage --> CommandHandler: Edited FilePath
+CommandHandler -> Thumbnail: Generate new thumbnail
+Thumbnail --> CommandHandler: New ThumbnailPath
+CommandHandler -> Aggregate: Create edited Photo\n(linked to original)
+Aggregate --> CommandHandler: Edited photo created
+CommandHandler -> Events: Publish PhotoEdited event
+Events --> CommandHandler: Event published
+CommandHandler --> Controller: Edited PhotoDto
+Controller --> API: 200 OK
+API --> UI: Edited PhotoDto
+UI --> User: Display edited photo
+
+== Delete Photo ==
+User -> UI: Select photo and click Delete
+UI -> UI: Show confirmation dialog
+User -> UI: Confirm deletion
+UI -> API: DELETE /api/photos/{id}
+API -> Controller: DeletePhotoCommand
+Controller -> CommandHandler: Handle(DeletePhotoCommand)
+CommandHandler -> Aggregate: Load photo
+Aggregate -> Aggregate: Set IsDeleted = true\nSet DeletedAt = now
+Aggregate --> CommandHandler: Photo soft deleted
+CommandHandler -> Events: Publish PhotoDeleted event
+Events --> CommandHandler: Event published
+CommandHandler --> Controller: Success
+Controller --> API: 204 No Content
+API --> UI: Success
+UI --> User: Show "Photo moved to trash"\n+ Undo option
+
+== Restore Photo ==
+User -> UI: Open trash
+User -> UI: Select photo and click Restore
+UI -> API: POST /api/photos/{id}/restore
+API -> Controller: RestorePhotoCommand
+Controller -> CommandHandler: Handle(RestorePhotoCommand)
+CommandHandler -> Aggregate: Load deleted photo
+Aggregate -> Aggregate: Set IsDeleted = false\nClear DeletedAt
+Aggregate --> CommandHandler: Photo restored
+CommandHandler -> Events: Publish PhotoRestored event
+Events --> CommandHandler: Event published
+CommandHandler --> Controller: PhotoDto
+Controller --> API: 200 OK
+API --> UI: PhotoDto
+UI --> User: Show "Photo restored"
+
+@enduml

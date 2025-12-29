@@ -1,0 +1,436 @@
+@startuml Grooming Management - Sequence Diagrams
+
+' ====================================================================================
+' Sequence 1: Schedule Grooming Appointment
+' ====================================================================================
+
+title Schedule Grooming Appointment
+
+actor "Pet Owner" as owner
+participant "UI" as ui
+participant "GroomingCommandHandler" as handler
+participant "AppointmentSchedulingService" as scheduler
+participant "GroomingAppointmentRepository" as repo
+participant "EventPublisher" as events
+participant "NotificationService" as notify
+
+owner -> ui : Select "Schedule Appointment"
+activate ui
+
+ui -> ui : Display appointment form
+owner -> ui : Fill appointment details\n(date, groomer, services)
+owner -> ui : Submit form
+
+ui -> ui : Validate form data
+ui -> handler : ScheduleAppointment(command)
+activate handler
+
+handler -> scheduler : ValidateAppointmentTime(date)
+activate scheduler
+scheduler -> scheduler : Check if date is in future
+scheduler -> scheduler : Check business hours
+scheduler --> handler : Valid
+deactivate scheduler
+
+handler -> scheduler : CheckDoubleBooking(petId, date)
+activate scheduler
+scheduler -> repo : GetAppointments(petId, date)
+activate repo
+repo --> scheduler : Existing appointments
+deactivate repo
+scheduler -> scheduler : Check for conflicts
+scheduler --> handler : No conflicts
+deactivate scheduler
+
+handler -> scheduler : CalculateEstimatedDuration(services)
+activate scheduler
+scheduler -> scheduler : Sum service durations
+scheduler --> handler : Total duration
+deactivate scheduler
+
+handler -> repo : Save(appointment)
+activate repo
+repo -> repo : Insert into database
+repo --> handler : Appointment saved
+deactivate repo
+
+handler -> events : Publish(GroomingAppointmentScheduled)
+activate events
+events -> events : Distribute event
+events -> notify : NotifyAppointmentScheduled(appointment)
+activate notify
+notify -> notify : Send confirmation email
+notify -> notify : Send push notification
+notify --> events : Notification sent
+deactivate notify
+events --> handler : Event published
+deactivate events
+
+handler --> ui : AppointmentId
+deactivate handler
+
+ui -> ui : Display success message
+ui --> owner : "Appointment scheduled!\nConfirmation sent"
+deactivate ui
+
+@enduml
+
+' ====================================================================================
+' Sequence 2: Complete Grooming Appointment
+' ====================================================================================
+
+@startuml Complete Grooming Appointment
+
+title Complete Grooming Appointment
+
+actor "Pet Owner" as owner
+participant "UI" as ui
+participant "GroomingCommandHandler" as handler
+participant "GroomingAppointmentRepository" as appointmentRepo
+participant "GroomingSessionRepository" as sessionRepo
+participant "GroomingRecommendationService" as recommender
+participant "EventPublisher" as events
+participant "NotificationService" as notify
+
+owner -> ui : Select "Complete Appointment"
+activate ui
+
+ui -> appointmentRepo : GetAppointment(appointmentId)
+activate appointmentRepo
+appointmentRepo --> ui : Appointment details
+deactivate appointmentRepo
+
+ui -> ui : Display completion form\n(pre-filled with appointment data)
+owner -> ui : Fill completion details\n(services, behavior, condition, photos)
+owner -> ui : Rate service (1-5 stars)
+owner -> ui : Submit
+
+ui -> ui : Validate form data
+ui -> handler : CompleteAppointment(command)
+activate handler
+
+handler -> appointmentRepo : GetById(appointmentId)
+activate appointmentRepo
+appointmentRepo --> handler : Appointment
+deactivate appointmentRepo
+
+handler -> handler : Validate appointment\ncan be completed
+
+handler -> sessionRepo : CreateSession(sessionData)
+activate sessionRepo
+sessionRepo -> sessionRepo : Insert grooming session
+sessionRepo --> handler : Session created
+deactivate sessionRepo
+
+handler -> appointmentRepo : UpdateStatus(Completed)
+activate appointmentRepo
+appointmentRepo -> appointmentRepo : Update appointment status
+appointmentRepo --> handler : Updated
+deactivate appointmentRepo
+
+handler -> recommender : CalculateNextGroomingDate(pet, session)
+activate recommender
+recommender -> recommender : Get pet breed & coat type
+recommender -> recommender : Calculate frequency
+recommender -> recommender : Apply user preferences
+recommender --> handler : Recommended date
+deactivate recommender
+
+handler -> events : Publish(GroomingCompleted)
+activate events
+events -> events : Distribute event
+events -> notify : NotifyGroomingCompleted(session)
+activate notify
+notify -> notify : Send completion notification
+notify -> notify : Request review
+notify --> events : Notification sent
+deactivate notify
+events --> handler : Event published
+deactivate events
+
+handler --> ui : Success
+deactivate handler
+
+ui -> ui : Display success message\nwith next grooming date
+ui --> owner : "Appointment completed!\nNext grooming: [date]"
+deactivate ui
+
+@enduml
+
+' ====================================================================================
+' Sequence 3: Log Home Grooming
+' ====================================================================================
+
+@startuml Log Home Grooming
+
+title Log Home Grooming Activity
+
+actor "Pet Owner" as owner
+participant "UI" as ui
+participant "GroomingCommandHandler" as handler
+participant "GroomingSessionRepository" as sessionRepo
+participant "GroomingRecommendationService" as recommender
+participant "EventPublisher" as events
+participant "PhotoStorageService" as storage
+
+owner -> ui : Select "Log Home Grooming"
+activate ui
+
+ui -> ui : Display grooming log form
+owner -> ui : Fill grooming details\n(activities, duration, products)
+owner -> ui : Upload photos (optional)
+
+ui -> storage : UploadPhotos(photos)
+activate storage
+storage -> storage : Compress & optimize images
+storage -> storage : Generate thumbnails
+storage -> storage : Store in cloud
+storage --> ui : Photo URLs
+deactivate storage
+
+owner -> ui : Submit
+
+ui -> ui : Validate form data
+ui -> handler : LogHomeGrooming(command)
+activate handler
+
+handler -> sessionRepo : CreateHomeGroomingSession(data)
+activate sessionRepo
+sessionRepo -> sessionRepo : Insert home grooming log
+sessionRepo --> handler : Session created with ID
+deactivate sessionRepo
+
+handler -> recommender : CalculateNextGroomingDate(pet, session)
+activate recommender
+recommender -> recommender : Update last grooming date
+recommender -> recommender : Calculate next recommended date
+recommender --> handler : Next recommended date
+deactivate recommender
+
+handler -> events : Publish(HomeGroomingLogged)
+activate events
+events -> events : Distribute event
+events --> handler : Event published
+deactivate events
+
+handler --> ui : HomeGroomingId
+deactivate handler
+
+ui -> ui : Display success message
+ui --> owner : "Home grooming logged!\nGreat job caring for [pet name]"
+deactivate ui
+
+@enduml
+
+' ====================================================================================
+' Sequence 4: Grooming Recommendation Generation
+' ====================================================================================
+
+@startuml Grooming Recommendation Generation
+
+title Automatic Grooming Recommendation
+
+participant "ScheduledJob" as job
+participant "GroomingRecommendationService" as recommender
+participant "GroomingSessionRepository" as sessionRepo
+participant "PetRepository" as petRepo
+participant "EventPublisher" as events
+participant "NotificationService" as notify
+
+job -> recommender : GenerateRecommendations()\n[Daily scheduled task]
+activate recommender
+
+recommender -> petRepo : GetAllActivePets()
+activate petRepo
+petRepo --> recommender : List of pets
+deactivate petRepo
+
+loop For each pet
+    recommender -> sessionRepo : GetLastSession(petId)
+    activate sessionRepo
+    sessionRepo --> recommender : Last grooming session
+    deactivate sessionRepo
+
+    recommender -> petRepo : GetPetDetails(petId)
+    activate petRepo
+    petRepo --> recommender : Pet breed, coat type, preferences
+    deactivate petRepo
+
+    recommender -> recommender : Calculate days since\nlast grooming
+    recommender -> recommender : Determine recommended\nfrequency by breed
+
+    alt Days since grooming > recommended frequency
+        recommender -> recommender : Calculate priority\n(High, Medium, Low, Overdue)
+        recommender -> recommender : Generate suggested services
+
+        recommender -> events : Publish(GroomingRecommended)
+        activate events
+        events -> events : Distribute event
+        events -> notify : NotifyGroomingDue(recommendation)
+        activate notify
+
+        alt Priority is High or Overdue
+            notify -> notify : Send urgent notification
+            notify -> notify : Send push + email
+        else Priority is Medium or Low
+            notify -> notify : Send standard notification
+            notify -> notify : Send push notification
+        end
+
+        notify --> events : Notification sent
+        deactivate notify
+        events --> recommender : Event published
+        deactivate events
+
+        recommender -> recommender : Log recommendation
+    end
+end
+
+recommender --> job : Recommendations generated
+deactivate recommender
+
+@enduml
+
+' ====================================================================================
+' Sequence 5: Cancel Appointment
+' ====================================================================================
+
+@startuml Cancel Grooming Appointment
+
+title Cancel Grooming Appointment
+
+actor "Pet Owner" as owner
+participant "UI" as ui
+participant "GroomingCommandHandler" as handler
+participant "GroomingAppointmentRepository" as repo
+participant "EventPublisher" as events
+participant "NotificationService" as notify
+participant "PaymentService" as payment
+
+owner -> ui : Select "Cancel Appointment"
+activate ui
+
+ui -> repo : GetAppointment(appointmentId)
+activate repo
+repo --> ui : Appointment details
+deactivate repo
+
+ui -> ui : Display cancellation form
+ui -> ui : Show cancellation policy
+owner -> ui : Enter cancellation reason
+owner -> ui : Confirm cancellation
+
+ui -> ui : Validate cancellation allowed
+ui -> handler : CancelAppointment(command)
+activate handler
+
+handler -> repo : GetById(appointmentId)
+activate repo
+repo --> handler : Appointment
+deactivate repo
+
+handler -> handler : Validate appointment\ncan be cancelled
+
+handler -> handler : Calculate cancellation fee\n(if within 24 hours)
+
+alt Cancellation fee applies
+    handler -> payment : ProcessCancellationFee(amount)
+    activate payment
+    payment -> payment : Charge cancellation fee
+    payment --> handler : Fee charged
+    deactivate payment
+end
+
+handler -> repo : UpdateStatus(Cancelled)
+activate repo
+repo -> repo : Update appointment status
+repo -> repo : Store cancellation details
+repo --> handler : Updated
+deactivate repo
+
+handler -> events : Publish(GroomingAppointmentCancelled)
+activate events
+events -> events : Distribute event
+events -> notify : NotifyCancellation(appointment)
+activate notify
+notify -> notify : Send cancellation email\nto owner
+notify -> notify : Notify groomer\nof cancellation
+notify --> events : Notifications sent
+deactivate notify
+events --> handler : Event published
+deactivate events
+
+handler --> ui : Success
+deactivate handler
+
+ui -> ui : Display confirmation
+ui --> owner : "Appointment cancelled"
+deactivate ui
+
+@enduml
+
+' ====================================================================================
+' Sequence 6: Browse and Select Groomer
+' ====================================================================================
+
+@startuml Browse and Select Groomer
+
+title Browse and Select Professional Groomer
+
+actor "Pet Owner" as owner
+participant "UI" as ui
+participant "GroomerRepository" as groomerRepo
+participant "GroomerService" as groomerService
+
+owner -> ui : Navigate to "Find Groomers"
+activate ui
+
+ui -> groomerRepo : GetAllGroomers(filters)
+activate groomerRepo
+groomerRepo --> ui : List of groomers
+deactivate groomerRepo
+
+ui -> ui : Display groomer cards\n(grid/list view)
+ui --> owner : Show groomers with ratings
+
+owner -> ui : Apply filters\n(location, mobile, rating, price)
+ui -> groomerRepo : GetGroomers(filterCriteria)
+activate groomerRepo
+groomerRepo --> ui : Filtered groomers
+deactivate groomerRepo
+
+ui -> ui : Update display
+ui --> owner : Show filtered results
+
+owner -> ui : Select groomer
+ui -> groomerRepo : GetGroomerById(groomerId)
+activate groomerRepo
+groomerRepo --> ui : Groomer details
+deactivate groomerRepo
+
+ui -> groomerService : GetGroomerReviews(groomerId)
+activate groomerService
+groomerService --> ui : Reviews and ratings
+deactivate groomerService
+
+ui -> groomerService : GetGroomerAvailability(groomerId)
+activate groomerService
+groomerService --> ui : Available time slots
+deactivate groomerService
+
+ui -> ui : Display full groomer profile\n(services, prices, reviews, availability)
+ui --> owner : Show groomer details
+
+owner -> ui : Add to favorites (optional)
+ui -> groomerRepo : AddFavoriteGroomer(userId, groomerId)
+activate groomerRepo
+groomerRepo --> ui : Saved to favorites
+deactivate groomerRepo
+
+owner -> ui : Book appointment
+ui -> ui : Navigate to schedule form\nwith groomer pre-selected
+deactivate ui
+
+@enduml
+
+@enduml

@@ -1,0 +1,83 @@
+@startuml TimeAuditTracker Sequence Diagram - Log Time Entry
+
+title Log Time Entry and Check Budget
+
+actor User
+participant "UI" as UI
+participant "TimeEntry\nController" as TEC
+participant "TimeEntry\nService" as TES
+participant "Category\nService" as CS
+participant "Budget\nService" as BS
+participant "Event\nBus" as EB
+participant "Database" as DB
+
+User -> UI: Fill time entry form
+activate UI
+
+UI -> UI: Validate form data
+UI -> TEC: POST /api/time-entries
+activate TEC
+
+TEC -> TES: createTimeEntry(data)
+activate TES
+
+TES -> TES: validateTimeRange()
+TES -> TES: checkForOverlaps()
+
+TES -> DB: INSERT time_entry
+activate DB
+DB --> TES: entry created
+deactivate DB
+
+TES -> EB: publish(TimeEntryLogged)
+activate EB
+EB --> TES: acknowledged
+deactivate EB
+
+TES -> CS: categorizeActivity(entryId, category)
+activate CS
+CS -> DB: UPDATE time_entry.category
+activate DB
+DB --> CS: updated
+deactivate DB
+
+CS -> EB: publish(ActivityCategorized)
+activate EB
+EB --> CS: acknowledged
+deactivate EB
+CS --> TES: categorized
+deactivate CS
+
+TES -> BS: checkBudgetStatus(category)
+activate BS
+BS -> DB: SELECT budget, SUM(duration)
+activate DB
+DB --> BS: budget data
+deactivate DB
+
+BS -> BS: calculateUtilization()
+
+alt Budget Exceeded
+  BS -> EB: publish(BudgetExceeded)
+  activate EB
+  EB --> BS: acknowledged
+  deactivate EB
+
+  BS -> UI: Send budget alert
+  UI -> User: Display budget warning
+end
+
+BS --> TES: budget status
+deactivate BS
+
+TES --> TEC: timeEntry created
+deactivate TES
+
+TEC --> UI: 201 Created
+deactivate TEC
+
+UI -> UI: Update timeline view
+UI --> User: Show success message
+deactivate UI
+
+@enduml

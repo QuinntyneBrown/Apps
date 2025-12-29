@@ -1,0 +1,196 @@
+@startuml Vaccination Management Use Case Diagram
+
+' Styling
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor WhiteSmoke
+    BorderColor Black
+    ArrowColor Black
+}
+
+' Actors
+actor "Pet Owner" as Owner
+actor "Veterinarian" as Vet
+actor "System Admin" as Admin
+actor "Background Scheduler" as Scheduler <<System>>
+actor "Notification Service" as NotificationSvc <<System>>
+
+' Use Cases - Core Vaccination Management
+rectangle "Vaccination Management" {
+
+    ' Vaccination Recording
+    usecase "Record Vaccination" as UC1
+    usecase "Upload Vaccination Certificate" as UC2
+    usecase "Edit Vaccination Record" as UC3
+    usecase "Delete Vaccination Record" as UC4
+    usecase "View Vaccination History" as UC5
+
+    ' Schedule Management
+    usecase "View Vaccination Schedule" as UC6
+    usecase "Generate Schedule from Template" as UC7
+    usecase "Add Custom Schedule Entry" as UC8
+    usecase "Mark Vaccination Complete" as UC9
+    usecase "Reschedule Vaccination" as UC10
+
+    ' Certificate & Reports
+    usecase "Generate Vaccination Certificate" as UC11
+    usecase "Download Certificate PDF" as UC12
+    usecase "Email Certificate" as UC13
+    usecase "Verify Certificate via QR Code" as UC14
+    usecase "Generate Vaccination Report" as UC15
+
+    ' Notifications & Reminders
+    usecase "Configure Notification Preferences" as UC16
+    usecase "Receive Due Reminder" as UC17
+    usecase "Receive Overdue Alert" as UC18
+    usecase "Receive Confirmation Notification" as UC19
+
+    ' Template Management (Admin)
+    usecase "Manage Vaccination Templates" as UC20
+    usecase "Create Template" as UC21
+    usecase "Edit Template" as UC22
+    usecase "Activate/Deactivate Template" as UC23
+
+    ' Compliance & Monitoring
+    usecase "Check Compliance Status" as UC24
+    usecase "View Overdue Vaccinations" as UC25
+    usecase "Generate Compliance Report" as UC26
+
+    ' Background Processes
+    usecase "Check Due Vaccinations" as UC27
+    usecase "Check Overdue Vaccinations" as UC28
+    usecase "Send Scheduled Reminders" as UC29
+    usecase "Update Priority Levels" as UC30
+}
+
+' Domain Events
+rectangle "Domain Events" #LightYellow {
+    usecase "VaccinationAdministered" as Event1
+    usecase "VaccinationDue" as Event2
+    usecase "VaccinationOverdue" as Event3
+}
+
+' Actor Relationships - Pet Owner
+Owner --> UC1 : performs
+Owner --> UC2 : performs
+Owner --> UC3 : performs
+Owner --> UC4 : performs
+Owner --> UC5 : performs
+Owner --> UC6 : performs
+Owner --> UC7 : performs
+Owner --> UC8 : performs
+Owner --> UC9 : performs
+Owner --> UC10 : performs
+Owner --> UC11 : performs
+Owner --> UC12 : performs
+Owner --> UC13 : performs
+Owner --> UC14 : performs
+Owner --> UC15 : performs
+Owner --> UC16 : manages
+Owner <-- UC17 : notifies
+Owner <-- UC18 : alerts
+Owner <-- UC19 : confirms
+Owner --> UC24 : checks
+Owner --> UC25 : views
+
+' Actor Relationships - Veterinarian
+Vet --> UC1 : records
+Vet --> UC2 : uploads
+Vet --> UC3 : edits
+Vet --> UC5 : reviews
+Vet --> UC6 : reviews
+Vet --> UC11 : generates
+Vet --> UC15 : generates
+
+' Actor Relationships - Admin
+Admin --> UC20 : manages
+Admin --> UC21 : performs
+Admin --> UC22 : performs
+Admin --> UC23 : performs
+Admin --> UC26 : generates
+
+' Actor Relationships - Background Scheduler
+Scheduler --> UC27 : executes daily
+Scheduler --> UC28 : executes daily
+Scheduler --> UC30 : executes daily
+
+' Actor Relationships - Notification Service
+NotificationSvc --> UC29 : performs
+NotificationSvc --> UC17 : sends
+NotificationSvc --> UC18 : sends
+NotificationSvc --> UC19 : sends
+
+' Use Case Dependencies and Extensions
+UC1 ..> UC2 : <<include>>
+UC1 ..> Event1 : <<trigger>>
+UC1 ..> UC7 : <<extend>>\n[auto-generate next schedule]
+
+UC9 ..> UC1 : <<include>>
+
+UC11 ..> UC5 : <<include>>
+UC11 ..> UC12 : <<include>>
+
+UC13 ..> UC11 : <<extend>>
+
+UC7 ..> UC20 : <<use>>
+
+UC27 ..> Event2 : <<trigger>>\n[vaccination due]
+UC28 ..> Event3 : <<trigger>>\n[vaccination overdue]
+
+Event1 ..> UC19 : <<trigger>>
+Event2 ..> UC17 : <<trigger>>
+Event2 ..> UC30 : <<trigger>>
+Event3 ..> UC18 : <<trigger>>
+Event3 ..> UC30 : <<trigger>>
+
+' Notes
+note right of UC1
+  Records a completed vaccination
+  with all relevant details including
+  batch number, administrator, and
+  certificate information.
+end note
+
+note right of UC7
+  Automatically generates a vaccination
+  schedule based on pet species, age,
+  and selected templates.
+end note
+
+note right of Event1
+  Raised when vaccination is recorded.
+  Triggers:
+  - Schedule creation for next booster
+  - Owner notification
+  - Dashboard update
+end note
+
+note right of Event2
+  Raised when vaccination approaches
+  due date. Triggers:
+  - Reminder notifications
+  - Priority updates
+  - Dashboard alerts
+end note
+
+note right of Event3
+  Raised when vaccination is overdue.
+  Triggers:
+  - Urgent notifications
+  - Priority escalation
+  - Compliance alerts
+end note
+
+note bottom of UC27
+  Background job runs daily at 6 AM
+  to check for vaccinations due
+  within the next 14 days.
+end note
+
+note bottom of UC28
+  Background job runs daily at 6 AM
+  to identify overdue vaccinations
+  and escalate alerts.
+end note
+
+@enduml

@@ -1,0 +1,141 @@
+@startuml Blood Pressure Monitor - Event Flow
+
+!define EVENT_COLOR #FFE6CC
+!define HANDLER_COLOR #CCE6FF
+!define SERVICE_COLOR #E6CCFF
+
+skinparam sequence {
+    ArrowColor #666666
+    LifeLineBorderColor #666666
+    LifeLineBackgroundColor #FFFFFF
+    ParticipantBorderColor #333333
+    ParticipantBackgroundColor #F5F5F5
+}
+
+actor User
+participant "API Controller" as API
+participant "Reading Service" as ReadingSvc <<Service>>
+participant "Event Publisher" as Events <<Service>>
+participant "Alert Handler" as AlertHandler <<Handler>>
+participant "Trend Handler" as TrendHandler <<Handler>>
+participant "Goal Handler" as GoalHandler <<Handler>>
+participant "Notification Service" as NotifSvc <<Service>>
+database "Database" as DB
+
+== Record Blood Pressure Reading ==
+
+User -> API: POST /api/readings\n{systolic: 145, diastolic: 92}
+activate API
+
+API -> ReadingSvc: CreateReading(reading)
+activate ReadingSvc
+
+ReadingSvc -> ReadingSvc: ValidateReading()
+ReadingSvc -> DB: SaveReading()
+activate DB
+DB --> ReadingSvc: ReadingId
+deactivate DB
+
+ReadingSvc -> Events: Publish(BloodPressureRecorded)
+activate Events
+Events -> Events: Store event in event store
+note right: Event Sourcing
+
+Events -> AlertHandler: BloodPressureRecorded
+activate AlertHandler
+AlertHandler -> AlertHandler: CheckThresholds()
+alt BP > 140/90 (Stage 1)
+    AlertHandler -> DB: CreateAlert(HighBPDetected)
+    AlertHandler -> Events: Publish(HighBloodPressureDetected)
+    Events -> NotifSvc: HighBloodPressureDetected
+    activate NotifSvc
+    NotifSvc -> User: Push notification:\n"High BP Detected"
+    deactivate NotifSvc
+else BP > 180/120 (Crisis)
+    AlertHandler -> DB: CreateAlert(HypertensiveCrisis)
+    AlertHandler -> Events: Publish(HypertensiveCrisisDetected)
+    Events -> NotifSvc: HypertensiveCrisisDetected
+    activate NotifSvc
+    NotifSvc -> User: URGENT notification:\n"Seek medical care"
+    deactivate NotifSvc
+end
+deactivate AlertHandler
+
+Events -> TrendHandler: BloodPressureRecorded
+activate TrendHandler
+TrendHandler -> DB: GetRecentReadings()
+DB --> TrendHandler: Last 30 days readings
+TrendHandler -> TrendHandler: AnalyzeTrend()
+TrendHandler -> DB: SaveTrendAnalysis()
+alt Rising Trend Detected
+    TrendHandler -> Events: Publish(BloodPressureRisingTrend)
+    note right: Triggers early warning
+end
+deactivate TrendHandler
+
+Events -> GoalHandler: BloodPressureRecorded
+activate GoalHandler
+GoalHandler -> DB: GetActiveGoals()
+DB --> GoalHandler: User's goals
+GoalHandler -> GoalHandler: CheckIfInRange()
+alt Reading in goal range
+    GoalHandler -> Events: Publish(BloodPressureGoalReached)
+    GoalHandler -> GoalHandler: UpdateStreak()
+    Events -> NotifSvc: BloodPressureGoalReached
+    activate NotifSvc
+    NotifSvc -> User: "Great! In goal range!"
+    deactivate NotifSvc
+end
+deactivate GoalHandler
+
+deactivate Events
+
+ReadingSvc --> API: Success(ReadingId)
+deactivate ReadingSvc
+
+API --> User: 201 Created\n{readingId, ...}
+deactivate API
+
+== Trend Analysis Triggers Risk Assessment ==
+
+TrendHandler -> Events: Publish(BloodPressureRisingTrend)
+activate Events
+participant "Risk Handler" as RiskHandler <<Handler>>
+Events -> RiskHandler: BloodPressureRisingTrend
+activate RiskHandler
+RiskHandler -> DB: GetUserRiskFactors()
+DB --> RiskHandler: BP history, duration
+RiskHandler -> RiskHandler: CalculateCardiovascularRisk()
+RiskHandler -> DB: SaveRiskAssessment()
+alt Risk Level Increased
+    RiskHandler -> Events: Publish(CardiovascularRiskAssessed)
+    Events -> NotifSvc: CardiovascularRiskAssessed
+    activate NotifSvc
+    NotifSvc -> User: "Your CV risk is now Moderate"
+    deactivate NotifSvc
+end
+deactivate RiskHandler
+deactivate Events
+
+== Weekly Report Generation ==
+
+participant "Report Service" as ReportSvc <<Service>>
+participant "Email Service" as EmailSvc <<Service>>
+
+activate ReportSvc
+note right of ReportSvc: Scheduled job\n(Every Sunday)
+ReportSvc -> DB: GetWeeklyReadings()
+DB --> ReportSvc: Week's data
+ReportSvc -> ReportSvc: GenerateReport()
+ReportSvc -> DB: SaveReport()
+ReportSvc -> Events: Publish(WeeklyBPReportGenerated)
+activate Events
+Events -> EmailSvc: WeeklyBPReportGenerated
+activate EmailSvc
+EmailSvc -> EmailSvc: RenderEmailTemplate()
+EmailSvc -> User: Email: Weekly BP Summary
+deactivate EmailSvc
+deactivate Events
+deactivate ReportSvc
+
+@enduml
