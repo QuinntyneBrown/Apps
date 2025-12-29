@@ -263,6 +263,9 @@ To provide users with a complete solution for meal planning, recipe organization
 - **Macro**: Macronutrient (protein, carbs, fats)
 - **Micro**: Micronutrient (vitamins, minerals)
 - **Domain Event**: A significant occurrence in the system
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **CQRS**: Command Query Responsibility Segregation
 - **DDD**: Domain-Driven Design
 

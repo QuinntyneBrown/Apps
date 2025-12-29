@@ -11,6 +11,9 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - Reduce healthcare costs associated with medication non-compliance
 - Provide peace of mind through automated reminders and tracking
 - Enable better patient-provider communication with adherence data
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Support caregivers in managing medications for family members
 
 ## System Purpose
@@ -22,6 +25,8 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - Track side effects and medication interactions
 - Support travel scenarios with timezone adjustments
 - Generate health reports for healthcare providers
+  - **AC1**: Exported data is in the correct format and complete
+  - **AC2**: Large datasets are handled without timeout or memory issues
 
 ## Core Features
 
@@ -132,6 +137,9 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 
 ### Healthcare Events
 - **PrescriptionReceived**: New prescription from provider
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - **DoctorReportGenerated**: Adherence report created for doctor
 
 ### Travel Events
@@ -156,6 +164,9 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - Real-time notifications
 - Interactive adherence visualizations
 - Medication scanning with OCR (future)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### Integration Points
 - Pharmacy APIs for refill coordination
@@ -169,6 +180,8 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - **Patient**: Primary user managing own medications
 - **Caregiver**: Family member helping manage patient medications
 - **Healthcare Provider**: Doctor/nurse viewing adherence data (read-only)
+  - **AC1**: Data is displayed in a clear, readable format
+  - **AC2**: Display updates reflect the most current data state
 - **Pharmacy**: Partner for refill coordination
 
 ## Security Requirements
@@ -207,6 +220,9 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - AI-powered adherence predictions
 - Voice assistant integration (Alexa, Google Assistant)
 - Medication barcode/QR code scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Pill identifier using image recognition
 - Smart pillbox hardware integration
 - Telehealth appointment integration
@@ -214,3 +230,6 @@ MedicationReminderSystem is a comprehensive medication adherence platform design
 - Family medication coordination dashboard
 - Gamification and rewards system
 - Community support features
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully

@@ -10,15 +10,24 @@ A comprehensive appliance documentation system for tracking warranties, storing 
 ### REQ-APP-001: Register Appliance
 **Acceptance Criteria**:
 - User can add appliance with brand, model, serial number
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Purchase date, price, and retailer captured
 - Location in home specified
 - Photo upload supported
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### REQ-APP-002: Track Appliance Lifecycle
 **Acceptance Criteria**:
 - Status tracking (active, retired, replaced)
 - Relocation history maintained
 - Replacement planning supported
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ---
 
@@ -27,6 +36,9 @@ A comprehensive appliance documentation system for tracking warranties, storing 
 ### REQ-WAR-001: Upload Warranty Documents
 **Acceptance Criteria**:
 - PDF and image upload supported
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - OCR extraction of key dates
 - Coverage details parsed
 
@@ -65,6 +77,9 @@ A comprehensive appliance documentation system for tracking warranties, storing 
 ### REQ-SVC-001: Log Service Calls
 **Acceptance Criteria**:
 - Service provider, date, description
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Cost tracking (labor, parts)
 - Warranty claim linking
 

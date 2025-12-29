@@ -4,12 +4,53 @@
 Help couples set, track, and achieve shared goals together with milestones, progress tracking, and celebration features.
 
 ## Core Features
-1. **Goal Management** - Create shared goals, update details, complete or abandon
-2. **Milestone Tracking** - Break goals into milestones, track achievements
-3. **Progress Tracking** - Log progress, visualize trends, celebrate wins
-4. **Collaboration** - Assign tasks, log contributions, balance workload
-5. **Check-ins** - Weekly reviews, goal discussions, alignment tracking
-6. **Motivation** - Celebrations, streaks, encouragement, achievements
+
+### Functional Requirements
+
+#### 1. Goal Management
+
+- **FR-1.0**: The system shall provide goal management capabilities to create shared goals, update details, complete or abandon
+  - **AC1**: Users can create new items with all required fields
+  - **AC2**: Validation prevents invalid data entry
+  - **AC3**: Existing items can be edited and changes are saved
+  - **AC4**: Items can be deleted with confirmation
+
+#### 2. Milestone Tracking
+
+- **FR-2.0**: The system shall provide milestone tracking capabilities to break goals into milestones, track achievements
+  - **AC1**: Progress is tracked and historical data is preserved
+  - **AC2**: Visual indicators show current status
+  - **AC3**: Notifications are delivered at appropriate times
+
+#### 3. Progress Tracking
+
+- **FR-3.0**: The system shall provide progress tracking capabilities to log progress, visualize trends, celebrate wins
+  - **AC1**: Progress is tracked and historical data is preserved
+  - **AC2**: Visual indicators show current status
+  - **AC3**: Data is displayed in a clear, understandable format
+
+#### 4. Collaboration
+
+- **FR-4.0**: The system shall provide collaboration capabilities to assign tasks, log contributions, balance workload
+  - **AC1**: Progress is tracked and historical data is preserved
+  - **AC2**: Visual indicators show current status
+  - **AC3**: Shared items are visible to all authorized users
+  - **AC4**: Changes by one user are reflected for all users
+
+#### 5. Check-ins
+
+- **FR-5.0**: The system shall provide check-ins capabilities to weekly reviews, goal discussions, alignment tracking
+  - **AC1**: Progress is tracked and historical data is preserved
+  - **AC2**: Visual indicators show current status
+  - **AC3**: Data is displayed in a clear, understandable format
+
+#### 6. Motivation
+
+- **FR-6.0**: The system shall provide motivation capabilities to celebrations, streaks, encouragement, achievements
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs its intended function correctly
+  - **AC3**: Appropriate feedback is provided to users
+
 
 ## Goal Categories
 - Financial (savings, debt payoff, investments)
@@ -24,6 +65,7 @@ Help couples set, track, and achieve shared goals together with milestones, prog
 - Backend: .NET 8, C#, CQRS, SQL Server
 - Frontend: React, TypeScript, Chart.js for visualizations
 - Features: Calendar sync, notifications, photo storage
+
 
 ## Key Screens
 1. Dashboard - Active goals, recent progress, upcoming milestones

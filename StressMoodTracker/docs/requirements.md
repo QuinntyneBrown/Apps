@@ -37,6 +37,9 @@ Stress & Mood Tracker helps users monitor their mental health through mood loggi
 - HIPAA-compliant data storage for health information
 - Encrypted journal entries
 - Professional support recommendations for crisis situations
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Offline mood logging capability
 - Anonymous data export for therapist sharing
 - Dark mode for evening journaling

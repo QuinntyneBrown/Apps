@@ -6,41 +6,139 @@ An application helping professionals document achievements, track goals, collect
 ## Core Features
 
 ### 1. Achievement Tracking
-- Log accomplishments with impact metrics
-- Document project milestones
-- Record recognition received
-- Track quantifiable business impact
-- Categorize by skill, project, or initiative
-- Add evidence (screenshots, metrics, emails)
+- **FR-1.1**: Log accomplishments with impact metrics
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.2**: Document project milestones
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.3**: Record recognition received
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-1.4**: Track quantifiable business impact
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.5**: Categorize by skill, project, or initiative
+  - **AC1**: Categories/tags can be created, edited, and deleted
+  - **AC2**: Items can be assigned to multiple categories
+  - **AC3**: Category changes are reflected immediately
+- **FR-1.6**: Add evidence (screenshots, metrics, emails)
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
 
 ### 2. Goal Management
-- Set SMART goals
-- Track progress with updates
-- Link achievements to goals
-- Revise or abandon goals with reasoning
-- Align with company OKRs
-- Goal completion tracking
+- **FR-2.1**: Set SMART goals
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.2**: Track progress with updates
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
+  - **AC4**: Historical data is preserved and accessible
+- **FR-2.3**: Link achievements to goals
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.4**: Revise or abandon goals with reasoning
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.5**: Align with company OKRs
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.6**: Goal completion tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
 
 ### 3. Feedback Collection
-- Request peer feedback
-- Store manager feedback
-- Track 360-degree feedback
-- Organize feedback by theme
-- Link feedback to achievements
+- **FR-3.1**: Request peer feedback
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.2**: Store manager feedback
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.3**: Track 360-degree feedback
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-3.4**: Organize feedback by theme
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.5**: Link feedback to achievements
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 4. Review Preparation
-- Auto-generate self-evaluation drafts
-- Achievement summary by quarter
-- Skills development tracking
-- Export review documents
-- Evidence portfolio generation
+- **FR-4.1**: Auto-generate self-evaluation drafts
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.2**: Achievement summary by quarter
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.3**: Skills development tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-4.4**: Export review documents
+  - **AC1**: Data is displayed in a clear, organized format
+  - **AC2**: View loads within acceptable performance limits
+  - **AC3**: Empty states are handled with appropriate messaging
+  - **AC4**: Export includes all relevant data fields
+- **FR-4.5**: Evidence portfolio generation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 5. Analytics & Insights
-- Impact metrics dashboard
-- Goal achievement rates
-- Skill development visualization
-- Career growth tracking
-- Comparison with past reviews
+- **FR-5.1**: Impact metrics dashboard
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.2**: Goal achievement rates
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.3**: Skill development visualization
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.4**: Career growth tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-5.5**: Comparison with past reviews
+  - **AC1**: Data is displayed in a clear, organized format
+  - **AC2**: View loads within acceptable performance limits
+  - **AC3**: Empty states are handled with appropriate messaging
 
 ## Technical Requirements
 - Mobile apps for quick achievement capture

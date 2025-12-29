@@ -53,6 +53,9 @@ HomeInventoryManager is a comprehensive home inventory cataloging and insurance 
 ### 5. Photo Documentation
 - Capture or upload item photos from multiple angles
 - Receipt scanning with OCR
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Serial number recording for theft recovery
 - Document storage and organization
 - Visual search capabilities
@@ -74,6 +77,9 @@ HomeInventoryManager is a comprehensive home inventory cataloging and insurance 
 - **LocationCreated**: Triggered when new storage location is defined
 - **LocationInventoryCompleted**: Triggered when location inventory count is done
 - **ItemLocationUnknown**: Triggered when item cannot be found
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### Insurance Events
 - **InsuranceCoverageCalculated**: Triggered when total coverage is computed
@@ -84,6 +90,9 @@ HomeInventoryManager is a comprehensive home inventory cataloging and insurance 
 ### Photo Documentation Events
 - **ItemPhotographed**: Triggered when photos are added
 - **ReceiptScanned**: Triggered when receipt is digitized
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **SerialNumberRecorded**: Triggered when serial number is documented
 
 ## Technical Architecture
@@ -105,6 +114,9 @@ HomeInventoryManager is a comprehensive home inventory cataloging and insurance 
 
 ### Integration Points
 - OCR services for receipt scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Cloud storage for photos and documents
 - Email for report delivery
 - Mobile apps for on-the-go cataloging
@@ -146,5 +158,8 @@ HomeInventoryManager is a comprehensive home inventory cataloging and insurance 
 - Market value estimation using online databases
 - 3D home layout visualization
 - Barcode and QR code scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Integration with smart home devices
 - Blockchain-based ownership verification

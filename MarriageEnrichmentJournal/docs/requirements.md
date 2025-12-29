@@ -152,7 +152,13 @@ The Marriage Enrichment Journal is a web application designed to help couples st
 ### Backend
 - RESTful API architecture
 - Real-time WebSocket support for notifications and collaboration
+  - **AC1**: Notifications are delivered within the specified timeframe
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
 - Domain event sourcing for all significant actions
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - SQL Server database
 - CQRS pattern for read/write separation
 

@@ -175,8 +175,14 @@ Time Audit & Tracker helps users understand how they spend their time, identify 
 
 ### Performance
 - Time entry logging must complete within 500ms
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Analysis generation should complete within 2 seconds
 - Dashboard must load within 1 second
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Support minimum 10,000 time entries per user
 
 ### Security

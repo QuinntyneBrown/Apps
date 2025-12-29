@@ -209,6 +209,9 @@ Manage professional contacts, track referrals, and conduct informational intervi
 ### Domain Events
 - **ReferralRequested** - When a referral is requested from a contact
 - **ReferralReceived** - When a referral is provided
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - **InformationalInterviewConducted** - When an informational interview is completed
 
 ### Key Features
@@ -346,7 +349,13 @@ Manage professional contacts, track referrals, and conduct informational intervi
 - Currency formatting
 - Number formatting
 - Multi-language support (English primary)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - RTL support for appropriate languages
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Timezone conversion
 
 ### Testing Requirements

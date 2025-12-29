@@ -15,6 +15,9 @@ Comprehensive vehicle maintenance tracking application for service history, repa
 - Schedule and log routine maintenance (oil change, tire rotation, etc.)
 - Service interval tracking
 - Maintenance history and service provider logging
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Next service due calculations
 
 ### Feature 3: Repair Management
@@ -40,6 +43,9 @@ Comprehensive vehicle maintenance tracking application for service history, repa
 - Mechanic/shop directory
 - Provider ratings and reviews
 - Service history with each provider
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Recommendations
 
 ### Feature 7: Reminders & Scheduling

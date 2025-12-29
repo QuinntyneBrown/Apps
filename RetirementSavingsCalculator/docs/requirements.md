@@ -6,84 +6,222 @@ The Retirement Savings Calculator is a comprehensive financial planning tool tha
 ## Functional Requirements
 
 ### FR-1: Scenario Management
-- FR-1.1: Users shall create multiple retirement scenarios with unique names
-- FR-1.2: Users shall set current age, target retirement age, and life expectancy
-- FR-1.3: Users shall duplicate scenarios for what-if analysis
-- FR-1.4: Users shall compare up to 4 scenarios side-by-side
-- FR-1.5: System shall identify optimal strategy across scenarios
+- **FR-1.1**: Users shall create multiple retirement scenarios with unique names
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-1.2**: Users shall set current age, target retirement age, and life expectancy
+  - **AC1**: Goals can be created, updated, and deleted
+  - **AC2**: Progress toward goals is accurately calculated
+- **FR-1.3**: Users shall duplicate scenarios for what-if analysis
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-1.4**: Users shall compare up to 4 scenarios side-by-side
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-1.5**: System shall identify optimal strategy across scenarios
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### FR-2: Savings Tracking
-- FR-2.1: Users shall input current retirement savings (401k, IRA, brokerage)
-- FR-2.2: Users shall set monthly contribution amounts
-- FR-2.3: Users shall specify employer match percentage and limits
-- FR-2.4: System shall track progress toward savings milestones (25%, 50%, 75%, 100%)
-- FR-2.5: System shall calculate compound growth with adjustable return rates
+- **FR-2.1**: Users shall input current retirement savings (401k, IRA, brokerage)
+  - **AC1**: Input validation prevents invalid data from being submitted
+  - **AC2**: Required fields are clearly indicated and validated
+  - **AC3**: Data is persisted correctly to the database
+- **FR-2.2**: Users shall set monthly contribution amounts
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-2.3**: Users shall specify employer match percentage and limits
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-2.4**: System shall track progress toward savings milestones (25%, 50%, 75%, 100%)
+  - **AC1**: Historical data is preserved and queryable
+  - **AC2**: Tracking data is accurately timestamped
+- **FR-2.5**: System shall calculate compound growth with adjustable return rates
+  - **AC1**: Calculations are mathematically accurate within acceptable precision
+  - **AC2**: Edge cases and boundary conditions are handled correctly
 
 ### FR-3: Income Projections
-- FR-3.1: Users shall add multiple retirement income streams
-- FR-3.2: Users shall estimate Social Security benefits by claiming age
-- FR-3.3: Users shall input pension amounts and start dates
-- FR-3.4: Users shall add other income (rental, part-time work, annuities)
-- FR-3.5: System shall adjust income streams for inflation
+- **FR-3.1**: Users shall add multiple retirement income streams
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-3.2**: Users shall estimate Social Security benefits by claiming age
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-3.3**: Users shall input pension amounts and start dates
+  - **AC1**: Input validation prevents invalid data from being submitted
+  - **AC2**: Required fields are clearly indicated and validated
+  - **AC3**: Data is persisted correctly to the database
+- **FR-3.4**: Users shall add other income (rental, part-time work, annuities)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-3.5**: System shall adjust income streams for inflation
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### FR-4: Expense Planning
-- FR-4.1: Users shall estimate monthly/annual retirement expenses
-- FR-4.2: Users shall categorize expenses (housing, healthcare, travel, etc.)
-- FR-4.3: Users shall set different expense levels for different retirement phases
-- FR-4.4: System shall calculate expense needs adjusted for inflation
+- **FR-4.1**: Users shall estimate monthly/annual retirement expenses
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-4.2**: Users shall categorize expenses (housing, healthcare, travel, etc.)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-4.3**: Users shall set different expense levels for different retirement phases
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-4.4**: System shall calculate expense needs adjusted for inflation
+  - **AC1**: Calculations are mathematically accurate within acceptable precision
+  - **AC2**: Edge cases and boundary conditions are handled correctly
 
 ### FR-5: Projection Calculations
-- FR-5.1: System shall calculate total savings at retirement
-- FR-5.2: System shall project monthly retirement income available
-- FR-5.3: System shall identify savings gap (shortfall or surplus)
-- FR-5.4: System shall calculate success probability using Monte Carlo simulation
-- FR-5.5: System shall show year-by-year cash flow projections
+- **FR-5.1**: System shall calculate total savings at retirement
+  - **AC1**: Calculations are mathematically accurate within acceptable precision
+  - **AC2**: Edge cases and boundary conditions are handled correctly
+- **FR-5.2**: System shall project monthly retirement income available
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-5.3**: System shall identify savings gap (shortfall or surplus)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-5.4**: System shall calculate success probability using Monte Carlo simulation
+  - **AC1**: Calculations are mathematically accurate within acceptable precision
+  - **AC2**: Edge cases and boundary conditions are handled correctly
+- **FR-5.5**: System shall show year-by-year cash flow projections
+  - **AC1**: Data is displayed in a clear, readable format
+  - **AC2**: Display updates reflect the most current data state
 
 ### FR-6: Assumption Management
-- FR-6.1: Users shall adjust inflation rate (default: 3%)
-- FR-6.2: Users shall set expected investment return (conservative/moderate/aggressive presets)
-- FR-6.3: Users shall modify tax assumptions
-- FR-6.4: System shall show impact of assumption changes on projections
+- **FR-6.1**: Users shall adjust inflation rate (default: 3%)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-6.2**: Users shall set expected investment return (conservative/moderate/aggressive presets)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-6.3**: Users shall modify tax assumptions
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-6.4**: System shall show impact of assumption changes on projections
+  - **AC1**: Data is displayed in a clear, readable format
+  - **AC2**: Display updates reflect the most current data state
 
 ### FR-7: Optimization & Recommendations
-- FR-7.1: System shall recommend increased contributions to close savings gap
-- FR-7.2: System shall suggest optimal Social Security claiming age
-- FR-7.3: System shall identify most impactful changes to improve outcomes
-- FR-7.4: System shall provide personalized action items
+- **FR-7.1**: System shall recommend increased contributions to close savings gap
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-7.2**: System shall suggest optimal Social Security claiming age
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-7.3**: System shall identify most impactful changes to improve outcomes
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-7.4**: System shall provide personalized action items
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### FR-8: Reporting & Visualization
-- FR-8.1: System shall generate comprehensive retirement plan PDF report
-- FR-8.2: System shall display savings growth chart over time
-- FR-8.3: System shall show income vs expenses chart for retirement years
-- FR-8.4: System shall visualize scenario comparisons
-- FR-8.5: Users shall export data to Excel/CSV
+- **FR-8.1**: System shall generate comprehensive retirement plan PDF report
+  - **AC1**: Exported data is in the correct format and complete
+  - **AC2**: Large datasets are handled without timeout or memory issues
+- **FR-8.2**: System shall display savings growth chart over time
+  - **AC1**: Data is displayed in a clear, readable format
+  - **AC2**: Display updates reflect the most current data state
+- **FR-8.3**: System shall show income vs expenses chart for retirement years
+  - **AC1**: Data is displayed in a clear, readable format
+  - **AC2**: Display updates reflect the most current data state
+- **FR-8.4**: System shall visualize scenario comparisons
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
+- **FR-8.5**: Users shall export data to Excel/CSV
+  - **AC1**: Exported data is in the correct format and complete
+  - **AC2**: Large datasets are handled without timeout or memory issues
 
 ## Non-Functional Requirements
 
 ### NFR-1: Performance
 - Calculations shall complete within 2 seconds for standard scenarios
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Monte Carlo simulations (10,000 iterations) shall complete within 5 seconds
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### NFR-2: Usability
 - Interface shall guide users through retirement planning step-by-step
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Default values shall be provided for all assumptions
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Help tooltips shall explain financial terms
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### NFR-3: Accuracy
 - Calculations shall use industry-standard formulas
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Social Security estimates shall align with SSA.gov methodology
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Tax calculations shall reflect current federal tax brackets
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### NFR-4: Data Persistence
 - Scenarios shall auto-save every 30 seconds
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - All user data shall be encrypted at rest
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Users shall access scenarios across devices
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ## User Stories
 
 ### Scenario Planning
 - US-1: As a user, I want to create multiple retirement scenarios so I can explore different strategies
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - US-2: As a user, I want to compare retiring at 62 vs 67 so I can make an informed decision
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - US-3: As a user, I want to see how much I need to save monthly to retire comfortably
 
 ### Income Optimization
@@ -129,6 +267,9 @@ The Retirement Savings Calculator is a comprehensive financial planning tool tha
 
 ## Success Criteria
 - Users can create a complete retirement scenario in under 5 minutes
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Calculation accuracy within 1% of manual spreadsheet calculations
 - 90% of users find recommendations helpful (user survey)
 - Projections account for inflation, taxes, and variable returns

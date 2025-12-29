@@ -20,6 +20,9 @@ A professional conference and event management platform for tracking conference 
 - Plan session schedules and identify conflicts
 - Track attendance and check-ins
 - Handle cancellations and refunds
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Rate overall conference experience
 
 ### 2. Session Tracking
@@ -35,6 +38,9 @@ A professional conference and event management platform for tracking conference 
 ### 3. Networking
 - Record new contacts met at events
 - Scan and store business cards (OCR)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Tag contacts by conference and context
 - Track networking events attended
 - Schedule and track follow-ups
@@ -69,6 +75,9 @@ A professional conference and event management platform for tracking conference 
 - Domain events for all key actions
 - RESTful API with JWT auth
 - OCR integration for business card scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Calendar sync (Google Calendar, Outlook)
 - File storage for certificates and receipts
 

@@ -71,6 +71,9 @@ Comprehensive project management system for woodworkers to plan builds, manage m
 ## Technical Requirements
 - .NET 8 backend, SQL Server
 - Rich media support for plans and photos
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Measurement calculations
 - Material cost tracking
 - Time tracking integration

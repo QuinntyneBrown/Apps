@@ -12,8 +12,17 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can select screening type from recommended list
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - User can specify provider, date, time, and location
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - System validates appointment against provider availability
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - System captures insurance information for coverage verification
 - Preparation requirements are displayed based on screening type
 - Calendar integration creates event with reminder
@@ -23,8 +32,15 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can mark screening as completed with date
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - System prompts for results status (pending/received)
 - Cost and insurance claim information can be recorded
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Input validation prevents invalid data from being submitted
 - Next screening due date is automatically calculated
 - Completion updates compliance status
 
@@ -33,10 +49,27 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can enter result summary and details
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Input validation prevents invalid data from being submitted
 - Abnormal findings can be flagged
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Follow-up requirements can be specified
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Documents can be attached (lab reports, images)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Provider notes can be recorded
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Input validation prevents invalid data from being submitted
 - Results are added to health record timeline
 
 ### REQ-SCR-004: Cancel Screening
@@ -44,6 +77,9 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can cancel with required reason selection
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - System offers rescheduling option
 - Compliance impact is displayed
 - Cancelled screening remains in history
@@ -68,10 +104,23 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can select notification channels (email, SMS, push, in-app)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Notifications are delivered within the specified timeframe
 - Advance notice periods are configurable (1 week, 1 month, etc.)
 - Reminder frequency can be set (once, recurring)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Quiet hours can be specified
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Channel-specific preferences supported
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### REQ-REM-002: Receive Screening Reminders
 **Description**: System sends reminders for upcoming and overdue screenings.
@@ -88,6 +137,9 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can mark reminder as seen
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Quick actions available (schedule now, snooze, dismiss)
 - Response tracked for analytics
 - Follow-up reminders adjusted based on response
@@ -98,6 +150,9 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - Escalation triggered when screening significantly overdue
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Higher urgency notification styling used
 - Health risk implications included
 - More frequent reminder cadence applied
@@ -115,6 +170,9 @@ A comprehensive health screening reminder application that helps users track pre
 - Gender-specific screenings properly recommended
 - Clinical guidelines source is cited
 - Timeline for completion provided
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Educational content links included
 
 ### REQ-REC-002: Customize Recommendations
@@ -126,6 +184,9 @@ A comprehensive health screening reminder application that helps users track pre
 - Previous screening results influence frequency
 - Customization rationale displayed
 - User can discuss with healthcare provider
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### REQ-REC-003: Display Recommended Screenings
 **Description**: Users see personalized screening recommendations.
@@ -148,8 +209,14 @@ A comprehensive health screening reminder application that helps users track pre
 - Provider search and selection available
 - Date/time picker shows available slots
 - Multiple screening types can be combined
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Insurance verification initiated
 - Preparation instructions provided
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Confirmation sent via preferred channel
 
 ### REQ-APT-002: Appointment Reminders
@@ -167,8 +234,17 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - User can confirm appointment attended
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Services received can be documented
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Follow-up appointments can be scheduled
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Screening completion triggered
 - Next steps captured
 
@@ -226,6 +302,9 @@ A comprehensive health screening reminder application that helps users track pre
 **Acceptance Criteria**:
 - Common risk factors available for selection
 - Custom risk factors can be added
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Onset date and severity recorded
 - Impact on screening recommendations shown
 - Privacy controls respected
@@ -235,9 +314,15 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - Family members can be added
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Conditions linked to relatives
 - Age of diagnosis recorded
 - Hereditary risk assessment provided
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Screening implications displayed
 
 ### REQ-HPR-003: Update Health Profile
@@ -249,6 +334,8 @@ A comprehensive health screening reminder application that helps users track pre
 - History of changes maintained
 - Annual review reminder sent
 - Export capability for providers
+  - **AC1**: Exported data is in the correct format and complete
+  - **AC2**: Large datasets are handled without timeout or memory issues
 
 ---
 
@@ -259,10 +346,17 @@ A comprehensive health screening reminder application that helps users track pre
 
 **Acceptance Criteria**:
 - Insurance information can be entered
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Input validation prevents invalid data from being submitted
 - Coverage verification per screening type
 - Copay/deductible amounts displayed
 - Pre-authorization requirements identified
 - In-network providers highlighted
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### REQ-INS-002: Maximize Preventive Benefits
 **Description**: Users can optimize use of preventive care benefits.
@@ -271,6 +365,9 @@ A comprehensive health screening reminder application that helps users track pre
 - Available preventive benefits displayed
 - Used vs. remaining benefits tracked
 - Optimization recommendations provided
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Benefit year reset alerts sent
 - Savings achieved calculated
 
@@ -287,6 +384,9 @@ A comprehensive health screening reminder application that helps users track pre
 - Health information encrypted at rest and in transit
 - HIPAA compliance maintained
 - Multi-factor authentication supported
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Audit logging for all data access
 
 ### Availability

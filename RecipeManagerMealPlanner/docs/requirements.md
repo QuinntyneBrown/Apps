@@ -212,6 +212,9 @@ The Recipe Manager & Meal Planner is a comprehensive full-stack application desi
 - **Routing**: React Router v6
 - **Charts**: Recharts or Chart.js for nutrition graphs
 - **Offline Support**: Service Workers and IndexedDB for shopping lists
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - **Responsive Design**: Mobile-first responsive design for all screens
 
 ### Database Schema Requirements
@@ -249,6 +252,9 @@ The Recipe Manager & Meal Planner is a comprehensive full-stack application desi
 ### Accessibility Requirements
 - WCAG 2.1 Level AA compliance
 - Keyboard navigation support for all features
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Screen reader compatibility
 - Sufficient color contrast ratios
 - ARIA labels for interactive elements
@@ -260,6 +266,9 @@ The Recipe Manager & Meal Planner is a comprehensive full-stack application desi
 - E2E tests for critical user flows (meal planning, shopping)
 - Performance testing for heavy operations
 - Security testing and vulnerability scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Cross-browser testing (Chrome, Firefox, Safari, Edge)
 - Mobile device testing (iOS and Android)
 
@@ -285,6 +294,9 @@ The Recipe Manager & Meal Planner is a comprehensive full-stack application desi
 
 ## Integration Requirements
 - **Recipe Import**: Support for popular recipe websites (Allrecipes, Food Network, etc.)
+  - **AC1**: Data synchronization handles conflicts appropriately
+  - **AC2**: Import process provides progress feedback
+  - **AC3**: Failed imports provide clear error messages
 - **Nutrition Database**: USDA FoodData Central or Nutritionix API
 - **Calendar Sync**: Optional Google Calendar or iCal export
 - **Email/SMS**: Twilio or SendGrid for notifications

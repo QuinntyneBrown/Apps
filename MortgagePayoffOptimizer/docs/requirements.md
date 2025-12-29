@@ -12,39 +12,121 @@ MortgagePayoffOptimizer is a comprehensive mortgage management and payoff optimi
 
 ## Core Features
 ### 1. Mortgage Management
-- Add and track multiple mortgages
-- Update terms after refinancing
-- Track payoff completion
+- **FR-1.1**: Add and track multiple mortgages
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+  - **AC4**: Historical data is preserved and accessible
+- **FR-1.2**: Update terms after refinancing
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
+- **FR-1.3**: Track payoff completion
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
 
 ### 2. Payment Tracking
-- Record regular monthly payments
-- Log extra principal payments
-- Track biweekly payment schedules
-- Monitor missed payments
+- **FR-2.1**: Record regular monthly payments
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-2.2**: Log extra principal payments
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-2.3**: Track biweekly payment schedules
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-2.4**: Monitor missed payments
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 3. Payoff Strategies
-- Create and compare strategies (extra payments, biweekly, lump sum)
-- Activate chosen strategy
-- Track milestone achievements
-- Calculate time and interest savings
+- **FR-3.1**: Create and compare strategies (extra payments, biweekly, lump sum)
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-3.2**: Activate chosen strategy
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.3**: Track milestone achievements
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-3.4**: Calculate time and interest savings
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 4. Refinance Analysis
-- Identify refinance opportunities
-- Analyze break-even points
-- Compare current vs refinanced terms
-- Track executed refinances
+- **FR-4.1**: Identify refinance opportunities
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.2**: Analyze break-even points
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.3**: Compare current vs refinanced terms
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.4**: Track executed refinances
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
 
 ### 5. Amortization
-- Generate payment schedules
-- Recalculate based on strategy changes
-- Track principal vs interest crossover
-- Visualize payoff progress
+- **FR-5.1**: Generate payment schedules
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.2**: Recalculate based on strategy changes
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.3**: Track principal vs interest crossover
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-5.4**: Visualize payoff progress
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 6. Savings Tracking
-- Calculate interest savings
-- Track time savings (months/years)
-- Monitor cumulative savings
-- Celebrate savings milestones
+- **FR-6.1**: Calculate interest savings
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.2**: Track time savings (months/years)
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-6.3**: Monitor cumulative savings
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.4**: Celebrate savings milestones
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ## Domain Events
 - MortgageAdded, MortgagePaidOff, RegularPaymentMade, ExtraPaymentMade

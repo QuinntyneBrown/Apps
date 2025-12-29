@@ -62,6 +62,9 @@ LetterToFutureSelf is a personal growth and self-reflection platform that enable
 - Capture life circumstances
 - Compare emotional states over time
 - Detect significant emotional contrasts
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Visualize emotional timeline
 - Gain insights into resilience
 
