@@ -1,3 +1,6 @@
+using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
+using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
+
 namespace FamilyCalendarEventPlanner.Core.Tests;
 
 public class FamilyMemberTests

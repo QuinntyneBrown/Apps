@@ -1,4 +1,6 @@
-namespace FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
+
+namespace FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 
 public class CalendarEvent
 {

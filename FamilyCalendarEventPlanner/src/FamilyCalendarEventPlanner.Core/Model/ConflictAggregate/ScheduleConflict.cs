@@ -1,4 +1,6 @@
-namespace FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate.Enums;
+
+namespace FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
 
 public class ScheduleConflict
 {

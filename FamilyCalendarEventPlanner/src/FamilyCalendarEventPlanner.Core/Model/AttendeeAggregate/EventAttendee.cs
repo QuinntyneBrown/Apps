@@ -1,4 +1,6 @@
-namespace FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate.Enums;
+
+namespace FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
 
 public class EventAttendee
 {

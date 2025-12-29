@@ -1,3 +1,6 @@
+using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
+using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate.Enums;
+
 namespace FamilyCalendarEventPlanner.Core.Tests;
 
 public class ScheduleConflictTests

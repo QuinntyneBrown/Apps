@@ -1,3 +1,6 @@
+using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.Enums;
+
 namespace FamilyCalendarEventPlanner.Core.Tests;
 
 public class EventReminderTests

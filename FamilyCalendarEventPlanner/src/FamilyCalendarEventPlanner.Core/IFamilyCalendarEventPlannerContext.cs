@@ -1,4 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
+using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
+using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
+using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
+using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
 
 namespace FamilyCalendarEventPlanner.Core;
 

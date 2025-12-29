@@ -1,4 +1,4 @@
-namespace FamilyCalendarEventPlanner.Core;
+namespace FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
 
 public enum EventType
 {

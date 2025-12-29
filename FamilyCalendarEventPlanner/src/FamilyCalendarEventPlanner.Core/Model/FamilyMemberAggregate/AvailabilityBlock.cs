@@ -1,4 +1,6 @@
-namespace FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
+
+namespace FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 
 public class AvailabilityBlock
 {

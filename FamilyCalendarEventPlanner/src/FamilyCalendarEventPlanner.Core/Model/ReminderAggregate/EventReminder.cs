@@ -1,4 +1,6 @@
-namespace FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.Enums;
+
+namespace FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
 
 public class EventReminder
 {
