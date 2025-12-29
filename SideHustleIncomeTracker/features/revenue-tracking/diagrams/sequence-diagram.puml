@@ -1,0 +1,28 @@
+@startuml Revenue Tracking Sequence Diagram
+
+title Record Income Payment
+
+actor User
+participant "UI" as UI
+participant "API" as API
+participant "Handler" as Handler
+participant "Income" as Aggregate
+participant "Repository" as Repo
+participant "EventBus" as Bus
+
+User -> UI : Enter payment details
+User -> UI : Click "Record Income"
+UI -> API : POST /api/income
+API -> Handler : RecordIncomeCommand
+Handler -> Aggregate : Create(amount, stream, date)
+Aggregate --> Handler : Income
+Handler -> Repo : Add(income)
+Handler -> Bus : Publish(IncomeReceived)
+alt Large Payment
+    Handler -> Bus : Publish(LargePaymentReceived)
+end
+Handler --> API : IncomeId
+API --> UI : 201 Created
+UI --> User : "Payment recorded: $X"
+
+@enduml

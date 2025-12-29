@@ -1,0 +1,185 @@
+@startuml Domain_Model
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam class {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    ArrowColor #666666
+}
+
+class User {
+    +Guid Id
+    +string Email
+    +string Name
+    +DateTime CreatedAt
+    --
+    +RegisterAccount()
+    +DesignateExecutor()
+    +CreateWill()
+}
+
+class DigitalAccount {
+    +Guid Id
+    +Guid UserId
+    +string ServiceName
+    +AccountType Type
+    +ImportanceLevel Importance
+    +string Username
+    +LegacyPriority Priority
+    --
+    +Categorize()
+    +AssessValue()
+}
+
+class AccountAccessDetails {
+    +Guid AccountId
+    +string EncryptedCredentials
+    +AccessMethod Method
+    +bool Has2FA
+    +string EncryptedRecoveryInfo
+    --
+    +Decrypt()
+    +UpdateCredentials()
+}
+
+class LegacyInstruction {
+    +Guid Id
+    +Guid AccountId
+    +PreferredAction Action
+    +string DetailedSteps
+    +Priority Priority
+    --
+    +CreateInstructions()
+    +UpdateInstructions()
+}
+
+class DigitalExecutor {
+    +Guid Id
+    +Guid UserId
+    +string Name
+    +string Email
+    +AccessLevel Level
+    +bool IsNotified
+    +bool HasAccepted
+    --
+    +Notify()
+    +AcceptRole()
+    +RequestAccess()
+}
+
+class EmergencyAccessProtocol {
+    +Guid UserId
+    +int InactivityThresholdDays
+    +int WaitingPeriodDays
+    +bool IsActive
+    +DateTime LastActivity
+    +DateTime NextCheckDate
+    --
+    +ConfirmActivity()
+    +Activate()
+    +GrantAccess()
+}
+
+class DigitalWill {
+    +Guid Id
+    +Guid UserId
+    +int Version
+    +List<Guid> AccountsCovered
+    +List<Guid> Beneficiaries
+    +LegalStatus Status
+    --
+    +Generate()
+    +Update()
+    +ExportPDF()
+}
+
+class DigitalAsset {
+    +Guid Id
+    +AssetType Type
+    +string Location
+    +decimal Value
+    +Guid BeneficiaryId
+    --
+    +Document()
+    +AssignBeneficiary()
+}
+
+class PaidSubscription {
+    +Guid Id
+    +string ServiceName
+    +decimal Cost
+    +BillingCycle Cycle
+    +Priority CancellationPriority
+    --
+    +PlanCancellation()
+}
+
+class PrivacyPreference {
+    +Guid UserId
+    +PrivacyLevel Level
+    +bool DeleteSensitive
+    +List<string> DataToDelete
+    --
+    +ScheduleDeletion()
+    +FlagContent()
+}
+
+enum AccountType {
+    Social
+    Financial
+    Email
+    Storage
+    Professional
+}
+
+enum ImportanceLevel {
+    Critical
+    High
+    Medium
+    Low
+}
+
+enum PreferredAction {
+    Close
+    Memorialize
+    Preserve
+    Transfer
+}
+
+enum AccessLevel {
+    Full
+    Limited
+    ViewOnly
+}
+
+User "1" --> "*" DigitalAccount : owns
+User "1" --> "0..1" EmergencyAccessProtocol : configures
+User "1" --> "*" DigitalExecutor : designates
+User "1" --> "0..1" DigitalWill : creates
+User "1" --> "*" DigitalAsset : owns
+User "1" --> "*" PaidSubscription : has
+User "1" --> "0..1" PrivacyPreference : sets
+
+DigitalAccount "1" --> "0..1" AccountAccessDetails : has
+DigitalAccount "1" --> "*" LegacyInstruction : has
+DigitalAccount "1" --> "*" PaidSubscription : linked
+
+DigitalWill "*" --> "*" DigitalAccount : covers
+DigitalWill "*" --> "*" DigitalExecutor : includes
+
+DigitalAsset "*" --> "1" DigitalExecutor : inherited by
+
+EmergencyAccessProtocol "*" --> "*" DigitalExecutor : notifies
+
+note right of AccountAccessDetails
+  All credentials are encrypted
+  using AES-256 encryption
+end note
+
+note right of EmergencyAccessProtocol
+  Dead Man's Switch monitors
+  user activity and triggers
+  emergency access
+end note
+
+@enduml

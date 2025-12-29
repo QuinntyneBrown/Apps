@@ -1,0 +1,267 @@
+@startuml Environment Configuration - Class Diagram
+
+' Style definitions
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor WhiteSmoke
+    BorderColor Black
+    ArrowColor DarkSlateGray
+}
+
+' Entities
+class EnvironmentConfiguration {
+    +Id: Guid
+    +UserId: Guid
+    +Theme: string
+    +NotificationsEnabled: bool
+    +NotificationsDuringSession: bool
+    +BreakRemindersEnabled: bool
+    +FullscreenMode: bool
+    +HideDistractions: bool
+    +DimmingLevel: decimal
+    +SlackIntegration: bool
+    +TeamsIntegration: bool
+    +CalendarIntegration: bool
+    +CreatedAt: DateTime
+    +UpdatedAt: DateTime
+    --
+    +UpdateTheme(theme: string): void
+    +UpdateNotifications(settings: NotificationSettings): void
+    +UpdateDisplay(settings: DisplaySettings): void
+    +ToggleIntegration(service: string, enabled: bool): void
+}
+
+class FocusMode {
+    +Id: Guid
+    +UserId: Guid
+    +SessionId: Guid?
+    +Mode: FocusModeLevel
+    +Duration: int
+    +ActivatedAt: DateTime
+    +DeactivatedAt: DateTime?
+    +EstimatedEndTime: DateTime
+    +Status: FocusModeStatus
+    +AutoReplyEnabled: bool
+    +AutoReplyMessage: string?
+    +CreatedAt: DateTime
+    --
+    +Activate(): void
+    +Deactivate(): void
+    +IsActive(): bool
+    +GetRemainingTime(): TimeSpan
+    +AddBlockRule(rule: BlockRule): void
+    +RemoveBlockRule(ruleId: Guid): void
+}
+
+class FocusModeBlockRule {
+    +Id: Guid
+    +FocusModeId: Guid
+    +RuleType: BlockRuleType
+    +Target: string
+    +CreatedAt: DateTime
+    --
+    +IsWebsite(): bool
+    +IsApplication(): bool
+}
+
+class BackgroundNoisePreference {
+    +Id: Guid
+    +UserId: Guid
+    +Enabled: bool
+    +NoiseType: NoiseType
+    +Volume: decimal
+    +CustomUrl: string?
+    +AutoStart: bool
+    +CreatedAt: DateTime
+    +UpdatedAt: DateTime
+    --
+    +UpdateType(type: NoiseType): void
+    +UpdateVolume(volume: decimal): void
+    +SetCustomUrl(url: string): void
+    +Toggle(enabled: bool): void
+}
+
+' Enums
+enum FocusModeLevel {
+    Deep
+    Moderate
+    Light
+}
+
+enum FocusModeStatus {
+    Active
+    Paused
+    Deactivated
+}
+
+enum BlockRuleType {
+    Website
+    Application
+}
+
+enum NoiseType {
+    WhiteNoise
+    BrownNoise
+    Rain
+    Cafe
+    Nature
+    Custom
+}
+
+enum Theme {
+    Dark
+    Light
+    Auto
+}
+
+' Value Objects
+class NotificationSettings <<ValueObject>> {
+    +Enabled: bool
+    +DuringSession: bool
+    +BreakReminders: bool
+}
+
+class DisplaySettings <<ValueObject>> {
+    +Fullscreen: bool
+    +HideDistractions: bool
+    +Dimming: decimal
+}
+
+class IntegrationSettings <<ValueObject>> {
+    +SlackStatus: bool
+    +TeamsStatus: bool
+    +Calendar: bool
+}
+
+' Services
+class EnvironmentConfigurationService <<Service>> {
+    -repository: IEnvironmentConfigRepository
+    -eventPublisher: IEventPublisher
+    --
+    +GetConfiguration(userId: Guid): EnvironmentConfiguration
+    +UpdateConfiguration(config: EnvironmentConfiguration): void
+    +ConfigureEnvironment(userId: Guid, settings: EnvironmentSettings): void
+}
+
+class FocusModeService <<Service>> {
+    -repository: IFocusModeRepository
+    -blockingService: IBlockingService
+    -integrationService: IIntegrationService
+    -eventPublisher: IEventPublisher
+    --
+    +ActivateFocusMode(userId: Guid, config: FocusModeConfig): FocusMode
+    +DeactivateFocusMode(focusModeId: Guid): void
+    +GetActiveFocusMode(userId: Guid): FocusMode?
+    +ApplyBlockingRules(focusMode: FocusMode): void
+    +UpdateIntegrationStatuses(userId: Guid, message: string): void
+}
+
+class BackgroundNoiseService <<Service>> {
+    -repository: IBackgroundNoiseRepository
+    -audioService: IAudioService
+    -eventPublisher: IEventPublisher
+    --
+    +GetPreferences(userId: Guid): BackgroundNoisePreference
+    +UpdatePreferences(preferences: BackgroundNoisePreference): void
+    +StartAudio(userId: Guid): void
+    +StopAudio(userId: Guid): void
+    +ValidateCustomUrl(url: string): bool
+}
+
+class BlockingService <<Service>> {
+    -browserExtension: IBrowserExtensionClient
+    -desktopApp: IDesktopAppClient
+    --
+    +BlockWebsites(websites: List<string>): void
+    +BlockApplications(apps: List<string>): void
+    +UnblockAll(): void
+    +GetBlockedResources(): BlockedResources
+}
+
+class IntegrationService <<Service>> {
+    -slackClient: ISlackClient
+    -teamsClient: ITeamsClient
+    -calendarClient: ICalendarClient
+    --
+    +UpdateSlackStatus(userId: Guid, message: string): void
+    +UpdateTeamsStatus(userId: Guid, message: string): void
+    +BlockCalendar(userId: Guid, duration: int): void
+    +RestoreStatuses(userId: Guid): void
+}
+
+' Domain Events
+class FocusEnvironmentConfigured <<DomainEvent>> {
+    +ConfigurationId: Guid
+    +UserId: Guid
+    +Theme: string
+    +NotificationsEnabled: bool
+    +NotificationsDuringSession: bool
+    +FullscreenMode: bool
+    +HideDistractions: bool
+    +DimmingLevel: decimal
+    +SlackIntegration: bool
+    +TeamsIntegration: bool
+    +CalendarIntegration: bool
+    +Timestamp: DateTime
+}
+
+class FocusModeActivated <<DomainEvent>> {
+    +FocusModeId: Guid
+    +UserId: Guid
+    +SessionId: Guid?
+    +Mode: string
+    +Duration: int
+    +ActivatedAt: DateTime
+    +EstimatedEndTime: DateTime
+    +BlockedWebsites: List<string>
+    +BlockedApplications: List<string>
+    +AutoReplyEnabled: bool
+    +AutoReplyMessage: string?
+    +Timestamp: DateTime
+}
+
+class FocusModeDeactivated <<DomainEvent>> {
+    +FocusModeId: Guid
+    +DeactivatedAt: DateTime
+    +ActualDuration: int
+    +Timestamp: DateTime
+}
+
+class BackgroundNoisePreferenceSet <<DomainEvent>> {
+    +PreferenceId: Guid
+    +UserId: Guid
+    +Enabled: bool
+    +NoiseType: string
+    +Volume: decimal
+    +CustomUrl: string?
+    +AutoStart: bool
+    +Timestamp: DateTime
+}
+
+' Relationships
+EnvironmentConfiguration "1" *-- "1" NotificationSettings
+EnvironmentConfiguration "1" *-- "1" DisplaySettings
+EnvironmentConfiguration "1" *-- "1" IntegrationSettings
+EnvironmentConfiguration ..> Theme : uses
+
+FocusMode "1" *-- "0..*" FocusModeBlockRule : contains
+FocusMode ..> FocusModeLevel : uses
+FocusMode ..> FocusModeStatus : uses
+
+FocusModeBlockRule ..> BlockRuleType : uses
+
+BackgroundNoisePreference ..> NoiseType : uses
+
+EnvironmentConfigurationService ..> EnvironmentConfiguration : manages
+EnvironmentConfigurationService ..> FocusEnvironmentConfigured : publishes
+
+FocusModeService ..> FocusMode : manages
+FocusModeService ..> FocusModeActivated : publishes
+FocusModeService ..> FocusModeDeactivated : publishes
+FocusModeService --> BlockingService : uses
+FocusModeService --> IntegrationService : uses
+
+BackgroundNoiseService ..> BackgroundNoisePreference : manages
+BackgroundNoiseService ..> BackgroundNoisePreferenceSet : publishes
+
+@enduml

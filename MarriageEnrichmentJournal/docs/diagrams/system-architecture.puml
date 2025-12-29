@@ -1,0 +1,109 @@
+@startuml System Architecture - Marriage Enrichment Journal
+
+!define RECTANGLE class
+
+skinparam rectangleBackgroundColor<<frontend>> LightBlue
+skinparam rectangleBackgroundColor<<backend>> LightGreen
+skinparam rectangleBackgroundColor<<data>> LightYellow
+skinparam rectangleBackgroundColor<<external>> LightGray
+
+package "Client Layer" {
+    rectangle "Web Application\n(React/TypeScript)" <<frontend>> as WebApp
+    rectangle "Mobile Browser" <<frontend>> as Mobile
+}
+
+package "API Gateway" {
+    rectangle "API Gateway\n(Rate Limiting, Auth)" <<backend>> as Gateway
+}
+
+package "Application Services" {
+    rectangle "Gratitude Service" <<backend>> as GratitudeAPI
+    rectangle "Appreciation Service" <<backend>> as AppreciationAPI
+    rectangle "Reflection Service" <<backend>> as ReflectionAPI
+    rectangle "Communication Service" <<backend>> as CommunicationAPI
+    rectangle "Health Monitoring Service" <<backend>> as HealthAPI
+    rectangle "Milestone Service" <<backend>> as MilestoneAPI
+    rectangle "Privacy Service" <<backend>> as PrivacyAPI
+}
+
+package "Domain Event Processing" {
+    rectangle "Event Bus\n(Azure Service Bus)" <<backend>> as EventBus
+    rectangle "Event Handlers" <<backend>> as Handlers
+}
+
+package "Real-time Services" {
+    rectangle "WebSocket Server\n(SignalR)" <<backend>> as WebSocket
+    rectangle "Notification Service" <<backend>> as Notifications
+}
+
+package "Data Layer" {
+    database "SQL Server\n(Primary Data Store)" <<data>> as Database
+    database "Redis Cache" <<data>> as Cache
+    storage "Blob Storage\n(Photos)" <<data>> as BlobStorage
+}
+
+package "External Services" {
+    rectangle "Email Service\n(SendGrid)" <<external>> as Email
+    rectangle "SMS Service\n(Twilio)" <<external>> as SMS
+    rectangle "Analytics\n(Application Insights)" <<external>> as Analytics
+}
+
+' Client connections
+WebApp --> Gateway : HTTPS
+Mobile --> Gateway : HTTPS
+WebApp --> WebSocket : WSS
+
+' Gateway to services
+Gateway --> GratitudeAPI
+Gateway --> AppreciationAPI
+Gateway --> ReflectionAPI
+Gateway --> CommunicationAPI
+Gateway --> HealthAPI
+Gateway --> MilestoneAPI
+Gateway --> PrivacyAPI
+
+' Services to Event Bus
+GratitudeAPI --> EventBus : Publish Events
+AppreciationAPI --> EventBus : Publish Events
+ReflectionAPI --> EventBus : Publish Events
+CommunicationAPI --> EventBus : Publish Events
+HealthAPI --> EventBus : Publish Events
+MilestoneAPI --> EventBus : Publish Events
+
+' Event processing
+EventBus --> Handlers : Subscribe
+Handlers --> Notifications
+Handlers --> WebSocket
+Handlers --> Database
+
+' Data access
+GratitudeAPI --> Database
+GratitudeAPI --> Cache
+AppreciationAPI --> Database
+AppreciationAPI --> Cache
+ReflectionAPI --> Database
+MilestoneAPI --> BlobStorage
+PrivacyAPI --> Database
+
+' External integrations
+Notifications --> Email
+Notifications --> SMS
+WebSocket --> WebApp
+AllServices --> Analytics
+
+note right of EventBus
+  Domain Events:
+  - GratitudeEntryCreated
+  - AppreciationExpressed
+  - ReflectionJournalCreated
+  - MoodTrendDetected
+  - MilestoneCelebrated
+end note
+
+note right of Database
+  Encrypted at rest
+  Automated backups
+  Read replicas for scaling
+end note
+
+@enduml

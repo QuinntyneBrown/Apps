@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Management - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .stat-card.total { border-top: 4px solid #3498db; }
+        .stat-card.active { border-top: 4px solid #27ae60; }
+        .stat-card.paused { border-top: 4px solid #f39c12; }
+        .stat-card.refills { border-top: 4px solid #e74c3c; }
+
+        .alert-banner {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+        }
+
+        .alert-text {
+            color: #856404;
+            font-weight: 500;
+        }
+
+        .alert-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .filters-bar {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .medications-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .medication-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: box-shadow 0.3s;
+        }
+
+        .medication-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .medication-header {
+            display: flex;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .pill-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .medication-info {
+            flex: 1;
+        }
+
+        .medication-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .medication-meta {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+        }
+
+        .interaction-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .next-dose {
+            background: #e8f5e9;
+            border-left: 3px solid #4caf50;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .next-dose-label {
+            font-size: 12px;
+            color: #2e7d32;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .next-dose-time {
+            font-size: 16px;
+            color: #1b5e20;
+            font-weight: 500;
+        }
+
+        .schedule-info {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .adherence-bar {
+            margin-bottom: 12px;
+        }
+
+        .adherence-label {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .adherence-progress {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .adherence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .adherence-fill.warning {
+            background: linear-gradient(90deg, #ff9800, #ffc107);
+        }
+
+        .medication-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-info {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #1976d2;
+        }
+
+        .paused-badge {
+            display: inline-block;
+            background: #fff3e0;
+            color: #e65100;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .paused-card {
+            background: #fafafa;
+            border-left: 4px solid #ff9800;
+        }
+
+        .paused-info {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .paused-reason {
+            font-size: 14px;
+            color: #e65100;
+            margin-bottom: 4px;
+        }
+
+        .resume-date {
+            font-size: 13px;
+            color: #f57c00;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #f57c00;
+        }
+
+        .show-more {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .btn-link {
+            background: none;
+            color: #3498db;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-bar {
+                flex-direction: column;
+            }
+
+            .filter-select, .search-box {
+                width: 100%;
+            }
+
+            .medication-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💊 Medication Management</h1>
+            <button class="btn-primary">+ Add Medication</button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Total Medications</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-value">10</div>
+                <div class="stat-label">Active Medications</div>
+            </div>
+            <div class="stat-card paused">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Paused Medications</div>
+            </div>
+            <div class="stat-card refills">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Refills Due Soon</div>
+            </div>
+        </div>
+
+        <div class="alert-banner">
+            <div class="alert-content">
+                <span class="alert-icon">⚠️</span>
+                <span class="alert-text">Drug Interaction Warning: 2 interactions detected</span>
+            </div>
+            <button class="alert-btn">View Details</button>
+        </div>
+
+        <div class="filters-bar">
+            <select class="filter-select">
+                <option>All Medications</option>
+                <option>Active Only</option>
+                <option>Paused Only</option>
+                <option>Discontinued</option>
+            </select>
+            <select class="filter-select">
+                <option>All Categories</option>
+                <option>Prescription</option>
+                <option>OTC</option>
+                <option>Supplement</option>
+                <option>Vitamin</option>
+            </select>
+            <select class="filter-select">
+                <option>All Forms</option>
+                <option>Tablet</option>
+                <option>Capsule</option>
+                <option>Liquid</option>
+                <option>Injection</option>
+            </select>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search medications...">
+            </div>
+        </div>
+
+        <div class="medications-section">
+            <h2 class="section-title">Active Medications</h2>
+
+            <!-- Medication Card 1 -->
+            <div class="medication-card">
+                <div class="medication-header">
+                    <div class="pill-icon">💊</div>
+                    <div class="medication-info">
+                        <div class="medication-name">
+                            Lisinopril 10mg
+                            <span class="interaction-badge">⚠️ Interaction</span>
+                        </div>
+                        <div class="medication-meta">Tablet • Prescription • Dr. Smith</div>
+                    </div>
+                </div>
+
+                <div class="next-dose">
+                    <div class="next-dose-label">NEXT DOSE</div>
+                    <div class="next-dose-time">Today at 8:00 PM (in 6 hours)</div>
+                </div>
+
+                <div class="schedule-info">
+                    📅 Schedule: Daily at 8:00 AM, 8:00 PM
+                </div>
+
+                <div class="adherence-bar">
+                    <div class="adherence-label">
+                        <span>Adherence Rate</span>
+                        <span><strong>95%</strong></span>
+                    </div>
+                    <div class="adherence-progress">
+                        <div class="adherence-fill" style="width: 95%"></div>
+                    </div>
+                </div>
+
+                <div class="medication-actions">
+                    <button class="btn btn-success">✓ Take Dose</button>
+                    <button class="btn btn-secondary">✏️ Edit</button>
+                    <button class="btn btn-info">📋 Details</button>
+                </div>
+            </div>
+
+            <!-- Medication Card 2 -->
+            <div class="medication-card">
+                <div class="medication-header">
+                    <div class="pill-icon">💊</div>
+                    <div class="medication-info">
+                        <div class="medication-name">Metformin 500mg</div>
+                        <div class="medication-meta">Tablet • Prescription • Dr. Johnson</div>
+                    </div>
+                </div>
+
+                <div class="next-dose">
+                    <div class="next-dose-label">NEXT DOSE</div>
+                    <div class="next-dose-time">Today at 9:00 PM (in 7 hours) • With Food 🍽️</div>
+                </div>
+
+                <div class="schedule-info">
+                    📅 Schedule: Daily at 9:00 AM, 9:00 PM with food
+                </div>
+
+                <div class="adherence-bar">
+                    <div class="adherence-label">
+                        <span>Adherence Rate</span>
+                        <span><strong>88%</strong></span>
+                    </div>
+                    <div class="adherence-progress">
+                        <div class="adherence-fill warning" style="width: 88%"></div>
+                    </div>
+                </div>
+
+                <div class="medication-actions">
+                    <button class="btn btn-success">✓ Take Dose</button>
+                    <button class="btn btn-secondary">✏️ Edit</button>
+                    <button class="btn btn-info">📋 Details</button>
+                </div>
+            </div>
+
+            <!-- Medication Card 3 - Paused -->
+            <div class="medication-card paused-card">
+                <div class="medication-header">
+                    <div class="pill-icon">💊</div>
+                    <div class="medication-info">
+                        <div class="medication-name">
+                            Vitamin D 2000 IU
+                            <span class="paused-badge">Paused</span>
+                        </div>
+                        <div class="medication-meta">Capsule • Supplement</div>
+                    </div>
+                </div>
+
+                <div class="paused-info">
+                    <div class="paused-reason">⏸️ Paused: Doctor's orders</div>
+                    <div class="resume-date">Expected Resume: December 15, 2025</div>
+                </div>
+
+                <div class="schedule-info">
+                    📅 Schedule: Daily at 9:00 AM
+                </div>
+
+                <div class="medication-actions">
+                    <button class="btn btn-warning">▶️ Resume</button>
+                    <button class="btn btn-secondary">✏️ Edit</button>
+                    <button class="btn btn-info">📋 Details</button>
+                </div>
+            </div>
+
+            <!-- Medication Card 4 -->
+            <div class="medication-card">
+                <div class="medication-header">
+                    <div class="pill-icon">💊</div>
+                    <div class="medication-info">
+                        <div class="medication-name">Atorvastatin 20mg</div>
+                        <div class="medication-meta">Tablet • Prescription • Dr. Smith</div>
+                    </div>
+                </div>
+
+                <div class="next-dose">
+                    <div class="next-dose-label">NEXT DOSE</div>
+                    <div class="next-dose-time">Tomorrow at 10:00 PM</div>
+                </div>
+
+                <div class="schedule-info">
+                    📅 Schedule: Daily at 10:00 PM
+                </div>
+
+                <div class="adherence-bar">
+                    <div class="adherence-label">
+                        <span>Adherence Rate</span>
+                        <span><strong>92%</strong></span>
+                    </div>
+                    <div class="adherence-progress">
+                        <div class="adherence-fill" style="width: 92%"></div>
+                    </div>
+                </div>
+
+                <div class="medication-actions">
+                    <button class="btn btn-success">✓ Take Dose</button>
+                    <button class="btn btn-secondary">✏️ Edit</button>
+                    <button class="btn btn-info">📋 Details</button>
+                </div>
+            </div>
+
+            <div class="show-more">
+                <button class="btn-link">Show More Medications...</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

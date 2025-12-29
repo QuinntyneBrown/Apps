@@ -1,0 +1,304 @@
+@startuml Pattern Analysis Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class Pattern {
+        +Guid Id
+        +Guid UserId
+        +PatternType Type
+        +DateTime DetectedAt
+        +int Confidence
+        +string Data
+        +bool IsActive
+        --
+        +UpdateConfidence(score: int): void
+        +Deactivate(): void
+        +IsExpired(): bool
+    }
+
+    class OptimalSessionLength {
+        +Guid Id
+        +Guid UserId
+        +int OptimalDuration
+        +int ConfidenceScore
+        +Dictionary<int, decimal> SuccessRates
+        +int SampleSize
+        +string Recommendation
+        +DateTime DetectedAt
+        +DateTime? ExpiresAt
+        --
+        +CalculateConfidence(): int
+        +IsValid(): bool
+        +GetSuccessRate(duration: int): decimal
+    }
+
+    class PeakFocusTime {
+        +Guid Id
+        +Guid UserId
+        +int StartHour
+        +int EndHour
+        +decimal AvgFocusScore
+        +int ConsistencyScore
+        +int SessionsAnalyzed
+        +int? DayOfWeek
+        +DateTime DetectedAt
+        --
+        +IsInTimeWindow(hour: int): bool
+        +GetDuration(): int
+    }
+
+    class DistractionPattern {
+        +Guid Id
+        +Guid UserId
+        +string DistractionType
+        +string Source
+        +int Frequency
+        +ImpactLevel AvgImpact
+        +List<string> TypicalTiming
+        +string MitigationSuggestion
+        +DateTime DetectedAt
+        +bool IsResolved
+        --
+        +MarkResolved(): void
+        +IncrementFrequency(): void
+        +ShouldExpire(): bool
+    }
+
+    class ProductivityTrend {
+        +Guid Id
+        +Guid UserId
+        +TrendDirection Direction
+        +Magnitude Magnitude
+        +int Duration
+        +DateTime StartDate
+        +DateTime EndDate
+        +string Metric
+        +decimal StartValue
+        +decimal EndValue
+        +decimal PercentChange
+        +List<string> ContributingFactors
+        +DateTime DetectedAt
+        --
+        +CalculatePercentChange(): decimal
+        +AddContributingFactor(factor: string): void
+        +IsSignificant(): bool
+    }
+
+    class Insight {
+        +Guid Id
+        +Guid UserId
+        +Guid? PatternId
+        +InsightType Type
+        +Priority Priority
+        +string Title
+        +string Description
+        +bool IsActionable
+        +string? ActionText
+        +bool IsDismissed
+        +DateTime CreatedAt
+        +DateTime? ExpiresAt
+        --
+        +Dismiss(): void
+        +IsExpired(): bool
+        +GenerateFromPattern(pattern: Pattern): Insight
+    }
+
+    enum PatternType {
+        OptimalLength
+        PeakTime
+        Distraction
+        ProductivityTrend
+    }
+
+    enum TrendDirection {
+        Upward
+        Downward
+        Stable
+    }
+
+    enum Magnitude {
+        Slight
+        Moderate
+        Significant
+    }
+
+    enum ImpactLevel {
+        Low
+        Medium
+        High
+    }
+
+    enum Priority {
+        Low
+        Medium
+        High
+    }
+
+    enum InsightType {
+        SessionTiming
+        DistractionPrevention
+        DurationOptimization
+        TrendAlert
+    }
+
+    Pattern --> PatternType
+    ProductivityTrend --> TrendDirection
+    ProductivityTrend --> Magnitude
+    DistractionPattern --> ImpactLevel
+    Insight --> Priority
+    Insight --> InsightType
+    Insight "0..*" --> "0..1" Pattern : generated from
+}
+
+package "Events" {
+    class OptimalSessionLengthIdentified {
+        +Guid PatternId
+        +Guid UserId
+        +int OptimalDuration
+        +int ConfidenceScore
+        +int SampleSize
+        +DateTime Timestamp
+    }
+
+    class PeakFocusTimeDetected {
+        +Guid PatternId
+        +Guid UserId
+        +List<TimeWindow> PeakWindows
+        +int ConsistencyScore
+        +DateTime Timestamp
+    }
+
+    class DistractionPatternIdentified {
+        +Guid PatternId
+        +Guid UserId
+        +string DistractionType
+        +string Source
+        +int Frequency
+        +string AvgImpact
+        +DateTime Timestamp
+    }
+
+    class ProductivityTrendDetected {
+        +Guid TrendId
+        +Guid UserId
+        +string Direction
+        +string Magnitude
+        +int DurationDays
+        +decimal PercentChange
+        +DateTime Timestamp
+    }
+
+    class InsightGenerated {
+        +Guid InsightId
+        +Guid UserId
+        +Guid? PatternId
+        +string InsightType
+        +string Priority
+        +DateTime Timestamp
+    }
+
+    class PatternAnalysisCompleted {
+        +Guid JobId
+        +Guid UserId
+        +string AnalysisType
+        +int PatternsDetected
+        +int SessionsAnalyzed
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class PatternAnalysisService {
+        -IPatternRepository patternRepository
+        -ISessionRepository sessionRepository
+        -IEventPublisher eventPublisher
+        -IPatternDetector patternDetector
+        --
+        +AnalyzeOptimalSessionLength(userId: Guid): OptimalSessionLength
+        +DetectPeakFocusTimes(userId: Guid): List<PeakFocusTime>
+        +IdentifyDistractionPatterns(userId: Guid): List<DistractionPattern>
+        +DetectProductivityTrends(userId: Guid, period: string): List<ProductivityTrend>
+        +GenerateInsights(userId: Guid): List<Insight>
+        +TriggerAnalysis(userId: Guid, type: string): Guid
+    }
+
+    interface IPatternRepository {
+        +GetById(id: Guid): Pattern
+        +GetByUser(userId: Guid, type: PatternType): List<Pattern>
+        +Save(pattern: Pattern): void
+        +GetActivePatterns(userId: Guid): List<Pattern>
+        +DeactivateExpired(): void
+    }
+
+    interface IPatternDetector {
+        +DetectOptimalLength(sessions: List<Session>): OptimalSessionLength
+        +DetectPeakTimes(sessions: List<Session>): List<PeakFocusTime>
+        +DetectDistractionPatterns(distractions: List<Distraction>): List<DistractionPattern>
+        +DetectTrends(metrics: List<Metric>, period: string): ProductivityTrend
+    }
+
+    class InsightGenerator {
+        -IPatternRepository patternRepository
+        -IInsightRepository insightRepository
+        --
+        +GenerateFromPattern(pattern: Pattern): List<Insight>
+        +PrioritizeInsights(insights: List<Insight>): List<Insight>
+        +CreateActionable(pattern: Pattern): Insight
+    }
+
+    interface IInsightRepository {
+        +GetById(id: Guid): Insight
+        +GetActiveByUser(userId: Guid): List<Insight>
+        +Save(insight: Insight): void
+        +Dismiss(insightId: Guid): void
+    }
+
+    class AnalysisJob {
+        +Guid Id
+        +Guid UserId
+        +string AnalysisType
+        +JobStatus Status
+        +DateTime? StartedAt
+        +DateTime? CompletedAt
+        +string? ErrorMessage
+        --
+        +Start(): void
+        +Complete(result: string): void
+        +Fail(error: string): void
+    }
+
+    enum JobStatus {
+        Queued
+        Processing
+        Completed
+        Failed
+    }
+
+    AnalysisJob --> JobStatus
+}
+
+PatternAnalysisService --> IPatternRepository
+PatternAnalysisService --> IPatternDetector
+PatternAnalysisService --> Pattern
+PatternAnalysisService --> OptimalSessionLength
+PatternAnalysisService --> PeakFocusTime
+PatternAnalysisService --> DistractionPattern
+PatternAnalysisService --> ProductivityTrend
+
+InsightGenerator --> IPatternRepository
+InsightGenerator --> IInsightRepository
+InsightGenerator --> Insight
+
+OptimalSessionLength ..> OptimalSessionLengthIdentified : publishes
+PeakFocusTime ..> PeakFocusTimeDetected : publishes
+DistractionPattern ..> DistractionPatternIdentified : publishes
+ProductivityTrend ..> ProductivityTrendDetected : publishes
+Insight ..> InsightGenerated : publishes
+
+@enduml

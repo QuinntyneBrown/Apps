@@ -1,0 +1,300 @@
+@startuml Distraction Tracking Class Diagram
+
+!define ENTITY_COLOR #E3F2FD
+!define VALUE_OBJECT_COLOR #FFF3E0
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #F3E5F5
+
+skinparam class {
+    BackgroundColor ENTITY_COLOR
+    BorderColor #1976D2
+    ArrowColor #1976D2
+}
+
+' Core Entities
+class Session <<Entity>> {
+    - Id: Guid
+    - UserId: Guid
+    - SessionType: string
+    - PlannedDuration: int
+    - ActualDuration: int
+    - StartTime: DateTime
+    - EndTime: DateTime
+    - Status: SessionStatus
+    - FocusScore: int
+    --
+    + AddDistraction(distraction: Distraction)
+    + LogResistance(resistance: DistractionResistance)
+    + CalculateFocusScore(): int
+    + GetDistractionCount(): int
+}
+
+class Distraction <<Entity>> {
+    - Id: Guid
+    - SessionId: Guid
+    - UserId: Guid
+    - DistractionType: DistractionType
+    - Source: string
+    - Description: string
+    - Duration: int
+    - ImpactLevel: int
+    - Trigger: string
+    - Preventable: bool
+    - Notes: string
+    - LoggedAt: DateTime
+    --
+    + UpdateImpactLevel(level: int)
+    + AddNotes(notes: string)
+    + CalculateImpact(): int
+    + IsInternal(): bool
+    + IsExternal(): bool
+}
+
+class InternalDistraction <<Entity>> {
+    - Nature: InternalDistractionNature
+    - MentalState: string
+    - EnergyLevel: int
+    --
+    + IdentifyTrigger(): string
+    + SuggestMitigation(): string[]
+}
+
+class ExternalDistraction <<Entity>> {
+    - SourcePerson: string
+    - SourceDevice: string
+    - EnvironmentFactor: string
+    --
+    + IsPreventable(): bool
+    + SuggestEnvironmentChange(): string[]
+}
+
+class DistractionResistance <<Entity>> {
+    - Id: Guid
+    - SessionId: Guid
+    - UserId: Guid
+    - DistractionTypeResisted: string
+    - ResistanceStrategy: ResistanceStrategy
+    - Description: string
+    - ResistedAt: DateTime
+    --
+    + RecordSuccess()
+    + GetStrategyEffectiveness(): double
+}
+
+class DistractionPattern <<Entity>> {
+    - Id: Guid
+    - UserId: Guid
+    - PatternType: PatternType
+    - PatternDescription: string
+    - Frequency: decimal
+    - Severity: decimal
+    - DetectedAt: DateTime
+    - IsActive: bool
+    - MitigationSuggestions: List<string>
+    --
+    + Detect(distractions: List<Distraction>)
+    + GenerateSuggestions(): List<string>
+    + Deactivate()
+}
+
+class User <<Entity>> {
+    - Id: Guid
+    - Email: string
+    - Name: string
+    --
+    + GetDistractions(): List<Distraction>
+    + GetPatterns(): List<DistractionPattern>
+}
+
+' Value Objects
+class DistractionType <<Value Object>> {
+    - Value: string
+    --
+    + IsInternal(): bool
+    + IsExternal(): bool
+    {static} + Internal(): DistractionType
+    {static} + External(): DistractionType
+}
+
+class InternalDistractionNature <<Value Object>> {
+    - Value: string
+    --
+    {static} + MindWandering(): InternalDistractionNature
+    {static} + Urge(): InternalDistractionNature
+    {static} + Thought(): InternalDistractionNature
+    {static} + Daydream(): InternalDistractionNature
+}
+
+class ResistanceStrategy <<Value Object>> {
+    - Value: string
+    - EffectivenessScore: double
+    --
+    {static} + DeepBreath(): ResistanceStrategy
+    {static} + NotedForLater(): ResistanceStrategy
+    {static} + BlockedApp(): ResistanceStrategy
+    {static} + TenSecondRule(): ResistanceStrategy
+}
+
+class SessionStatus <<Enumeration>> {
+    Active
+    Paused
+    Completed
+    Abandoned
+}
+
+class PatternType <<Enumeration>> {
+    RecurringSource
+    TimeOfDay
+    SessionTypeCorrelation
+    DurationPattern
+    EnvironmentalTrigger
+}
+
+' Services
+class DistractionTrackingService <<Service>> {
+    - distractionRepository: IDistractionRepository
+    - patternDetector: IPatternDetector
+    - eventPublisher: IEventPublisher
+    --
+    + LogDistraction(command: LogDistractionCommand): Guid
+    + LogResistance(command: LogResistanceCommand): Guid
+    + GetDistractions(filter: DistractionFilter): List<Distraction>
+    + AnalyzePatterns(userId: Guid, period: TimePeriod): AnalyticsResult
+}
+
+class PatternDetectionService <<Service>> {
+    - distractionRepository: IDistractionRepository
+    - patternRepository: IPatternRepository
+    --
+    + DetectPatterns(userId: Guid): List<DistractionPattern>
+    + AnalyzeFrequency(distractions: List<Distraction>): FrequencyAnalysis
+    + IdentifyPeakTimes(distractions: List<Distraction>): PeakTimeAnalysis
+    + CalculateResistanceRate(userId: Guid): double
+}
+
+class FocusScoreCalculator <<Service>> {
+    --
+    + Calculate(session: Session): int
+    + CalculateDistractionPenalty(distractions: List<Distraction>): int
+    + CalculateResistanceBonus(resistances: List<DistractionResistance>): int
+}
+
+' Domain Events
+class DistractionLogged <<Event>> {
+    + DistractionId: Guid
+    + SessionId: Guid
+    + UserId: Guid
+    + DistractionType: string
+    + Source: string
+    + Duration: int
+    + ImpactLevel: int
+    + Timestamp: DateTime
+}
+
+class InternalDistractionRecorded <<Event>> {
+    + DistractionId: Guid
+    + SessionId: Guid
+    + Nature: string
+    + Trigger: string
+    + ImpactLevel: int
+    + Timestamp: DateTime
+}
+
+class ExternalDistractionRecorded <<Event>> {
+    + DistractionId: Guid
+    + SessionId: Guid
+    + Source: string
+    + Preventable: bool
+    + ImpactLevel: int
+    + Timestamp: DateTime
+}
+
+class DistractionResisted <<Event>> {
+    + ResistanceId: Guid
+    + SessionId: Guid
+    + DistractionTypeResisted: string
+    + ResistanceStrategy: string
+    + Timestamp: DateTime
+}
+
+class DistractionPatternIdentified <<Event>> {
+    + PatternId: Guid
+    + UserId: Guid
+    + PatternType: string
+    + PatternDescription: string
+    + Frequency: decimal
+    + Timestamp: DateTime
+}
+
+' Repositories
+interface IDistractionRepository {
+    + Add(distraction: Distraction): Guid
+    + GetById(id: Guid): Distraction
+    + GetBySession(sessionId: Guid): List<Distraction>
+    + GetByUser(userId: Guid, filter: DistractionFilter): List<Distraction>
+    + Update(distraction: Distraction)
+    + Delete(id: Guid)
+}
+
+interface IPatternRepository {
+    + Add(pattern: DistractionPattern): Guid
+    + GetActivePatterns(userId: Guid): List<DistractionPattern>
+    + Update(pattern: DistractionPattern)
+}
+
+interface IResistanceRepository {
+    + Add(resistance: DistractionResistance): Guid
+    + GetBySession(sessionId: Guid): List<DistractionResistance>
+    + GetByUser(userId: Guid): List<DistractionResistance>
+}
+
+' Relationships
+Session "1" *-- "0..*" Distraction : contains
+Session "1" *-- "0..*" DistractionResistance : tracks
+User "1" -- "0..*" Distraction : logs
+User "1" -- "0..*" DistractionPattern : has
+User "1" -- "0..*" DistractionResistance : records
+
+Distraction <|-- InternalDistraction : extends
+Distraction <|-- ExternalDistraction : extends
+
+Distraction --> DistractionType : has
+InternalDistraction --> InternalDistractionNature : has
+DistractionResistance --> ResistanceStrategy : uses
+Session --> SessionStatus : has
+DistractionPattern --> PatternType : has
+
+DistractionTrackingService --> IDistractionRepository : uses
+DistractionTrackingService --> IResistanceRepository : uses
+DistractionTrackingService --> PatternDetectionService : uses
+DistractionTrackingService --> FocusScoreCalculator : uses
+
+PatternDetectionService --> IDistractionRepository : uses
+PatternDetectionService --> IPatternRepository : uses
+
+DistractionTrackingService ..> DistractionLogged : publishes
+DistractionTrackingService ..> InternalDistractionRecorded : publishes
+DistractionTrackingService ..> ExternalDistractionRecorded : publishes
+DistractionTrackingService ..> DistractionResisted : publishes
+PatternDetectionService ..> DistractionPatternIdentified : publishes
+
+note right of Distraction
+  Base class for all distractions.
+  Impact on focus score:
+  penalty = impactLevel * 5 points
+end note
+
+note right of DistractionPattern
+  Automatically detected patterns
+  trigger mitigation suggestions
+  and user awareness alerts
+end note
+
+note right of FocusScoreCalculator
+  Score = BaseScore (100)
+  - DistractionPenalty
+  + ResistanceBonus
+  + DurationBonus
+end note
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml Dose Tracking Class Diagram
+
+class Dose <<Entity>> {
+    - DoseId: Guid
+    - MedicationId: Guid
+    - UserId: Guid
+    - ScheduledTime: DateTime
+    - ActualTime: DateTime?
+    - Status: DoseStatus
+    - DoseAmount: string
+    - Notes: string
+    --
+    + LogTaken()
+    + MarkMissed()
+    + CalculateDelay()
+}
+
+enum DoseStatus {
+    Scheduled
+    Taken
+    Missed
+    Delayed
+    Skipped
+}
+
+class LogDoseTakenCommand <<Command>> {
+    + DoseId: Guid
+    + ActualTime: DateTime
+    + Notes: string
+    --
+    + Validate()
+}
+
+class DoseTaken <<Domain Event>> {
+    + DoseId: Guid
+    + MedicationId: Guid
+    + ScheduledTime: DateTime
+    + ActualTime: DateTime
+    + UserId: Guid
+}
+
+class DoseMissed <<Domain Event>> {
+    + DoseId: Guid
+    + MedicationId: Guid
+    + ScheduledTime: DateTime
+    + UserId: Guid
+}
+
+class DoubleDoseAlert <<Domain Event>> {
+    + MedicationId: Guid
+    + LastDoseTime: DateTime
+    + AttemptTime: DateTime
+    + MinimumInterval: decimal
+}
+
+Dose ..> DoseStatus : uses
+LogDoseTakenCommand ..> Dose : modifies
+Dose ..> DoseTaken : raises
+Dose ..> DoseMissed : raises
+Dose ..> DoubleDoseAlert : raises
+
+@enduml

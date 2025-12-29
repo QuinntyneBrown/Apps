@@ -1,0 +1,99 @@
+@startuml Grocery Lists - Class Diagram
+
+!define ENTITY_COLOR #E3F2FD
+!define AGGREGATE_COLOR #C8E6C9
+!define EVENT_COLOR #F8BBD0
+
+package "Grocery List Aggregate" {
+    class GroceryList <<Aggregate Root>> AGGREGATE_COLOR {
+        - Id : Guid
+        - UserId : Guid
+        - MealPlanId : Guid?
+        - Name : string
+        - GeneratedDate : DateTime
+        - Status : GroceryListStatus
+        - Items : List<GroceryItem>
+        - TotalEstimatedCost : decimal?
+        - PurchaseDate : DateTime?
+        --
+        + GenerateFromMealPlan(mealPlan) : GroceryList
+        + AddItem(name, quantity, unit, category) : void
+        + RemoveItem(itemId) : void
+        + MarkItemPurchased(itemId, isPurchased) : void
+        + Complete() : void
+        + GetItemsByCategory() : Dictionary<string, List<GroceryItem>>
+        + CalculateTotalCost() : decimal
+        --
+        Events:
+        + GroceryListGenerated
+        + GroceryItemPurchased
+    }
+
+    class GroceryItem <<Entity>> ENTITY_COLOR {
+        - Id : Guid
+        - GroceryListId : Guid
+        - IngredientId : Guid?
+        - Name : string
+        - Quantity : decimal
+        - Unit : string
+        - Category : string
+        - IsPurchased : bool
+        - EstimatedPrice : decimal?
+        - Notes : string?
+        - Priority : int
+        --
+        + MarkPurchased(price) : void
+        + UpdateQuantity(quantity) : void
+    }
+
+    GroceryList "1" *-- "*" GroceryItem
+}
+
+enum GroceryListStatus {
+    Active
+    Completed
+    Archived
+}
+
+enum StoreCategory {
+    Produce
+    MeatAndSeafood
+    DairyAndEggs
+    Bakery
+    Pantry
+    Frozen
+    Beverages
+    Other
+}
+
+package "Domain Events" {
+    class GroceryListGenerated EVENT_COLOR {
+        + GroceryListId : Guid
+        + UserId : Guid
+        + MealPlanId : Guid
+        + ItemCount : int
+    }
+
+    class GroceryItemPurchased EVENT_COLOR {
+        + GroceryItemId : Guid
+        + GroceryListId : Guid
+        + ItemName : string
+        + Quantity : decimal
+        + Unit : string
+    }
+}
+
+package "Services" {
+    interface IGroceryListService {
+        + GenerateFromMealPlanAsync(command) : Task<GroceryListDto>
+        + AddItemAsync(command) : Task<GroceryItemDto>
+        + MarkItemPurchasedAsync(command) : Task
+        + CompleteListAsync(command) : Task
+    }
+
+    interface IIngredientConsolidator {
+        + ConsolidateIngredients(ingredients) : List<GroceryItem>
+    }
+}
+
+@enduml

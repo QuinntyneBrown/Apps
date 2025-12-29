@@ -1,0 +1,48 @@
+@startuml Complete Milestone Sequence
+
+actor User
+participant "Web App" as Web
+participant "Milestone API" as API
+participant "Milestone Service" as Service
+participant "Photo Service" as Photos
+participant "Event Bus" as Events
+database "SQL Server" as DB
+
+User -> Web: Mark milestone complete
+Web -> Web: Show completion form
+User -> Web: Add quality notes\nUpload photos
+Web -> Photos: Upload milestone photos
+Photos --> Web: Photo URLs
+
+Web -> API: POST /api/milestones/{id}/complete\n{completion data}
+
+activate API
+API -> Service: CompleteMilestone(command)
+
+activate Service
+Service -> Service: Validate milestone exists
+Service -> Service: Check project is active
+
+Service -> DB: UPDATE Milestones\nSET status=Completed
+DB --> Service: Updated
+
+Service -> Events: Publish(ProjectMilestoneReached)
+activate Events
+Events --> Service: Event published
+deactivate Events
+
+Service -> Service: Update project progress %
+Service -> DB: UPDATE Projects
+DB --> Service: Updated
+
+Service --> API: MilestoneDto
+deactivate Service
+
+API --> Web: 200 OK\n{milestone}
+deactivate API
+
+Web -> Web: Update progress bar
+Web -> Web: Show celebration animation
+Web --> User: Milestone completed!
+
+@enduml

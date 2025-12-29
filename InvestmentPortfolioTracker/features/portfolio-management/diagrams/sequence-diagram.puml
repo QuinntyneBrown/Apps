@@ -1,0 +1,54 @@
+@startuml Portfolio Management Sequence Diagram
+
+actor User
+participant "UI" as UI
+participant "Controller" as Controller
+participant "Handler" as Handler
+participant "Portfolio" as Portfolio
+participant "Repository" as Repo
+participant "EventBus" as Events
+
+== Create Portfolio ==
+User -> UI: Fill portfolio form
+UI -> Controller: POST /api/portfolios
+activate Controller
+Controller -> Handler: Handle(CreatePortfolioCommand)
+activate Handler
+Handler -> Portfolio: Create()
+activate Portfolio
+Portfolio -> Portfolio: Validate allocation = 100%
+Portfolio --> Handler: Portfolio created
+deactivate Portfolio
+Handler -> Repo: AddAsync(portfolio)
+Handler -> Events: Publish(PortfolioCreated)
+Handler --> Controller: Portfolio DTO
+deactivate Handler
+Controller --> UI: 201 Created
+deactivate Controller
+UI -> User: Show success
+
+== Rebalance Portfolio ==
+User -> UI: Click "Rebalance"
+UI -> Controller: POST /api/portfolios/{id}/rebalance
+activate Controller
+Controller -> Handler: Handle(RebalancePortfolioCommand)
+activate Handler
+Handler -> Repo: GetByIdAsync(portfolioId)
+Repo --> Handler: Portfolio
+Handler -> Portfolio: CalculateDrift()
+activate Portfolio
+Portfolio --> Handler: Drift percentages
+deactivate Portfolio
+Handler -> Portfolio: Rebalance()
+activate Portfolio
+Portfolio -> Portfolio: Generate trade orders
+Portfolio --> Handler: Trade orders
+deactivate Portfolio
+Handler -> Events: Publish(PortfolioRebalanced)
+Handler --> Controller: Rebalance result
+deactivate Handler
+Controller --> UI: 200 OK
+deactivate Controller
+UI -> User: Show rebalance summary
+
+@enduml

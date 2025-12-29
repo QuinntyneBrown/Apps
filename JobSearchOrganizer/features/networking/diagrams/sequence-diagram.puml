@@ -1,0 +1,35 @@
+@startuml Networking - Sequence Diagram
+
+title Referral Request Flow
+
+actor "Job Seeker" as seeker
+participant "UI" as ui
+participant "NetworkingController" as controller
+participant "NetworkingService" as service
+participant "ReferralRepository" as repo
+
+== Request Referral ==
+
+seeker -> ui: Select contact and job listing
+ui -> ui: Show referral request form
+seeker -> ui: Enter request message
+ui -> controller: POST /api/referrals
+controller -> service: RequestReferral(command)
+service -> repo: Create(referral)
+service --> controller: Referral created
+controller --> ui: 201 Created
+ui --> seeker: Referral requested successfully
+
+== Mark Referral Received ==
+
+seeker -> ui: Contact provided referral
+ui -> controller: PUT /api/referrals/{id}/receive
+controller -> service: MarkReferralReceived(id, details)
+service -> repo: GetById(id)
+service -> service: Update status to Provided
+service -> repo: Update(referral)
+service --> controller: Updated
+controller --> ui: 200 OK
+ui --> seeker: Referral marked as received
+
+@enduml

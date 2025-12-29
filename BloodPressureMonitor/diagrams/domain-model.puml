@@ -1,0 +1,269 @@
+@startuml Blood Pressure Monitor - Domain Model
+
+!define AGGREGATE_ROOT_COLOR #FFE6E6
+!define ENTITY_COLOR #E6F3FF
+!define VALUE_OBJECT_COLOR #E6FFE6
+
+skinparam class {
+    BackgroundColor<<AggregateRoot>> AGGREGATE_ROOT_COLOR
+    BackgroundColor<<Entity>> ENTITY_COLOR
+    BackgroundColor<<ValueObject>> VALUE_OBJECT_COLOR
+    BorderColor #333333
+    ArrowColor #666666
+}
+
+package "Reading Aggregate" {
+    class Reading <<AggregateRoot>> {
+        +ReadingId: Guid
+        +UserId: Guid
+        +Systolic: int
+        +Diastolic: int
+        +Pulse: int?
+        +MeasurementTime: DateTime
+        +ArmUsed: string
+        +IsDeleted: bool
+        +CreatedAt: DateTime
+        --
+        +UpdateReading()
+        +Delete()
+        +ValidateReading()
+    }
+
+    class MeasurementContext <<ValueObject>> {
+        +ContextType: string
+        +TimeSinceActivity: int?
+        +Posture: string
+        +ProtocolFollowed: bool
+    }
+
+    class MeasurementSession <<AggregateRoot>> {
+        +SessionId: Guid
+        +UserId: Guid
+        +SessionTime: DateTime
+        +SystolicVariance: decimal
+        +DiastolicVariance: decimal
+        --
+        +CalculateAverage()
+        +CalculateVariance()
+    }
+}
+
+package "Alert Aggregate" {
+    class Alert <<AggregateRoot>> {
+        +AlertId: Guid
+        +UserId: Guid
+        +ReadingId: Guid
+        +Type: AlertType
+        +Severity: AlertSeverity
+        +Title: string
+        +Message: string
+        +Acknowledged: bool
+        +CreatedAt: DateTime
+        --
+        +Acknowledge()
+    }
+
+    enum AlertType {
+        HighBloodPressure
+        LowBloodPressure
+        HypertensiveCrisis
+        IrregularHeartbeat
+    }
+
+    enum AlertSeverity {
+        Low
+        Medium
+        High
+        Critical
+    }
+
+    class AlertSettings <<ValueObject>> {
+        +EnableAlerts: bool
+        +HighBPThreshold: BPThreshold
+        +LowBPThreshold: BPThreshold
+        +NotificationChannels: List<string>
+    }
+}
+
+package "Trend Aggregate" {
+    class TrendAnalysis <<AggregateRoot>> {
+        +AnalysisId: Guid
+        +UserId: Guid
+        +Period: DateRange
+        +TrendDirection: TrendDirection
+        +ConfidenceLevel: double
+        +AnalyzedAt: DateTime
+        --
+        +CalculateTrend()
+    }
+
+    enum TrendDirection {
+        Rising
+        Lowering
+        Stable
+        Volatile
+    }
+
+    class BPAverages <<ValueObject>> {
+        +Systolic: double
+        +Diastolic: double
+        +Pulse: double
+    }
+}
+
+package "Goal Aggregate" {
+    class BPGoal <<AggregateRoot>> {
+        +GoalId: Guid
+        +UserId: Guid
+        +TargetRange: BPRange
+        +Deadline: DateTime
+        +Status: GoalStatus
+        +AchievedDate: DateTime?
+        +CreatedAt: DateTime
+        --
+        +IsReadingInRange()
+        +MarkAsAchieved()
+    }
+
+    enum GoalStatus {
+        Active
+        Achieved
+        Expired
+        Archived
+    }
+
+    class BPRange <<ValueObject>> {
+        +SystolicMin: int
+        +SystolicMax: int
+        +DiastolicMin: int
+        +DiastolicMax: int
+    }
+
+    class GoalProgress <<ValueObject>> {
+        +ReadingsInRange: int
+        +TotalReadings: int
+        +CurrentStreak: int
+        +PercentageAchieved: double
+    }
+}
+
+package "Medication Aggregate" {
+    class Medication <<AggregateRoot>> {
+        +MedicationId: Guid
+        +UserId: Guid
+        +Name: string
+        +Dosage: string
+        +Frequency: MedicationFrequency
+        +StartDate: DateTime
+        +EndDate: DateTime?
+        +IsActive: bool
+        --
+        +RecordDose()
+        +Discontinue()
+    }
+
+    class MedicationDose <<Entity>> {
+        +DoseId: Guid
+        +ScheduledTime: DateTime
+        +TakenAt: DateTime?
+        +WasTaken: bool
+        --
+        +MarkAsTaken()
+    }
+
+    enum MedicationFrequency {
+        OnceDaily
+        TwiceDaily
+        ThreeTimesDaily
+        AsNeeded
+        Custom
+    }
+}
+
+package "Lifestyle Aggregate" {
+    class LifestyleFactor <<AggregateRoot>> {
+        +FactorId: Guid
+        +UserId: Guid
+        +Type: FactorType
+        +Value: double
+        +Unit: string
+        +LogDate: DateTime
+        +Notes: string
+    }
+
+    enum FactorType {
+        Sodium
+        Exercise
+        Stress
+        Alcohol
+        Caffeine
+        Sleep
+    }
+
+    class FactorCorrelation <<ValueObject>> {
+        +Factor: FactorType
+        +CorrelationStrength: double
+        +BPImpact: double
+        +ConfidenceLevel: double
+    }
+}
+
+package "Risk Assessment Aggregate" {
+    class RiskAssessment <<AggregateRoot>> {
+        +AssessmentId: Guid
+        +UserId: Guid
+        +Level: RiskLevel
+        +RiskScore: double
+        +AssessedAt: DateTime
+        --
+        +CalculateRisk()
+    }
+
+    enum RiskLevel {
+        Low
+        Moderate
+        High
+        VeryHigh
+    }
+
+    class RiskFactor <<ValueObject>> {
+        +Factor: string
+        +Impact: string
+        +Score: double
+    }
+}
+
+package "Report Aggregate" {
+    class Report <<AggregateRoot>> {
+        +ReportId: Guid
+        +UserId: Guid
+        +Type: ReportType
+        +Period: DateRange
+        +FileUrl: string
+        +ExpiresAt: DateTime
+        +GeneratedAt: DateTime
+        --
+        +Generate()
+    }
+
+    enum ReportType {
+        Weekly
+        Monthly
+        Doctor
+        Custom
+    }
+}
+
+' Relationships
+Reading "1" *-- "1" MeasurementContext
+MeasurementSession "1" *-- "2..5" Reading
+Alert "1" --> "1" Reading : references
+Alert "1" *-- "1" AlertType
+Alert "1" *-- "1" AlertSeverity
+TrendAnalysis "1" *-- "1" BPAverages
+BPGoal "1" *-- "1" BPRange
+BPGoal "1" *-- "1" GoalProgress
+Medication "1" *-- "*" MedicationDose
+RiskAssessment "1" *-- "*" RiskFactor
+
+@enduml

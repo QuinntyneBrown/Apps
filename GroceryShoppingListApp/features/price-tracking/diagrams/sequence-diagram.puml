@@ -1,0 +1,64 @@
+@startuml Price Tracking - Sequence Diagram
+
+title Record Price and Detect Price Change Flow
+
+actor "User" as user
+participant "Frontend" as frontend
+participant "API" as api
+participant "Price\nTracking\nService" as service
+participant "Analytics\nEngine" as analytics
+participant "Price\nRepository" as repo
+participant "Alert\nRepository" as alertRepo
+participant "Event\nPublisher" as events
+
+== Record Price (When Item Purchased) ==
+
+user -> frontend : Mark item purchased\nwith actual price $4.25
+frontend -> api : POST /api/price-tracking/record\n{itemName, price, store}
+api -> service : recordPrice(priceData)
+
+service -> repo : findRecentPrices(itemName)
+repo --> service : Recent price records
+
+service -> analytics : calculateStatistics(records)
+analytics -> analytics : Calculate average, trend
+analytics --> service : PriceStatistics
+
+alt Price increased > 10%
+    service -> events : publish(PriceIncreaseDetected)
+    events -> alertRepo : findActiveAlerts(itemName)
+    alertRepo --> events : User alerts
+    events -> user : Send notification
+end
+
+service -> repo : save(priceRecord)
+repo --> service : Saved
+
+service -> events : publish(ItemPriceRecorded)
+events --> service : Event published
+
+service --> api : Success
+api --> frontend : 201 Created
+frontend -> user : Show price recorded
+
+== Daily Deal Detection (Background Job) ==
+
+system -> service : identifyDeals() [Daily CRON]
+
+service -> repo : getAllRecentPrices()
+repo --> service : Price records (last 90 days)
+
+service -> analytics : identifyDeals(records)
+analytics -> analytics : Find prices >15% below average
+analytics --> service : List<Deal>
+
+loop For each deal found
+    service -> events : publish(DealIdentified)
+    events -> alertRepo : findInterestedUsers(deal)
+    alertRepo --> events : User list
+    events -> user : Send deal notification
+end
+
+service --> system : Deals processed
+
+@enduml

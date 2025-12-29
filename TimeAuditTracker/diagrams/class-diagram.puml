@@ -1,0 +1,143 @@
+@startuml TimeAuditTracker Class Diagram
+
+' Core Entities
+class User {
+  +UUID id
+  +String email
+  +String name
+  +DateTime createdAt
+}
+
+class TimeEntry {
+  +UUID id
+  +UUID userId
+  +String activityType
+  +DateTime startTime
+  +DateTime endTime
+  +Integer duration
+  +String category
+  +String location
+  +Integer energyLevel
+  +Boolean isAutomatic
+  +Decimal confidence
+  +DateTime createdAt
+  +DateTime updatedAt
+  --
+  +calculateDuration()
+  +validate()
+}
+
+class Category {
+  +UUID id
+  +UUID userId
+  +String name
+  +String description
+  +String colorCode
+  +UUID parentCategoryId
+  +String icon
+  +Boolean isCustom
+  +Boolean isPredefined
+  +DateTime createdAt
+  --
+  +getHierarchy()
+  +validateColorCode()
+}
+
+class CategoryBudget {
+  +UUID id
+  +UUID userId
+  +UUID categoryId
+  +Decimal targetHours
+  +String period
+  +String rationale
+  +Boolean isActive
+  +DateTime createdAt
+  --
+  +checkExceeded()
+  +calculateUtilization()
+}
+
+class TimeGoal {
+  +UUID id
+  +UUID userId
+  +String description
+  +Object targetMetrics
+  +Object baseline
+  +DateTime deadline
+  +String status
+  +DateTime createdAt
+  --
+  +updateProgress()
+  +checkMilestones()
+}
+
+class DailyAnalysis {
+  +UUID id
+  +UUID userId
+  +Date date
+  +Integer totalTrackedTime
+  +Object categoryBreakdown
+  +Decimal productiveRatio
+  +Decimal unproductiveRatio
+  +DateTime generatedAt
+  --
+  +generate()
+  +calculateProductivity()
+}
+
+class WeeklyPattern {
+  +UUID id
+  +UUID userId
+  +String patternType
+  +Array daysInvolved
+  +Array activitiesInvolved
+  +Decimal consistencyScore
+  +DateTime identifiedAt
+  --
+  +detect()
+  +calculateConsistency()
+}
+
+class TimeBlock {
+  +UUID id
+  +UUID userId
+  +String activity
+  +String recurrencePattern
+  +Integer duration
+  +String protectionLevel
+  +DateTime createdAt
+  --
+  +generateOccurrences()
+  +validateRecurrence()
+}
+
+class Integration {
+  +UUID id
+  +UUID userId
+  +String provider
+  +String type
+  +Object credentials
+  +DateTime lastSync
+  +Boolean isActive
+  --
+  +sync()
+  +authenticate()
+}
+
+' Relationships
+User "1" -- "0..*" TimeEntry : logs
+User "1" -- "0..*" Category : creates
+User "1" -- "0..*" CategoryBudget : sets
+User "1" -- "0..*" TimeGoal : defines
+User "1" -- "0..*" DailyAnalysis : receives
+User "1" -- "0..*" TimeBlock : schedules
+User "1" -- "0..*" Integration : connects
+
+TimeEntry "*" -- "1" Category : belongs to
+CategoryBudget "*" -- "1" Category : applies to
+Category "0..1" -- "0..*" Category : parent/child
+
+TimeEntry "0..*" -- "0..*" TimeGoal : contributes to
+DailyAnalysis "1" -- "0..*" WeeklyPattern : generates
+
+@enduml

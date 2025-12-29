@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completion Tracking - HabitFormationApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .date-display {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .progress-card {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .progress-card h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.3);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            border-radius: 6px;
+            width: 67%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .section-header {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .section-header h3 {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .habits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .habit-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .habit-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .habit-item.completed {
+            opacity: 0.85;
+        }
+
+        .habit-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .habit-content {
+            flex: 1;
+        }
+
+        .habit-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .habit-title h4 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .habit-meta {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .completion-time {
+            color: #4caf50;
+            font-weight: 600;
+        }
+
+        .completion-notes {
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .btn-complete {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-complete:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .check-icon {
+            background: #4caf50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .menu-btn {
+            background: #f5f5f5;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #323232;
+            color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .btn-undo {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-undo:hover {
+            background: #f57c00;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .late-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff3e0;
+            color: #e65100;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Today's Progress</h1>
+            <div class="date-display">Saturday, December 28, 2025</div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="progress-card">
+            <h2>🎯 4 of 6 completed</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="progress-text">Keep it up! 2 more to go!</p>
+        </div>
+
+        <!-- Morning Section -->
+        <div class="section-header">
+            <h3>Morning (3)</h3>
+        </div>
+
+        <div class="habits-list">
+            <!-- Completed Habit 1 -->
+            <div class="habit-item completed">
+                <div class="habit-icon">🏃</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Morning Run</h4>
+                        <span class="status-badge completed">Completed</span>
+                    </div>
+                    <div class="habit-meta">
+                        <div class="completion-time">6:15 AM</div>
+                        <div class="completion-notes">Great run! Felt energized</div>
+                    </div>
+                </div>
+                <div class="check-icon">✓</div>
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <!-- Completed Habit 2 -->
+            <div class="habit-item completed">
+                <div class="habit-icon">🧘</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Meditation</h4>
+                        <span class="status-badge completed">Completed</span>
+                    </div>
+                    <div class="habit-meta">
+                        <div class="completion-time">7:05 AM • 10 minutes</div>
+                    </div>
+                </div>
+                <div class="check-icon">✓</div>
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <!-- Pending Habit -->
+            <div class="habit-item">
+                <div class="habit-icon">🍎</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Healthy Breakfast</h4>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+                    <div class="habit-meta">
+                        Scheduled: 7:30 AM
+                    </div>
+                </div>
+                <button class="btn-complete" onclick="completeHabit('Healthy Breakfast')">✓ Complete</button>
+                <button class="menu-btn">⋮</button>
+            </div>
+        </div>
+
+        <!-- Evening Section -->
+        <div class="section-header">
+            <h3>Evening (3)</h3>
+        </div>
+
+        <div class="habits-list">
+            <!-- Completed Habit 3 -->
+            <div class="habit-item completed">
+                <div class="habit-icon">💻</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Code Practice</h4>
+                        <span class="status-badge completed">Completed</span>
+                    </div>
+                    <div class="habit-meta">
+                        <div class="completion-time">8:20 PM • 45 minutes</div>
+                        <div class="completion-notes">Worked on React project</div>
+                    </div>
+                </div>
+                <div class="check-icon">✓</div>
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <!-- Pending Habit 2 -->
+            <div class="habit-item">
+                <div class="habit-icon">📚</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Read 30 Minutes</h4>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+                    <div class="habit-meta">
+                        Scheduled: Evening
+                    </div>
+                </div>
+                <button class="btn-complete" onclick="openDetailModal()">✓ Complete</button>
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <!-- Pending Habit 3 -->
+            <div class="habit-item">
+                <div class="habit-icon">💧</div>
+                <div class="habit-content">
+                    <div class="habit-title">
+                        <h4>Drink 8 Glasses of Water</h4>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+                    <div class="habit-meta">
+                        Scheduled: Throughout day
+                    </div>
+                </div>
+                <button class="btn-complete" onclick="completeHabit('Drink Water')">✓ Complete</button>
+                <button class="menu-btn">⋮</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div class="toast" id="successToast">
+        <div class="toast-content">
+            <div class="toast-title">Habit completed! 🎉</div>
+            <div class="toast-message">Great job! You're on a 15-day streak! 🔥</div>
+        </div>
+        <button class="btn-undo">Undo</button>
+        <button class="btn-close" onclick="closeToast()">×</button>
+    </div>
+
+    <!-- Completion Details Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Log Completion</h2>
+                <button class="btn-close" onclick="closeDetailModal()">×</button>
+            </div>
+
+            <form>
+                <div class="form-group">
+                    <label>Habit: 📚 Read 30 Minutes</label>
+                </div>
+
+                <div class="form-group">
+                    <label>Completion Time</label>
+                    <input type="time" value="20:30">
+                </div>
+
+                <div class="form-group">
+                    <label>Duration (minutes)</label>
+                    <input type="number" value="30" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label>How did it go?</label>
+                    <textarea placeholder="Add notes about your completion..."></textarea>
+                    <div class="char-counter">0/200</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Location (optional)</label>
+                    <input type="text" placeholder="e.g., Home, Library">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeDetailModal()">Cancel</button>
+                    <button type="button" class="btn-primary" onclick="submitCompletion()">Log Completion</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function completeHabit(habitName) {
+            const toast = document.getElementById('successToast');
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        function closeToast() {
+            document.getElementById('successToast').classList.remove('show');
+        }
+
+        function openDetailModal() {
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function submitCompletion() {
+            closeDetailModal();
+            completeHabit('Reading');
+        }
+
+        // Close modal on outside click
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>

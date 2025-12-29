@@ -1,0 +1,79 @@
+@startuml Golf Score Tracker - System Architecture
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+
+title Golf Score Tracker - System Architecture
+
+package "Frontend" {
+    [Mobile App\n(React Native)] as Mobile
+    [Web App\n(React)] as Web
+}
+
+package "API Layer" {
+    [API Gateway] as API
+    [Auth Service] as Auth
+}
+
+package "Application Services" {
+    [Round Service] as RoundSvc
+    [Handicap Service] as HandicapSvc
+    [Statistics Service] as StatsSvc
+    [Course Service] as CourseSvc
+}
+
+package "Domain" {
+    [Round Aggregate] as RoundAgg
+    [Handicap Aggregate] as HandicapAgg
+    [Goal Aggregate] as GoalAgg
+    [Domain Event Bus] as Events
+}
+
+database "SQL Server" as DB {
+    [Rounds]
+    [Hole Scores]
+    [Handicaps]
+    [Courses]
+}
+
+queue "Message Queue" as Queue
+
+package "Event Handlers" {
+    [Handicap Calculator] as HandicapCalc
+    [Stats Calculator] as StatsCalc
+    [Achievement Processor] as Achievements
+}
+
+package "External" {
+    [Weather API]
+    [GPS Service]
+    [Course Database]
+}
+
+Mobile --> API
+Web --> API
+API --> Auth
+API --> RoundSvc
+API --> HandicapSvc
+API --> StatsSvc
+
+RoundSvc --> RoundAgg
+HandicapSvc --> HandicapAgg
+
+RoundAgg --> Events
+HandicapAgg --> Events
+
+Events --> Queue
+Queue --> HandicapCalc
+Queue --> StatsCalc
+Queue --> Achievements
+
+RoundSvc --> DB
+HandicapSvc --> DB
+StatsSvc --> DB
+
+RoundSvc --> [Weather API]
+RoundSvc --> [GPS Service]
+CourseSvc --> [Course Database]
+
+@enduml

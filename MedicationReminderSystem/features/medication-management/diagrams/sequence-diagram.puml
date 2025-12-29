@@ -1,0 +1,256 @@
+@startuml Medication Management Sequence Diagrams
+
+' Add Medication Flow
+title Add Medication and Set Schedule Flow
+
+actor User
+participant "UI" as UI
+participant "API Gateway" as API
+participant "Command Handler" as CMD
+participant "Medication" as MED
+participant "Event Bus" as EVT
+participant "Interaction Service" as INT
+participant "Repository" as REPO
+
+== Add Medication ==
+User -> UI: Click "Add Medication"
+UI -> UI: Display medication form
+User -> UI: Fill medication details
+User -> UI: Click "Save"
+
+UI -> API: POST /api/medications\n{name, dosage, form, startDate}
+activate API
+
+API -> CMD: AddMedicationCommand
+activate CMD
+
+CMD -> CMD: Validate command
+note right
+  - Validate required fields
+  - Check dosage format
+  - Verify start date
+end note
+
+CMD -> MED: Create medication aggregate
+activate MED
+
+MED -> MED: Validate business rules
+MED -> EVT: Raise MedicationAdded event
+MED --> CMD: MedicationId
+deactivate MED
+
+CMD -> REPO: Save(medication)
+activate REPO
+REPO --> CMD: Success
+deactivate REPO
+
+CMD --> API: MedicationId
+deactivate CMD
+
+API --> UI: 201 Created {medicationId}
+deactivate API
+
+== Check Drug Interactions ==
+UI -> API: GET /api/medications/interactions
+activate API
+
+API -> INT: CheckInteractions(userId)
+activate INT
+
+INT -> REPO: GetActiveMedications(userId)
+activate REPO
+REPO --> INT: List<Medication>
+deactivate REPO
+
+INT -> INT: Analyze medication combinations
+note right
+  - Check interaction database
+  - Determine severity
+  - Generate recommendations
+end note
+
+alt Interactions Found
+    INT -> EVT: Raise DrugInteractionDetected event
+    INT --> API: List<Interaction>
+    API --> UI: 200 OK {interactions}
+    UI -> UI: Display interaction warnings
+    UI --> User: Show warning dialog
+else No Interactions
+    INT --> API: Empty list
+    API --> UI: 200 OK {[]}
+    UI --> User: No interactions found
+end
+
+deactivate INT
+deactivate API
+
+== Set Dosing Schedule ==
+User -> UI: Click "Set Schedule"
+UI -> UI: Display schedule form
+User -> UI: Set frequency and times
+User -> UI: Click "Save Schedule"
+
+UI -> API: POST /api/medications/{id}/schedule\n{frequency, timesOfDay}
+activate API
+
+API -> CMD: SetMedicationScheduleCommand
+activate CMD
+
+CMD -> CMD: Validate schedule
+note right
+  - Validate times of day
+  - Check max doses
+  - Verify minimum interval
+end note
+
+CMD -> MED: SetSchedule(schedule)
+activate MED
+
+MED -> MED: Create MedicationSchedule
+MED -> EVT: Raise MedicationScheduleSet event
+MED --> CMD: ScheduleId
+deactivate MED
+
+CMD -> REPO: Update(medication)
+activate REPO
+REPO --> CMD: Success
+deactivate REPO
+
+CMD --> API: ScheduleId
+deactivate CMD
+
+API --> UI: 201 Created {scheduleId}
+deactivate API
+
+UI --> User: Success notification
+UI -> UI: Activate reminders
+
+@enduml
+
+@startuml Pause and Discontinue Medication Flows
+
+' Pause Medication Flow
+title Pause and Discontinue Medication Flows
+
+actor User
+participant "UI" as UI
+participant "API Gateway" as API
+participant "Command Handler" as CMD
+participant "Medication" as MED
+participant "Event Bus" as EVT
+participant "Reminder Service" as REM
+participant "Repository" as REPO
+
+== Pause Medication ==
+User -> UI: Click "Pause Medication"
+UI -> UI: Display pause dialog
+User -> UI: Enter pause reason\nSelect resume date
+User -> UI: Click "Confirm Pause"
+
+UI -> API: POST /api/medications/{id}/pause\n{reason, resumeDate}
+activate API
+
+API -> CMD: PauseMedicationCommand
+activate CMD
+
+CMD -> CMD: Validate command
+CMD -> REPO: GetById(medicationId)
+activate REPO
+REPO --> CMD: Medication
+deactivate REPO
+
+CMD -> MED: Pause(reason, resumeDate)
+activate MED
+
+MED -> MED: Validate can pause
+note right
+  - Must be active
+  - Must not already be paused
+end note
+
+MED -> MED: Set IsPaused = true
+MED -> EVT: Raise MedicationPaused event
+MED --> CMD: Success
+deactivate MED
+
+CMD -> REPO: Update(medication)
+activate REPO
+REPO --> CMD: Success
+deactivate REPO
+
+CMD --> API: Success
+deactivate CMD
+
+API --> UI: 200 OK
+deactivate API
+
+== Suspend Reminders ==
+EVT -> REM: MedicationPaused event
+activate REM
+
+REM -> REM: Suspend active reminders
+REM -> REM: Schedule resume reminder\n(if resumeDate provided)
+REM --> EVT: Reminders suspended
+deactivate REM
+
+UI --> User: Success notification
+UI -> UI: Update medication status
+
+== Discontinue Medication ==
+User -> UI: Click "Discontinue Medication"
+UI -> UI: Display discontinue dialog\nwith warnings
+User -> UI: Enter discontinuation reason
+User -> UI: Confirm discontinuation
+User -> UI: Click "Confirm"
+
+UI -> API: POST /api/medications/{id}/discontinue\n{reason, date}
+activate API
+
+API -> CMD: DiscontinueMedicationCommand
+activate CMD
+
+CMD -> CMD: Validate command
+CMD -> REPO: GetById(medicationId)
+activate REPO
+REPO --> CMD: Medication
+deactivate REPO
+
+CMD -> MED: Discontinue(reason, date)
+activate MED
+
+MED -> MED: Validate can discontinue
+note right
+  - Must be active
+end note
+
+MED -> MED: Set IsActive = false
+MED -> MED: Calculate duration taken
+MED -> EVT: Raise MedicationDiscontinued event
+MED --> CMD: Success
+deactivate MED
+
+CMD -> REPO: Update(medication)
+activate REPO
+REPO --> CMD: Success
+deactivate REPO
+
+CMD --> API: Success
+deactivate CMD
+
+API --> UI: 200 OK
+deactivate API
+
+== Cancel All Reminders ==
+EVT -> REM: MedicationDiscontinued event
+activate REM
+
+REM -> REM: Cancel all active reminders
+REM -> REM: Archive reminder history
+REM --> EVT: Reminders cancelled
+deactivate REM
+
+UI --> User: Success notification
+UI -> UI: Move to discontinued list
+UI -> UI: Preserve historical data
+
+@enduml

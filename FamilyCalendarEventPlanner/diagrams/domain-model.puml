@@ -1,0 +1,161 @@
+@startuml Family Calendar Event Planner - Domain Model
+
+skinparam class {
+    BackgroundColor<<AggregateRoot>> #FFE6E6
+    BackgroundColor<<Entity>> #E6F3FF
+    BackgroundColor<<ValueObject>> #E6FFE6
+}
+
+package "Event Aggregate" {
+    class CalendarEvent <<AggregateRoot>> {
+        +EventId: Guid
+        +FamilyId: Guid
+        +CreatorId: Guid
+        +Title: string
+        +Description: string
+        +StartTime: DateTime
+        +EndTime: DateTime
+        +Location: string
+        +EventType: EventType
+        +RecurrencePattern: RecurrencePattern
+        +Status: EventStatus
+        --
+        +Modify()
+        +Cancel()
+        +AddAttendee()
+    }
+
+    enum EventType {
+        Appointment
+        FamilyDinner
+        Sports
+        School
+        Vacation
+        Birthday
+        Other
+    }
+
+    enum EventStatus {
+        Scheduled
+        Cancelled
+        Completed
+    }
+
+    class RecurrencePattern <<ValueObject>> {
+        +Frequency: RecurrenceFrequency
+        +Interval: int
+        +EndDate: DateTime?
+        +DaysOfWeek: List<DayOfWeek>
+    }
+
+    enum RecurrenceFrequency {
+        None
+        Daily
+        Weekly
+        Monthly
+        Yearly
+    }
+}
+
+package "Attendee Aggregate" {
+    class EventAttendee <<Entity>> {
+        +AttendeeId: Guid
+        +EventId: Guid
+        +FamilyMemberId: Guid
+        +RSVPStatus: RSVPStatus
+        +ResponseTime: DateTime?
+        +Notes: string
+        --
+        +Respond()
+    }
+
+    enum RSVPStatus {
+        Pending
+        Accepted
+        Declined
+        Tentative
+    }
+}
+
+package "Family Member Aggregate" {
+    class FamilyMember <<AggregateRoot>> {
+        +MemberId: Guid
+        +FamilyId: Guid
+        +Name: string
+        +Email: string
+        +Color: string
+        +Role: MemberRole
+        --
+        +BlockAvailability()
+        +CheckAvailability()
+    }
+
+    enum MemberRole {
+        Admin
+        Member
+        ViewOnly
+    }
+
+    class AvailabilityBlock <<Entity>> {
+        +BlockId: Guid
+        +MemberId: Guid
+        +StartTime: DateTime
+        +EndTime: DateTime
+        +BlockType: BlockType
+        +Reason: string
+    }
+
+    enum BlockType {
+        Busy
+        OutOfOffice
+        Personal
+    }
+}
+
+package "Conflict Aggregate" {
+    class ScheduleConflict <<AggregateRoot>> {
+        +ConflictId: Guid
+        +ConflictingEventIds: List<Guid>
+        +AffectedMemberIds: List<Guid>
+        +ConflictSeverity: ConflictSeverity
+        +IsResolved: bool
+        +ResolvedAt: DateTime?
+        --
+        +Resolve()
+    }
+
+    enum ConflictSeverity {
+        Low
+        Medium
+        High
+        Critical
+    }
+}
+
+package "Reminder Aggregate" {
+    class EventReminder <<AggregateRoot>> {
+        +ReminderId: Guid
+        +EventId: Guid
+        +RecipientId: Guid
+        +ReminderTime: DateTime
+        +DeliveryChannel: NotificationChannel
+        +Sent: bool
+        --
+        +Send()
+    }
+
+    enum NotificationChannel {
+        Email
+        Push
+        SMS
+    }
+}
+
+' Relationships
+CalendarEvent "1" *-- "*" EventAttendee : has
+CalendarEvent "1" *-- "1" RecurrencePattern
+FamilyMember "1" *-- "*" AvailabilityBlock : has
+ScheduleConflict "*" -- "*" CalendarEvent : identifies
+CalendarEvent "1" -- "*" EventReminder : triggers
+
+@enduml

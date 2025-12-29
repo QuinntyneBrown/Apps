@@ -1,0 +1,279 @@
+@startuml Applications - Class Diagram
+
+!define AGGREGATE_COLOR #FFE6CC
+!define ENTITY_COLOR #E1F5FE
+!define VALUE_OBJECT_COLOR #F3E5F5
+!define SERVICE_COLOR #E8F5E9
+!define EVENT_COLOR #FFF9C4
+
+' Aggregates
+class Application <<Aggregate Root>> AGGREGATE_COLOR {
+  - Id: Guid
+  - UserId: Guid
+  - JobListingId: Guid
+  - Status: ApplicationStatus
+  - StartedAt: DateTime
+  - SubmittedAt: DateTime?
+  - TargetSubmissionDate: DateTime?
+  - SubmissionMethod: string?
+  - ConfirmationNumber: string?
+  - DocumentsSubmitted: List<string>
+  - CoverLetterUsed: bool
+  - CurrentStage: string?
+  - RejectedAt: DateTime?
+  - RejectionReason: string?
+  - Feedback: string?
+  - EligibleForReapplication: bool
+  - ReapplicationDate: DateTime?
+  - WithdrawnAt: DateTime?
+  - WithdrawalReason: string?
+  - Notes: string?
+  - StatusHistory: List<ApplicationStatusHistory>
+  - CreatedAt: DateTime
+  - UpdatedAt: DateTime
+  --
+  + Start(): void
+  + Submit(method, confirmation, documents): void
+  + UpdateStatus(status, updatedBy, notes, nextSteps): void
+  + Reject(reason, feedback, eligible, reapplyDate): void
+  + Withdraw(reason): void
+  + AddDocument(documentName): void
+  + AddNote(note): void
+  + CanSubmit(): bool
+  + CanUpdateStatus(newStatus): bool
+  + CanWithdraw(): bool
+  + IsValidStatusTransition(newStatus): bool
+}
+
+' Value Objects
+class ApplicationStatusHistory <<Value Object>> VALUE_OBJECT_COLOR {
+  + Status: string
+  + Timestamp: DateTime
+  + UpdatedBy: string?
+  + Notes: string?
+  + NextSteps: string?
+  --
+  + Format(): string
+}
+
+' Enums
+enum ApplicationStatus {
+  Draft
+  Submitted
+  UnderReview
+  PhoneScreen
+  TechnicalAssessment
+  Interviewing
+  BackgroundCheck
+  OfferExtended
+  Rejected
+  Withdrawn
+}
+
+enum SubmissionMethod {
+  OnlinePortal
+  Email
+  InPerson
+  Recruiter
+  Referral
+}
+
+' Domain Events
+class ApplicationStarted <<Domain Event>> EVENT_COLOR {
+  + ApplicationId: Guid
+  + UserId: Guid
+  + JobListingId: Guid
+  + StartedAt: DateTime
+  + TargetSubmissionDate: DateTime?
+  + Notes: string?
+  + OccurredAt: DateTime
+}
+
+class ApplicationSubmitted <<Domain Event>> EVENT_COLOR {
+  + ApplicationId: Guid
+  + UserId: Guid
+  + JobListingId: Guid
+  + SubmittedAt: DateTime
+  + SubmissionMethod: string
+  + ConfirmationNumber: string?
+  + DocumentsSubmitted: string[]
+  + CoverLetterUsed: bool
+  + Notes: string?
+  + OccurredAt: DateTime
+}
+
+class ApplicationStatusUpdated <<Domain Event>> EVENT_COLOR {
+  + ApplicationId: Guid
+  + UserId: Guid
+  + PreviousStatus: string
+  + NewStatus: string
+  + UpdatedAt: DateTime
+  + UpdatedBy: string?
+  + Notes: string?
+  + NextSteps: string?
+  + OccurredAt: DateTime
+}
+
+class ApplicationRejected <<Domain Event>> EVENT_COLOR {
+  + ApplicationId: Guid
+  + UserId: Guid
+  + RejectedAt: DateTime
+  + RejectionReason: string?
+  + Feedback: string?
+  + EligibleForReapplication: bool
+  + ReapplicationDate: DateTime?
+  + Notes: string?
+  + OccurredAt: DateTime
+}
+
+class ApplicationWithdrawn <<Domain Event>> EVENT_COLOR {
+  + ApplicationId: Guid
+  + UserId: Guid
+  + WithdrawnAt: DateTime
+  + Reason: string
+  + Notes: string?
+  + OccurredAt: DateTime
+}
+
+' Services
+class ApplicationService <<Service>> SERVICE_COLOR {
+  - repository: IApplicationRepository
+  - jobListingRepository: IJobListingRepository
+  - eventPublisher: IEventPublisher
+  - userContext: IUserContext
+  --
+  + StartApplication(command): Application
+  + SubmitApplication(applicationId, command): void
+  + UpdateStatus(applicationId, command): void
+  + RejectApplication(applicationId, command): void
+  + WithdrawApplication(applicationId, reason): void
+  + GetApplications(filters): PagedResult<Application>
+  + GetApplicationById(id): Application
+  + UpdateApplication(id, updates): void
+  + DeleteApplication(id): void
+  + GetStatistics(): ApplicationStats
+  + GetByJobListing(jobListingId): List<Application>
+}
+
+class ApplicationRepository <<Repository>> SERVICE_COLOR {
+  - dbContext: DbContext
+  --
+  + GetById(id): Application
+  + GetByUserId(userId, filters): PagedResult<Application>
+  + GetByJobListingId(jobListingId): List<Application>
+  + Add(application): void
+  + Update(application): void
+  + Delete(id): void
+  + GetByStatus(userId, status): List<Application>
+  + GetStatistics(userId): ApplicationStats
+}
+
+' DTOs
+class ApplicationStats VALUE_OBJECT_COLOR {
+  + Total: int
+  + Draft: int
+  + Submitted: int
+  + UnderReview: int
+  + Interviewing: int
+  + Rejected: int
+  + Withdrawn: int
+  + AverageTimeToSubmit: TimeSpan
+  + SuccessRate: double
+  + MostCommonRejectionReason: string
+}
+
+class PagedResult<T> VALUE_OBJECT_COLOR {
+  + Items: List<T>
+  + TotalCount: int
+  + PageSize: int
+  + PageNumber: int
+  + TotalPages: int
+  --
+  + HasNextPage(): bool
+  + HasPreviousPage(): bool
+}
+
+' Commands
+class StartApplicationCommand {
+  + JobListingId: Guid
+  + TargetSubmissionDate: DateTime?
+  + Notes: string?
+}
+
+class SubmitApplicationCommand {
+  + ApplicationId: Guid
+  + SubmissionMethod: string
+  + ConfirmationNumber: string?
+  + DocumentsSubmitted: string[]
+  + CoverLetterUsed: bool
+  + Notes: string?
+}
+
+class UpdateApplicationStatusCommand {
+  + ApplicationId: Guid
+  + Status: string
+  + UpdatedBy: string?
+  + Notes: string?
+  + NextSteps: string?
+}
+
+class RejectApplicationCommand {
+  + ApplicationId: Guid
+  + RejectionReason: string?
+  + Feedback: string?
+  + EligibleForReapplication: bool
+  + ReapplicationDate: DateTime?
+  + Notes: string?
+}
+
+class WithdrawApplicationCommand {
+  + ApplicationId: Guid
+  + Reason: string
+  + Notes: string?
+}
+
+' Relationships
+Application "1" *-- "*" ApplicationStatusHistory : contains
+Application ..> ApplicationStatus : uses
+Application ..> SubmissionMethod : uses
+
+ApplicationService --> ApplicationRepository : uses
+ApplicationService ..> ApplicationStarted : publishes
+ApplicationService ..> ApplicationSubmitted : publishes
+ApplicationService ..> ApplicationStatusUpdated : publishes
+ApplicationService ..> ApplicationRejected : publishes
+ApplicationService ..> ApplicationWithdrawn : publishes
+ApplicationService ..> StartApplicationCommand : handles
+ApplicationService ..> SubmitApplicationCommand : handles
+ApplicationService ..> UpdateApplicationStatusCommand : handles
+ApplicationService ..> RejectApplicationCommand : handles
+ApplicationService ..> WithdrawApplicationCommand : handles
+
+ApplicationRepository --> Application : manages
+ApplicationRepository ..> PagedResult : returns
+
+ApplicationStarted ..> Application : created from
+ApplicationSubmitted ..> Application : created from
+ApplicationStatusUpdated ..> Application : created from
+ApplicationRejected ..> Application : created from
+ApplicationWithdrawn ..> Application : created from
+
+note right of Application
+  Aggregate root for Application domain.
+  Enforces valid status transitions and
+  maintains complete status history.
+  Cannot update rejected/withdrawn apps.
+end note
+
+note right of ApplicationStatusHistory
+  Immutable value object tracking
+  each status change with metadata.
+end note
+
+note bottom of ApplicationService
+  Application service coordinating
+  application lifecycle and publishing
+  domain events for each state change.
+end note
+
+@enduml

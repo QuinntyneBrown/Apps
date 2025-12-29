@@ -1,0 +1,144 @@
+@startuml Fuel Economy Tracker - System Architecture
+
+!define RECTANGLE class
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Fuel Economy Tracker - System Architecture
+
+' Frontend Layer
+package "Frontend Layer" {
+    [React Web App] as WebApp
+    [Mobile App\n(React Native)] as MobileApp
+}
+
+' API Gateway
+package "API Layer" {
+    [API Gateway] as APIGateway
+    [Authentication\nService] as AuthService
+}
+
+' Application Services
+package "Application Services" {
+    [Fuel Purchase\nService] as FuelService
+    [Economy\nCalculation Service] as EconomyService
+    [Trip Tracking\nService] as TripService
+    [Cost Analysis\nService] as CostService
+    [Reporting\nService] as ReportService
+    [Notification\nService] as NotificationService
+}
+
+' Domain Layer
+package "Domain Layer" {
+    [Fuel Purchase\nAggregate] as FuelAggregate
+    [Vehicle\nAggregate] as VehicleAggregate
+    [Trip\nAggregate] as TripAggregate
+    [Budget\nAggregate] as BudgetAggregate
+    [Domain Event\nBus] as EventBus
+}
+
+' Infrastructure
+package "Infrastructure" {
+    database "SQL Server" as Database {
+        [Fuel Purchases]
+        [Vehicles]
+        [Trips]
+        [Economy Calculations]
+    }
+
+    queue "Event Queue\n(RabbitMQ/Azure Service Bus)" as MessageQueue
+
+    package "External APIs" as ExternalAPIs {
+        [Weather API]
+        [Fuel Price API]
+        [Mapping/GPS API]
+    }
+
+    [Blob Storage] as BlobStorage
+    [Cache\n(Redis)] as Cache
+}
+
+' Event Handlers
+package "Event Handlers" {
+    [MPG Calculator\nHandler] as MPGHandler
+    [Budget Monitor\nHandler] as BudgetHandler
+    [Alert Generator\nHandler] as AlertHandler
+    [Report Generator\nHandler] as ReportHandler
+}
+
+' Relationships - Frontend to API
+WebApp --> APIGateway : HTTPS/REST
+MobileApp --> APIGateway : HTTPS/REST
+
+' API Gateway to Services
+APIGateway --> AuthService
+APIGateway --> FuelService
+APIGateway --> EconomyService
+APIGateway --> TripService
+APIGateway --> CostService
+APIGateway --> ReportService
+
+' Services to Domain
+FuelService --> FuelAggregate
+FuelService --> VehicleAggregate
+EconomyService --> FuelAggregate
+TripService --> TripAggregate
+CostService --> BudgetAggregate
+
+' Domain to Event Bus
+FuelAggregate --> EventBus : Publish Events
+VehicleAggregate --> EventBus : Publish Events
+TripAggregate --> EventBus : Publish Events
+BudgetAggregate --> EventBus : Publish Events
+
+' Event Bus to Message Queue
+EventBus --> MessageQueue : Publish
+
+' Event Handlers
+MessageQueue --> MPGHandler : Subscribe
+MessageQueue --> BudgetHandler : Subscribe
+MessageQueue --> AlertHandler : Subscribe
+MessageQueue --> ReportHandler : Subscribe
+
+' Handlers to Services
+MPGHandler --> EconomyService
+BudgetHandler --> NotificationService
+AlertHandler --> NotificationService
+ReportHandler --> ReportService
+
+' Infrastructure connections
+FuelService --> Database : Read/Write
+EconomyService --> Database : Read/Write
+TripService --> Database : Read/Write
+CostService --> Database : Read/Write
+ReportService --> Database : Read
+FuelService --> Cache : Cache
+EconomyService --> Cache : Cache
+
+' External API connections
+TripService --> ExternalAPIs : Get Weather
+FuelService --> ExternalAPIs : Get Fuel Prices
+TripService --> ExternalAPIs : Get Routes/GPS
+
+' Storage
+ReportService --> BlobStorage : Store Reports
+
+note right of EventBus
+  Domain Events:
+  - FuelPurchased
+  - FuelEconomyCalculated
+  - TripCompleted
+  - BudgetThresholdReached
+  - PersonalBestMPGAchieved
+end note
+
+note left of Database
+  Optimized for:
+  - Time-series queries
+  - Aggregations
+  - Historical analysis
+end note
+
+@enduml

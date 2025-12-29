@@ -1,0 +1,344 @@
+@startuml Vaccination Management Sequence Diagram
+
+' Styling
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Vaccination Administration & Reminder Flow
+
+' Participants
+actor "Pet Owner" as Owner
+participant "Frontend\nApp" as UI
+participant "API\nGateway" as API
+participant "Vaccination\nService" as VaccSvc
+participant "Schedule\nService" as SchedSvc
+participant "Event\nBus" as EventBus
+participant "Notification\nService" as NotifSvc
+database "Database" as DB
+participant "Background\nScheduler" as Scheduler
+
+== Record Vaccination ==
+
+Owner -> UI : Fill vaccination form\n(vaccine details, date, etc.)
+activate UI
+
+UI -> UI : Validate form data
+UI -> API : POST /api/vaccinations\n{vaccinationData}
+activate API
+
+API -> VaccSvc : RecordVaccination(vaccination)
+activate VaccSvc
+
+VaccSvc -> VaccSvc : Validate business rules\n(date, batch number, etc.)
+
+VaccSvc -> DB : INSERT vaccination
+activate DB
+DB --> VaccSvc : Vaccination created
+deactivate DB
+
+VaccSvc -> VaccSvc : Create VaccinationAdministered event
+
+VaccSvc -> EventBus : Publish(VaccinationAdministered)
+activate EventBus
+note right
+  Event: VaccinationAdministered
+  {
+    VaccinationId,
+    PetId,
+    VaccineName,
+    NextDueDate,
+    ...
+  }
+end note
+
+VaccSvc --> API : Success(vaccinationId)
+deactivate VaccSvc
+
+API --> UI : 201 Created\n{vaccinationId}
+deactivate API
+
+UI --> Owner : Show success message\n"Vaccination recorded!"
+deactivate UI
+
+' Event Processing - Parallel
+EventBus -> SchedSvc : Handle(VaccinationAdministered)
+activate SchedSvc
+EventBus -> NotifSvc : Handle(VaccinationAdministered)
+activate NotifSvc
+deactivate EventBus
+
+' Create Next Schedule
+SchedSvc -> SchedSvc : Calculate next booster date\n(based on vaccine type)
+
+alt Next booster required
+    SchedSvc -> DB : INSERT vaccination_schedule\n(nextDueDate, reminderDate)
+    activate DB
+    DB --> SchedSvc : Schedule created
+    deactivate DB
+
+    SchedSvc -> SchedSvc : Calculate reminder date\n(dueDate - 14 days)
+end
+
+SchedSvc --> EventBus : Schedule created
+deactivate SchedSvc
+
+' Send Confirmation
+NotifSvc -> DB : Get owner details
+activate DB
+DB --> NotifSvc : Owner info & preferences
+deactivate DB
+
+NotifSvc -> NotifSvc : Check notification preferences
+
+alt Email enabled
+    NotifSvc -> NotifSvc : Send confirmation email
+end
+
+alt SMS enabled
+    NotifSvc -> NotifSvc : Send confirmation SMS
+end
+
+NotifSvc --> EventBus : Notification sent
+deactivate NotifSvc
+
+...Time passes - 2 weeks before next vaccination due date...
+
+== Check Due Vaccinations (Daily Background Job) ==
+
+Scheduler -> Scheduler : Daily job triggered (6:00 AM)
+activate Scheduler
+
+Scheduler -> SchedSvc : CheckDueVaccinations()
+activate SchedSvc
+
+SchedSvc -> DB : SELECT schedules\nWHERE dueDate\nBETWEEN NOW() AND NOW()+14 days\nAND isCompleted = false
+activate DB
+DB --> SchedSvc : Due vaccination schedules
+deactivate DB
+
+loop For each due schedule
+    SchedSvc -> SchedSvc : Calculate daysUntilDue
+
+    alt Due within 14 days
+        SchedSvc -> SchedSvc : Update priority\n(High if <14 days)
+
+        SchedSvc -> DB : UPDATE priority
+        activate DB
+        DB --> SchedSvc : Updated
+        deactivate DB
+
+        SchedSvc -> SchedSvc : Create VaccinationDue event
+
+        SchedSvc -> EventBus : Publish(VaccinationDue)
+        activate EventBus
+        note right
+          Event: VaccinationDue
+          {
+            ScheduleId,
+            PetId,
+            VaccineName,
+            DueDate,
+            DaysUntilDue,
+            Priority
+          }
+        end note
+        deactivate EventBus
+    end
+end
+
+SchedSvc --> Scheduler : Check complete
+deactivate SchedSvc
+
+Scheduler --> Scheduler : Job finished
+deactivate Scheduler
+
+== Process VaccinationDue Event ==
+
+EventBus -> NotifSvc : Handle(VaccinationDue)
+activate EventBus
+activate NotifSvc
+
+NotifSvc -> DB : Get pet and owner details
+activate DB
+DB --> NotifSvc : Pet & owner info
+deactivate DB
+
+NotifSvc -> NotifSvc : Check if reminder already sent today
+
+alt Reminder not sent today
+    NotifSvc -> NotifSvc : Check notification preferences
+
+    alt Email enabled
+        NotifSvc -> Owner : Send reminder email\n"Vaccination due in X days"
+    end
+
+    alt SMS enabled
+        NotifSvc -> Owner : Send reminder SMS
+    end
+
+    alt Push enabled
+        NotifSvc -> Owner : Send push notification
+    end
+
+    NotifSvc -> DB : Log notification sent
+    activate DB
+    deactivate DB
+end
+
+NotifSvc --> EventBus : Reminder sent
+deactivate NotifSvc
+deactivate EventBus
+
+Owner -> UI : Open app to view reminder
+activate Owner
+activate UI
+
+UI -> API : GET /api/vaccination-schedules/pet/{petId}
+activate API
+
+API -> SchedSvc : GetSchedule(petId)
+activate SchedSvc
+
+SchedSvc -> DB : SELECT schedules\nWHERE petId = {petId}
+activate DB
+DB --> SchedSvc : Schedules
+deactivate DB
+
+SchedSvc --> API : Schedule list
+deactivate SchedSvc
+
+API --> UI : 200 OK\n{schedules}
+deactivate API
+
+UI --> Owner : Display upcoming vaccinations\nwith due dates highlighted
+deactivate UI
+deactivate Owner
+
+...Vaccination date passes without being recorded...
+
+== Check Overdue Vaccinations ==
+
+Scheduler -> Scheduler : Daily job triggered (6:00 AM)
+activate Scheduler
+
+Scheduler -> SchedSvc : CheckOverdueVaccinations()
+activate SchedSvc
+
+SchedSvc -> DB : SELECT schedules\nWHERE dueDate < NOW()\nAND isCompleted = false
+activate DB
+DB --> SchedSvc : Overdue schedules
+deactivate DB
+
+loop For each overdue schedule
+    SchedSvc -> SchedSvc : Calculate daysOverdue
+
+    SchedSvc -> SchedSvc : Update priority to Critical
+
+    SchedSvc -> DB : UPDATE priority = Critical
+    activate DB
+    DB --> SchedSvc : Updated
+    deactivate DB
+
+    SchedSvc -> SchedSvc : Create VaccinationOverdue event
+
+    SchedSvc -> EventBus : Publish(VaccinationOverdue)
+    activate EventBus
+    note right
+      Event: VaccinationOverdue
+      {
+        ScheduleId,
+        PetId,
+        VaccineName,
+        DaysOverdue,
+        IsLegallyRequired,
+        Priority: Critical
+      }
+    end note
+    deactivate EventBus
+end
+
+SchedSvc --> Scheduler : Check complete
+deactivate SchedSvc
+deactivate Scheduler
+
+== Process VaccinationOverdue Event ==
+
+EventBus -> NotifSvc : Handle(VaccinationOverdue)
+activate EventBus
+activate NotifSvc
+
+NotifSvc -> DB : Get pet and owner details
+activate DB
+DB --> NotifSvc : Pet & owner info
+deactivate DB
+
+NotifSvc -> NotifSvc : Create urgent notification
+
+alt Legally required vaccine (e.g., Rabies)
+    NotifSvc -> Owner : Send URGENT email
+    NotifSvc -> Owner : Send URGENT SMS
+    NotifSvc -> Owner : Send push notification\n(bypasses quiet hours)
+    note right
+      "URGENT: Rabies vaccination
+      overdue by X days.
+      This is legally required!"
+    end note
+else Regular vaccine
+    NotifSvc -> Owner : Send overdue reminder\nvia preferred channels
+end
+
+NotifSvc -> DB : Log urgent notification
+activate DB
+deactivate DB
+
+NotifSvc --> EventBus : Alert sent
+deactivate NotifSvc
+deactivate EventBus
+
+Owner -> UI : Login to view alert
+activate Owner
+activate UI
+
+UI -> API : GET /api/vaccination-schedules/overdue
+activate API
+
+API -> SchedSvc : GetOverdueVaccinations(ownerId)
+activate SchedSvc
+
+SchedSvc -> DB : SELECT overdue schedules
+activate DB
+DB --> SchedSvc : Overdue list
+deactivate DB
+
+SchedSvc --> API : Overdue vaccinations
+deactivate SchedSvc
+
+API --> UI : 200 OK\n{overdueVaccinations}
+deactivate API
+
+UI --> Owner : Display OVERDUE ALERT banner\nwith action buttons
+note right
+  Red alert banner:
+  "URGENT: 2 vaccinations overdue"
+  [Schedule Appointment]
+  [Mark Complete]
+end note
+
+deactivate UI
+
+Owner -> UI : Click "Mark Complete"\n(after vet visit)
+activate UI
+
+UI -> Owner : Show vaccination form\n(pre-filled with vaccine name)
+
+' This loops back to the Record Vaccination flow
+note over Owner, UI
+  Flow continues with
+  "Record Vaccination"
+  sequence above
+end note
+
+deactivate UI
+deactivate Owner
+
+@enduml

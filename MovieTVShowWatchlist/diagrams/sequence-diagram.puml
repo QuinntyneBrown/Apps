@@ -1,0 +1,123 @@
+@startuml MovieTVShowWatchlist Sequence Diagram
+
+title Add Movie to Watchlist and Mark as Watched Flow
+
+actor User
+actor "System\nScheduler" as Scheduler
+participant "Frontend\nUI" as UI
+participant "API\nGateway" as API
+participant "Watchlist\nService" as WatchlistService
+participant "Content\nService" as ContentService
+participant "Viewing\nService" as ViewingService
+participant "Rating\nService" as RatingService
+participant "Event\nBus" as EventBus
+participant "Notification\nService" as NotificationService
+participant "Recommendation\nEngine" as RecommendationEngine
+participant "Database" as DB
+participant "External\nAPI (TMDB)" as TMDB
+
+== Add Movie to Watchlist ==
+
+User -> UI: Search for movie
+UI -> API: GET /api/content/search?q=Inception
+API -> TMDB: Search movie "Inception"
+TMDB --> API: Movie details
+API --> UI: Display search results
+UI --> User: Show movie results
+
+User -> UI: Click "Add to Watchlist"
+UI -> User: Show add to watchlist form
+
+User -> UI: Set priority, mood category
+UI -> API: POST /api/watchlist/movies\n{movieId, priority, mood}
+
+API -> ContentService: Get or create movie
+ContentService -> DB: SELECT Movie WHERE ExternalId=...
+alt Movie not exists
+  ContentService -> TMDB: Fetch full movie details
+  TMDB --> ContentService: Movie metadata
+  ContentService -> DB: INSERT Movie
+end
+ContentService --> API: Movie entity
+
+API -> WatchlistService: AddToWatchlist(movieId, userId, priority)
+WatchlistService -> DB: INSERT WatchlistItem
+WatchlistService -> EventBus: Publish MovieAddedToWatchlist event
+WatchlistService --> API: WatchlistItem created
+
+EventBus -> NotificationService: MovieAddedToWatchlist event
+NotificationService -> ContentService: Check availability
+ContentService -> TMDB: Get streaming availability
+TMDB --> ContentService: Availability data
+alt Content is available
+  NotificationService -> User: Push notification\n"Inception is available on Netflix!"
+end
+
+EventBus -> RecommendationEngine: MovieAddedToWatchlist event
+RecommendationEngine -> RecommendationEngine: Update user preferences
+RecommendationEngine -> DB: Update GenrePreferences
+RecommendationEngine -> DB: Queue similar content discovery
+
+API --> UI: Success response
+UI --> User: "Added to watchlist!"
+
+== Mark Movie as Watched ==
+
+User -> UI: Click "Mark as Watched"
+UI -> User: Show watched form
+
+User -> UI: Enter watch date, platform, rating
+UI -> API: POST /api/viewing/movies/{movieId}/watched\n{watchDate, platform, rating}
+
+API -> ViewingService: RecordMovieWatched(movieId, userId, details)
+ViewingService -> DB: INSERT ViewingRecord
+ViewingService -> EventBus: Publish MovieWatched event
+ViewingService --> API: ViewingRecord created
+
+EventBus -> WatchlistService: MovieWatched event
+WatchlistService -> DB: DELETE WatchlistItem\nWHERE MovieId={movieId}
+WatchlistService -> EventBus: Publish WatchlistItemRemoved event
+
+alt User provided rating
+  API -> RatingService: CreateRating(movieId, userId, ratingValue)
+  RatingService -> DB: INSERT Rating
+  RatingService -> EventBus: Publish MovieRated event
+
+  EventBus -> RecommendationEngine: MovieRated event
+  RecommendationEngine -> RecommendationEngine: Update taste profile
+  RecommendationEngine -> DB: Update GenrePreferences
+  RecommendationEngine -> DB: Generate new recommendations
+end
+
+EventBus -> ViewingService: Calculate statistics
+ViewingService -> DB: UPDATE ViewingStatistics
+ViewingService -> DB: UPDATE ViewingStreak
+
+alt Milestone achieved
+  ViewingService -> EventBus: Publish ViewingMilestoneAchieved event
+  EventBus -> NotificationService: ViewingMilestoneAchieved event
+  NotificationService -> User: "Congratulations! 100 movies watched!"
+end
+
+API --> UI: Success response with updated stats
+UI --> User: "Marked as watched!" + statistics update
+
+== System: Monitor Availability Changes (Background) ==
+
+Scheduler -> ContentService: CheckAvailabilityChanges()
+ContentService -> DB: SELECT WatchlistItems with platforms
+loop For each watchlisted content
+  ContentService -> TMDB: Get current availability
+  TMDB --> ContentService: Availability data
+
+  alt Availability changed
+    ContentService -> DB: UPDATE StreamingAvailability
+    ContentService -> EventBus: Publish ContentAvailabilityChanged event
+
+    EventBus -> NotificationService: ContentAvailabilityChanged event
+    NotificationService -> DB: Get users with this content in watchlist
+    NotificationService -> User: "The Dark Knight is now on HBO Max!"
+  end
+end
+
+@enduml

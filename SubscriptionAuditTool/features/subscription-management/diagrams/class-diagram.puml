@@ -1,0 +1,75 @@
+@startuml Subscription Management Class Diagram
+
+class Subscription <<Aggregate Root>> {
+  - subscriptionId: Guid
+  - userId: Guid
+  - serviceName: string
+  - cost: decimal
+  - billingFrequency: BillingFrequency
+  - startDate: DateTime
+  - nextRenewalDate: DateTime
+  - categoryId: Guid
+  - paymentMethodId: Guid
+  - status: SubscriptionStatus
+  - trialEndDate: DateTime?
+  - cancellationDeadline: DateTime?
+  - notes: string
+  --
+  + Cancel(reason): void
+  + Pause(resumeDate): void
+  + Reactivate(): void
+  + UpdateCost(newCost): void
+}
+
+enum BillingFrequency {
+  Monthly
+  Quarterly
+  Annual
+  Custom
+}
+
+enum SubscriptionStatus {
+  Active
+  Paused
+  Cancelled
+  Trial
+}
+
+class AddSubscriptionCommand {
+  + ServiceName: string
+  + Cost: decimal
+  + BillingFrequency: BillingFrequency
+  + StartDate: DateTime
+  + CategoryId: Guid
+}
+
+class CancelSubscriptionCommand {
+  + SubscriptionId: Guid
+  + CancellationReason: string
+}
+
+class SubscriptionAdded <<Domain Event>> {
+  + SubscriptionId: Guid
+  + ServiceName: string
+  + Cost: decimal
+  + BillingFrequency: string
+  + NextRenewalDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class SubscriptionCancelled <<Domain Event>> {
+  + SubscriptionId: Guid
+  + CancellationReason: string
+  + TotalAmountPaid: decimal
+  + SavingsFromCancellation: decimal
+  + OccurredAt: DateTime
+}
+
+Subscription *-- BillingFrequency
+Subscription *-- SubscriptionStatus
+AddSubscriptionCommand --> Subscription : creates
+CancelSubscriptionCommand --> Subscription : cancels
+Subscription ..> SubscriptionAdded : raises
+Subscription ..> SubscriptionCancelled : raises
+
+@enduml

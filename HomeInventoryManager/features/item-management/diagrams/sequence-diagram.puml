@@ -1,0 +1,108 @@
+@startuml Item Management Sequence Diagram
+
+actor User
+participant "UI" as UI
+participant "ItemController" as Controller
+participant "CommandHandler" as Handler
+participant "Item" as Item
+participant "Repository" as Repo
+participant "EventBus" as Events
+participant "NotificationService" as Notify
+
+== Add New Item ==
+User -> UI: Fill item form and submit
+UI -> Controller: POST /api/items
+activate Controller
+Controller -> Handler: Handle(AddItemCommand)
+activate Handler
+Handler -> Item: Create new Item()
+activate Item
+Item -> Item: Validate data
+Item --> Handler: Item created
+deactivate Item
+Handler -> Repo: AddAsync(item)
+activate Repo
+Repo --> Handler: Success
+deactivate Repo
+Handler -> Events: Publish(ItemAdded)
+activate Events
+Events -> Notify: Send confirmation
+Events --> Handler: Event published
+deactivate Events
+Handler --> Controller: Item DTO
+deactivate Handler
+Controller --> UI: 201 Created
+deactivate Controller
+UI -> User: Show success message
+
+== Update Item ==
+User -> UI: Edit item and save
+UI -> Controller: PUT /api/items/{id}
+activate Controller
+Controller -> Handler: Handle(UpdateItemCommand)
+activate Handler
+Handler -> Repo: GetByIdAsync(itemId)
+activate Repo
+Repo --> Handler: Item
+deactivate Repo
+Handler -> Item: UpdateDetails(updates)
+activate Item
+Item -> Item: Track changes
+Item --> Handler: Updated
+deactivate Item
+Handler -> Repo: UpdateAsync(item)
+activate Repo
+Repo --> Handler: Success
+deactivate Repo
+Handler -> Events: Publish(ItemUpdated)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+Handler --> Controller: Updated Item DTO
+deactivate Handler
+Controller --> UI: 200 OK
+deactivate Controller
+UI -> User: Show update confirmation
+
+== Relocate Item ==
+User -> UI: Select new location
+UI -> Controller: POST /api/items/{id}/relocate
+activate Controller
+Controller -> Handler: Handle(RelocateItemCommand)
+activate Handler
+Handler -> Repo: GetByIdAsync(itemId)
+activate Repo
+Repo --> Handler: Item
+deactivate Repo
+Handler -> Item: Relocate(newLocationId)
+activate Item
+Item -> Item: Update location
+Item --> Handler: Relocated
+deactivate Item
+Handler -> Repo: UpdateAsync(item)
+activate Repo
+Repo --> Handler: Success
+deactivate Repo
+Handler -> Events: Publish(ItemRelocated)
+activate Events
+Events --> Handler: Event published
+deactivate Events
+Handler --> Controller: Item DTO
+deactivate Handler
+Controller --> UI: 200 OK
+deactivate Controller
+UI -> User: Show relocation confirmation
+
+== Search Items ==
+User -> UI: Enter search query
+UI -> Controller: GET /api/items?search=query
+activate Controller
+Controller -> Repo: SearchAsync(query, filters)
+activate Repo
+Repo --> Controller: List<Item>
+deactivate Repo
+Controller --> UI: 200 OK with results
+deactivate Controller
+UI -> User: Display search results
+
+@enduml

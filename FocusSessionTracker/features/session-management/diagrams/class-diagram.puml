@@ -1,0 +1,136 @@
+@startuml Session Management Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "Domain" {
+    class Session {
+        +Guid Id
+        +Guid UserId
+        +SessionType Type
+        +int PlannedDuration
+        +int? ActualDuration
+        +DateTime StartTime
+        +DateTime? EndTime
+        +SessionStatus Status
+        +Guid? TaskId
+        +Guid? ProjectId
+        +int? QualityRating
+        +int? FocusScore
+        +string? AbandonReason
+        +string? ProgressMade
+        --
+        +Start(): void
+        +Pause(reason: string): void
+        +Resume(): void
+        +Complete(rating: int, progress: string): void
+        +Abandon(reason: string): void
+        +CalculateFocusScore(): int
+    }
+
+    class SessionPause {
+        +Guid Id
+        +Guid SessionId
+        +DateTime PauseTime
+        +DateTime? ResumeTime
+        +string? PauseReason
+        +int? Duration
+        --
+        +End(): void
+        +GetDuration(): int
+    }
+
+    enum SessionType {
+        Pomodoro
+        Short
+        Long
+        Custom
+    }
+
+    enum SessionStatus {
+        Active
+        Paused
+        Completed
+        Abandoned
+    }
+
+    Session "1" --> "*" SessionPause : has
+    Session --> SessionType
+    Session --> SessionStatus
+}
+
+package "Events" {
+    class FocusSessionStarted {
+        +Guid SessionId
+        +Guid UserId
+        +string SessionType
+        +int PlannedDuration
+        +Guid? TaskId
+        +DateTime Timestamp
+    }
+
+    class SessionCompleted {
+        +Guid SessionId
+        +int ActualDuration
+        +int QualityRating
+        +int FocusScore
+        +DateTime Timestamp
+    }
+
+    class SessionAbandoned {
+        +Guid SessionId
+        +int PlannedDuration
+        +int ActualDuration
+        +string? Reason
+        +DateTime Timestamp
+    }
+
+    class SessionPaused {
+        +Guid SessionId
+        +DateTime PauseTime
+        +string? Reason
+        +DateTime Timestamp
+    }
+
+    class SessionResumed {
+        +Guid SessionId
+        +DateTime ResumeTime
+        +int PauseDuration
+        +DateTime Timestamp
+    }
+}
+
+package "Application" {
+    class SessionService {
+        -ISessionRepository repository
+        -IEventPublisher eventPublisher
+        -ITimerService timerService
+        --
+        +StartSession(command: StartSessionCommand): Session
+        +PauseSession(sessionId: Guid, reason: string): void
+        +ResumeSession(sessionId: Guid): void
+        +CompleteSession(command: CompleteSessionCommand): void
+        +AbandonSession(sessionId: Guid, reason: string): void
+    }
+
+    interface ISessionRepository {
+        +GetById(id: Guid): Session
+        +GetActiveByUser(userId: Guid): Session
+        +Save(session: Session): void
+        +GetByDateRange(userId: Guid, start: DateTime, end: DateTime): List<Session>
+    }
+}
+
+SessionService --> Session
+SessionService --> ISessionRepository
+Session ..> FocusSessionStarted : publishes
+Session ..> SessionCompleted : publishes
+Session ..> SessionAbandoned : publishes
+Session ..> SessionPaused : publishes
+Session ..> SessionResumed : publishes
+
+@enduml

@@ -1,0 +1,229 @@
+@startuml Meal Planning - Sequence Diagram: Create and Activate Meal Plan
+
+actor User
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "MealPlanController" as Controller
+participant "CommandHandler" as Handler
+participant "MealPlanService" as Service
+participant "MealPlan\nAggregate" as Aggregate
+participant "Repository" as Repo
+participant "EventBus" as Events
+database "SQL Server" as DB
+
+== Create Meal Plan ==
+
+User -> UI: Click "Create Meal Plan"
+activate UI
+
+UI -> UI: Show create form
+User -> UI: Enter name, start/end dates
+User -> UI: Click "Save"
+
+UI -> UI: Validate form
+UI -> API: POST /api/meal-plans\n{name, startDate, endDate}
+activate API
+
+API -> Controller: CreateMealPlan(command)
+activate Controller
+
+Controller -> Handler: Handle(CreateMealPlanCommand)
+activate Handler
+
+Handler -> Handler: Validate command
+Handler -> Service: CreateMealPlanAsync(command)
+activate Service
+
+Service -> Aggregate: Create(userId, name, startDate, endDate)
+activate Aggregate
+
+Aggregate -> Aggregate: Validate business rules
+Aggregate -> Aggregate: Initialize properties
+Aggregate -> Aggregate: Set status = Draft
+Aggregate -> Aggregate: Raise MealPlanCreated event
+deactivate Aggregate
+
+Service -> Repo: AddAsync(mealPlan)
+activate Repo
+
+Repo -> DB: INSERT INTO MealPlans
+activate DB
+DB --> Repo: Success
+deactivate DB
+
+deactivate Repo
+
+Service -> Events: Publish(MealPlanCreated)
+activate Events
+Events -> Events: Dispatch to handlers
+deactivate Events
+
+Service --> Handler: MealPlanDto
+deactivate Service
+
+Handler --> Controller: MealPlanDto
+deactivate Handler
+
+Controller --> API: 201 Created + MealPlanDto
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Show success message
+UI -> UI: Navigate to meal plan details
+deactivate UI
+
+== Assign Meals to Plan ==
+
+User -> UI: Click on meal slot
+activate UI
+
+UI -> UI: Show recipe selector
+User -> UI: Select recipe
+User -> UI: Specify servings
+User -> UI: Click "Assign"
+
+UI -> API: POST /api/meal-plans/{id}/meals\n{recipeId, mealType, date, servings}
+activate API
+
+API -> Controller: AssignMealToSlot(command)
+activate Controller
+
+Controller -> Handler: Handle(AssignMealToSlotCommand)
+activate Handler
+
+Handler -> Handler: Validate command
+Handler -> Service: AssignMealAsync(command)
+activate Service
+
+Service -> Repo: GetByIdAsync(mealPlanId)
+activate Repo
+Repo -> DB: SELECT * FROM MealPlans
+activate DB
+DB --> Repo: MealPlan data
+deactivate DB
+Repo --> Service: MealPlan
+deactivate Repo
+
+Service -> Aggregate: AddMeal(recipeId, mealType, date, servings)
+activate Aggregate
+
+Aggregate -> Aggregate: Validate date within range
+Aggregate -> Aggregate: Create Meal entity
+Aggregate -> Aggregate: Add to Meals collection
+Aggregate -> Aggregate: Raise MealAssigned event
+deactivate Aggregate
+
+Service -> Repo: UpdateAsync(mealPlan)
+activate Repo
+Repo -> DB: UPDATE MealPlans\nINSERT INTO Meals
+activate DB
+DB --> Repo: Success
+deactivate DB
+deactivate Repo
+
+Service -> Events: Publish(MealAssigned)
+activate Events
+Events -> Events: Trigger nutrition calculation
+deactivate Events
+
+Service --> Handler: MealDto
+deactivate Service
+
+Handler --> Controller: MealDto
+deactivate Handler
+
+Controller --> API: 201 Created + MealDto
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Update calendar view
+UI -> UI: Show meal in slot
+deactivate UI
+
+== Activate Meal Plan ==
+
+User -> UI: Click "Activate Plan"
+activate UI
+
+UI -> UI: Show confirmation dialog
+User -> UI: Confirm activation
+
+UI -> API: POST /api/meal-plans/{id}/activate
+activate API
+
+API -> Controller: ActivateMealPlan(command)
+activate Controller
+
+Controller -> Handler: Handle(ActivateMealPlanCommand)
+activate Handler
+
+Handler -> Service: ActivateMealPlanAsync(command)
+activate Service
+
+Service -> Repo: GetActiveByUserIdAsync(userId)
+activate Repo
+Repo -> DB: SELECT * FROM MealPlans\nWHERE Status = 'Active'
+activate DB
+DB --> Repo: Existing active plan (if any)
+deactivate DB
+deactivate Repo
+
+alt Has existing active plan
+    Service -> Aggregate: Deactivate existing plan
+    activate Aggregate
+    Aggregate -> Aggregate: Set status = Completed/Archived
+    deactivate Aggregate
+end
+
+Service -> Repo: GetByIdAsync(mealPlanId)
+activate Repo
+Repo -> DB: SELECT * FROM MealPlans
+activate DB
+DB --> Repo: MealPlan data
+deactivate DB
+deactivate Repo
+
+Service -> Aggregate: Activate()
+activate Aggregate
+
+Aggregate -> Aggregate: Validate can activate\n(has meals)
+Aggregate -> Aggregate: Set status = Active
+Aggregate -> Aggregate: Raise MealPlanActivated event
+deactivate Aggregate
+
+Service -> Repo: UpdateAsync(mealPlan)
+activate Repo
+Repo -> DB: UPDATE MealPlans\nSET Status = 'Active'
+activate DB
+DB --> Repo: Success
+deactivate DB
+deactivate Repo
+
+Service -> Events: Publish(MealPlanActivated)
+activate Events
+Events -> Events: Trigger GroceryListGenerated
+Events -> Events: Send notifications
+deactivate Events
+
+Service --> Handler: Success
+deactivate Service
+
+Handler --> Controller: Success
+deactivate Handler
+
+Controller --> API: 200 OK
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Update plan status badge
+UI -> UI: Show success notification
+UI -> UI: Refresh calendar
+deactivate UI
+
+@enduml

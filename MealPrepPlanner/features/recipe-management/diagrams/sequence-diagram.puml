@@ -1,0 +1,259 @@
+@startuml Recipe Management - Sequence Diagram: Create Recipe with Nutrition Calculation
+
+actor User
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "RecipeController" as Controller
+participant "CommandHandler" as Handler
+participant "RecipeService" as Service
+participant "Recipe\nAggregate" as Aggregate
+participant "NutritionCalculator" as NutritionCalc
+participant "Nutrition API" as ExtAPI
+participant "Repository" as Repo
+participant "EventBus" as Events
+database "SQL Server" as DB
+
+== Create Recipe ==
+
+User -> UI: Click "Add New Recipe"
+activate UI
+
+UI -> UI: Show recipe form
+User -> UI: Enter basic info\n(name, description, times)
+User -> UI: Add ingredients
+User -> UI: Add instructions
+User -> UI: Upload image
+User -> UI: Add tags
+User -> UI: Click "Save Recipe"
+
+UI -> UI: Validate form
+UI -> API: POST /api/recipes\n{AddRecipeCommand}
+activate API
+
+API -> Controller: AddRecipe(command)
+activate Controller
+
+Controller -> Handler: Handle(AddRecipeCommand)
+activate Handler
+
+Handler -> Handler: Validate command
+Handler -> Service: AddRecipeAsync(command)
+activate Service
+
+Service -> Aggregate: Create(userId, name, servings)
+activate Aggregate
+
+Aggregate -> Aggregate: Validate business rules
+Aggregate -> Aggregate: Initialize properties
+Aggregate -> Aggregate: Set ingredients list
+Aggregate -> Aggregate: Set instructions list
+Aggregate -> Aggregate: Raise RecipeAdded event
+deactivate Aggregate
+
+Service -> Repo: AddAsync(recipe)
+activate Repo
+
+Repo -> DB: INSERT INTO Recipes
+activate DB
+DB --> Repo: RecipeId
+deactivate DB
+
+Repo -> DB: INSERT INTO Instructions
+activate DB
+DB --> Repo: Success
+deactivate DB
+
+Repo -> DB: INSERT INTO RecipeIngredients
+activate DB
+DB --> Repo: Success
+deactivate DB
+
+deactivate Repo
+
+Service -> Events: Publish(RecipeAdded)
+activate Events
+Events -> Events: Dispatch to handlers
+deactivate Events
+
+Service --> Handler: RecipeDto (without nutrition)
+deactivate Service
+
+Handler --> Controller: RecipeDto
+deactivate Handler
+
+Controller --> API: 201 Created + RecipeDto
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Show success message
+UI -> UI: Navigate to recipe details
+deactivate UI
+
+== Calculate Nutrition ==
+
+User -> UI: Click "Calculate Nutrition"
+activate UI
+
+UI -> API: POST /api/recipes/{id}/calculate-nutrition
+activate API
+
+API -> Controller: CalculateNutrition(recipeId)
+activate Controller
+
+Controller -> Handler: Handle(CalculateRecipeNutritionCommand)
+activate Handler
+
+Handler -> Service: CalculateNutritionAsync(recipeId)
+activate Service
+
+Service -> Repo: GetByIdAsync(recipeId)
+activate Repo
+Repo -> DB: SELECT * FROM Recipes\nJOIN RecipeIngredients
+activate DB
+DB --> Repo: Recipe with ingredients
+deactivate DB
+deactivate Repo
+
+Service -> NutritionCalc: CalculateAsync(ingredients, servings)
+activate NutritionCalc
+
+loop For each ingredient
+    NutritionCalc -> Repo: GetIngredientById(ingredientId)
+    activate Repo
+    Repo -> DB: SELECT * FROM Ingredients
+    activate DB
+    DB --> Repo: Ingredient nutrition data
+    deactivate DB
+    deactivate Repo
+
+    alt Ingredient has nutrition data
+        NutritionCalc -> NutritionCalc: Calculate from local data
+    else No local data
+        NutritionCalc -> ExtAPI: GET /nutrition/{ingredientName}
+        activate ExtAPI
+        ExtAPI --> NutritionCalc: Nutrition data
+        deactivate ExtAPI
+
+        NutritionCalc -> Repo: UpdateIngredient(nutrition data)
+        activate Repo
+        Repo -> DB: UPDATE Ingredients
+        activate DB
+        DB --> Repo: Success
+        deactivate DB
+        deactivate Repo
+    end
+
+    NutritionCalc -> NutritionCalc: Scale by quantity & unit
+    NutritionCalc -> NutritionCalc: Accumulate totals
+end
+
+NutritionCalc -> NutritionCalc: Divide by servings
+NutritionCalc --> Service: NutritionInfo
+deactivate NutritionCalc
+
+Service -> Aggregate: SetNutrition(nutritionInfo)
+activate Aggregate
+Aggregate -> Aggregate: Update nutrition properties
+Aggregate -> Aggregate: Raise RecipeNutritionCalculated event
+deactivate Aggregate
+
+Service -> Repo: UpdateAsync(recipe)
+activate Repo
+Repo -> DB: UPDATE Recipes\nSET nutrition values
+activate DB
+DB --> Repo: Success
+deactivate DB
+deactivate Repo
+
+Service -> Events: Publish(RecipeNutritionCalculated)
+activate Events
+Events -> Events: Trigger nutrition tracking update
+deactivate Events
+
+Service --> Handler: NutritionInfo
+deactivate Service
+
+Handler --> Controller: NutritionInfo
+deactivate Handler
+
+Controller --> API: 200 OK + NutritionInfo
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Display nutrition panel
+UI -> UI: Show success notification
+deactivate UI
+
+== Mark Recipe as Prepared ==
+
+User -> UI: Click "Mark as Prepared"
+activate UI
+
+UI -> UI: Show rating dialog
+User -> UI: Enter rating (optional)
+User -> UI: Confirm
+
+UI -> API: POST /api/recipes/{id}/prepare\n{date, servings, rating}
+activate API
+
+API -> Controller: MarkPrepared(command)
+activate Controller
+
+Controller -> Handler: Handle(MarkRecipePreparedCommand)
+activate Handler
+
+Handler -> Service: MarkPreparedAsync(command)
+activate Service
+
+Service -> Repo: GetByIdAsync(recipeId)
+activate Repo
+Repo -> DB: SELECT * FROM Recipes
+activate DB
+DB --> Repo: Recipe
+deactivate DB
+deactivate Repo
+
+Service -> Aggregate: MarkPrepared(date, servings, rating)
+activate Aggregate
+
+Aggregate -> Aggregate: Increment PrepCount
+Aggregate -> Aggregate: Update LastPreparedDate
+Aggregate -> Aggregate: Update Rating (if provided)
+Aggregate -> Aggregate: Raise RecipePrepared event
+deactivate Aggregate
+
+Service -> Repo: UpdateAsync(recipe)
+activate Repo
+Repo -> DB: UPDATE Recipes\nSET PrepCount, LastPreparedDate, Rating
+activate DB
+DB --> Repo: Success
+deactivate DB
+deactivate Repo
+
+Service -> Events: Publish(RecipePrepared)
+activate Events
+Events -> Events: Update user statistics
+Events -> Events: Trigger nutrition tracking
+deactivate Events
+
+Service --> Handler: Success
+deactivate Service
+
+Handler --> Controller: Success
+deactivate Handler
+
+Controller --> API: 200 OK
+deactivate Controller
+
+API --> UI: Response
+deactivate API
+
+UI -> UI: Update prep count display
+UI -> UI: Show celebration animation
+deactivate UI
+
+@enduml

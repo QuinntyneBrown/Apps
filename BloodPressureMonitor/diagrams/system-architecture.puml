@@ -1,0 +1,159 @@
+@startuml Blood Pressure Monitor - System Architecture
+
+!define FRONTEND_COLOR #E6F3FF
+!define BACKEND_COLOR #FFE6E6
+!define DATA_COLOR #E6FFE6
+!define EXTERNAL_COLOR #FFFFCC
+
+skinparam component {
+    BackgroundColor<<Frontend>> FRONTEND_COLOR
+    BackgroundColor<<Backend>> BACKEND_COLOR
+    BackgroundColor<<Data>> DATA_COLOR
+    BackgroundColor<<External>> EXTERNAL_COLOR
+    BorderColor #333333
+    ArrowColor #666666
+}
+
+package "Client Layer" {
+    [Web App\n(React/Angular)] as WebApp <<Frontend>>
+    [Mobile App\n(iOS/Android)] as MobileApp <<Frontend>>
+    [PWA] as PWA <<Frontend>>
+}
+
+package "API Gateway Layer" {
+    [API Gateway\n(REST/GraphQL)] as Gateway <<Backend>>
+    [Authentication\nMiddleware] as Auth <<Backend>>
+    [Rate Limiting] as RateLimit <<Backend>>
+}
+
+package "Application Services Layer" {
+    [Reading Service] as ReadingSvc <<Backend>>
+    [Alert Service] as AlertSvc <<Backend>>
+    [Trend Analysis\nService] as TrendSvc <<Backend>>
+    [Goal Service] as GoalSvc <<Backend>>
+    [Medication Service] as MedSvc <<Backend>>
+    [Lifestyle Service] as LifestyleSvc <<Backend>>
+    [Reporting Service] as ReportSvc <<Backend>>
+    [Risk Assessment\nService] as RiskSvc <<Backend>>
+}
+
+package "Domain Layer" {
+    [Reading Aggregate] as ReadingAgg <<Backend>>
+    [Alert Aggregate] as AlertAgg <<Backend>>
+    [Goal Aggregate] as GoalAgg <<Backend>>
+    [Medication Aggregate] as MedAgg <<Backend>>
+    [Domain Events] as Events <<Backend>>
+}
+
+package "Infrastructure Layer" {
+    database "SQL Server\n(Primary Store)" as SQLServer <<Data>>
+    database "Event Store\n(Event Sourcing)" as EventStore <<Data>>
+    queue "Message Queue\n(RabbitMQ/Azure Service Bus)" as MQ <<Data>>
+    database "Blob Storage\n(Reports, PDFs)" as Blob <<Data>>
+    database "Redis Cache" as Cache <<Data>>
+}
+
+package "External Services" {
+    cloud "Notification\nService\n(SendGrid/FCM)" as NotifService <<External>>
+    cloud "Device Sync API\n(BP Monitor\nManufacturers)" as DeviceAPI <<External>>
+    cloud "Email Service\n(SendGrid/AWS SES)" as EmailService <<External>>
+    cloud "SMS Service\n(Twilio)" as SMSService <<External>>
+}
+
+package "Background Jobs" {
+    [Trend Analyzer\nJob] as TrendJob <<Backend>>
+    [Weekly Report\nGenerator] as WeeklyJob <<Backend>>
+    [Risk Assessment\nJob] as RiskJob <<Backend>>
+    [Reminder\nScheduler] as ReminderJob <<Backend>>
+}
+
+' Client to Gateway
+WebApp --> Gateway : HTTPS
+MobileApp --> Gateway : HTTPS
+PWA --> Gateway : HTTPS
+
+' Gateway to Auth & Rate Limiting
+Gateway --> Auth : Authenticate
+Gateway --> RateLimit : Check limits
+
+' Gateway to Services
+Gateway --> ReadingSvc
+Gateway --> AlertSvc
+Gateway --> TrendSvc
+Gateway --> GoalSvc
+Gateway --> MedSvc
+Gateway --> LifestyleSvc
+Gateway --> ReportSvc
+Gateway --> RiskSvc
+
+' Services to Domain
+ReadingSvc --> ReadingAgg
+AlertSvc --> AlertAgg
+GoalSvc --> GoalAgg
+MedSvc --> MedAgg
+
+' Services to Events
+ReadingSvc --> Events : Publish
+AlertSvc --> Events : Publish
+TrendSvc --> Events : Publish
+GoalSvc --> Events : Publish
+
+' Services to Data
+ReadingSvc --> SQLServer : Read/Write
+ReadingSvc --> Cache : Cache readings
+AlertSvc --> SQLServer
+TrendSvc --> SQLServer
+GoalSvc --> SQLServer
+MedSvc --> SQLServer
+ReportSvc --> SQLServer
+ReportSvc --> Blob : Store PDFs
+
+' Events to Infrastructure
+Events --> EventStore : Store events
+Events --> MQ : Publish events
+
+' Message Queue to Handlers
+MQ --> AlertSvc : Alert events
+MQ --> TrendSvc : Trend events
+MQ --> NotifService : Notifications
+
+' External Services
+AlertSvc --> NotifService : Send push
+ReportSvc --> EmailService : Send reports
+AlertSvc --> SMSService : Send SMS (crisis)
+ReadingSvc --> DeviceAPI : Sync devices
+
+' Background Jobs
+TrendJob --> TrendSvc : Trigger analysis
+WeeklyJob --> ReportSvc : Generate reports
+RiskJob --> RiskSvc : Assess risk
+ReminderJob --> NotifService : Send reminders
+
+TrendJob <-- MQ : Scheduled
+WeeklyJob <-- MQ : Scheduled
+RiskJob <-- MQ : Scheduled
+ReminderJob <-- MQ : Scheduled
+
+note right of Events
+    Event Sourcing:
+    - All domain events stored
+    - Full audit trail
+    - Event replay capability
+end note
+
+note right of Cache
+    Caching Strategy:
+    - Recent readings (7 days)
+    - User preferences
+    - Trend analysis results
+    - TTL: 5 minutes
+end note
+
+note left of MQ
+    Event-Driven Architecture:
+    - Async processing
+    - Decoupled services
+    - Scalable handlers
+end note
+
+@enduml

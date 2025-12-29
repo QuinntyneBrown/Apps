@@ -1,0 +1,190 @@
+@startuml Exercises - Sequence Diagram
+
+!define ACTOR_COLOR #E8F4F8
+!define COMPONENT_COLOR #FFF4E6
+!define DATABASE_COLOR #E8F5E9
+
+skinparam sequence {
+    ActorBackgroundColor ACTOR_COLOR
+    ParticipantBackgroundColor COMPONENT_COLOR
+    DatabaseBackgroundColor DATABASE_COLOR
+    ArrowColor #34495E
+}
+
+actor User
+participant "Exercise\nController" as Controller
+participant "Add Exercise\nTo Library\nCommand Handler" as AddHandler
+participant "Record Exercise\nPerformance\nCommand Handler" as RecordHandler
+participant "Substitute\nExercise\nCommand Handler" as SubHandler
+participant "Exercise\nAggregate" as Exercise
+participant "Exercise\nPerformance" as Performance
+participant "Event\nPublisher" as Publisher
+database "Database" as DB
+
+== Add Custom Exercise to Library ==
+
+User -> Controller : POST /api/exercises\n{exercise details}
+activate Controller
+
+Controller -> AddHandler : Handle(AddExerciseToLibraryCommand)
+activate AddHandler
+
+AddHandler -> Exercise : Create(name, category, muscles, equipment)
+activate Exercise
+Exercise -> Exercise : Validate exercise data
+Exercise --> AddHandler : Exercise created
+deactivate Exercise
+
+AddHandler -> DB : Save(exercise)
+activate DB
+DB --> AddHandler : Saved
+deactivate DB
+
+AddHandler -> Publisher : Publish(ExerciseAddedToLibraryEvent)
+activate Publisher
+Publisher -> Publisher : Notify subscribers
+Publisher --> AddHandler : Event published
+deactivate Publisher
+
+AddHandler --> Controller : ExerciseId
+deactivate AddHandler
+
+Controller --> User : 201 Created\n{exerciseId}
+deactivate Controller
+
+== Record Exercise Performance ==
+
+User -> Controller : POST /api/exercises/{id}/performance\n{sets, reps, weight}
+activate Controller
+
+Controller -> RecordHandler : Handle(RecordExercisePerformanceCommand)
+activate RecordHandler
+
+RecordHandler -> DB : GetExercise(exerciseId)
+activate DB
+DB --> RecordHandler : Exercise
+deactivate DB
+
+RecordHandler -> Performance : Create(exerciseId, userId, sessionId, sets)
+activate Performance
+Performance -> Performance : CalculateTotalVolume()
+Performance -> Performance : EstimateOneRepMax()
+Performance --> RecordHandler : ExercisePerformance created
+deactivate Performance
+
+RecordHandler -> DB : Save(exercisePerformance)
+activate DB
+DB --> RecordHandler : Saved
+deactivate DB
+
+RecordHandler -> RecordHandler : CheckForPersonalRecord()
+
+alt New Personal Record Detected
+    RecordHandler -> Publisher : Publish(NewPersonalRecordEvent)
+    activate Publisher
+    Publisher --> RecordHandler : Event published
+    deactivate Publisher
+end
+
+RecordHandler -> Publisher : Publish(ExercisePerformedEvent)
+activate Publisher
+Publisher -> Publisher : Update statistics
+Publisher -> Publisher : Update exercise popularity
+Publisher --> RecordHandler : Event published
+deactivate Publisher
+
+RecordHandler --> Controller : Success
+deactivate RecordHandler
+
+Controller --> User : 200 OK\n{performance recorded}
+deactivate Controller
+
+== Substitute Exercise in Workout Plan ==
+
+User -> Controller : POST /api/exercises/substitute\n{original, substitute, reason}
+activate Controller
+
+Controller -> SubHandler : Handle(SubstituteExerciseCommand)
+activate SubHandler
+
+SubHandler -> DB : GetWorkoutPlan(planId)
+activate DB
+DB --> SubHandler : WorkoutPlan
+deactivate DB
+
+SubHandler -> DB : GetExercise(originalId)
+activate DB
+DB --> SubHandler : OriginalExercise
+deactivate DB
+
+SubHandler -> DB : GetExercise(substituteId)
+activate DB
+DB --> SubHandler : SubstituteExercise
+deactivate DB
+
+SubHandler -> SubHandler : ValidateSubstitution()\n(same muscle group, etc.)
+
+alt Valid Substitution
+    SubHandler -> DB : UpdateWorkoutPlan(plan)
+    activate DB
+    DB --> SubHandler : Updated
+    deactivate DB
+
+    SubHandler -> DB : CreateSubstitutionRecord()
+    activate DB
+    DB --> SubHandler : Saved
+    deactivate DB
+
+    SubHandler -> Publisher : Publish(ExerciseSubstitutedEvent)
+    activate Publisher
+    Publisher -> Publisher : Log substitution pattern
+    Publisher -> Publisher : Update recommendations
+    Publisher --> SubHandler : Event published
+    deactivate Publisher
+
+    SubHandler -> Publisher : Publish(WorkoutPlanModifiedEvent)
+    activate Publisher
+    Publisher --> SubHandler : Event published
+    deactivate Publisher
+
+    SubHandler --> Controller : Success
+else Invalid Substitution
+    SubHandler --> Controller : ValidationError
+end
+deactivate SubHandler
+
+Controller --> User : 200 OK\n{exercise substituted}
+deactivate Controller
+
+== View Exercise Performance History ==
+
+User -> Controller : GET /api/exercises/{id}/performance/history
+activate Controller
+
+Controller -> DB : GetPerformanceHistory(exerciseId, userId)
+activate DB
+DB --> Controller : List<ExercisePerformance>
+deactivate DB
+
+Controller -> Controller : CalculateProgressionMetrics()
+Controller -> Controller : IdentifyPersonalRecords()
+
+Controller --> User : 200 OK\n{performance history + metrics}
+deactivate Controller
+
+note over Publisher
+  Event handlers execute asynchronously:
+  - Update search index
+  - Send notifications
+  - Update analytics
+  - Calculate achievements
+end note
+
+note over RecordHandler
+  Personal Record detection:
+  - Compare current performance
+  - Check max weight, max reps, max volume
+  - Validate against previous records
+end note
+
+@enduml

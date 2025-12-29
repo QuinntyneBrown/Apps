@@ -1,0 +1,157 @@
+@startuml Pattern Analysis Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Pattern Analysis and Insight Generation
+
+actor User
+participant "Frontend" as FE
+participant "AnalyticsController" as API
+participant "PatternAnalysisService" as SVC
+participant "PatternDetector" as DETECTOR
+participant "SessionRepository" as SESS_REPO
+participant "PatternRepository" as PATTERN_REPO
+participant "InsightGenerator" as INSIGHT
+participant "EventPublisher" as EVT
+participant "NotificationService" as NOTIF
+
+== View Pattern Insights ==
+
+User -> FE: Navigate to Insights Dashboard
+FE -> API: GET /api/analytics/patterns
+API -> SVC: GetAllPatterns(userId)
+SVC -> PATTERN_REPO: GetActivePatterns(userId)
+PATTERN_REPO --> SVC: patterns[]
+SVC --> API: patterns[]
+API --> FE: 200 OK (patterns)
+FE -> FE: Render pattern cards
+FE --> User: Display insights dashboard
+
+== Trigger Pattern Analysis ==
+
+User -> FE: Click "Analyze Now"
+FE -> API: POST /api/analytics/patterns/analyze
+API -> SVC: TriggerAnalysis(userId, "all")
+SVC -> SVC: ValidateDataSufficiency()
+alt Insufficient Data
+    SVC --> API: 400 Bad Request
+    API --> FE: Insufficient data error
+    FE --> User: Show "Need more sessions" message
+else Sufficient Data
+    SVC -> SVC: CreateAnalysisJob()
+    SVC --> API: 202 Accepted (jobId)
+    API --> FE: Analysis started
+    FE --> User: Show progress indicator
+end
+
+== Detect Optimal Session Length (Background) ==
+
+SVC -> SESS_REPO: GetCompletedSessions(userId)
+SESS_REPO --> SVC: sessions[]
+SVC -> DETECTOR: DetectOptimalLength(sessions)
+DETECTOR -> DETECTOR: GroupByDuration()
+DETECTOR -> DETECTOR: CalculateSuccessRates()
+DETECTOR -> DETECTOR: CalculateConfidence()
+DETECTOR --> SVC: optimalLength
+SVC -> PATTERN_REPO: Save(optimalLength)
+SVC -> EVT: Publish(OptimalSessionLengthIdentified)
+EVT -> NOTIF: Send notification
+
+== Detect Peak Focus Times ==
+
+SVC -> SESS_REPO: GetCompletedSessions(userId)
+SESS_REPO --> SVC: sessions[]
+SVC -> DETECTOR: DetectPeakTimes(sessions)
+DETECTOR -> DETECTOR: GroupByHourOfDay()
+DETECTOR -> DETECTOR: CalculateAvgFocusScore()
+DETECTOR -> DETECTOR: IdentifyPeakWindows()
+DETECTOR --> SVC: peakTimes[]
+SVC -> PATTERN_REPO: Save(peakTimes)
+SVC -> EVT: Publish(PeakFocusTimeDetected)
+
+== Identify Distraction Patterns ==
+
+SVC -> SESS_REPO: GetDistractions(userId)
+SESS_REPO --> SVC: distractions[]
+SVC -> DETECTOR: DetectDistractionPatterns(distractions)
+DETECTOR -> DETECTOR: GroupBySourceAndType()
+DETECTOR -> DETECTOR: CalculateFrequency()
+DETECTOR -> DETECTOR: AnalyzeImpact()
+DETECTOR -> DETECTOR: IdentifyTiming()
+DETECTOR -> DETECTOR: GenerateMitigation()
+DETECTOR --> SVC: patterns[]
+SVC -> PATTERN_REPO: Save(patterns)
+SVC -> EVT: Publish(DistractionPatternIdentified)
+
+== Detect Productivity Trends ==
+
+SVC -> SESS_REPO: GetSessionMetrics(userId, period)
+SESS_REPO --> SVC: metrics[]
+SVC -> DETECTOR: DetectTrends(metrics, period)
+DETECTOR -> DETECTOR: CalculateMovingAverage()
+DETECTOR -> DETECTOR: DetermineTrendDirection()
+DETECTOR -> DETECTOR: CalculateMagnitude()
+DETECTOR -> DETECTOR: IdentifyContributingFactors()
+DETECTOR --> SVC: trend
+SVC -> PATTERN_REPO: Save(trend)
+SVC -> EVT: Publish(ProductivityTrendDetected)
+
+== Generate Insights ==
+
+SVC -> INSIGHT: GenerateInsights(patterns)
+INSIGHT -> INSIGHT: PrioritizePatterns()
+loop For Each High-Priority Pattern
+    INSIGHT -> INSIGHT: CreateActionableInsight()
+    INSIGHT -> PATTERN_REPO: SaveInsight(insight)
+    INSIGHT -> EVT: Publish(InsightGenerated)
+end
+INSIGHT --> SVC: insights[]
+SVC -> SVC: CompleteAnalysisJob()
+SVC -> EVT: Publish(PatternAnalysisCompleted)
+
+EVT -> NOTIF: Send insights notification
+NOTIF -> FE: WebSocket notification
+FE -> FE: Update insights display
+FE --> User: Show "New insights available"
+
+== Apply Recommendation ==
+
+User -> FE: Click "Apply Recommendation"
+FE -> FE: Show confirmation modal
+User -> FE: Confirm action
+FE -> API: PUT /api/analytics/patterns/{id}/apply
+API -> SVC: ApplyRecommendation(patternId)
+SVC -> PATTERN_REPO: GetById(patternId)
+PATTERN_REPO --> SVC: pattern
+SVC -> SVC: ApplyPattern(pattern)
+alt Optimal Length
+    SVC -> SVC: UpdateDefaultDuration()
+else Peak Time
+    SVC -> SVC: UpdateSchedulingPreference()
+else Distraction
+    SVC -> SVC: EnableMitigation()
+end
+SVC -> PATTERN_REPO: MarkAsApplied(patternId)
+SVC --> API: 200 OK
+API --> FE: Success
+FE --> User: Show success message
+
+== Dismiss Insight ==
+
+User -> FE: Click "Dismiss" on insight
+FE -> API: PUT /api/analytics/insights/{id}/dismiss
+API -> SVC: DismissInsight(insightId)
+SVC -> PATTERN_REPO: GetInsight(insightId)
+SVC -> SVC: MarkDismissed()
+SVC -> PATTERN_REPO: Update(insight)
+SVC --> API: 200 OK
+API --> FE: Success
+FE -> FE: Remove from display
+FE --> User: Insight hidden
+
+@enduml

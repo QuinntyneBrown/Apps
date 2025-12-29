@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist Management - Movie & TV Show Watchlist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: #1a237e;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ff6f00;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f5f5f5;
+            padding: 30px 20px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: #1a237e;
+            font-size: 18px;
+        }
+
+        .filter-group {
+            margin-bottom: 25px;
+        }
+
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .filter-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .clear-filters {
+            width: 100%;
+            padding: 10px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .clear-filters:hover {
+            background: #d0d0d0;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .content-header h1 {
+            color: #1a237e;
+            font-size: 32px;
+        }
+
+        .add-btn {
+            background: #00897b;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #00695c;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .controls select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .watchlist-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .watchlist-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .poster {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .priority-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #e53935;
+        }
+
+        .priority-medium {
+            background: #ffa000;
+        }
+
+        .priority-low {
+            background: #43a047;
+        }
+
+        .availability {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .card-content {
+            padding: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #1a237e;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .card-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+
+        .genre-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .card-added {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-watch {
+            background: #00897b;
+            color: white;
+        }
+
+        .btn-remove {
+            background: #e0e0e0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🎬 WatchTrack</div>
+            <nav>
+                <a href="#">Watchlist</a>
+                <a href="#">History</a>
+                <a href="#">Statistics</a>
+                <a href="#">Discover</a>
+            </nav>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <h3>Filters</h3>
+
+                <div class="filter-group">
+                    <h4 style="margin-bottom: 10px; color: #666; font-size: 14px;">Content Type</h4>
+                    <label><input type="checkbox" checked> Movies</label>
+                    <label><input type="checkbox" checked> TV Shows</label>
+                </div>
+
+                <div class="filter-group">
+                    <h4 style="margin-bottom: 10px; color: #666; font-size: 14px;">Genre</h4>
+                    <label><input type="checkbox"> Action</label>
+                    <label><input type="checkbox"> Drama</label>
+                    <label><input type="checkbox"> Sci-Fi</label>
+                    <label><input type="checkbox"> Comedy</label>
+                    <label><input type="checkbox"> Thriller</label>
+                    <label><input type="checkbox"> Horror</label>
+                </div>
+
+                <div class="filter-group">
+                    <h4 style="margin-bottom: 10px; color: #666; font-size: 14px;">Mood</h4>
+                    <label><input type="checkbox"> Action-packed</label>
+                    <label><input type="checkbox"> Thought-provoking</label>
+                    <label><input type="checkbox"> Relaxing</label>
+                    <label><input type="checkbox"> Funny</label>
+                </div>
+
+                <div class="filter-group">
+                    <h4 style="margin-bottom: 10px; color: #666; font-size: 14px;">Availability</h4>
+                    <label><input type="checkbox"> Available Now</label>
+                    <label><input type="checkbox"> Coming Soon</label>
+                    <label><input type="checkbox"> Unavailable</label>
+                </div>
+
+                <button class="clear-filters">Clear All Filters</button>
+            </aside>
+
+            <main class="content-area">
+                <div class="content-header">
+                    <h1>My Watchlist <span style="color: #666; font-size: 24px;">(47 items)</span></h1>
+                    <button class="add-btn">+ Add Content</button>
+                </div>
+
+                <div class="controls">
+                    <div>
+                        <select>
+                            <option>Sort by: Priority</option>
+                            <option>Sort by: Recently Added</option>
+                            <option>Sort by: Title</option>
+                            <option>Sort by: Release Year</option>
+                        </select>
+                    </div>
+                    <div style="color: #666;">View: Grid</div>
+                </div>
+
+                <div class="grid">
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-high">HIGH</div>
+                            <div class="availability">Netflix</div>
+                            🎬
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Inception</div>
+                            <div class="card-meta">2010 • 148 min</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Sci-Fi</span>
+                                <span class="genre-tag">Thriller</span>
+                            </div>
+                            <div class="card-added">Added 2 days ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Watch</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-medium">MEDIUM</div>
+                            <div class="availability">Criterion</div>
+                            🎬
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Parasite</div>
+                            <div class="card-meta">2019 • 132 min</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Drama</span>
+                                <span class="genre-tag">Thriller</span>
+                            </div>
+                            <div class="card-added">Added 1 week ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Watch</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-high">HIGH</div>
+                            <div class="availability">HBO Max</div>
+                            📺
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">The Wire</div>
+                            <div class="card-meta">2002 • 5 Seasons</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Drama</span>
+                                <span class="genre-tag">Crime</span>
+                            </div>
+                            <div class="card-added">Added 3 days ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Start</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-low">LOW</div>
+                            <div class="availability">HBO Max</div>
+                            🎬
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Dune</div>
+                            <div class="card-meta">2021 • 155 min</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Sci-Fi</span>
+                                <span class="genre-tag">Adventure</span>
+                            </div>
+                            <div class="card-added">Added 2 weeks ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Watch</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-medium">MEDIUM</div>
+                            <div class="availability">Prime</div>
+                            🎬
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">The Godfather</div>
+                            <div class="card-meta">1972 • 175 min</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Crime</span>
+                                <span class="genre-tag">Drama</span>
+                            </div>
+                            <div class="card-added">Added 1 month ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Watch</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="watchlist-card">
+                        <div class="poster">
+                            <div class="priority-badge priority-low">LOW</div>
+                            <div class="availability">Netflix</div>
+                            📺
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">The Crown</div>
+                            <div class="card-meta">2016 • 6 Seasons</div>
+                            <div class="card-genres">
+                                <span class="genre-tag">Drama</span>
+                                <span class="genre-tag">History</span>
+                            </div>
+                            <div class="card-added">Added 2 months ago</div>
+                            <div class="card-actions">
+                                <button class="action-btn btn-watch">Start</button>
+                                <button class="action-btn btn-remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

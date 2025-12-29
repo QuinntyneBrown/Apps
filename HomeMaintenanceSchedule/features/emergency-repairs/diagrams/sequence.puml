@@ -1,0 +1,77 @@
+@startuml Emergency Repairs - Report Emergency Sequence
+
+title Report Emergency Workflow
+
+actor "Homeowner" as user
+participant "Emergency UI" as ui
+participant "API Controller" as api
+participant "EmergencyHandler" as handler
+participant "Emergency Repository" as repo
+participant "Notification Service" as notif
+participant "Provider Service" as provider
+
+autonumber
+
+user -> ui: Click "Report Emergency"
+activate ui
+ui -> ui: Show emergency form
+
+user -> ui: Select type (Burst Pipe)
+user -> ui: Set severity (Critical)
+user -> ui: Add description
+user -> ui: Capture photos/videos
+user -> ui: Submit
+
+ui -> api: POST /api/emergency-repairs
+activate api
+
+api -> handler: Handle(ReportEmergencyCommand)
+activate handler
+
+handler -> handler: Create EmergencyRepair entity
+handler -> handler: Set status = Reported
+handler -> handler: Set reported date
+
+handler -> repo: CreateAsync(emergency)
+activate repo
+repo --> handler: Emergency created
+deactivate repo
+
+handler -> notif: SendEmergencyAlert(emergency)
+activate notif
+notif -> notif: Send SMS to homeowner
+notif -> notif: Send email notification
+notif -> notif: Send push notification
+notif --> handler: Alerts sent
+deactivate notif
+
+alt Severity is Critical
+    handler -> provider: GetEmergencyProviders(type)
+    activate provider
+    provider --> handler: List of 24/7 providers
+    deactivate provider
+
+    handler -> notif: NotifyEmergencyProviders(providers, emergency)
+    activate notif
+    notif -> notif: Send urgent alerts to providers
+    notif --> handler: Providers notified
+    deactivate notif
+end
+
+handler --> api: Success
+deactivate handler
+
+api --> ui: 201 Created {emergency}
+deactivate api
+
+ui -> ui: Show emergency tracking page
+ui -> ui: Display provider contacts
+ui --> user: Emergency reported
+deactivate ui
+
+group Background Processing
+    notif -> notif: Start response time tracking
+    notif -> notif: Schedule escalation if no response
+end
+
+@enduml

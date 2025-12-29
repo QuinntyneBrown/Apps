@@ -1,0 +1,80 @@
+@startuml Cash Flow Sequence Diagram
+
+!theme plain
+
+title Generate Cash Flow Projection - Sequence Diagram
+
+actor User
+participant "UI: CashFlowDashboard" as UI
+participant "API: CashFlowController" as API
+participant "Handler: GenerateCashFlowProjectionQueryHandler" as Handler
+participant "Repository: ICashFlowRepository" as CashFlowRepo
+participant "Repository: IBillRepository" as BillRepo
+participant "Repository: IPaymentScheduleRepository" as PaymentRepo
+participant "Calculator: CashFlowCalculator" as Calculator
+database "Database" as DB
+
+User -> UI: View cash flow dashboard
+activate UI
+
+UI -> API: GET /api/cash-flow/projection?month=2025-01
+activate API
+
+API -> Handler: Handle(GenerateCashFlowProjectionQuery)
+activate Handler
+
+Handler -> CashFlowRepo: GetProjection(userId, month)
+activate CashFlowRepo
+CashFlowRepo -> DB: SELECT FROM CashFlowProjections
+DB --> CashFlowRepo: Existing projection (or null)
+CashFlowRepo --> Handler: CashFlowProjection?
+deactivate CashFlowRepo
+
+alt Projection exists and is recent
+    Handler --> API: CashFlowProjectionDto
+else Need to recalculate
+    Handler -> BillRepo: GetByUserId(userId)
+    activate BillRepo
+    BillRepo -> DB: SELECT FROM Bills WHERE UserId = ?
+    DB --> BillRepo: User's bills
+    BillRepo --> Handler: List<Bill>
+    deactivate BillRepo
+
+    Handler -> PaymentRepo: GetScheduledPayments(userId, month)
+    activate PaymentRepo
+    PaymentRepo -> DB: SELECT FROM PaymentSchedules\nWHERE UserId = ? AND Month = ?
+    DB --> PaymentRepo: Scheduled payments
+    PaymentRepo --> Handler: List<PaymentSchedule>
+    deactivate PaymentRepo
+
+    Handler -> Calculator: Calculate(bills, payments, income)
+    activate Calculator
+    Calculator -> Calculator: Sum income
+    Calculator -> Calculator: Sum bill amounts
+    Calculator -> Calculator: Group by category
+    Calculator -> Calculator: Calculate net cash flow
+    Calculator --> Handler: CashFlowProjection
+    deactivate Calculator
+
+    Handler -> CashFlowRepo: SaveProjection(projection)
+    activate CashFlowRepo
+    CashFlowRepo -> DB: INSERT/UPDATE CashFlowProjections
+    DB --> CashFlowRepo: Success
+    deactivate CashFlowRepo
+
+    Handler -> Handler: Map to DTO
+    Handler --> API: CashFlowProjectionDto
+end
+deactivate Handler
+
+API --> UI: 200 OK {projection}
+deactivate API
+
+UI -> UI: Render charts and visualizations
+UI -> UI: Display income vs expenses
+UI -> UI: Show category breakdown
+UI -> UI: Calculate financial health indicators
+UI --> User: Display cash flow dashboard
+deactivate UI
+
+@enduml

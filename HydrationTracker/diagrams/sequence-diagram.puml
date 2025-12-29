@@ -1,0 +1,39 @@
+@startuml Hydration Tracker Sequence
+
+actor User
+actor "Scheduler" as Scheduler
+participant "UI" as UI
+participant "IntakeService" as IS
+participant "GoalService" as GS
+participant "ReminderService" as RS
+participant "Database" as DB
+
+User -> UI: Log water intake (250ml)
+UI -> IS: LogIntake(userId, 250ml, timestamp)
+IS -> DB: INSERT IntakeEntry
+IS -> GS: UpdateDailyProgress(userId)
+GS -> DB: SELECT DailyGoal
+GS -> DB: UPDATE actual amount
+
+alt Goal achieved
+  GS -> GS: CheckStreakContinuation()
+  GS -> DB: UPDATE Streak
+  GS -> UI: Goal achieved! Celebration
+  UI -> User: "Congratulations! Goal reached!"
+end
+
+IS --> UI: Intake logged successfully
+UI --> User: Progress updated
+
+== Reminder Flow ==
+
+Scheduler -> RS: TriggerReminder(userId, time)
+RS -> DB: GET ReminderSettings
+RS -> User: "Time to hydrate! 💧"
+
+User -> UI: Log intake after reminder
+UI -> IS: LogIntake(userId, amount, timestamp)
+IS -> RS: RecordReminderAction(reminderId)
+RS -> DB: UPDATE reminder effectiveness
+
+@enduml

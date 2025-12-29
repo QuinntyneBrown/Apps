@@ -1,0 +1,258 @@
+@startuml Bill Management Sequence Diagrams
+
+
+title Add Bill - Sequence Diagram
+
+actor User
+participant "UI: BillForm" as UI
+participant "API: BillsController" as API
+participant "Handler: AddBillCommandHandler" as Handler
+participant "Aggregate: Bill" as Bill
+participant "Repository: IBillRepository" as Repo
+participant "EventPublisher: IEventPublisher" as EventPub
+participant "EventHandler: BillEventHandler" as EventHandler
+database "Database" as DB
+
+User -> UI: Fill bill form and click Save
+activate UI
+
+UI -> UI: Validate form data
+UI -> API: POST /api/bills
+activate API
+
+API -> API: Validate authentication
+API -> API: Map request to AddBillCommand
+API -> Handler: Handle(AddBillCommand)
+activate Handler
+
+Handler -> Handler: Validate command
+Handler -> Bill: new Bill(...)
+activate Bill
+
+Bill -> Bill: Validate business rules
+Bill -> Bill: Set initial state
+Bill -> Bill: RaiseBillAdded()
+Bill --> Handler: Bill aggregate
+deactivate Bill
+
+Handler -> Repo: Add(bill)
+activate Repo
+Repo -> DB: INSERT INTO Bills
+DB --> Repo: Success
+deactivate Repo
+
+Handler -> EventPub: Publish(BillAdded)
+activate EventPub
+EventPub -> EventHandler: Handle(BillAdded)
+activate EventHandler
+EventHandler -> EventHandler: Create reminder
+EventHandler -> EventHandler: Update cash flow projections
+EventHandler --> EventPub: Done
+deactivate EventHandler
+deactivate EventPub
+
+Handler --> API: BillId
+deactivate Handler
+
+API --> UI: 201 Created {billId}
+deactivate API
+
+UI -> UI: Show success notification
+UI -> UI: Redirect to bills list
+UI --> User: Display updated bills
+deactivate UI
+
+|||
+
+newpage Update Bill Amount - Sequence Diagram
+
+actor User
+participant "UI: BillDetails" as UI2
+participant "API: BillsController" as API2
+participant "Handler: UpdateBillAmountCommandHandler" as Handler2
+participant "Aggregate: Bill" as Bill2
+participant "Repository: IBillRepository" as Repo2
+participant "EventPublisher: IEventPublisher" as EventPub2
+participant "EventHandler: BillEventHandler" as EventHandler2
+database "Database" as DB2
+
+User -> UI2: Click edit amount
+activate UI2
+UI2 -> UI2: Show amount input dialog
+
+User -> UI2: Enter new amount and save
+UI2 -> UI2: Validate amount > 0
+UI2 -> API2: PUT /api/bills/{billId}/amount
+activate API2
+
+API2 -> API2: Validate authentication
+API2 -> API2: Check user authorization
+API2 -> Handler2: Handle(UpdateBillAmountCommand)
+activate Handler2
+
+Handler2 -> Repo2: GetById(billId)
+activate Repo2
+Repo2 -> DB2: SELECT FROM Bills WHERE BillId = ?
+DB2 --> Repo2: Bill data
+Repo2 --> Handler2: Bill aggregate
+deactivate Repo2
+
+Handler2 -> Bill2: UpdateAmount(newAmount)
+activate Bill2
+Bill2 -> Bill2: Validate amount > 0
+Bill2 -> Bill2: Check if amount changed
+Bill2 -> Bill2: Update amount property
+Bill2 -> Bill2: RaiseBillAmountChanged(oldAmount, newAmount)
+Bill2 --> Handler2: Updated bill
+deactivate Bill2
+
+Handler2 -> Repo2: Update(bill)
+activate Repo2
+Repo2 -> DB2: UPDATE Bills SET Amount = ?, UpdatedAt = ?
+DB2 --> Repo2: Success
+deactivate Repo2
+
+Handler2 -> EventPub2: Publish(BillAmountChanged)
+activate EventPub2
+EventPub2 -> EventHandler2: Handle(BillAmountChanged)
+activate EventHandler2
+EventHandler2 -> EventHandler2: Update payment schedules
+EventHandler2 -> EventHandler2: Recalculate cash flow
+EventHandler2 -> EventHandler2: Send notification
+EventHandler2 --> EventPub2: Done
+deactivate EventHandler2
+deactivate EventPub2
+
+Handler2 --> API2: Success
+deactivate Handler2
+
+API2 --> UI2: 200 OK
+deactivate API2
+
+UI2 -> UI2: Show success notification
+UI2 -> UI2: Update displayed amount
+UI2 --> User: Display updated bill
+deactivate UI2
+
+|||
+
+newpage Delete Bill - Sequence Diagram
+
+actor User
+participant "UI: BillDetails" as UI3
+participant "UI: ConfirmDialog" as Dialog
+participant "API: BillsController" as API3
+participant "Handler: DeleteBillCommandHandler" as Handler3
+participant "Repository: IBillRepository" as Repo3
+participant "EventPublisher: IEventPublisher" as EventPub3
+participant "EventHandler: BillEventHandler" as EventHandler3
+database "Database" as DB3
+
+User -> UI3: Click delete button
+activate UI3
+
+UI3 -> API3: GET /api/bills/{billId}/dependencies
+activate API3
+API3 -> DB3: Check for active autopay/scheduled payments
+DB3 --> API3: Dependencies found
+API3 --> UI3: {hasAutopay: true, scheduledPayments: 2}
+deactivate API3
+
+UI3 -> Dialog: Show confirmation
+activate Dialog
+Dialog --> User: "Are you sure? This bill has\nactive autopay and 2 scheduled payments."
+
+User -> Dialog: Confirm deletion
+Dialog --> UI3: Confirmed
+deactivate Dialog
+
+UI3 -> API3: DELETE /api/bills/{billId}
+activate API3
+
+API3 -> API3: Validate authentication
+API3 -> API3: Check user authorization
+API3 -> Handler3: Handle(DeleteBillCommand)
+activate Handler3
+
+Handler3 -> Repo3: GetById(billId)
+activate Repo3
+Repo3 -> DB3: SELECT FROM Bills WHERE BillId = ?
+DB3 --> Repo3: Bill data
+Repo3 --> Handler3: Bill
+deactivate Repo3
+
+Handler3 -> Handler3: Validate deletion allowed
+Handler3 -> Repo3: Delete(billId)
+activate Repo3
+Repo3 -> DB3: UPDATE Bills SET IsDeleted = 1, DeletedAt = ?
+DB3 --> Repo3: Success
+deactivate Repo3
+
+Handler3 -> EventPub3: Publish(BillDeleted)
+activate EventPub3
+EventPub3 -> EventHandler3: Handle(BillDeleted)
+activate EventHandler3
+EventHandler3 -> EventHandler3: Cancel associated reminders
+EventHandler3 -> EventHandler3: Cancel autopay settings
+EventHandler3 -> EventHandler3: Cancel scheduled payments
+EventHandler3 -> EventHandler3: Send notification
+EventHandler3 --> EventPub3: Done
+deactivate EventHandler3
+deactivate EventPub3
+
+Handler3 --> API3: Success
+deactivate Handler3
+
+API3 --> UI3: 204 No Content
+deactivate API3
+
+UI3 -> UI3: Show success notification
+UI3 -> UI3: Redirect to bills list
+UI3 --> User: Bill removed
+deactivate UI3
+
+|||
+
+newpage Get Upcoming Bills - Sequence Diagram
+
+actor User
+participant "UI: Dashboard" as UI4
+participant "API: BillsController" as API4
+participant "Handler: GetUpcomingBillsQueryHandler" as Handler4
+participant "Repository: IBillRepository" as Repo4
+database "Database" as DB4
+
+User -> UI4: Load dashboard
+activate UI4
+
+UI4 -> API4: GET /api/bills/upcoming?days=30
+activate API4
+
+API4 -> API4: Validate authentication
+API4 -> Handler4: Handle(GetUpcomingBillsQuery)
+activate Handler4
+
+Handler4 -> Repo4: GetUpcoming(userId, 30)
+activate Repo4
+
+Repo4 -> DB4: SELECT FROM Bills\nWHERE UserId = ? AND DueDate BETWEEN ? AND ?\nORDER BY DueDate ASC
+DB4 --> Repo4: Bills data
+
+Repo4 -> Repo4: Calculate recurring bill instances
+Repo4 -> Repo4: Map to BillDto
+Repo4 --> Handler4: List<BillDto>
+deactivate Repo4
+
+Handler4 --> API4: List<BillDto>
+deactivate Handler4
+
+API4 --> UI4: 200 OK [bills]
+deactivate API4
+
+UI4 -> UI4: Render upcoming bills widget
+UI4 -> UI4: Display due date indicators
+UI4 -> UI4: Show total amount due
+UI4 --> User: Display upcoming bills
+deactivate UI4
+
+@enduml

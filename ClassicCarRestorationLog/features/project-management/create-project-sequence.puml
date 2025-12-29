@@ -1,0 +1,43 @@
+@startuml Create Restoration Project Sequence
+
+actor User
+participant "Web App" as Web
+participant "Project API" as API
+participant "Project Service" as Service
+participant "Repository" as Repo
+participant "Event Bus" as Events
+database "SQL Server" as DB
+
+User -> Web: Fill project form
+Web -> Web: Validate inputs
+Web -> API: POST /api/projects\n{vehicle details}
+
+activate API
+API -> Service: CreateProject(command)
+
+activate Service
+Service -> Service: Validate VIN uniqueness
+Service -> Service: Validate business rules
+
+Service -> Repo: Save(project)
+activate Repo
+Repo -> DB: INSERT INTO Projects
+DB --> Repo: Success
+Repo --> Service: Project created
+deactivate Repo
+
+Service -> Events: Publish(RestorationProjectStarted)
+activate Events
+Events --> Service: Event published
+deactivate Events
+
+Service --> API: ProjectDto
+deactivate Service
+
+API --> Web: 201 Created\n{project}
+deactivate API
+
+Web -> Web: Navigate to project details
+Web --> User: Show project created
+
+@enduml

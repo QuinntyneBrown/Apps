@@ -1,0 +1,151 @@
+@startuml Goal Management Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Goal Lifecycle - From Creation to Achievement
+
+actor User
+participant "Frontend" as FE
+participant "GoalController" as API
+participant "GoalService" as SVC
+participant "GoalRepository" as REPO
+participant "StreakService" as STREAK
+participant "EventPublisher" as EVT
+participant "SessionService" as SESSION
+
+== Set Daily Goal ==
+
+User -> FE: Click "Set Daily Goal"
+FE -> FE: Show goal setup modal
+User -> FE: Select template (4 sessions, 100 min)
+FE -> API: POST /api/goals/daily
+API -> SVC: SetDailyGoal(command)
+SVC -> SVC: Validate no existing goal for date
+SVC -> SVC: Create Goal entity
+SVC -> REPO: Save(goal)
+SVC -> EVT: Publish(DailyFocusGoalSet)
+API --> FE: 201 Created (goal)
+FE -> FE: Show goal on dashboard
+FE --> User: Display progress ring (0%)
+
+== Session Completed - Progress Update ==
+
+SESSION -> EVT: Publish(SessionCompleted)
+EVT -> SVC: OnSessionCompleted(event)
+SVC -> REPO: GetActiveByUserAndDate(userId, date)
+SVC -> SVC: goal.UpdateProgress(+1 session, +25 min)
+SVC -> SVC: goal.CalculateProgress()
+note right: Progress = min(\n  sessions: 25%,\n  minutes: 25%\n) = 25%
+SVC -> REPO: Save(goal)
+SVC -> EVT: Publish(GoalProgressUpdated)
+EVT --> FE: WebSocket notification
+FE -> FE: Animate progress ring
+FE --> User: Update display (25%)
+
+== Second Session Completed ==
+
+SESSION -> EVT: Publish(SessionCompleted)
+EVT -> SVC: OnSessionCompleted(event)
+SVC -> REPO: GetActiveByUserAndDate(userId, date)
+SVC -> SVC: goal.UpdateProgress(+1 session, +25 min)
+SVC -> SVC: goal.CalculateProgress()
+note right: Progress = min(\n  sessions: 50%,\n  minutes: 50%\n) = 50%
+SVC -> REPO: Save(goal)
+SVC -> EVT: Publish(GoalProgressUpdated)
+EVT --> FE: WebSocket notification
+FE --> User: Show "Halfway there!" message
+
+== Fourth Session Completed - Goal Achieved ==
+
+SESSION -> EVT: Publish(SessionCompleted)
+EVT -> SVC: OnSessionCompleted(event)
+SVC -> REPO: GetActiveByUserAndDate(userId, date)
+SVC -> SVC: goal.UpdateProgress(+1 session, +25 min)
+SVC -> SVC: goal.CalculateProgress()
+note right: Progress = min(\n  sessions: 100%,\n  minutes: 100%\n) = 100%
+SVC -> SVC: goal.CheckAchievement()
+SVC -> SVC: goal.MarkAsAchieved()
+SVC -> SVC: CreateAchievementRecord()
+SVC -> SVC: CalculateBonusPoints(100% = 10 points)
+SVC -> REPO: Save(goal)
+SVC -> EVT: Publish(GoalAchieved)
+
+SVC -> STREAK: UpdateStreak(userId, GoalType.Daily)
+STREAK -> REPO: GetActiveStreak(userId, Daily)
+STREAK -> STREAK: streak.Increment()
+STREAK -> STREAK: CheckMilestone(streakCount)
+STREAK -> REPO: Save(streak)
+STREAK -> EVT: Publish(GoalStreakAchieved)
+
+API --> FE: 200 OK
+FE -> FE: Trigger confetti animation
+FE -> FE: Show achievement modal
+FE --> User: "Congratulations! Goal achieved!"
+FE --> User: Display bonus points + streak
+
+== View Goal History ==
+
+User -> FE: Navigate to Goal History
+FE -> API: GET /api/goals/history?type=daily
+API -> SVC: GetGoalHistory(filters)
+SVC -> REPO: GetHistory(userId, filters)
+REPO --> SVC: List<Goal>
+SVC --> API: GoalHistoryResponse
+API --> FE: 200 OK (goals + achievements)
+FE -> FE: Render achievement cards
+FE --> User: Display history grid
+
+== Set Weekly Goal ==
+
+User -> FE: Click "Set Weekly Goal"
+FE -> FE: Show weekly goal modal
+FE -> FE: Display current week (Dec 23-29)
+User -> FE: Set targets (20 sessions, 500 min)
+FE -> API: POST /api/goals/weekly
+API -> SVC: SetWeeklyGoal(command)
+SVC -> SVC: Validate no existing goal for week
+SVC -> SVC: Create Goal entity
+SVC -> REPO: Save(goal)
+SVC -> EVT: Publish(WeeklyFocusTargetSet)
+API --> FE: 201 Created (goal)
+FE --> User: Show weekly goal card
+
+== Scheduled: Day End Processing ==
+
+participant "Scheduler" as SCHED
+
+SCHED -> SVC: ProcessDayEnded(yesterday)
+SVC -> REPO: GetActiveDailyGoals(yesterday)
+loop For each active goal
+    SVC -> SVC: goal.CheckAchievement()
+    alt Goal achieved
+        SVC -> SVC: goal.MarkAsAchieved()
+        SVC -> EVT: Publish(GoalAchieved)
+        SVC -> STREAK: UpdateStreak(userId, Daily)
+    else Goal not achieved
+        SVC -> SVC: goal.MarkAsFailed()
+        SVC -> EVT: Publish(GoalFailed)
+        SVC -> STREAK: BreakStreak(userId, Daily)
+    end
+    SVC -> REPO: Save(goal)
+end
+
+== View Statistics ==
+
+User -> FE: Click "Goal Stats"
+FE -> API: GET /api/goals/stats
+API -> SVC: GetStatistics(userId)
+SVC -> REPO: GetStatistics(userId)
+REPO -> REPO: Calculate metrics
+REPO --> SVC: GoalStatistics
+SVC --> API: StatsResponse
+API --> FE: 200 OK (stats)
+FE -> FE: Render stats dashboard
+FE --> User: Display achievement rate, streaks
+
+@enduml

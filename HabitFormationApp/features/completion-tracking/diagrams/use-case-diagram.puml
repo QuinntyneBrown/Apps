@@ -1,0 +1,124 @@
+@startuml Completion Tracking - Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as user
+actor "System" as system
+actor "Reminder Service" as reminder
+actor "Streak Service" as streak
+
+rectangle "Completion Tracking" {
+  usecase "Log Habit Completion" as UC1
+  usecase "Quick Complete (One-Tap)" as UC2
+  usecase "Log with Details" as UC3
+  usecase "Undo Completion" as UC4
+  usecase "View Completion History" as UC5
+  usecase "View Completion Calendar" as UC6
+  usecase "View Today's Progress" as UC7
+  usecase "Log Late Completion" as UC8
+  usecase "Add Completion Notes" as UC9
+  usecase "Track Duration" as UC10
+  usecase "Record Location" as UC11
+  usecase "Calculate Streak" as UC12
+  usecase "Validate Completion" as UC13
+  usecase "Check Duplicate" as UC14
+  usecase "Publish Completion Event" as UC15
+  usecase "Update Streak" as UC16
+  usecase "Mark Reminder as Acted Upon" as UC17
+}
+
+' User interactions
+user --> UC2
+user --> UC3
+user --> UC4
+user --> UC5
+user --> UC6
+user --> UC7
+
+' Generalizations
+UC2 --|> UC1
+UC3 --|> UC1
+UC8 --|> UC1
+
+' Includes relationships
+UC1 ..> UC13 : <<include>>
+UC1 ..> UC14 : <<include>>
+UC1 ..> UC15 : <<include>>
+UC3 ..> UC9 : <<include>>
+UC3 ..> UC10 : <<include>>
+UC3 ..> UC11 : <<include>>
+UC5 ..> UC6 : <<include>>
+
+' Extends relationships
+UC1 ..> UC8 : <<extend>>\n[completion is late]
+UC7 ..> UC2 : <<extend>>
+
+' System interactions
+system --> UC13
+system --> UC14
+system --> UC15
+
+' Service integrations
+UC15 --> UC16 : triggers
+UC15 --> UC17 : triggers
+streak --> UC16
+reminder --> UC17
+
+note right of UC2
+  User taps complete button
+  on habit card for quick
+  logging with default values
+end note
+
+note right of UC3
+  User opens form to add
+  notes, duration, location
+  and custom time
+end note
+
+note right of UC4
+  Users can undo mistaken
+  completions within 7 days
+end note
+
+note right of UC8
+  System detects completion
+  logged after scheduled time
+  and flags it accordingly
+end note
+
+note bottom of UC13
+  Validates:
+  - Date not in future
+  - Date after habit start
+  - Habit not archived
+  - User owns habit
+end note
+
+note bottom of UC14
+  For daily habits, checks
+  if completion already exists
+  for the same calendar day
+end note
+
+note bottom of UC15
+  Events:
+  - HabitCompletionLogged
+  - LateCompletionLogged
+  - HabitCompletionUndone
+end note
+
+note bottom of UC16
+  Streak Service recalculates
+  current and best streak
+  based on new completion
+end note
+
+note bottom of UC17
+  If completion was triggered
+  by reminder, mark reminder
+  as successfully acted upon
+end note
+
+@enduml

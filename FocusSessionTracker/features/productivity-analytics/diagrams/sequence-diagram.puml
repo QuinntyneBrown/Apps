@@ -1,0 +1,187 @@
+@startuml Productivity Analytics Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Productivity Analytics and Achievement Flow
+
+actor User
+participant "Frontend" as FE
+participant "AnalyticsController" as API
+participant "AnalyticsService" as SVC
+participant "SessionCompletedHandler" as HANDLER
+participant "StreakManager" as STREAK
+participant "DeepWorkTracker" as DEEP
+participant "AchievementEngine" as ACH
+participant "MetricsRepository" as REPO
+participant "EventPublisher" as EVT
+participant "NotificationService" as NOTIF
+
+== Session Completed Processing ==
+
+HANDLER -> HANDLER: Handle(SessionCompleted)
+HANDLER -> SVC: ProcessSessionCompletion(session)
+
+SVC -> SVC: CheckHighFocusQualification(session)
+alt Qualifies as High-Focus
+    SVC -> REPO: SaveHighFocusSession(session)
+    SVC -> EVT: Publish(HighFocusSessionAchieved)
+end
+
+HANDLER -> STREAK: ProcessSessionCompleted(session)
+STREAK -> REPO: GetCurrentStreak(userId)
+
+alt Has Active Streak
+    STREAK -> STREAK: ContinueStreak()
+else No Active Streak
+    STREAK -> STREAK: StartNewStreak()
+    STREAK -> REPO: SaveStreak(streak)
+    STREAK -> EVT: Publish(FocusStreakStarted)
+end
+
+STREAK -> STREAK: CheckMilestone(streak)
+alt Milestone Reached
+    STREAK -> REPO: SaveMilestone(milestone)
+    STREAK -> EVT: Publish(FocusStreakMilestone)
+    EVT -> NOTIF: Send(MilestoneNotification)
+end
+
+HANDLER -> DEEP: TrackSession(session)
+DEEP -> REPO: GetAccumulatedTime(userId)
+DEEP -> DEEP: AddSessionTime(session)
+
+alt Session Qualifies as Deep Work
+    DEEP -> DEEP: CheckThresholds(accumulatedTime)
+    alt Threshold Reached
+        DEEP -> REPO: SaveThreshold(threshold)
+        DEEP -> EVT: Publish(DeepWorkThresholdReached)
+        EVT -> NOTIF: Send(ThresholdNotification)
+    end
+end
+
+HANDLER -> ACH: ProcessEvent(event)
+ACH -> ACH: CheckAchievementCriteria(event)
+alt Achievement Unlocked
+    ACH -> REPO: UnlockAchievement(achievement)
+    EVT -> NOTIF: Send(AchievementNotification)
+    NOTIF -> FE: Push(AchievementUnlocked)
+    FE -> FE: ShowConfettiAnimation()
+    FE -> User: Display Achievement Modal
+end
+
+== View Dashboard ==
+
+User -> FE: Navigate to Analytics
+FE -> API: GET /api/analytics/productivity/dashboard
+API -> SVC: GetDashboard(userId, dateRange)
+
+SVC -> REPO: GetMetrics(userId, startDate, endDate)
+REPO --> SVC: ProductivityMetrics
+
+SVC -> REPO: GetCurrentStreak(userId)
+REPO --> SVC: Streak
+
+SVC -> REPO: GetDeepWorkStats(userId)
+REPO --> SVC: DeepWorkStats
+
+SVC -> SVC: CalculateTrends(metrics)
+SVC --> API: DashboardData
+
+API --> FE: 200 OK (dashboard)
+FE -> FE: RenderCharts()
+FE -> FE: AnimateMetricCards()
+FE --> User: Display Dashboard
+
+== Achievement Progress ==
+
+User -> FE: View Achievements
+FE -> API: GET /api/analytics/productivity/achievements
+API -> SVC: GetAchievements(userId, filters)
+
+SVC -> REPO: GetAllAchievements(userId)
+REPO --> SVC: List<Achievement>
+
+SVC -> SVC: CalculateProgress(achievements)
+SVC --> API: AchievementData
+
+API --> FE: 200 OK (achievements)
+FE -> FE: RenderAchievementGrid()
+FE -> FE: ShowProgressIndicators()
+FE --> User: Display Achievements
+
+== Streak Milestone Reached ==
+
+User -> FE: Complete Session (Day 7)
+note over STREAK: Session completed maintaining streak
+STREAK -> STREAK: ContinueStreak()
+STREAK -> STREAK: CheckMilestone(7)
+
+STREAK -> REPO: SaveMilestone(milestone)
+STREAK -> EVT: Publish(FocusStreakMilestone)
+
+EVT -> ACH: Handle(FocusStreakMilestone)
+ACH -> ACH: UnlockStreakAchievement()
+ACH -> REPO: SaveAchievement(achievement)
+
+EVT -> NOTIF: SendMilestoneNotification()
+NOTIF -> FE: WebSocket(MilestoneReached)
+
+FE -> FE: PlayCelebrationAnimation()
+FE -> FE: UpdateStreakBadge()
+FE -> User: Show "7 Day Streak!" notification
+
+== Deep Work Threshold ==
+
+User -> FE: View Deep Work Progress
+FE -> API: GET /api/analytics/productivity/deep-work
+
+API -> SVC: GetDeepWorkStats(userId)
+SVC -> REPO: GetAccumulatedTime(userId, period)
+SVC -> REPO: GetThresholds(userId)
+
+REPO --> SVC: DeepWorkData
+SVC -> SVC: CalculateProgress(data)
+
+SVC --> API: DeepWorkStats
+API --> FE: 200 OK (stats)
+
+FE -> FE: RenderProgressBar()
+FE -> FE: ShowNextThreshold()
+FE --> User: Display Deep Work Progress
+
+note over User, NOTIF: User completes session that crosses 500-minute threshold
+
+DEEP -> DEEP: CheckThresholds(510 minutes)
+DEEP -> REPO: SaveThreshold(500)
+DEEP -> EVT: Publish(DeepWorkThresholdReached)
+
+EVT -> ACH: Handle(DeepWorkThresholdReached)
+ACH -> ACH: UnlockDeepWorkAchievement()
+
+EVT -> NOTIF: SendThresholdNotification()
+NOTIF -> FE: WebSocket(ThresholdReached)
+
+FE -> FE: PlayThresholdAnimation()
+FE -> User: Show "500 Minutes of Deep Work!" modal
+
+== Export Analytics ==
+
+User -> FE: Click Export
+FE -> FE: Show Export Modal
+User -> FE: Select format (PDF)
+
+FE -> API: POST /api/analytics/productivity/export
+API -> SVC: ExportData(userId, format, dateRange)
+
+SVC -> REPO: GetAllMetrics(userId, dateRange)
+SVC -> SVC: GeneratePDF(metrics)
+
+SVC --> API: PDF bytes
+API --> FE: 200 OK (file download)
+FE -> User: Download analytics.pdf
+
+@enduml

@@ -1,0 +1,110 @@
+@startuml ProfessionalNetworkCRM_Architecture
+!define RECTANGLE class
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+package "Frontend Layer" {
+  [Web App] as WebApp
+  [Mobile App] as MobileApp
+}
+
+package "API Gateway" {
+  [API Gateway] as Gateway
+  [Authentication] as Auth
+}
+
+package "Application Services" {
+  [Contact Service] as ContactSvc
+  [Interaction Service] as InteractionSvc
+  [Follow-Up Service] as FollowUpSvc
+  [Relationship Service] as RelationshipSvc
+  [Event Service] as EventSvc
+  [Opportunity Service] as OpportunitySvc
+  [Value Exchange Service] as ValueSvc
+  [Goals Service] as GoalsSvc
+  [Segmentation Service] as SegmentSvc
+  [Notes Service] as NotesSvc
+}
+
+package "Domain Layer" {
+  [Contact Aggregate] as ContactAgg
+  [Interaction Aggregate] as InteractionAgg
+  [FollowUp Aggregate] as FollowUpAgg
+  [NetworkingEvent Aggregate] as EventAgg
+  [Opportunity Aggregate] as OpportunityAgg
+}
+
+package "Infrastructure" {
+  database "SQL Server" as DB
+  queue "Event Bus" as EventBus
+  [Search Service] as Search
+  [Cache (Redis)] as Cache
+  [File Storage] as FileStorage
+}
+
+package "External Integrations" {
+  [LinkedIn API] as LinkedIn
+  [Google Calendar] as GCal
+  [Email Service] as Email
+  [Notification Service] as Notifications
+}
+
+package "Background Jobs" {
+  [Relationship Calculator] as RelCalc
+  [Follow-Up Detector] as FollowUpDetect
+  [Milestone Tracker] as MilestoneTrack
+}
+
+' Frontend to Gateway
+WebApp --> Gateway
+MobileApp --> Gateway
+
+' Gateway to Services
+Gateway --> Auth
+Gateway --> ContactSvc
+Gateway --> InteractionSvc
+Gateway --> FollowUpSvc
+Gateway --> RelationshipSvc
+Gateway --> EventSvc
+Gateway --> OpportunitySvc
+Gateway --> ValueSvc
+Gateway --> GoalsSvc
+Gateway --> SegmentSvc
+Gateway --> NotesSvc
+
+' Services to Domain
+ContactSvc --> ContactAgg
+InteractionSvc --> InteractionAgg
+FollowUpSvc --> FollowUpAgg
+EventSvc --> EventAgg
+OpportunitySvc --> OpportunityAgg
+
+' Services to Infrastructure
+ContactSvc --> DB
+ContactSvc --> EventBus
+ContactSvc --> Cache
+InteractionSvc --> DB
+InteractionSvc --> EventBus
+FollowUpSvc --> DB
+FollowUpSvc --> EventBus
+RelationshipSvc --> DB
+RelationshipSvc --> Cache
+
+' Services to Search
+ContactSvc --> Search
+NotesSvc --> Search
+
+' Event Bus to Background Jobs
+EventBus --> RelCalc
+EventBus --> FollowUpDetect
+EventBus --> MilestoneTrack
+
+' External Integrations
+ContactSvc --> LinkedIn
+InteractionSvc --> GCal
+InteractionSvc --> Email
+FollowUpSvc --> Notifications
+RelationshipSvc --> Notifications
+
+@enduml

@@ -1,0 +1,108 @@
+@startuml StressMoodTracker Sequence Diagram
+
+title Log High Stress and Receive Intervention
+
+actor User
+participant "UI" as UI
+participant "Stress\nController" as SC
+participant "Stress\nService" as SS
+participant "Trigger\nService" as TS
+participant "Intervention\nService" as IS
+participant "Notification\nService" as NS
+participant "Event\nBus" as EB
+participant "Database" as DB
+
+User -> UI: Open stress check-in
+activate UI
+
+UI -> UI: Show stress assessment
+User -> UI: Rate stress (9/10)
+User -> UI: Select symptoms (headache, tension)
+User -> UI: Add context note
+
+UI -> SC: POST /api/stress/entries
+activate SC
+
+SC -> SS: recordStressLevel(data)
+activate SS
+
+SS -> DB: INSERT stress_entry
+activate DB
+DB --> SS: entry created
+deactivate DB
+
+SS -> EB: publish(StressLevelRecorded)
+activate EB
+EB --> SS: acknowledged
+deactivate EB
+
+SS -> SS: checkThreshold(9)
+
+alt Stress >= 8 (High Stress)
+  SS -> EB: publish(HighStressAlertTriggered)
+  activate EB
+  EB --> SS: acknowledged
+  deactivate EB
+
+  SS -> TS: identifyPotentialTriggers(userId)
+  activate TS
+  TS -> DB: SELECT recent_triggers
+  activate DB
+  DB --> TS: triggers
+  deactivate DB
+  TS --> SS: potential triggers
+  deactivate TS
+
+  SS -> IS: recommendCopingStrategies(stressLevel)
+  activate IS
+  IS -> DB: SELECT effective_strategies
+  activate DB
+  DB --> IS: strategies
+  deactivate DB
+  IS --> SS: recommended strategies
+  deactivate IS
+
+  SS -> NS: sendHighStressAlert(userId, recommendations)
+  activate NS
+  NS --> SS: alert sent
+  deactivate NS
+end
+
+SS --> SC: stress recorded
+deactivate SS
+
+SC --> UI: 201 Created + Recommendations
+deactivate SC
+
+UI -> UI: Show high stress alert
+UI -> UI: Display coping recommendations
+UI --> User: Alert + Resources
+
+User -> UI: Select coping strategy "Deep Breathing"
+UI -> SC: POST /api/interventions/apply
+activate SC
+
+SC -> IS: applyCopingStrategy(strategyId)
+activate IS
+
+IS -> DB: INSERT coping_application
+activate DB
+DB --> IS: applied
+deactivate DB
+
+IS -> EB: publish(CopingStrategyApplied)
+activate EB
+EB --> IS: acknowledged
+deactivate EB
+
+IS --> SC: strategy applied
+deactivate IS
+
+SC --> UI: 200 OK
+deactivate SC
+
+UI -> UI: Start guided breathing
+UI --> User: Begin breathing exercise
+deactivate UI
+
+@enduml

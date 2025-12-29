@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Session Tracker - Goal Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stats-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .stats-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Goal Cards Grid */
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .goal-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .goal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4ade80;
+        }
+
+        .goal-date {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .edit-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Progress Ring */
+        .progress-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .progress-ring-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-percentage {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 0.25rem;
+        }
+
+        /* Progress Bars */
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            background: rgba(255,255,255,0.03);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .metric-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .metric-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Status Badge */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .time-left {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.875rem;
+        }
+
+        /* Streak Section */
+        .streak-section {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .streak-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .streak-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .streak-card {
+            background: rgba(255,255,255,0.03);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .streak-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .streak-count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+        }
+
+        .streak-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.875rem;
+        }
+
+        .streak-visual {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .streak-day {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .streak-day.completed {
+            background: #22c55e;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Achievement Badge */
+        .achievement-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Weekly Goal Card (different color scheme) */
+        .goal-card.weekly::before {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        }
+
+        .goal-card.weekly .goal-title {
+            color: #3b82f6;
+        }
+
+        .goal-card.weekly .progress-percentage {
+            color: #3b82f6;
+        }
+
+        .goal-card.weekly .metric-fill {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .goals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .streak-visual {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 2rem;
+        }
+
+        /* Quick Templates */
+        .templates-section {
+            margin-top: 2rem;
+        }
+
+        .templates-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .template-card {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .template-card:hover {
+            border-color: #4ade80;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(74, 222, 128, 0.2);
+        }
+
+        .template-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .template-level.beginner {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .template-level.intermediate {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .template-level.advanced {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .template-stats {
+            margin-top: 1rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .template-stat {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">FOCUS SESSION TRACKER</div>
+        <div class="header-actions">
+            <button class="header-btn">User</button>
+            <button class="header-btn">Settings</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Goal Manager</h1>
+            <button class="stats-btn">View Statistics</button>
+        </div>
+
+        <!-- Goals Grid -->
+        <div class="goals-grid">
+            <!-- Daily Goal Card -->
+            <div class="goal-card">
+                <div class="goal-header">
+                    <div>
+                        <div class="goal-title">DAILY GOAL</div>
+                        <div class="goal-date">December 28, 2024</div>
+                    </div>
+                    <button class="edit-btn">Edit</button>
+                </div>
+
+                <!-- Progress Ring -->
+                <div class="progress-container">
+                    <div class="progress-ring-wrapper">
+                        <svg class="progress-ring" width="200" height="200">
+                            <circle
+                                class="progress-ring-circle"
+                                stroke="rgba(255,255,255,0.1)"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="90"
+                                cx="100"
+                                cy="100"
+                            />
+                            <circle
+                                class="progress-ring-circle"
+                                stroke="#4ade80"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="90"
+                                cx="100"
+                                cy="100"
+                                stroke-dasharray="565.48"
+                                stroke-dashoffset="282.74"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percentage">50%</div>
+                            <div class="progress-label">Complete</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>Sessions</span>
+                            <span class="metric-value">2/4</span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>Minutes</span>
+                            <span class="metric-value">50/100</span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="status-bar">
+                    <div class="status-badge active">
+                        <div class="status-dot"></div>
+                        Active
+                    </div>
+                    <div class="time-left">Time left: 8h 30m</div>
+                </div>
+            </div>
+
+            <!-- Weekly Goal Card -->
+            <div class="goal-card weekly">
+                <div class="goal-header">
+                    <div>
+                        <div class="goal-title">WEEKLY GOAL</div>
+                        <div class="goal-date">Dec 23 - Dec 29, 2024</div>
+                    </div>
+                    <button class="edit-btn">Edit</button>
+                </div>
+
+                <!-- Progress Ring -->
+                <div class="progress-container">
+                    <div class="progress-ring-wrapper">
+                        <svg class="progress-ring" width="200" height="200">
+                            <circle
+                                class="progress-ring-circle"
+                                stroke="rgba(255,255,255,0.1)"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="90"
+                                cx="100"
+                                cy="100"
+                            />
+                            <circle
+                                class="progress-ring-circle"
+                                stroke="#3b82f6"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="90"
+                                cx="100"
+                                cy="100"
+                                stroke-dasharray="565.48"
+                                stroke-dashoffset="367.56"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percentage">35%</div>
+                            <div class="progress-label">Complete</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>Sessions</span>
+                            <span class="metric-value">7/20</span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-fill" style="width: 35%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>Minutes</span>
+                            <span class="metric-value">175/500</span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-fill" style="width: 35%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="status-bar">
+                    <div class="status-badge active">
+                        <div class="status-dot"></div>
+                        Active
+                    </div>
+                    <div class="time-left">Days left: 2</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Streak Section -->
+        <div class="streak-section">
+            <div class="streak-header">Streak Tracker</div>
+
+            <div class="streak-cards">
+                <!-- Daily Streak -->
+                <div class="streak-card">
+                    <div class="streak-icon">🔥</div>
+                    <div class="streak-count">5 Days</div>
+                    <div class="streak-label">Current Daily Streak</div>
+                    <div class="streak-visual">
+                        <div class="streak-day completed">✓</div>
+                        <div class="streak-day completed">✓</div>
+                        <div class="streak-day completed">✓</div>
+                        <div class="streak-day completed">✓</div>
+                        <div class="streak-day completed">✓</div>
+                        <div class="streak-day"></div>
+                        <div class="streak-day"></div>
+                    </div>
+                </div>
+
+                <!-- Weekly Streak -->
+                <div class="streak-card">
+                    <div class="streak-icon">🔥</div>
+                    <div class="streak-count">3 Weeks</div>
+                    <div class="streak-label">Current Weekly Streak</div>
+                </div>
+
+                <!-- Longest Streak -->
+                <div class="streak-card">
+                    <div class="streak-icon">🏆</div>
+                    <div class="streak-count">12 Days</div>
+                    <div class="streak-label">Longest Daily Streak</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Templates -->
+        <div class="templates-section">
+            <div class="templates-header">Quick Start Templates</div>
+            <div class="templates-grid">
+                <!-- Beginner Template -->
+                <div class="template-card">
+                    <div class="template-level beginner">BEGINNER</div>
+                    <div class="template-stats">
+                        <div class="template-stat"><strong>2</strong> sessions</div>
+                        <div class="template-stat"><strong>50</strong> minutes</div>
+                    </div>
+                </div>
+
+                <!-- Intermediate Template -->
+                <div class="template-card">
+                    <div class="template-level intermediate">INTERMEDIATE</div>
+                    <div class="template-stats">
+                        <div class="template-stat"><strong>4</strong> sessions</div>
+                        <div class="template-stat"><strong>100</strong> minutes</div>
+                    </div>
+                </div>
+
+                <!-- Advanced Template -->
+                <div class="template-card">
+                    <div class="template-level advanced">ADVANCED</div>
+                    <div class="template-stats">
+                        <div class="template-stat"><strong>6</strong> sessions</div>
+                        <div class="template-stat"><strong>150</strong> minutes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary">
+                <span>➕</span>
+                Set Daily Goal
+            </button>
+            <button class="btn btn-secondary">
+                <span>📅</span>
+                Set Weekly Goal
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Simple interactivity for demonstration
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', function() {
+                alert('Template selected! In the real app, this would open the goal setup modal.');
+            });
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Edit goal clicked! In the real app, this would open the edit modal.');
+            });
+        });
+
+        document.querySelector('.stats-btn').addEventListener('click', function() {
+            alert('View statistics clicked! In the real app, this would navigate to the statistics page.');
+        });
+
+        document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.textContent.includes('Daily') ? 'daily' : 'weekly';
+                alert(`Set ${type} goal clicked! In the real app, this would open the goal setup modal.`);
+            });
+        });
+    </script>
+</body>
+</html>

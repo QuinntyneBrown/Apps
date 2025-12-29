@@ -1,0 +1,478 @@
+@startuml Medication Management - Sequence Diagrams
+
+!define ACTOR_COLOR #4FC3F7
+!define UI_COLOR #81C784
+!define API_COLOR #FFB74D
+!define SERVICE_COLOR #9575CD
+!define REPO_COLOR #E57373
+!define EVENT_COLOR #FFD54F
+
+skinparam sequenceBoxBorderColor #888888
+
+' ========================================
+' Scenario 1: Prescribe Medication
+' ========================================
+title Scenario 1: Prescribe New Medication for Pet
+
+actor "Pet Owner" as Owner ACTOR_COLOR
+participant "Medication UI" as UI UI_COLOR
+participant "API Gateway" as API API_COLOR
+participant "Medication\nCommand Handler" as Handler SERVICE_COLOR
+participant "Medication\nAggregate" as Medication SERVICE_COLOR
+participant "Schedule\nService" as ScheduleService SERVICE_COLOR
+participant "Medication\nRepository" as MedicationRepo REPO_COLOR
+participant "Event\nPublisher" as EventBus EVENT_COLOR
+
+Owner -> UI : Click "Add New Medication"
+activate UI
+
+UI -> Owner : Display medication form
+Owner -> UI : Enter medication details\n(name, dosage, frequency, etc.)
+UI -> UI : Validate form inputs
+
+UI -> API : POST /api/medications/prescribe
+activate API
+
+API -> API : Authenticate user\nAuthorize access to pet
+
+API -> Handler : PrescribeMedicationCommand
+activate Handler
+
+Handler -> Medication : Create new Medication
+activate Medication
+
+Medication -> Medication : Validate prescription rules\n- StartDate >= PrescriptionDate\n- InitialQuantity > 0\n- RefillThreshold < InitialQuantity
+
+alt Validation Fails
+    Medication --> Handler : ValidationException
+    Handler --> API : 400 Bad Request
+    API --> UI : Error response
+    UI --> Owner : Show validation errors
+else Validation Succeeds
+    Medication -> ScheduleService : GenerateSchedule(startDate, endDate)
+    activate ScheduleService
+
+    ScheduleService -> ScheduleService : Calculate dose times\nbased on frequency
+    ScheduleService --> Medication : List<ScheduledDose>
+    deactivate ScheduleService
+
+    Medication -> Medication : Create AdministrationSchedule\nwith generated doses
+
+    Medication -> EventBus : Publish MedicationPrescribed event
+    activate EventBus
+
+    EventBus -> EventBus : Notify subscribers:\n- NotificationService\n- AuditService\n- AnalyticsService
+    deactivate EventBus
+
+    Handler -> MedicationRepo : Save(medication)
+    activate MedicationRepo
+    MedicationRepo -> MedicationRepo : Persist to database
+    MedicationRepo --> Handler : Success
+    deactivate MedicationRepo
+
+    Handler --> API : 201 Created\n{medicationId}
+    deactivate Handler
+
+    API --> UI : Success response
+    deactivate API
+
+    UI -> UI : Update medication list
+    UI --> Owner : Show success message\n"Medication added successfully"
+    deactivate UI
+
+    note right of EventBus
+        MedicationPrescribed event triggers:
+        1. Welcome notification to owner
+        2. First dose reminder scheduled
+        3. Audit log entry created
+    end note
+end
+
+|||
+
+' ========================================
+' Scenario 2: Record Medication Administration
+' ========================================
+newpage Scenario 2: Record Medication Administration
+
+actor "Pet Owner" as Owner2 ACTOR_COLOR
+participant "Medication UI" as UI2 UI_COLOR
+participant "API Gateway" as API2 API_COLOR
+participant "Medication\nCommand Handler" as Handler2 SERVICE_COLOR
+participant "Medication\nAggregate" as Medication2 SERVICE_COLOR
+participant "Refill Monitor\nService" as RefillService SERVICE_COLOR
+participant "Medication\nRepository" as MedicationRepo2 REPO_COLOR
+participant "Administration\nRepository" as AdminRepo REPO_COLOR
+participant "Event\nPublisher" as EventBus2 EVENT_COLOR
+participant "Notification\nService" as NotificationService SERVICE_COLOR
+
+Owner2 -> UI2 : Receive dose reminder notification
+activate UI2
+
+UI2 -> Owner2 : Show "Give Medication" prompt\n(Fluffy - Antibiotics - 2 tablets)
+
+Owner2 -> UI2 : Click "Mark as Given"
+UI2 -> Owner2 : Show confirmation dialog\n(actual time, notes optional)
+
+Owner2 -> UI2 : Confirm administration\n"Given at 9:05 AM"
+
+UI2 -> API2 : POST /api/medications/{id}/administer
+activate API2
+
+API2 -> Handler2 : RecordAdministrationCommand
+activate Handler2
+
+Handler2 -> MedicationRepo2 : GetById(medicationId)
+activate MedicationRepo2
+MedicationRepo2 --> Handler2 : Medication
+deactivate MedicationRepo2
+
+Handler2 -> Medication2 : RecordAdministration(data)
+activate Medication2
+
+Medication2 -> Medication2 : Validate:\n- Medication is Active\n- Sufficient supply exists\n- Time is reasonable
+
+alt Medication is Discontinued
+    Medication2 --> Handler2 : InvalidOperationException
+    Handler2 --> API2 : 400 Bad Request
+    API2 --> UI2 : Error response
+    UI2 --> Owner2 : "Cannot administer discontinued medication"
+
+else Insufficient Supply
+    Medication2 --> Handler2 : InsufficientSupplyException
+    Handler2 --> API2 : 400 Bad Request
+    API2 --> UI2 : Error response
+    UI2 --> Owner2 : "Not enough medication remaining"
+
+else Valid Administration
+    Medication2 -> Medication2 : Update supply:\ncurrentQuantity -= 1
+
+    Medication2 -> Medication2 : Create AdministrationRecord
+
+    Medication2 -> EventBus2 : Publish MedicationAdministered event
+    activate EventBus2
+    deactivate EventBus2
+
+    Medication2 -> RefillService : CheckRefillNeeded()
+    activate RefillService
+
+    RefillService -> RefillService : Compare currentQuantity\nwith refillThreshold
+
+    alt Supply Below Threshold
+        RefillService -> RefillService : Calculate days remaining
+        RefillService -> RefillService : Determine priority level
+
+        RefillService -> EventBus2 : Publish MedicationRefillNeeded event
+        activate EventBus2
+
+        EventBus2 -> NotificationService : Handle RefillNeeded event
+        activate NotificationService
+        NotificationService -> Owner2 : Send refill alert\n"Only 3 days of medication left"
+        deactivate NotificationService
+
+        deactivate EventBus2
+    end
+
+    RefillService --> Medication2 : Refill check complete
+    deactivate RefillService
+
+    Medication2 --> Handler2 : AdministrationRecord
+
+    Handler2 -> MedicationRepo2 : Save(medication)
+    activate MedicationRepo2
+    MedicationRepo2 --> Handler2 : Success
+    deactivate MedicationRepo2
+
+    Handler2 -> AdminRepo : Save(administrationRecord)
+    activate AdminRepo
+    AdminRepo --> Handler2 : Success
+    deactivate AdminRepo
+
+    Handler2 --> API2 : 200 OK
+    deactivate Handler2
+
+    API2 --> UI2 : Success response
+    deactivate API2
+
+    UI2 -> UI2 : Update schedule:\nMark dose as completed\nShow next dose time
+
+    UI2 --> Owner2 : "Dose recorded!\nNext dose: Today at 9:00 PM"
+    deactivate UI2
+
+    note right of EventBus2
+        MedicationAdministered event triggers:
+        1. Adherence statistics update
+        2. Schedule advance to next dose
+        3. Refill check (if needed)
+        4. Success notification
+    end note
+
+    deactivate Medication2
+end
+
+|||
+
+' ========================================
+' Scenario 3: Missed Dose Detection & Alert
+' ========================================
+newpage Scenario 3: Automated Missed Dose Detection
+
+participant "Missed Dose\nDetection Service" as MissedService SERVICE_COLOR
+participant "Medication\nRepository" as MedicationRepo3 REPO_COLOR
+participant "Administration\nRepository" as AdminRepo2 REPO_COLOR
+participant "Medication\nAggregate" as Medication3 SERVICE_COLOR
+participant "Event\nPublisher" as EventBus3 EVENT_COLOR
+participant "Notification\nService" as NotificationService2 SERVICE_COLOR
+actor "Pet Owner" as Owner3 ACTOR_COLOR
+
+[-> MissedService : Scheduled job runs\n(every hour)
+activate MissedService
+
+MissedService -> MedicationRepo3 : GetAllActiveScheduledDoses()
+activate MedicationRepo3
+MedicationRepo3 --> MissedService : List<ScheduledDose>
+deactivate MedicationRepo3
+
+loop For each scheduled dose
+    MissedService -> MissedService : Check if:\n- scheduledTime + gracePeriod < now\n- status == Pending
+
+    alt Dose is Missed
+        MissedService -> AdminRepo2 : GetAdministrationRecord(doseId)
+        activate AdminRepo2
+        AdminRepo2 --> MissedService : null (not administered)
+        deactivate AdminRepo2
+
+        MissedService -> MedicationRepo3 : GetById(medicationId)
+        activate MedicationRepo3
+        MedicationRepo3 --> MissedService : Medication
+        deactivate MedicationRepo3
+
+        MissedService -> Medication3 : MarkDoseMissed(scheduledTime)
+        activate Medication3
+
+        Medication3 -> Medication3 : Create MissedDose record
+        Medication3 -> Medication3 : Update schedule status
+        Medication3 -> Medication3 : Increment missed dose count
+
+        Medication3 -> EventBus3 : Publish MedicationMissed event
+        activate EventBus3
+
+        EventBus3 -> NotificationService2 : Handle MedicationMissed event
+        activate NotificationService2
+
+        NotificationService2 -> NotificationService2 : Determine notification priority:\n- Critical medication = high priority\n- Consecutive misses = escalate
+
+        NotificationService2 -> Owner3 : Send missed dose alert\n"You missed giving Fluffy her medication\nat 9:00 AM"
+
+        alt Critical Medication with Multiple Misses
+            NotificationService2 -> Owner3 : Send urgent notification\n"URGENT: Multiple missed doses"
+
+            NotificationService2 -> NotificationService2 : Notify veterinarian\nif configured
+        end
+
+        deactivate NotificationService2
+        deactivate EventBus3
+
+        Medication3 --> MissedService : Success
+        deactivate Medication3
+
+        MissedService -> MedicationRepo3 : Save(medication)
+        activate MedicationRepo3
+        deactivate MedicationRepo3
+    end
+end
+
+MissedService -> MissedService : Log detection summary:\n"Processed 150 doses,\nfound 3 missed"
+
+deactivate MissedService
+
+note right of NotificationService2
+    Missed dose notifications include:
+    - Pet name and medication
+    - Scheduled time
+    - Option to mark as given late
+    - Option to mark as skipped
+    - Adherence impact warning
+end note
+
+|||
+
+' ========================================
+' Scenario 4: View Adherence Report
+' ========================================
+newpage Scenario 4: View Medication Adherence Report
+
+actor "Pet Owner" as Owner4 ACTOR_COLOR
+participant "Medication UI" as UI4 UI_COLOR
+participant "API Gateway" as API4 API_COLOR
+participant "Medication\nQuery Handler" as QueryHandler SERVICE_COLOR
+participant "Adherence\nCalculation Service" as AdherenceService SERVICE_COLOR
+participant "Medication\nRepository" as MedicationRepo4 REPO_COLOR
+participant "Administration\nRepository" as AdminRepo3 REPO_COLOR
+
+Owner4 -> UI4 : Navigate to "Adherence Report"
+activate UI4
+
+UI4 -> Owner4 : Show report options\n(select pet, date range)
+
+Owner4 -> UI4 : Select "Fluffy - Last 30 days"
+
+UI4 -> API4 : GET /api/pets/{petId}/medications/adherence\n?periodDays=30
+activate API4
+
+API4 -> QueryHandler : GetAdherenceStatistics(petId, 30)
+activate QueryHandler
+
+QueryHandler -> MedicationRepo4 : GetActiveMedications(petId)
+activate MedicationRepo4
+MedicationRepo4 --> QueryHandler : List<Medication>
+deactivate MedicationRepo4
+
+QueryHandler -> AdminRepo3 : GetAdministrationRecords\n(petId, last30Days)
+activate AdminRepo3
+AdminRepo3 --> QueryHandler : List<AdministrationRecord>\n+ List<MissedDose>
+deactivate AdminRepo3
+
+QueryHandler -> AdherenceService : CalculateAdherence(medications, records)
+activate AdherenceService
+
+loop For each medication
+    AdherenceService -> AdherenceService : Count scheduled doses
+    AdherenceService -> AdherenceService : Count administered doses
+    AdherenceService -> AdherenceService : Count missed doses
+    AdherenceService -> AdherenceService : Calculate adherence rate:\n(administered / scheduled) * 100
+end
+
+AdherenceService -> AdherenceService : Calculate overall adherence:\nweighted average across all meds
+
+AdherenceService -> AdherenceService : Identify patterns:\n- Time of day with most misses\n- Day of week patterns\n- Medication-specific trends
+
+AdherenceService --> QueryHandler : AdherenceStatistics
+deactivate AdherenceService
+
+QueryHandler -> QueryHandler : Map to DTO
+
+QueryHandler --> API4 : AdherenceDTO
+deactivate QueryHandler
+
+API4 --> UI4 : JSON response
+deactivate API4
+
+UI4 -> UI4 : Render adherence report:\n- Overall: 87% adherence\n- Antibiotics: 95%\n- Pain med: 78%\n- Calendar heatmap\n- Trend chart
+
+UI4 --> Owner4 : Display comprehensive report
+deactivate UI4
+
+note right of UI4
+    Report includes:
+    - Overall adherence percentage
+    - Per-medication breakdown
+    - Visual calendar heatmap
+    - Trend over time chart
+    - Insights and patterns
+    - Share/export options
+end note
+
+|||
+
+' ========================================
+' Scenario 5: Discontinue Medication
+' ========================================
+newpage Scenario 5: Discontinue Medication (Course Completed)
+
+actor "Pet Owner" as Owner5 ACTOR_COLOR
+participant "Medication UI" as UI5 UI_COLOR
+participant "API Gateway" as API5 API_COLOR
+participant "Medication\nCommand Handler" as Handler5 SERVICE_COLOR
+participant "Medication\nAggregate" as Medication5 SERVICE_COLOR
+participant "Schedule\nService" as ScheduleService2 SERVICE_COLOR
+participant "Medication\nRepository" as MedicationRepo5 REPO_COLOR
+participant "Event\nPublisher" as EventBus5 EVENT_COLOR
+participant "Notification\nService" as NotificationService3 SERVICE_COLOR
+
+Owner5 -> UI5 : Select medication\n"10-day Antibiotic Course"
+activate UI5
+
+UI5 -> Owner5 : Show medication details\n"All doses completed"
+
+Owner5 -> UI5 : Click "Discontinue Medication"
+
+UI5 -> Owner5 : Show discontinuation form:\n- Reason (dropdown)\n- Was course completed? (checkbox)\n- Final notes (textarea)
+
+Owner5 -> UI5 : Submit:\n- Reason: "Completed as scheduled"\n- Course completed: Yes\n- Notes: "No adverse reactions"
+
+UI5 -> API5 : POST /api/medications/{id}/discontinue
+activate API5
+
+API5 -> Handler5 : DiscontinueMedicationCommand
+activate Handler5
+
+Handler5 -> MedicationRepo5 : GetById(medicationId)
+activate MedicationRepo5
+MedicationRepo5 --> Handler5 : Medication
+deactivate MedicationRepo5
+
+Handler5 -> Medication5 : Discontinue(reason, category, notes)
+activate Medication5
+
+Medication5 -> Medication5 : Validate:\n- Not already discontinued\n- User has permission
+
+Medication5 -> Medication5 : Set status = Discontinued\nSet discontinuedDate = now\nSet discontinuationReason
+
+Medication5 -> ScheduleService2 : CancelFutureScheduledDoses(medicationId)
+activate ScheduleService2
+
+ScheduleService2 -> ScheduleService2 : Mark all future doses\nas Cancelled
+
+ScheduleService2 --> Medication5 : Doses cancelled
+deactivate ScheduleService2
+
+Medication5 -> Medication5 : Preserve historical records:\n- All past administrations\n- Adherence statistics\n- Refill history
+
+Medication5 -> EventBus5 : Publish MedicationDiscontinued event
+activate EventBus5
+
+EventBus5 -> NotificationService3 : Handle MedicationDiscontinued event
+activate NotificationService3
+
+NotificationService3 -> Owner5 : Send confirmation\n"Antibiotic course completed\nsuccessfully!"
+
+alt Course Completed Successfully
+    NotificationService3 -> Owner5 : Include completion summary:\n"10/10 doses taken\n100% adherence"
+else Discontinued Early
+    NotificationService3 -> Owner5 : Reminder to inform vet\nif stopped early
+end
+
+deactivate NotificationService3
+deactivate EventBus5
+
+Medication5 --> Handler5 : Success
+deactivate Medication5
+
+Handler5 -> MedicationRepo5 : Save(medication)
+activate MedicationRepo5
+MedicationRepo5 --> Handler5 : Success
+deactivate MedicationRepo5
+
+Handler5 --> API5 : 200 OK
+deactivate Handler5
+
+API5 --> UI5 : Success response
+deactivate API5
+
+UI5 -> UI5 : Remove from active list\nMove to history\nCancel all reminders
+
+UI5 --> Owner5 : "Medication discontinued\nMoved to history"
+deactivate UI5
+
+note right of Medication5
+    When discontinuing:
+    - All future doses cancelled
+    - Historical data preserved
+    - Active status removed
+    - Reminders stopped
+    - Refill alerts cancelled
+    - Archive for vet reports
+end note
+
+@enduml

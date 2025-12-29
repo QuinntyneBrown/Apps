@@ -1,0 +1,113 @@
+@startuml Revenue Tracking Class Diagram
+
+package "Income Aggregate" {
+    class Income <<Aggregate Root>> {
+        + IncomeId : Guid
+        + StreamId : Guid
+        + UserId : Guid
+        + Amount : decimal
+        + ClientName : string
+        + PaymentDate : DateTime
+        + PaymentMethod : PaymentMethodEnum
+        + InvoiceId : Guid?
+        + Description : string
+        + IsRecurring : bool
+        + RecurringScheduleId : Guid?
+        + Tags : List<string>
+        + CreatedAt : DateTime
+    }
+
+    enum PaymentMethodEnum {
+        Cash
+        Check
+        BankTransfer
+        CreditCard
+        PayPal
+        Venmo
+        Stripe
+        Other
+    }
+}
+
+package "Recurring Income Aggregate" {
+    class RecurringIncomeSchedule <<Aggregate Root>> {
+        + ScheduleId : Guid
+        + StreamId : Guid
+        + UserId : Guid
+        + Amount : decimal
+        + Frequency : FrequencyEnum
+        + StartDate : DateTime
+        + EndDate : DateTime?
+        + ClientId : Guid?
+        + NextExpectedDate : DateTime
+        + IsActive : bool
+        + CreatedAt : DateTime
+        --
+        + CalculateNextDate() : DateTime
+        + Cancel() : void
+    }
+
+    enum FrequencyEnum {
+        Weekly
+        BiWeekly
+        Monthly
+        Quarterly
+        Annually
+    }
+}
+
+package "Commands" {
+    class RecordIncomeCommand {
+        + StreamId : Guid
+        + Amount : decimal
+        + ClientName : string
+        + PaymentDate : DateTime
+        + PaymentMethod : PaymentMethodEnum
+        + Description : string
+    }
+
+    class ScheduleRecurringIncomeCommand {
+        + StreamId : Guid
+        + Amount : decimal
+        + Frequency : FrequencyEnum
+        + StartDate : DateTime
+        + ClientId : Guid?
+    }
+}
+
+package "Events" {
+    class IncomeReceived <<Event>> {
+        + IncomeId : Guid
+        + StreamId : Guid
+        + Amount : decimal
+        + ClientName : string
+        + PaymentDate : DateTime
+        + Timestamp : DateTime
+    }
+
+    class LargePaymentReceived <<Event>> {
+        + IncomeId : Guid
+        + Amount : decimal
+        + AverageComparison : decimal
+        + Timestamp : DateTime
+    }
+
+    class RecurringIncomeScheduled <<Event>> {
+        + ScheduleId : Guid
+        + Amount : decimal
+        + Frequency : string
+        + Timestamp : DateTime
+    }
+
+    class PaymentOverdue <<Event>> {
+        + ScheduleId : Guid
+        + AmountDue : decimal
+        + DaysOverdue : int
+        + Timestamp : DateTime
+    }
+}
+
+Income --> PaymentMethodEnum
+RecurringIncomeSchedule --> FrequencyEnum
+
+@enduml

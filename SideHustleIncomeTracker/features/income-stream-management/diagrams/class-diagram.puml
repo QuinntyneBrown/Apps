@@ -1,0 +1,226 @@
+@startuml Income Stream Management Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define VALUE_OBJECT_COLOR #FFF9C4
+!define AGGREGATE_COLOR #C8E6C9
+!define COMMAND_COLOR #FFCCBC
+!define EVENT_COLOR #F8BBD0
+
+package "Income Stream Aggregate" <<Rectangle>> {
+    class IncomeStream <<Aggregate Root>> AGGREGATE_COLOR {
+        - StreamId : Guid
+        - UserId : Guid
+        - StreamName : string
+        - BusinessType : BusinessTypeEnum
+        - Description : string
+        - StartDate : DateTime
+        - EndDate : DateTime?
+        - Status : StreamStatusEnum
+        - ExpectedMonthlyRevenue : decimal
+        - ActualMonthlyRevenue : decimal
+        - TotalRevenueEarned : decimal
+        - ClosureReason : string?
+        - ReactivationDate : DateTime?
+        - Tags : List<string>
+        - CreatedAt : DateTime
+        - UpdatedAt : DateTime
+        --
+        + Create(name, type, startDate, userId) : IncomeStream
+        + UpdateDetails(name, description, expectedRevenue) : void
+        + Close(endDate, reason) : void
+        + Reactivate(reactivationDate) : void
+        + CalculateActualMonthlyRevenue() : decimal
+        + GetDurationInDays() : int
+    }
+
+    enum BusinessTypeEnum VALUE_OBJECT_COLOR {
+        Freelancing
+        Consulting
+        ECommerce
+        ContentCreation
+        Tutoring
+        Crafts
+        Services
+        Rental
+        Other
+    }
+
+    enum StreamStatusEnum VALUE_OBJECT_COLOR {
+        Active
+        Closed
+        Reactivated
+    }
+}
+
+package "Commands" <<Rectangle>> {
+    class CreateIncomeStreamCommand <<Command>> COMMAND_COLOR {
+        + UserId : Guid
+        + StreamName : string
+        + BusinessType : BusinessTypeEnum
+        + Description : string
+        + StartDate : DateTime
+        + ExpectedMonthlyRevenue : decimal?
+        + Tags : List<string>
+    }
+
+    class UpdateIncomeStreamCommand <<Command>> COMMAND_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + StreamName : string
+        + Description : string
+        + BusinessType : BusinessTypeEnum
+        + ExpectedMonthlyRevenue : decimal?
+        + Tags : List<string>
+    }
+
+    class CloseIncomeStreamCommand <<Command>> COMMAND_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + EndDate : DateTime
+        + ClosureReason : string
+    }
+
+    class ReactivateIncomeStreamCommand <<Command>> COMMAND_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + ReactivationDate : DateTime
+    }
+}
+
+package "Domain Events" <<Rectangle>> {
+    class IncomeStreamCreated <<Domain Event>> EVENT_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + StreamName : string
+        + BusinessType : string
+        + StartDate : DateTime
+        + ExpectedMonthlyRevenue : decimal
+        + Timestamp : DateTime
+    }
+
+    class IncomeStreamClosed <<Domain Event>> EVENT_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + StreamName : string
+        + EndDate : DateTime
+        + TotalRevenueEarned : decimal
+        + DurationInDays : int
+        + ClosureReason : string
+        + Timestamp : DateTime
+    }
+
+    class IncomeStreamReactivated <<Domain Event>> EVENT_COLOR {
+        + StreamId : Guid
+        + UserId : Guid
+        + StreamName : string
+        + ReactivationDate : DateTime
+        + PreviousEndDate : DateTime
+        + Timestamp : DateTime
+    }
+}
+
+package "Command Handlers" <<Rectangle>> {
+    class CreateIncomeStreamHandler {
+        + Handle(CreateIncomeStreamCommand) : Guid
+    }
+
+    class UpdateIncomeStreamHandler {
+        + Handle(UpdateIncomeStreamCommand) : void
+    }
+
+    class CloseIncomeStreamHandler {
+        + Handle(CloseIncomeStreamCommand) : void
+    }
+
+    class ReactivateIncomeStreamHandler {
+        + Handle(ReactivateIncomeStreamCommand) : void
+    }
+}
+
+package "Queries" <<Rectangle>> {
+    class GetActiveIncomeStreamsQuery {
+        + UserId : Guid
+        + Page : int
+        + PageSize : int
+        + SortBy : string
+        + SortOrder : string
+    }
+
+    class GetIncomeStreamByIdQuery {
+        + StreamId : Guid
+        + UserId : Guid
+    }
+
+    class GetIncomeStreamHistoryQuery {
+        + UserId : Guid
+        + Page : int
+        + PageSize : int
+    }
+
+    class GetIncomeStreamSummaryQuery {
+        + UserId : Guid
+    }
+}
+
+package "Query Handlers" <<Rectangle>> {
+    class GetActiveIncomeStreamsHandler {
+        + Handle(GetActiveIncomeStreamsQuery) : List<IncomeStreamDto>
+    }
+
+    class GetIncomeStreamByIdHandler {
+        + Handle(GetIncomeStreamByIdQuery) : IncomeStreamDetailDto
+    }
+
+    class GetIncomeStreamHistoryHandler {
+        + Handle(GetIncomeStreamHistoryQuery) : List<IncomeStreamDto>
+    }
+
+    class GetIncomeStreamSummaryHandler {
+        + Handle(GetIncomeStreamSummaryQuery) : IncomeStreamSummaryDto
+    }
+}
+
+package "Repository" <<Rectangle>> {
+    interface IIncomeStreamRepository {
+        + Add(incomeStream) : void
+        + Update(incomeStream) : void
+        + GetById(id) : IncomeStream
+        + GetActiveByUserId(userId) : List<IncomeStream>
+        + GetClosedByUserId(userId) : List<IncomeStream>
+        + GetByUserId(userId) : List<IncomeStream>
+    }
+}
+
+' Relationships
+IncomeStream --> BusinessTypeEnum
+IncomeStream --> StreamStatusEnum
+
+CreateIncomeStreamHandler --> CreateIncomeStreamCommand
+CreateIncomeStreamHandler --> IncomeStream
+CreateIncomeStreamHandler --> IIncomeStreamRepository
+CreateIncomeStreamHandler ..> IncomeStreamCreated : publishes
+
+UpdateIncomeStreamHandler --> UpdateIncomeStreamCommand
+UpdateIncomeStreamHandler --> IIncomeStreamRepository
+
+CloseIncomeStreamHandler --> CloseIncomeStreamCommand
+CloseIncomeStreamHandler --> IIncomeStreamRepository
+CloseIncomeStreamHandler ..> IncomeStreamClosed : publishes
+
+ReactivateIncomeStreamHandler --> ReactivateIncomeStreamCommand
+ReactivateIncomeStreamHandler --> IIncomeStreamRepository
+ReactivateIncomeStreamHandler ..> IncomeStreamReactivated : publishes
+
+GetActiveIncomeStreamsHandler --> GetActiveIncomeStreamsQuery
+GetActiveIncomeStreamsHandler --> IIncomeStreamRepository
+
+GetIncomeStreamByIdHandler --> GetIncomeStreamByIdQuery
+GetIncomeStreamByIdHandler --> IIncomeStreamRepository
+
+GetIncomeStreamHistoryHandler --> GetIncomeStreamHistoryQuery
+GetIncomeStreamHistoryHandler --> IIncomeStreamRepository
+
+GetIncomeStreamSummaryHandler --> GetIncomeStreamSummaryQuery
+GetIncomeStreamSummaryHandler --> IIncomeStreamRepository
+
+@enduml

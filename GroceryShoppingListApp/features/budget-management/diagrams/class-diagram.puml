@@ -1,0 +1,55 @@
+@startuml Budget Management - Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define SERVICE_COLOR #C8E6C9
+!define EVENT_COLOR #FFCCBC
+
+class ShoppingBudget <<Entity>> ENTITY_COLOR {
+    - budgetId: UUID
+    - listId: UUID
+    - budgetAmount: Money
+    - estimatedTotal: Money
+    - actualTotal: Money
+    - alertThresholds: List<Integer>
+    + setBudget(amount): void
+    + updateSpending(amount): void
+    + getRemaining(): Money
+    + getStatus(): BudgetStatus
+}
+
+enum BudgetStatus {
+    UNDER_BUDGET
+    AT_BUDGET
+    OVER_BUDGET
+}
+
+class BudgetAlert <<Entity>> ENTITY_COLOR {
+    - alertId: UUID
+    - budgetId: UUID
+    - thresholdPercentage: Integer
+    - triggeredAt: DateTime
+    - isAcknowledged: Boolean
+}
+
+class BudgetManagementService <<Service>> SERVICE_COLOR {
+    + setBudget(listId, amount): void
+    + getBudget(listId): ShoppingBudget
+    + updateSpending(listId, amount): void
+    + checkThresholds(budgetId): void
+}
+
+class ShoppingBudgetSet <<Event>> EVENT_COLOR {
+    - budgetId: UUID
+    - listId: UUID
+    - budgetAmount: Decimal
+}
+
+class BudgetThresholdReached <<Event>> EVENT_COLOR {
+    - budgetId: UUID
+    - thresholdPercentage: Decimal
+}
+
+ShoppingBudget -- BudgetStatus
+BudgetManagementService --> ShoppingBudget
+
+@enduml

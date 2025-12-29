@@ -1,0 +1,68 @@
+@startuml LogInteraction_Sequence
+
+actor User
+participant "Web App" as Web
+participant "API Gateway" as Gateway
+participant "Interaction\nService" as InteractionSvc
+participant "Contact\nService" as ContactSvc
+participant "Relationship\nService" as RelationshipSvc
+participant "Event Bus" as EventBus
+participant Database as DB
+participant "Follow-Up\nService" as FollowUpSvc
+
+User -> Web: Log interaction with contact
+activate Web
+
+Web -> Gateway: POST /api/interactions
+activate Gateway
+
+Gateway -> Gateway: Authenticate user
+Gateway -> InteractionSvc: CreateInteraction(data)
+activate InteractionSvc
+
+InteractionSvc -> ContactSvc: ValidateContact(contactId)
+activate ContactSvc
+ContactSvc -> DB: SELECT contact
+ContactSvc --> InteractionSvc: Contact valid
+deactivate ContactSvc
+
+InteractionSvc -> InteractionSvc: Create Interaction aggregate
+InteractionSvc -> DB: INSERT interaction
+InteractionSvc -> EventBus: Publish InteractionLogged event
+activate EventBus
+
+InteractionSvc --> Gateway: Interaction created
+deactivate InteractionSvc
+
+Gateway --> Web: 201 Created
+deactivate Gateway
+
+Web --> User: Success notification
+deactivate Web
+
+' Event handling
+EventBus -> ContactSvc: InteractionLogged event
+activate ContactSvc
+ContactSvc -> DB: UPDATE last_interaction_date
+ContactSvc -> EventBus: Publish ContactUpdated
+deactivate ContactSvc
+
+EventBus -> RelationshipSvc: InteractionLogged event
+activate RelationshipSvc
+RelationshipSvc -> RelationshipSvc: Recalculate strength
+RelationshipSvc -> DB: UPDATE relationship_strength
+RelationshipSvc -> EventBus: Publish RelationshipStrengthCalculated
+deactivate RelationshipSvc
+
+alt Follow-up needed
+  EventBus -> FollowUpSvc: InteractionLogged event
+  activate FollowUpSvc
+  FollowUpSvc -> FollowUpSvc: Create suggested follow-up
+  FollowUpSvc -> DB: INSERT follow_up
+  FollowUpSvc -> EventBus: Publish FollowUpScheduled
+  deactivate FollowUpSvc
+end
+
+deactivate EventBus
+
+@enduml

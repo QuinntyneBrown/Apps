@@ -1,0 +1,300 @@
+@startuml Service Providers - Class Diagram
+
+!define ENTITY_COLOR #E8F4F8
+!define VALUE_COLOR #FFF9E6
+!define ENUM_COLOR #FFE6E6
+
+' Entities
+class ServiceProvider <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+    + CompanyName: string
+    + Specialty: string
+    + Phone: string
+    + Email: string
+    + Website: string
+    + Address: Address
+    + LicenseNumber: string
+    + InsuranceInfo: string
+    + AverageRating: decimal
+    + ReviewCount: int
+    + IsPreferred: bool
+    + IsActive: bool
+    + Notes: string
+    + ServiceCategories: List<string>
+    + CreatedAt: DateTime
+    + UpdatedAt: DateTime
+    + CreatedBy: Guid
+    --
+    + MarkAsPreferred(): void
+    + Deactivate(): void
+    + AddService(service): void
+    + UpdateRating(newRating): void
+    + CalculateStatistics(): ProviderStatistics
+}
+
+class Service <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + ServiceProviderId: Guid
+    + TaskId: Guid?
+    + ServiceDate: DateTime
+    + Description: string
+    + Cost: decimal
+    + DurationMinutes: int?
+    + Rating: int?
+    + ReviewText: string
+    + InvoiceUrl: string
+    + Notes: string
+    + PhotoUrls: List<string>
+    + CreatedAt: DateTime
+    + CreatedBy: Guid
+    --
+    + AddRating(rating, review): void
+    + Validate(): bool
+}
+
+class Task <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Title: string
+    + AssignedProviderId: Guid?
+    --
+    + AssignProvider(providerId): void
+}
+
+' Value Objects
+class Address <<Value Object>> VALUE_COLOR {
+    + Street: string
+    + City: string
+    + State: string
+    + ZipCode: string
+    + Country: string
+    --
+    + GetFullAddress(): string
+    + Validate(): bool
+}
+
+class ContactInfo <<Value Object>> VALUE_COLOR {
+    + Phone: string
+    + Email: string
+    + Website: string
+    --
+    + FormatPhone(): string
+    + Validate(): bool
+}
+
+class ProviderStatistics <<Value Object>> VALUE_COLOR {
+    + TotalServices: int
+    + AverageRating: decimal
+    + ReviewCount: int
+    + TotalCost: decimal
+    + AverageCost: decimal
+    + MostRecentService: DateTime?
+    + CategoryBreakdown: Dictionary<string, int>
+}
+
+' Domain Events
+class ProviderAddedEvent <<Domain Event>> {
+    + ProviderId: Guid
+    + Name: string
+    + Specialty: string
+    + ContactInfo: ContactInfo
+    + OccurredAt: DateTime
+}
+
+class ProviderServiceCompletedEvent <<Domain Event>> {
+    + ProviderId: Guid
+    + ServiceId: Guid
+    + ServiceDate: DateTime
+    + TaskId: Guid?
+    + Cost: decimal
+    + DurationMinutes: int?
+    + OccurredAt: DateTime
+}
+
+class ProviderRatedEvent <<Domain Event>> {
+    + ProviderId: Guid
+    + ServiceId: Guid
+    + Rating: int
+    + ReviewText: string
+    + ServiceDate: DateTime
+    + OccurredAt: DateTime
+}
+
+' Commands
+class CreateServiceProviderCommand <<Command>> {
+    + Name: string
+    + CompanyName: string
+    + Specialty: string
+    + Phone: string
+    + Email: string
+    + Website: string
+    + Address: Address
+    + LicenseNumber: string
+    + InsuranceInfo: string
+    + ServiceCategories: List<string>
+    + Notes: string
+}
+
+class RecordServiceCommand <<Command>> {
+    + ServiceProviderId: Guid
+    + TaskId: Guid?
+    + ServiceDate: DateTime
+    + Description: string
+    + Cost: decimal
+    + DurationMinutes: int?
+    + Rating: int?
+    + ReviewText: string
+    + InvoiceUrl: string
+    + Notes: string
+    + PhotoUrls: List<string>
+}
+
+class AddRatingCommand <<Command>> {
+    + ServiceProviderId: Guid
+    + ServiceId: Guid
+    + Rating: int
+    + ReviewText: string
+}
+
+class MarkAsPreferredCommand <<Command>> {
+    + ServiceProviderId: Guid
+    + IsPreferred: bool
+}
+
+' Queries
+class GetServiceProviderByIdQuery <<Query>> {
+    + ServiceProviderId: Guid
+}
+
+class GetServiceProvidersQuery <<Query>> {
+    + Specialty: string?
+    + Category: string?
+    + IsPreferred: bool?
+    + MinRating: decimal?
+    + IsActive: bool?
+    + Search: string?
+    + PageNumber: int
+    + PageSize: int
+}
+
+class GetProviderServiceHistoryQuery <<Query>> {
+    + ServiceProviderId: Guid
+    + StartDate: DateTime?
+    + EndDate: DateTime?
+    + PageNumber: int
+    + PageSize: int
+}
+
+class GetProviderStatisticsQuery <<Query>> {
+    + ServiceProviderId: Guid
+}
+
+class SearchProvidersQuery <<Query>> {
+    + SearchTerm: string
+    + Category: string?
+}
+
+class GetPreferredProvidersQuery <<Query>> {
+    + UserId: Guid
+}
+
+' Handlers
+class CreateServiceProviderHandler <<Handler>> {
+    - _providerRepository: IServiceProviderRepository
+    - _eventPublisher: IEventPublisher
+    --
+    + Handle(command): ServiceProvider
+}
+
+class RecordServiceHandler <<Handler>> {
+    - _providerRepository: IServiceProviderRepository
+    - _serviceRepository: IServiceRepository
+    - _eventPublisher: IEventPublisher
+    --
+    + Handle(command): Service
+}
+
+class AddRatingHandler <<Handler>> {
+    - _providerRepository: IServiceProviderRepository
+    - _serviceRepository: IServiceRepository
+    - _eventPublisher: IEventPublisher
+    --
+    + Handle(command): void
+}
+
+class GetServiceProvidersHandler <<Handler>> {
+    - _providerRepository: IServiceProviderRepository
+    --
+    + Handle(query): PagedResult<ServiceProvider>
+}
+
+' Repositories
+interface IServiceProviderRepository <<Repository>> {
+    + GetByIdAsync(id): ServiceProvider
+    + GetAllAsync(filters): List<ServiceProvider>
+    + CreateAsync(provider): ServiceProvider
+    + UpdateAsync(provider): void
+    + DeleteAsync(id): void
+    + SearchAsync(term, category): List<ServiceProvider>
+    + GetPreferredAsync(userId): List<ServiceProvider>
+    + GetStatisticsAsync(providerId): ProviderStatistics
+}
+
+interface IServiceRepository <<Repository>> {
+    + GetByIdAsync(id): Service
+    + GetByProviderAsync(providerId, filters): List<Service>
+    + CreateAsync(service): Service
+    + UpdateAsync(service): void
+    + DeleteAsync(id): void
+}
+
+' Services
+class RatingCalculationService <<Service>> {
+    + CalculateAverageRating(services): decimal
+    + UpdateProviderRating(provider, newRating): void
+}
+
+class ProviderStatisticsService <<Service>> {
+    + CalculateStatistics(provider): ProviderStatistics
+    + GetCostTrends(provider): List<CostTrend>
+    + GetServiceFrequency(provider): Dictionary<string, int>
+}
+
+class ProviderNotificationService <<Service>> {
+    + SendProviderAddedNotification(provider): void
+    + SendRatingRequestNotification(provider, service): void
+    + SendProviderSummaryEmail(provider): void
+}
+
+' Relationships
+ServiceProvider "1" *-- "1" Address : contains
+ServiceProvider "1" *-- "1" ContactInfo : contains
+ServiceProvider "1" --> "*" Service : has provided
+ServiceProvider "1" --> "*" Task : assigned to
+
+Service "*" --> "1" ServiceProvider : provided by
+Service "0..1" --> "0..1" Task : related to
+
+CreateServiceProviderCommand ..> ProviderAddedEvent : publishes
+RecordServiceCommand ..> ProviderServiceCompletedEvent : publishes
+AddRatingCommand ..> ProviderRatedEvent : publishes
+
+CreateServiceProviderHandler --> IServiceProviderRepository : uses
+RecordServiceHandler --> IServiceProviderRepository : uses
+RecordServiceHandler --> IServiceRepository : uses
+AddRatingHandler --> IServiceProviderRepository : uses
+AddRatingHandler --> IServiceRepository : uses
+GetServiceProvidersHandler --> IServiceProviderRepository : uses
+
+CreateServiceProviderHandler ..> CreateServiceProviderCommand : handles
+RecordServiceHandler ..> RecordServiceCommand : handles
+AddRatingHandler ..> AddRatingCommand : handles
+GetServiceProvidersHandler ..> GetServiceProvidersQuery : handles
+
+RatingCalculationService --> ServiceProvider : updates
+ProviderStatisticsService --> ServiceProvider : analyzes
+ProviderNotificationService --> ServiceProvider : notifies about
+
+ServiceProvider ..> ProviderStatistics : calculates
+
+@enduml

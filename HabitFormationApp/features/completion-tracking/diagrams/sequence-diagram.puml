@@ -1,0 +1,187 @@
+@startuml Completion Tracking - Sequence Diagram
+
+title Log Habit Completion Flow
+
+actor User
+participant "UI" as UI
+participant "API Gateway" as API
+participant "LogCompletionHandler" as Handler
+participant "HabitRepository" as HabitRepo
+participant "CompletionRepository" as CompRepo
+participant "HabitCompletion" as Completion
+participant "EventPublisher" as Events
+participant "StreakService" as Streak
+participant "ReminderService" as Reminder
+
+== Quick Complete Flow ==
+User -> UI: Tap complete button
+activate UI
+UI -> UI: Mark as complete (optimistic)
+UI -> User: Show success animation
+
+UI -> API: POST /api/completions\n(LogHabitCompletionCommand)
+activate API
+API -> API: Authenticate user
+API -> Handler: Handle(LogHabitCompletionCommand)
+activate Handler
+
+Handler -> HabitRepo: GetByIdAsync(habitId)
+activate HabitRepo
+HabitRepo --> Handler: Habit
+deactivate HabitRepo
+
+Handler -> Handler: ValidateHabitOwnership(habit, userId)
+
+alt Habit is archived
+  Handler --> API: 400 Bad Request\n(Habit is archived)
+  API --> UI: Error response
+  UI -> UI: Revert optimistic update
+  UI -> User: Show error toast
+else Habit is active
+  Handler -> CompRepo: HasCompletionForDateAsync(habitId, today)
+  activate CompRepo
+  CompRepo --> Handler: false (no duplicate)
+  deactivate CompRepo
+
+  Handler -> Handler: CalculateScheduledTime(habit)
+  Handler -> Handler: DetermineIfLate(now, scheduledTime)
+
+  Handler -> Completion: Create(habitId, userId, now, ...)
+  activate Completion
+  Completion -> Completion: ValidateCompletionDate()
+  Completion -> Completion: Set IsLate flag
+  Completion --> Handler: HabitCompletion
+  deactivate Completion
+
+  Handler -> CompRepo: AddAsync(completion)
+  activate CompRepo
+  CompRepo -> CompRepo: Save to database
+  CompRepo --> Handler: Success
+  deactivate CompRepo
+
+  alt Completion is late
+    Handler -> Events: Publish(LateCompletionLogged)
+  else Completion is on-time
+    Handler -> Events: Publish(HabitCompletionLogged)
+  end
+  activate Events
+  Events --> Handler: Event published
+  deactivate Events
+
+  Handler --> API: CompletionId
+  deactivate Handler
+  API --> UI: 201 Created (CompletionDto)
+  deactivate API
+
+  UI -> User: Show "Undo" option (5 sec)
+end
+deactivate UI
+
+== Asynchronous Event Processing ==
+Events -> Streak: Handle(HabitCompletionLogged)
+activate Streak
+Streak -> CompRepo: Get all completions for habit
+activate CompRepo
+CompRepo --> Streak: List<HabitCompletion>
+deactivate CompRepo
+Streak -> Streak: Calculate streak
+Streak -> Streak: Update streak cache
+Streak -> Events: Publish(StreakUpdated)
+Events --> Streak: Event published
+deactivate Streak
+
+Events -> Reminder: Handle(HabitCompletionLogged)
+activate Reminder
+Reminder -> Reminder: Check for active reminder
+alt Reminder exists
+  Reminder -> Reminder: Mark as acted upon
+  Reminder -> Reminder: Calculate response time
+  Reminder --> Events: Reminder updated
+else No active reminder
+  Reminder --> Events: No action needed
+end
+deactivate Reminder
+
+== Undo Completion Flow ==
+User -> UI: Click "Undo"
+activate UI
+UI -> UI: Revert completion (optimistic)
+
+UI -> API: DELETE /api/completions/{id}\n(UndoHabitCompletionCommand)
+activate API
+API -> Handler: Handle(UndoHabitCompletionCommand)
+activate Handler
+
+Handler -> CompRepo: GetByIdAsync(completionId)
+activate CompRepo
+CompRepo --> Handler: HabitCompletion
+deactivate CompRepo
+
+Handler -> Handler: ValidateOwnership(completion, userId)
+Handler -> Completion: IsWithinUndoWindow()
+activate Completion
+Completion --> Handler: true
+deactivate Completion
+
+alt Within undo window (7 days)
+  Handler -> Completion: Undo(reason)
+  activate Completion
+  Completion -> Completion: Set IsDeleted = true
+  Completion -> Completion: Set DeletedAt
+  Completion --> Handler: Updated completion
+  deactivate Completion
+
+  Handler -> CompRepo: UpdateAsync(completion)
+  activate CompRepo
+  CompRepo --> Handler: Success
+  deactivate CompRepo
+
+  Handler -> Events: Publish(HabitCompletionUndone)
+  activate Events
+  Events --> Handler: Event published
+  deactivate Events
+
+  Handler --> API: 204 No Content
+  deactivate Handler
+  API --> UI: Success
+  deactivate API
+  UI -> User: Show "Completion undone"
+else Outside undo window
+  Handler --> API: 400 Bad Request\n(Outside undo window)
+  API --> UI: Error response
+  UI -> UI: Restore completion
+  UI -> User: Show error message
+end
+deactivate UI
+
+== Recalculate Streak After Undo ==
+Events -> Streak: Handle(HabitCompletionUndone)
+activate Streak
+Streak -> CompRepo: Get all active completions
+activate CompRepo
+CompRepo --> Streak: List<HabitCompletion>
+deactivate CompRepo
+Streak -> Streak: Recalculate streak
+Streak -> Streak: Update streak cache
+Streak -> Events: Publish(StreakUpdated)
+deactivate Streak
+
+== Alternative: Duplicate Completion ==
+User -> UI: Tap complete (already completed today)
+activate UI
+UI -> API: POST /api/completions
+activate API
+API -> Handler: Handle(LogHabitCompletionCommand)
+activate Handler
+Handler -> CompRepo: HasCompletionForDateAsync(habitId, today)
+activate CompRepo
+CompRepo --> Handler: true (duplicate found)
+deactivate CompRepo
+Handler --> API: 409 Conflict\n(Already completed today)
+deactivate Handler
+API --> UI: Error response
+deactivate API
+UI -> User: Show "Already completed today"
+deactivate UI
+
+@enduml

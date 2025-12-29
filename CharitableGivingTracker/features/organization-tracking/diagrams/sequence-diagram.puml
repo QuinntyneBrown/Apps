@@ -1,0 +1,26 @@
+@startuml Organization Tracking Sequence Diagram
+
+actor User
+participant "Web UI" as UI
+participant "API" as API
+participant "Command Handler" as Handler
+participant "Organization" as Aggregate
+participant "EIN Service" as EIN
+participant "Repository" as Repo
+
+User -> UI: Add new organization
+UI -> API: POST /api/organizations
+API -> Handler: AddCharityCommand
+Handler -> Aggregate: new Organization(details)
+Aggregate -> Aggregate: RaiseCharityAdded()
+Handler -> Repo: Add(organization)
+Handler -> EIN: VerifyEIN(ein)
+EIN -> Handler: Verification result
+Handler -> Aggregate: Verify(result)
+Aggregate -> Aggregate: RaiseCharityVerified()
+Handler -> Repo: Update(organization)
+Handler --> API: OrganizationId
+API --> UI: 201 Created
+UI --> User: Organization added
+
+@enduml

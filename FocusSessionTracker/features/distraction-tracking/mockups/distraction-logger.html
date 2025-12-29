@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distraction Tracker - Focus Session Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #4A90E2;
+            --primary-orange: #F5A623;
+            --success-green: #7ED321;
+            --danger-red: #D0021B;
+            --gray-100: #F8F9FA;
+            --gray-200: #E9ECEF;
+            --gray-300: #DEE2E6;
+            --gray-400: #CED4DA;
+            --gray-600: #6C757D;
+            --gray-800: #343A40;
+            --gray-900: #212529;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--gray-800);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary-blue);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #6bc419;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--gray-600);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-900);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .type-option {
+            padding: 20px;
+            border: 2px solid var(--gray-300);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .type-option:hover {
+            border-color: var(--gray-400);
+            transform: translateY(-2px);
+        }
+
+        .type-option.selected {
+            border-color: var(--primary-blue);
+            background: #E3F2FD;
+        }
+
+        .type-option.external.selected {
+            border-color: var(--primary-orange);
+            background: #FFF3E0;
+        }
+
+        .type-option .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .type-option .label {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--gray-800);
+        }
+
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .source-btn {
+            padding: 15px;
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-800);
+            transition: all 0.2s;
+        }
+
+        .source-btn:hover {
+            border-color: var(--primary-blue);
+            background: #F0F7FF;
+        }
+
+        .source-btn.selected {
+            border-color: var(--primary-blue);
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .impact-slider {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .impact-level {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .impact-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            transition: all 0.3s;
+        }
+
+        .impact-dot.active {
+            background: var(--danger-red);
+            transform: scale(1.2);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--gray-300);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .impact-label {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 16px;
+        }
+
+        .duration-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: var(--gray-100);
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-800);
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-icon {
+            font-size: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* Session Status */
+        .session-status {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+        }
+
+        .focus-score {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Distraction List */
+        .distraction-item {
+            padding: 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .distraction-item:hover {
+            border-color: var(--gray-400);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .distraction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .distraction-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .distraction-type.internal {
+            background: #E3F2FD;
+            color: var(--primary-blue);
+        }
+
+        .distraction-type.external {
+            background: #FFF3E0;
+            color: var(--primary-orange);
+        }
+
+        .distraction-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-top: 10px;
+        }
+
+        .impact-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger-red);
+        }
+
+        .dot.empty {
+            background: var(--gray-300);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--gray-100);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Resistance Badge */
+        .resistance-badge {
+            background: var(--success-green);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .resistance-badge .count {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .resistance-badge .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn.log {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-btn.log:hover {
+            background: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-btn.resist {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .action-btn.resist:hover {
+            background: #6bc419;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .source-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timer-display {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Focus Session Tracker</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">History</button>
+                <button class="btn btn-secondary">Analytics</button>
+                <button class="btn btn-primary">Settings</button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-content">
+            <!-- Left Column: Session Info & Distractions -->
+            <div>
+                <!-- Session Status -->
+                <div class="session-status">
+                    <div style="font-size: 18px; opacity: 0.9;">FOCUS MODE ACTIVE</div>
+                    <div class="timer-display">23:45</div>
+                    <div style="font-size: 16px; margin-bottom: 15px;">Task: Write Documentation</div>
+                    <div class="focus-score">Focus Score: 88 / 100</div>
+                </div>
+
+                <!-- Distraction Tracking Card -->
+                <div class="card">
+                    <div class="card-title">
+                        📊 Distraction Tracking
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-value">3</span>
+                            <span class="stat-label">Distractions</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" style="color: var(--success-green);">5</span>
+                            <span class="stat-label">Resisted</span>
+                        </div>
+                    </div>
+
+                    <!-- Distraction List -->
+                    <div style="margin-top: 25px;">
+                        <div class="distraction-item">
+                            <div class="distraction-header">
+                                <div>
+                                    <span class="distraction-type internal">Internal</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Mind Wandering</div>
+                                </div>
+                                <div style="color: var(--gray-600); font-size: 13px;">23:30</div>
+                            </div>
+                            <div style="color: var(--gray-700); font-size: 14px; margin: 10px 0;">
+                                Started thinking about dinner plans
+                            </div>
+                            <div class="distraction-meta">
+                                <div class="impact-dots">
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot empty"></span>
+                                    <span class="dot empty"></span>
+                                </div>
+                                <span>⏱ 15s</span>
+                            </div>
+                        </div>
+
+                        <div class="distraction-item">
+                            <div class="distraction-header">
+                                <div>
+                                    <span class="distraction-type external">External</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Notification</div>
+                                </div>
+                                <div style="color: var(--gray-600); font-size: 13px;">23:15</div>
+                            </div>
+                            <div style="color: var(--gray-700); font-size: 14px; margin: 10px 0;">
+                                Slack message alert from team channel
+                            </div>
+                            <div class="distraction-meta">
+                                <div class="impact-dots">
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot empty"></span>
+                                </div>
+                                <span>⏱ 45s</span>
+                                <span style="color: var(--primary-orange);">⚠ Preventable</span>
+                            </div>
+                        </div>
+
+                        <div class="distraction-item">
+                            <div class="distraction-header">
+                                <div>
+                                    <span class="distraction-type internal">Internal</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Urge to Check Phone</div>
+                                </div>
+                                <div style="color: var(--gray-600); font-size: 13px;">23:00</div>
+                            </div>
+                            <div style="color: var(--gray-700); font-size: 14px; margin: 10px 0;">
+                                Wanted to check messages
+                            </div>
+                            <div class="distraction-meta">
+                                <div class="impact-dots">
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot empty"></span>
+                                    <span class="dot empty"></span>
+                                    <span class="dot empty"></span>
+                                </div>
+                                <span>⏱ 20s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Quick Actions -->
+            <div>
+                <!-- Resistance Badge -->
+                <div class="resistance-badge">
+                    <div class="count">5</div>
+                    <div class="label">Distractions Resisted Today</div>
+                    <div style="margin-top: 10px; font-size: 12px;">Success Rate: 62%</div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="card">
+                    <div class="card-title">⚡ Quick Actions</div>
+
+                    <div class="quick-actions">
+                        <button class="action-btn log" onclick="openDistractionModal()">
+                            <span style="font-size: 20px;">⚠</span>
+                            Log Distraction
+                        </button>
+                        <button class="action-btn resist" onclick="openResistanceModal()">
+                            <span style="font-size: 20px;">✓</span>
+                            Resisted Distraction
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 25px; padding: 15px; background: var(--gray-100); border-radius: 10px;">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px;">
+                            💡 Quick Tip
+                        </div>
+                        <div style="font-size: 13px; color: var(--gray-600);">
+                            Click "Resisted" when you successfully ignore a distraction to boost your focus score!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distraction Logger Modal -->
+    <div class="modal-overlay" id="distractionModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Log Distraction</h2>
+                <button class="close-btn" onclick="closeModal('distractionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Distraction Type</label>
+                    <div class="type-selector">
+                        <div class="type-option selected" onclick="selectType('internal')">
+                            <div class="icon">🧠</div>
+                            <div class="label">Internal</div>
+                        </div>
+                        <div class="type-option external" onclick="selectType('external')">
+                            <div class="icon">📱</div>
+                            <div class="label">External</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Common Sources</label>
+                    <div class="source-grid">
+                        <button class="source-btn">Mind Wandering</button>
+                        <button class="source-btn">Urge to Check</button>
+                        <button class="source-btn">Random Thought</button>
+                        <button class="source-btn">Daydream</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Impact Level</label>
+                    <div class="impact-slider">
+                        <div class="impact-level">
+                            <span class="impact-dot active"></span>
+                            <span class="impact-dot active"></span>
+                            <span class="impact-dot active"></span>
+                            <span class="impact-dot"></span>
+                            <span class="impact-dot"></span>
+                        </div>
+                        <input type="range" min="1" max="5" value="3" id="impactSlider">
+                        <div class="impact-label">3 of 5 - Medium Impact</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Duration</label>
+                    <div class="duration-display">
+                        <span class="timer-icon">⏱</span>
+                        <span>00:12</span>
+                        <span style="font-size: 12px; color: var(--gray-600); margin-left: auto;">auto-tracking</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea placeholder="What happened? What were you thinking about?"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('distractionModal')">Cancel</button>
+                <button class="btn btn-primary">Log Distraction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resistance Logger Modal -->
+    <div class="modal-overlay" id="resistanceModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✓ Resisted Distraction!</h2>
+                <button class="close-btn" onclick="closeModal('resistanceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px 0; color: var(--success-green); font-size: 48px;">
+                    ★ ★ ★
+                </div>
+                <div style="text-align: center; font-size: 18px; color: var(--gray-700); margin-bottom: 30px;">
+                    Great job staying focused!
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What did you resist?</label>
+                    <div class="source-grid">
+                        <button class="source-btn">Phone Notification</button>
+                        <button class="source-btn selected">Social Media Urge</button>
+                        <button class="source-btn">Email Check</button>
+                        <button class="source-btn">Random Website</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How did you resist?</label>
+                    <select style="width: 100%; padding: 15px; border: 2px solid var(--gray-300); border-radius: 10px; font-size: 14px;">
+                        <option>Noted for Later</option>
+                        <option>Deep Breath & Refocus</option>
+                        <option>10-Second Rule</option>
+                        <option>Blocked the App</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quick note (optional)</label>
+                    <textarea placeholder="What strategy worked for you?"></textarea>
+                </div>
+
+                <div style="background: var(--gray-100); padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--success-green);">+3 Points!</div>
+                    <div style="font-size: 14px; color: var(--gray-600); margin-top: 5px;">Added to your focus score</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" style="width: 100%;">Log Resistance</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDistractionModal() {
+            document.getElementById('distractionModal').style.display = 'flex';
+        }
+
+        function openResistanceModal() {
+            document.getElementById('resistanceModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function selectType(type) {
+            const options = document.querySelectorAll('.type-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            event.target.closest('.type-option').classList.add('selected');
+        }
+
+        // Impact slider interactivity
+        const slider = document.getElementById('impactSlider');
+        if (slider) {
+            slider.addEventListener('input', function() {
+                const value = this.value;
+                const dots = document.querySelectorAll('.impact-dot');
+                const labels = ['Minimal', 'Low', 'Medium', 'High', 'Severe'];
+
+                dots.forEach((dot, index) => {
+                    if (index < value) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+
+                document.querySelector('.impact-label').textContent = `${value} of 5 - ${labels[value - 1]} Impact`;
+            });
+        }
+
+        // Source button selection
+        document.querySelectorAll('.source-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.source-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

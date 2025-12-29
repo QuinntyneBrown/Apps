@@ -1,0 +1,63 @@
+@startuml Seasonal Maintenance - Generate and Complete Checklist Sequence
+
+title Generate Seasonal Checklist Workflow
+
+actor "Homeowner" as user
+participant "Seasonal UI" as ui
+participant "API Controller" as api
+participant "ChecklistHandler" as handler
+participant "Checklist Service" as service
+participant "Checklist Repository" as repo
+participant "Event Publisher" as events
+
+autonumber
+
+user -> ui: Click "Generate Fall Checklist"
+activate ui
+
+ui -> api: POST /api/seasonal-checklists/generate\n{season: Fall, year: 2025}
+activate api
+
+api -> handler: Handle(GenerateChecklistCommand)
+activate handler
+
+handler -> service: GetTemplateForSeason(Fall, location)
+activate service
+
+service -> service: Load Fall template
+service -> service: Customize for location/climate
+service -> service: Add region-specific tasks
+
+service --> handler: List<ChecklistItem>
+deactivate service
+
+handler -> handler: Create SeasonalChecklist entity
+handler -> handler: Set items, dates, metadata
+
+handler -> repo: CreateAsync(checklist)
+activate repo
+repo --> handler: Checklist created
+deactivate repo
+
+handler -> events: Publish(SeasonalChecklistGeneratedEvent)
+activate events
+events --> handler: Event published
+deactivate events
+
+handler --> api: Success
+deactivate handler
+
+api --> ui: 200 OK {checklist}
+deactivate api
+
+ui -> ui: Display checklist
+ui --> user: Checklist generated
+deactivate ui
+
+group Background Event Handlers
+    events -> events: Schedule seasonal reminders
+    events -> events: Link to existing tasks
+    events -> events: Send notification
+end
+
+@enduml

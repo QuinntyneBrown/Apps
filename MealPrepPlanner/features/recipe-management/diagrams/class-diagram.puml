@@ -1,0 +1,354 @@
+@startuml Recipe Management - Class Diagram
+
+!define ENTITY_COLOR #E3F2FD
+!define VALUEOBJECT_COLOR #FFF9C4
+!define AGGREGATE_COLOR #C8E6C9
+!define SERVICE_COLOR #FFE0B2
+!define EVENT_COLOR #F8BBD0
+
+package "Recipe Management Aggregate" {
+
+    class Recipe <<Aggregate Root>> AGGREGATE_COLOR {
+        - Id : Guid
+        - UserId : Guid
+        - Name : string
+        - Description : string
+        - CategoryId : Guid?
+        - CuisineType : string
+        - PrepTime : int
+        - CookTime : int
+        - TotalTime : int
+        - Servings : int
+        - Difficulty : Difficulty
+        - IsFavorite : bool
+        - Rating : decimal?
+        - PrepCount : int
+        - LastPreparedDate : DateTime?
+        - ImageUrl : string
+        - Tags : List<string>
+        - Instructions : List<Instruction>
+        - Ingredients : List<RecipeIngredient>
+        - NutritionInfo : NutritionInfo
+        - CreatedDate : DateTime
+        - LastModifiedDate : DateTime
+        --
+        + Create(userId, name, servings) : Recipe
+        + AddIngredient(ingredient, quantity, unit) : void
+        + AddInstruction(stepNumber, description) : void
+        + CalculateNutrition() : void
+        + ToggleFavorite() : void
+        + MarkPrepared(date, servings, rating) : void
+        + UpdateBasicInfo(name, description, prepTime) : void
+        + ScaleServings(newServings) : Recipe
+        --
+        Domain Events:
+        + RecipeAdded
+        + RecipeNutritionCalculated
+        + RecipeFavorited
+        + RecipePrepared
+    }
+
+    class Instruction <<Entity>> ENTITY_COLOR {
+        - Id : Guid
+        - RecipeId : Guid
+        - StepNumber : int
+        - Description : string
+        - ImageUrl : string?
+        --
+        + Create(stepNumber, description) : Instruction
+        + UpdateDescription(description) : void
+    }
+
+    class RecipeIngredient <<Entity>> ENTITY_COLOR {
+        - Id : Guid
+        - RecipeId : Guid
+        - IngredientId : Guid
+        - Quantity : decimal
+        - Unit : string
+        - Notes : string?
+        - IsOptional : bool
+        --
+        + Create(ingredientId, quantity, unit) : RecipeIngredient
+        + Scale(factor) : RecipeIngredient
+        + UpdateQuantity(quantity) : void
+    }
+
+    Recipe "1" *-- "1..*" Instruction : contains
+    Recipe "1" *-- "1..*" RecipeIngredient : contains
+}
+
+package "Value Objects" {
+
+    class NutritionInfo <<Value Object>> VALUEOBJECT_COLOR {
+        - CaloriesPerServing : int
+        - ProteinGrams : decimal
+        - CarbsGrams : decimal
+        - FatGrams : decimal
+        - FiberGrams : decimal
+        - SugarGrams : decimal
+        - SodiumMg : decimal
+        --
+        + Create(calories, protein, carbs, fat) : NutritionInfo
+        + Scale(servingsFactor) : NutritionInfo
+        + IsValid() : bool
+    }
+
+    enum Difficulty VALUEOBJECT_COLOR {
+        Easy
+        Medium
+        Hard
+    }
+
+    class RecipeCategory <<Value Object>> VALUEOBJECT_COLOR {
+        - Id : Guid
+        - Name : string
+        - Icon : string
+    }
+
+    Recipe -- NutritionInfo : has
+    Recipe -- Difficulty : has
+    Recipe -- RecipeCategory : belongs to
+}
+
+package "Supporting Entities" {
+
+    class Ingredient <<Entity>> ENTITY_COLOR {
+        - Id : Guid
+        - Name : string
+        - Category : string
+        - DefaultUnit : string
+        - CaloriesPer100g : int
+        - ProteinPer100g : decimal
+        - CarbsPer100g : decimal
+        - FatPer100g : decimal
+        --
+        + GetNutritionForQuantity(quantity, unit) : NutritionInfo
+    }
+
+    RecipeIngredient --> Ingredient : references
+}
+
+package "Domain Events" {
+
+    abstract class DomainEvent EVENT_COLOR {
+        + EventId : Guid
+        + OccurredOn : DateTime
+    }
+
+    class RecipeAdded EVENT_COLOR {
+        + RecipeId : Guid
+        + UserId : Guid
+        + Name : string
+        + Servings : int
+    }
+
+    class RecipeNutritionCalculated EVENT_COLOR {
+        + RecipeId : Guid
+        + CaloriesPerServing : int
+        + ProteinGrams : decimal
+        + CarbsGrams : decimal
+        + FatGrams : decimal
+    }
+
+    class RecipeFavorited EVENT_COLOR {
+        + RecipeId : Guid
+        + UserId : Guid
+        + IsFavorite : bool
+    }
+
+    class RecipePrepared EVENT_COLOR {
+        + RecipeId : Guid
+        + UserId : Guid
+        + PreparedDate : DateTime
+        + Servings : int
+        + UserRating : decimal?
+    }
+
+    DomainEvent <|-- RecipeAdded
+    DomainEvent <|-- RecipeNutritionCalculated
+    DomainEvent <|-- RecipeFavorited
+    DomainEvent <|-- RecipePrepared
+}
+
+package "Commands" {
+
+    interface ICommand {
+    }
+
+    class AddRecipeCommand {
+        + UserId : Guid
+        + Name : string
+        + Description : string
+        + PrepTime : int
+        + CookTime : int
+        + Servings : int
+        + Difficulty : string
+        + Instructions : List<InstructionDto>
+        + Ingredients : List<RecipeIngredientDto>
+        + Tags : List<string>
+    }
+
+    class UpdateRecipeCommand {
+        + RecipeId : Guid
+        + Name : string
+        + Description : string
+        + PrepTime : int
+        + CookTime : int
+        + Servings : int
+    }
+
+    class ToggleFavoriteRecipeCommand {
+        + RecipeId : Guid
+        + UserId : Guid
+    }
+
+    class MarkRecipePreparedCommand {
+        + RecipeId : Guid
+        + UserId : Guid
+        + PreparedDate : DateTime
+        + Servings : int
+        + Rating : decimal?
+    }
+
+    class CalculateRecipeNutritionCommand {
+        + RecipeId : Guid
+    }
+
+    ICommand <|.. AddRecipeCommand
+    ICommand <|.. UpdateRecipeCommand
+    ICommand <|.. ToggleFavoriteRecipeCommand
+    ICommand <|.. MarkRecipePreparedCommand
+    ICommand <|.. CalculateRecipeNutritionCommand
+}
+
+package "Queries" {
+
+    interface IQuery<TResult> {
+    }
+
+    class GetRecipeByIdQuery {
+        + RecipeId : Guid
+        + UserId : Guid
+    }
+
+    class SearchRecipesQuery {
+        + UserId : Guid
+        + SearchTerm : string
+        + CategoryId : Guid?
+        + CuisineType : string
+        + FavoritesOnly : bool?
+        + Tags : List<string>
+        + Difficulty : string
+        + MaxPrepTime : int?
+        + PageNumber : int
+        + PageSize : int
+    }
+
+    class GetFavoriteRecipesQuery {
+        + UserId : Guid
+    }
+
+    class GetRecentlyPreparedQuery {
+        + UserId : Guid
+        + Count : int
+    }
+
+    IQuery <|.. GetRecipeByIdQuery
+    IQuery <|.. SearchRecipesQuery
+    IQuery <|.. GetFavoriteRecipesQuery
+    IQuery <|.. GetRecentlyPreparedQuery
+}
+
+package "Services" {
+
+    interface IRecipeRepository {
+        + GetByIdAsync(id) : Task<Recipe>
+        + GetByUserIdAsync(userId) : Task<IEnumerable<Recipe>>
+        + SearchAsync(criteria) : Task<PagedResult<Recipe>>
+        + AddAsync(recipe) : Task
+        + UpdateAsync(recipe) : Task
+        + DeleteAsync(id) : Task
+    }
+
+    interface IRecipeService SERVICE_COLOR {
+        + AddRecipeAsync(command) : Task<RecipeDto>
+        + UpdateRecipeAsync(command) : Task<RecipeDto>
+        + DeleteRecipeAsync(recipeId, userId) : Task
+        + ToggleFavoriteAsync(recipeId, userId) : Task
+        + MarkPreparedAsync(command) : Task
+        + CalculateNutritionAsync(recipeId) : Task<NutritionInfo>
+    }
+
+    interface INutritionCalculator SERVICE_COLOR {
+        + CalculateAsync(ingredients, servings) : Task<NutritionInfo>
+        + GetIngredientNutrition(ingredientId) : Task<NutritionInfo>
+    }
+
+    class RecipeService SERVICE_COLOR {
+        - repository : IRecipeRepository
+        - nutritionCalculator : INutritionCalculator
+        - eventBus : IEventBus
+        --
+        + AddRecipeAsync(command) : Task<RecipeDto>
+        + UpdateRecipeAsync(command) : Task<RecipeDto>
+        + ToggleFavoriteAsync(recipeId, userId) : Task
+        + CalculateNutritionAsync(recipeId) : Task<NutritionInfo>
+    }
+
+    IRecipeService <|.. RecipeService
+    RecipeService --> IRecipeRepository : uses
+    RecipeService --> INutritionCalculator : uses
+    RecipeService --> Recipe : manages
+}
+
+package "DTOs" {
+
+    class RecipeDto {
+        + Id : Guid
+        + Name : string
+        + Description : string
+        + PrepTime : int
+        + CookTime : int
+        + TotalTime : int
+        + Servings : int
+        + Difficulty : string
+        + IsFavorite : bool
+        + Rating : decimal?
+        + ImageUrl : string
+        + Instructions : List<InstructionDto>
+        + Ingredients : List<RecipeIngredientDto>
+        + Nutrition : NutritionInfoDto
+        + Tags : List<string>
+    }
+
+    class RecipeSummaryDto {
+        + Id : Guid
+        + Name : string
+        + ImageUrl : string
+        + PrepTime : int
+        + CookTime : int
+        + Servings : int
+        + Rating : decimal?
+        + IsFavorite : bool
+    }
+
+    class InstructionDto {
+        + StepNumber : int
+        + Description : string
+        + ImageUrl : string?
+    }
+
+    class RecipeIngredientDto {
+        + IngredientId : Guid
+        + IngredientName : string
+        + Quantity : decimal
+        + Unit : string
+        + Notes : string?
+        + IsOptional : bool
+    }
+
+    RecipeDto "1" *-- "1..*" InstructionDto
+    RecipeDto "1" *-- "1..*" RecipeIngredientDto
+}
+
+@enduml

@@ -1,0 +1,90 @@
+@startuml Organization Tracking Class Diagram
+
+skinparam classAttributeIconSize 0
+
+class Organization <<Aggregate Root>> {
+  - organizationId: Guid
+  - userId: Guid
+  - name: string
+  - ein: string
+  - charityType: CharityType
+  - mission: string
+  - website: string
+  - isVerified: bool
+  - verificationSource: VerificationSource
+  - taxExemptStatus: bool
+  - isPreferred: bool
+  - preferenceLevel: int
+  - rating: decimal?
+  - ratingSource: string
+  --
+  + Verify(source): void
+  + UpdateRating(score, source): void
+  + SetAsPreferred(level): void
+  - RaiseCharityAdded(): void
+  - RaiseCharityVerified(): void
+}
+
+enum CharityType {
+  Public
+  Private
+  Foundation
+  Religious
+  Educational
+  Other
+}
+
+enum VerificationSource {
+  IRS
+  Manual
+  API
+}
+
+class AddCharityCommand {
+  + UserId: Guid
+  + Name: string
+  + EIN: string
+  + CharityType: CharityType
+  + Website: string
+}
+
+class VerifyCharityCommand {
+  + OrganizationId: Guid
+}
+
+class SetPreferredCharityCommand {
+  + OrganizationId: Guid
+  + PreferenceLevel: int
+}
+
+class CharityAdded <<Domain Event>> {
+  + OrganizationId: Guid
+  + Name: string
+  + EIN: string
+  + UserId: Guid
+  + OccurredAt: DateTime
+}
+
+class CharityVerified <<Domain Event>> {
+  + OrganizationId: Guid
+  + EIN: string
+  + TaxExemptStatus: bool
+  + VerificationDate: DateTime
+  + OccurredAt: DateTime
+}
+
+interface IOrganizationRepository {
+  + Add(org: Organization): void
+  + Update(org: Organization): void
+  + GetById(id: Guid): Organization
+  + GetByUserId(userId: Guid): List<Organization>
+}
+
+interface IEINVerificationService {
+  + VerifyEIN(ein: string): VerificationResult
+}
+
+Organization *-- CharityType
+Organization *-- VerificationSource
+
+@enduml

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery List - MealPrepPlanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: #fff;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .progress-section {
+            background: #fff;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .category-section {
+            background: #fff;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .category-header {
+            padding: 1rem 1.5rem;
+            background: #f8f8f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-left: 4px solid;
+        }
+
+        .category-header.produce { border-left-color: #66BB6A; }
+        .category-header.meat { border-left-color: #EF5350; }
+        .category-header.dairy { border-left-color: #42A5F5; }
+        .category-header.bakery { border-left-color: #FFCA28; }
+        .category-header.pantry { border-left-color: #8D6E63; }
+
+        .category-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .category-icon {
+            font-size: 1.5rem;
+        }
+
+        .category-count {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .item-list {
+            display: none;
+        }
+
+        .item-list.expanded {
+            display: block;
+        }
+
+        .grocery-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.2s;
+        }
+
+        .grocery-item:hover {
+            background: #fafafa;
+        }
+
+        .grocery-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .checkbox.checked {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-name.purchased {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .item-quantity {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 1rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .add-item-btn {
+            position: fixed;
+            bottom: 100px;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-bottom: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="title">Weekly Groceries</div>
+        <button class="close-btn" onclick="alert('Exit shopping mode')">✕</button>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+        <div class="stats">
+            <span><strong>18</strong> of <strong>24</strong> items purchased</span>
+            <span>Est. Cost: <strong>$84.50</strong></span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 75%"></div>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Produce Category -->
+        <div class="category-section">
+            <div class="category-header produce" onclick="toggleCategory(this)">
+                <div class="category-name">
+                    <span class="category-icon">🥬</span>
+                    <span>Produce</span>
+                </div>
+                <span class="category-count">5 / 7</span>
+            </div>
+            <div class="item-list expanded">
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Chicken Breast</div>
+                        <div class="item-quantity">2 lbs</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Broccoli Florets</div>
+                        <div class="item-quantity">1 cup</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Bell Peppers</div>
+                        <div class="item-quantity">2 items (red and yellow)</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Carrots</div>
+                        <div class="item-quantity">1 lb</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Tomatoes</div>
+                        <div class="item-quantity">3 items</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Bananas</div>
+                        <div class="item-quantity">1 bunch</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Spinach</div>
+                        <div class="item-quantity">5 oz bag</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meat & Seafood Category -->
+        <div class="category-section">
+            <div class="category-header meat" onclick="toggleCategory(this)">
+                <div class="category-name">
+                    <span class="category-icon">🥩</span>
+                    <span>Meat & Seafood</span>
+                </div>
+                <span class="category-count">2 / 3</span>
+            </div>
+            <div class="item-list expanded">
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Chicken Breast</div>
+                        <div class="item-quantity">500 g</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Ground Turkey</div>
+                        <div class="item-quantity">300 g</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Salmon Fillets</div>
+                        <div class="item-quantity">2 fillets</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dairy & Eggs Category -->
+        <div class="category-section">
+            <div class="category-header dairy" onclick="toggleCategory(this)">
+                <div class="category-name">
+                    <span class="category-icon">🥛</span>
+                    <span>Dairy & Eggs</span>
+                </div>
+                <span class="category-count">3 / 4</span>
+            </div>
+            <div class="item-list expanded">
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Milk</div>
+                        <div class="item-quantity">1 gallon</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Eggs</div>
+                        <div class="item-quantity">12 count</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Cheddar Cheese</div>
+                        <div class="item-quantity">8 oz</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Greek Yogurt</div>
+                        <div class="item-quantity">16 oz</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bakery Category -->
+        <div class="category-section">
+            <div class="category-header bakery" onclick="toggleCategory(this)">
+                <div class="category-name">
+                    <span class="category-icon">🍞</span>
+                    <span>Bakery</span>
+                </div>
+                <span class="category-count">2 / 2</span>
+            </div>
+            <div class="item-list">
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Whole Wheat Bread</div>
+                        <div class="item-quantity">1 loaf</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Bagels</div>
+                        <div class="item-quantity">6 count</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantry Category -->
+        <div class="category-section">
+            <div class="category-header pantry" onclick="toggleCategory(this)">
+                <div class="category-name">
+                    <span class="category-icon">🥫</span>
+                    <span>Pantry</span>
+                </div>
+                <span class="category-count">6 / 8</span>
+            </div>
+            <div class="item-list">
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Olive Oil</div>
+                        <div class="item-quantity">16 oz</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Soy Sauce</div>
+                        <div class="item-quantity">10 oz</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Honey</div>
+                        <div class="item-quantity">12 oz</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Brown Rice</div>
+                        <div class="item-quantity">2 lbs</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Pasta</div>
+                        <div class="item-quantity">1 lb</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox checked" onclick="toggleItem(this)">✓</div>
+                    <div class="item-info">
+                        <div class="item-name purchased">Canned Tomatoes</div>
+                        <div class="item-quantity">2 cans (14 oz each)</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Garlic</div>
+                        <div class="item-quantity">1 bulb</div>
+                    </div>
+                </div>
+                <div class="grocery-item">
+                    <div class="checkbox" onclick="toggleItem(this)"></div>
+                    <div class="item-info">
+                        <div class="item-name">Onions</div>
+                        <div class="item-quantity">3 items</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="add-item-btn" onclick="alert('Add new item')">+</button>
+
+    <!-- Bottom Actions -->
+    <div class="actions">
+        <button class="btn btn-secondary" onclick="alert('Share list')">Share</button>
+        <button class="btn btn-primary" onclick="alert('Complete shopping')">Complete Shopping</button>
+    </div>
+
+    <script>
+        function toggleCategory(header) {
+            const itemList = header.nextElementSibling;
+            itemList.classList.toggle('expanded');
+        }
+
+        function toggleItem(checkbox) {
+            checkbox.classList.toggle('checked');
+            const itemName = checkbox.nextElementSibling.querySelector('.item-name');
+            itemName.classList.toggle('purchased');
+
+            if (checkbox.classList.contains('checked')) {
+                checkbox.textContent = '✓';
+            } else {
+                checkbox.textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

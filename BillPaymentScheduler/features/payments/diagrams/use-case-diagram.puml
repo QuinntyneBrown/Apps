@@ -1,0 +1,151 @@
+@startuml Payments Use Case Diagram
+
+!define USER_COLOR #E3F2FD
+!define SYSTEM_COLOR #F3E5F5
+!define EXTERNAL_COLOR #FFF9C4
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Bill Owner" as User USER_COLOR
+actor "System" as System SYSTEM_COLOR
+actor "Payment Gateway" as Gateway EXTERNAL_COLOR
+actor "Scheduler Job" as Scheduler SYSTEM_COLOR
+
+rectangle "Payment Management System" {
+
+  rectangle "Payment Scheduling" #E8F5E9 {
+    usecase "Schedule Payment" as UC1
+    usecase "Schedule Recurring Payment" as UC2
+    usecase "Bulk Schedule Payments" as UC3
+    usecase "Update Scheduled Payment" as UC4
+    usecase "Cancel Scheduled Payment" as UC5
+  }
+
+  rectangle "Payment Execution" #FFF9C4 {
+    usecase "Execute Payment" as UC6
+    usecase "Process Payment via Gateway" as UC7
+    usecase "Confirm Payment Success" as UC8
+    usecase "Handle Payment Failure" as UC9
+    usecase "Retry Failed Payment" as UC10
+    usecase "Reconcile Payments" as UC11
+  }
+
+  rectangle "Payment Method Management" #FCE4EC {
+    usecase "Add Payment Method" as UC12
+    usecase "Update Payment Method" as UC13
+    usecase "Delete Payment Method" as UC14
+    usecase "Set Default Payment Method" as UC15
+    usecase "Validate Payment Method" as UC16
+  }
+
+  rectangle "Payment Inquiry" #E1F5FE {
+    usecase "View Payment Details" as UC17
+    usecase "View Payment History" as UC18
+    usecase "View Upcoming Payments" as UC19
+    usecase "View Failed Payments" as UC20
+    usecase "Search Payments" as UC21
+    usecase "Download Receipt" as UC22
+    usecase "Export Payment Data" as UC23
+  }
+
+  rectangle "Notifications" #F3E5F5 {
+    usecase "Send Payment Confirmation" as UC24
+    usecase "Send Failure Notification" as UC25
+    usecase "Send Cancellation Confirmation" as UC26
+  }
+}
+
+' User relationships - Payment Scheduling
+User --> UC1 : initiates
+User --> UC2 : initiates
+User --> UC3 : initiates
+User --> UC4 : initiates
+User --> UC5 : initiates
+
+' User relationships - Payment Execution
+User --> UC10 : initiates
+User --> UC22 : requests
+
+' User relationships - Payment Method Management
+User --> UC12 : initiates
+User --> UC13 : initiates
+User --> UC14 : initiates
+User --> UC15 : initiates
+
+' User relationships - Payment Inquiry
+User --> UC17 : views
+User --> UC18 : views
+User --> UC19 : views
+User --> UC20 : views
+User --> UC21 : searches
+User --> UC23 : exports
+
+' System/Scheduler relationships
+Scheduler --> UC6 : triggers
+System --> UC7 : executes
+System --> UC8 : confirms
+System --> UC9 : handles
+System --> UC11 : performs
+System --> UC16 : validates
+
+' Gateway relationships
+UC7 --> Gateway : processes via
+UC16 --> Gateway : validates via
+
+' Notification relationships
+UC8 --> UC24 : triggers
+UC9 --> UC25 : triggers
+UC5 --> UC26 : triggers
+
+' Extension relationships
+UC1 ..> UC16 : <<includes>>
+UC2 ..> UC1 : <<extends>>
+UC3 ..> UC1 : <<extends>>
+UC6 ..> UC7 : <<includes>>
+UC6 ..> UC8 : <<includes>>
+UC6 ..> UC9 : <<includes>>
+UC10 ..> UC6 : <<includes>>
+UC12 ..> UC16 : <<includes>>
+
+' Dependencies
+UC4 ..> UC1 : modifies
+UC5 ..> UC1 : cancels
+UC10 ..> UC9 : recovers from
+UC19 ..> UC18 : filters
+UC20 ..> UC18 : filters
+
+note right of UC1
+  User selects a bill and schedules
+  a payment with specific date and
+  payment method
+end note
+
+note right of UC6
+  Automated execution of scheduled
+  payments at the specified date/time
+end note
+
+note bottom of UC7
+  Integration with external payment
+  processors (Stripe, PayPal, Plaid)
+  to execute actual payment
+end note
+
+note right of UC9
+  Handles payment failures with
+  automatic retry logic and user
+  notifications
+end note
+
+note bottom of UC11
+  Daily reconciliation with payment
+  gateway to ensure data consistency
+end note
+
+note left of UC16
+  Validates payment method is active,
+  not expired, and has sufficient funds
+end note
+
+@enduml

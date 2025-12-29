@@ -1,0 +1,49 @@
+@startuml FinancialGoalTracker_SequenceDiagram
+
+title Goal Creation and Progress Tracking Flow
+
+actor User
+participant "Web UI" as UI
+participant "API Gateway" as API
+participant "Goal Service" as GoalSvc
+participant "Forecast Service" as ForecastSvc
+participant "Event Bus" as Events
+participant "Database" as DB
+
+== Create Goal ==
+User -> UI: Create new goal\n($10,000 by Dec 31)
+UI -> API: POST /api/goals
+API -> GoalSvc: CreateGoal(goalDTO)
+GoalSvc -> DB: Insert Goal
+DB --> GoalSvc: Goal Created
+GoalSvc -> Events: Publish GoalCreatedEvent
+GoalSvc -> ForecastSvc: CalculateProjection(goalId)
+ForecastSvc -> DB: Insert Forecast
+ForecastSvc --> GoalSvc: Forecast Created
+GoalSvc --> API: GoalDTO + ForecastDTO
+API --> UI: 201 Created
+UI --> User: Show goal with\nrequired $400/month
+
+== Record Contribution ==
+User -> UI: Add contribution ($500)
+UI -> API: POST /api/goals/{id}/contributions
+API -> GoalSvc: RecordContribution(goalId, amount)
+GoalSvc -> DB: Insert Contribution
+GoalSvc -> DB: Update Goal.CurrentAmount
+DB --> GoalSvc: Updated
+GoalSvc -> Events: Publish ProgressUpdatedEvent
+Events --> ForecastSvc: ProgressUpdatedEvent
+ForecastSvc -> ForecastSvc: RecalculateProjection()
+ForecastSvc -> DB: Update Forecast
+ForecastSvc -> Events: Publish ProjectionUpdatedEvent
+GoalSvc -> GoalSvc: CheckMilestones()
+alt Milestone Reached
+  GoalSvc -> Events: Publish MilestoneReachedEvent
+  Events --> UI: Push notification
+  UI --> User: "25% milestone achieved!"
+end
+GoalSvc --> API: Updated GoalDTO
+API --> UI: 200 OK
+UI --> User: Show progress:\n$500 / $10,000 (5%)\nNew projection: Nov 15
+
+@enduml

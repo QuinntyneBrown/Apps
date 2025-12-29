@@ -1,0 +1,132 @@
+@startuml Fuel Purchase Flow - Sequence Diagram
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+
+title Add Fuel Purchase and Calculate MPG - Sequence Diagram
+
+actor User
+participant "Web/Mobile\nApp" as UI
+participant "API\nGateway" as API
+participant "Fuel Purchase\nService" as FuelService
+participant "FuelPurchase\nAggregate" as FuelAggregate
+participant "Vehicle\nAggregate" as VehicleAggregate
+participant "Domain Event\nBus" as EventBus
+participant "MPG Calculator\nHandler" as MPGHandler
+participant "Economy\nService" as EconomyService
+participant "Notification\nService" as NotificationService
+database "Database" as DB
+
+User -> UI: Fill out fuel\npurchase form
+activate UI
+
+UI -> UI: Validate input\n(client-side)
+
+UI -> API: POST /api/fuel-purchases\n{vehicle, gallons, cost, odometer...}
+activate API
+
+API -> API: Authenticate\n& Authorize
+
+API -> FuelService: CreateFuelPurchase(data)
+activate FuelService
+
+FuelService -> DB: Get previous\nfuel purchase
+DB --> FuelService: Previous purchase data
+
+FuelService -> VehicleAggregate: GetVehicle(vehicleId)
+activate VehicleAggregate
+VehicleAggregate --> FuelService: Vehicle details
+deactivate VehicleAggregate
+
+FuelService -> FuelAggregate: Create new\nFuelPurchase
+activate FuelAggregate
+
+FuelAggregate -> FuelAggregate: Validate data\n(odometer > previous,\nreasonable gallons, etc.)
+
+FuelAggregate -> FuelAggregate: RecordPurchase()
+FuelAggregate -> FuelAggregate: RaiseDomainEvent(\nFuelPurchased)
+
+alt Is Full Fill and Previous Full Fill Exists
+    FuelAggregate -> FuelAggregate: CalculateMPG(\npreviousFill)
+    FuelAggregate -> FuelAggregate: MPG = (CurrentOdo - PrevOdo)\n/ Gallons
+    FuelAggregate -> FuelAggregate: RaiseDomainEvent(\nFuelEconomyCalculated)
+
+    alt MPG > Personal Best
+        FuelAggregate -> FuelAggregate: RaiseDomainEvent(\nPersonalBestMPGAchieved)
+    end
+
+    alt MPG < Expected (decline)
+        FuelAggregate -> FuelAggregate: RaiseDomainEvent(\nFuelEconomyDeclined)
+    end
+end
+
+FuelAggregate --> FuelService: FuelPurchase created\nwith events
+deactivate FuelAggregate
+
+FuelService -> DB: Save FuelPurchase
+DB --> FuelService: Saved
+
+FuelService -> EventBus: Publish all\ndomain events
+activate EventBus
+
+FuelService --> API: FuelPurchase result\n{id, calculatedMPG, ...}
+deactivate FuelService
+
+API --> UI: 201 Created\n{purchase data}
+deactivate API
+
+UI -> UI: Update UI with\ncalculated MPG
+UI --> User: Show success message\nand MPG result
+deactivate UI
+
+' Event Processing (Asynchronous)
+EventBus -> EventBus: Route events to\nsubscribers
+
+alt FuelEconomyCalculated Event
+    EventBus -> MPGHandler: Handle\nFuelEconomyCalculated
+    activate MPGHandler
+
+    MPGHandler -> EconomyService: UpdateRunningAverages(\nvehicleId, newMPG)
+    activate EconomyService
+
+    EconomyService -> DB: Update running\naverages (30d, 90d, lifetime)
+    DB --> EconomyService: Updated
+
+    EconomyService -> EventBus: Publish\nRunningAverageUpdated
+
+    EconomyService --> MPGHandler: Complete
+    deactivate EconomyService
+    deactivate MPGHandler
+end
+
+alt PersonalBestMPGAchieved Event
+    EventBus -> NotificationService: Handle\nPersonalBestMPGAchieved
+    activate NotificationService
+
+    NotificationService -> NotificationService: Create celebration\nalert
+    NotificationService -> DB: Save alert
+    NotificationService -> UI: Push notification\n"🎉 New personal best!"
+
+    deactivate NotificationService
+end
+
+alt FuelEconomyDeclined Event
+    EventBus -> NotificationService: Handle\nFuelEconomyDeclined
+    activate NotificationService
+
+    NotificationService -> NotificationService: Create alert with\nsuggested actions
+    NotificationService -> DB: Save alert
+    NotificationService -> UI: Push notification\n"⚠️ MPG declined, check maintenance"
+
+    deactivate NotificationService
+end
+
+deactivate EventBus
+
+note over EventBus, NotificationService
+    Event handling is asynchronous
+    and doesn't block the user request
+end note
+
+@enduml

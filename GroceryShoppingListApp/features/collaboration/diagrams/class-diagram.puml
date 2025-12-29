@@ -1,0 +1,50 @@
+@startuml Collaboration - Class Diagram
+
+!define ENTITY_COLOR #E1F5FE
+!define SERVICE_COLOR #C8E6C9
+!define EVENT_COLOR #FFCCBC
+
+class ItemSuggestion <<Entity>> ENTITY_COLOR {
+    - suggestionId: UUID
+    - listId: UUID
+    - suggestedBy: UUID
+    - itemName: String
+    - quantity: Integer
+    - reason: String
+    - status: SuggestionStatus
+    + approve(approvedBy): void
+    + reject(): void
+}
+
+enum SuggestionStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+class RealtimeActivity <<Entity>> ENTITY_COLOR {
+    - activityId: UUID
+    - listId: UUID
+    - userId: UUID
+    - activityType: String
+    - activityData: Object
+    + broadcast(): void
+}
+
+class CollaborationService <<Service>> SERVICE_COLOR {
+    - suggestionRepo: ISuggestionRepository
+    - wsService: IWebSocketService
+    + makeSuggestion(suggestion): void
+    + approveSuggestion(suggestionId): void
+    + broadcastUpdate(activity): void
+    + trackPresence(listId, userId): void
+}
+
+class ItemSuggestionMade <<Event>> EVENT_COLOR
+class ItemSuggestionApproved <<Event>> EVENT_COLOR
+class RealTimeUpdateSynced <<Event>> EVENT_COLOR
+
+ItemSuggestion -- SuggestionStatus
+CollaborationService --> ItemSuggestion
+
+@enduml

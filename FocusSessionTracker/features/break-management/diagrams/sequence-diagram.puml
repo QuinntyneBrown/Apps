@@ -1,0 +1,134 @@
+@startuml Break Management Sequence
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Break Management Lifecycle
+
+actor User
+participant "Frontend" as FE
+participant "BreakController" as API
+participant "BreakService" as SVC
+participant "BreakRepository" as REPO
+participant "EventPublisher" as EVT
+participant "TimerService" as TIMER
+participant "RecommendationEngine" as REC
+
+== Get Break Recommendation ==
+
+User -> FE: Complete session
+FE -> API: GET /api/breaks/recommendations
+API -> SVC: GetRecommendation(userId)
+SVC -> REC: Calculate recommendation
+REC -> REC: Check session history
+REC -> REC: Determine break type
+REC --> SVC: Return recommendation
+SVC --> API: BreakRecommendation
+API --> FE: 200 OK (recommendation)
+FE -> FE: Show recommendation banner
+FE --> User: Display "Take a 5-min break"
+
+== Start Break ==
+
+User -> FE: Click Start Break
+FE -> FE: Show break type selection
+User -> FE: Select break type
+FE -> API: POST /api/breaks
+API -> SVC: StartBreak(command)
+SVC -> SVC: Validate break type
+SVC -> REPO: Save(break)
+SVC -> EVT: Publish(BreakStarted)
+SVC -> TIMER: StartTimer(breakId, duration)
+API --> FE: 201 Created (break)
+FE -> FE: Start countdown display
+FE --> User: Show break timer
+
+== Log Break Activity ==
+
+User -> FE: Click activity button (e.g., Walk)
+FE -> FE: Show activity form
+User -> FE: Add notes, rate effectiveness
+FE -> API: PUT /api/breaks/{id}/activity
+API -> SVC: LogActivity(command)
+SVC -> REPO: GetById(breakId)
+SVC -> SVC: CreateActivity()
+SVC -> REPO: Save(break)
+SVC -> EVT: Publish(BreakActivityLogged)
+API --> FE: 200 OK
+FE -> FE: Show confirmation
+FE --> User: "Activity logged: Walk"
+
+== Extend Break ==
+
+TIMER -> FE: Break timer nearing end
+FE -> FE: Show extend option
+User -> FE: Click Extend Break
+FE -> FE: Show extension modal
+User -> FE: Select +5 minutes
+FE -> API: PUT /api/breaks/{id}/extend
+API -> SVC: ExtendBreak(id, minutes, reason)
+SVC -> REPO: GetById(breakId)
+SVC -> SVC: ValidateExtension()
+SVC -> SVC: AddExtensionTime()
+SVC -> REPO: Save(break)
+SVC -> EVT: Publish(BreakExtended)
+SVC -> TIMER: ExtendTimer(breakId, minutes)
+API --> FE: 200 OK
+FE -> FE: Update timer display
+FE --> User: Show extended timer
+
+== Skip Break ==
+
+User -> FE: Click Skip Break
+FE -> FE: Show skip dialog
+FE -> FE: Check consecutive skips
+alt Consecutive skips >= 3
+    FE -> FE: Show burnout warning
+end
+User -> FE: Select reason, confirm
+FE -> API: POST /api/breaks/skip
+API -> SVC: SkipBreak(userId, reason)
+SVC -> SVC: RecordSkip()
+SVC -> REPO: SaveSkip(skip)
+SVC -> EVT: Publish(BreakSkipped)
+alt Consecutive skips >= 5
+    SVC -> EVT: Publish(BurnoutRiskDetected)
+end
+API --> FE: 200 OK
+FE --> User: Return to session view
+
+== Complete Break ==
+
+TIMER -> FE: Timer expired
+FE -> FE: Show completion prompt
+User -> FE: Click End Break
+FE -> API: PUT /api/breaks/{id}/complete
+API -> SVC: CompleteBreak(breakId)
+SVC -> REPO: GetById(breakId)
+SVC -> SVC: CalculateActualDuration()
+SVC -> SVC: MarkCompleted()
+SVC -> REPO: Save(break)
+SVC -> EVT: Publish(BreakCompleted)
+SVC -> REC: UpdateBreakPattern(userId)
+API --> FE: 200 OK
+FE -> FE: Show activity summary
+FE -> FE: Show "Ready to Focus" button
+FE --> User: Display summary
+
+== View Break History ==
+
+User -> FE: Navigate to break history
+FE -> API: GET /api/breaks?startDate=...
+API -> SVC: GetBreakHistory(query)
+SVC -> REPO: GetByDateRange(userId, start, end)
+REPO --> SVC: List<Break>
+SVC --> API: Paginated breaks
+API --> FE: 200 OK (breaks)
+FE -> FE: Render break cards
+FE --> User: Show break history
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml MeetingNotes_DomainModel
+
+class Meeting <<AggregateRoot>> {
+  - Id: Guid
+  - Title: string
+  - ScheduledDateTime: DateTime
+  - Participants: List<Participant>
+  - Status: MeetingStatus
+  --
+  + Start()
+  + Complete()
+  + Cancel()
+}
+
+class MeetingNotes <<Entity>> {
+  - Id: Guid
+  - MeetingId: Guid
+  - Content: string
+  - Author: Guid
+  - Version: int
+}
+
+class ActionItem <<AggregateRoot>> {
+  - Id: Guid
+  - MeetingId: Guid
+  - Title: string
+  - Assignee: Guid
+  - DueDate: DateTime
+  - Status: ActionItemStatus
+  - Priority: Priority
+  --
+  + Assign(assignee)
+  + UpdateStatus(status)
+  + Complete()
+}
+
+class Decision <<Entity>> {
+  - Id: Guid
+  - MeetingId: Guid
+  - DecisionText: string
+  - DecisionMakers: List<Guid>
+  - ImpactLevel: ImpactLevel
+}
+
+enum MeetingStatus {
+  Scheduled
+  InProgress
+  Completed
+  Cancelled
+}
+
+enum ActionItemStatus {
+  NotStarted
+  InProgress
+  Blocked
+  Completed
+}
+
+Meeting "1" -- "0..1" MeetingNotes
+Meeting "1" -- "0..*" ActionItem
+Meeting "1" -- "0..*" Decision
+Meeting --> MeetingStatus
+ActionItem --> ActionItemStatus
+
+@enduml

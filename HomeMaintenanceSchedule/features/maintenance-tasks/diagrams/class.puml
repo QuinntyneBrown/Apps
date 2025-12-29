@@ -1,0 +1,299 @@
+@startuml Maintenance Tasks - Class Diagram
+
+!define ENTITY_COLOR #E8F4F8
+!define VALUE_COLOR #FFF9E6
+!define ENUM_COLOR #FFE6E6
+
+' Entities
+class Task <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Title: string
+    + Description: string
+    + Category: TaskCategory
+    + Priority: TaskPriority
+    + ScheduledDate: DateTime
+    + DueDate: DateTime
+    + CompletedDate: DateTime?
+    + Status: TaskStatus
+    + RecurrencePattern: RecurrencePattern
+    + RecurrenceInterval: int?
+    + EstimatedCost: decimal?
+    + ActualCost: decimal?
+    + Notes: string
+    + PhotoUrls: List<string>
+    + PropertyId: Guid
+    + AssignedProviderId: Guid?
+    + CreatedAt: DateTime
+    + UpdatedAt: DateTime
+    + CreatedBy: Guid
+    + UpdatedBy: Guid?
+    --
+    + Complete(completionData): void
+    + Postpone(newDate, reason): void
+    + Cancel(reason): void
+    + CalculateCostVariance(): decimal
+    + IsOverdue(): bool
+    + GenerateNextInstance(): Task
+}
+
+class Property <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+    + Address: string
+    + OwnerId: Guid
+    --
+    + GetTasks(): List<Task>
+}
+
+class ServiceProvider <<Entity>> ENTITY_COLOR {
+    + Id: Guid
+    + Name: string
+    + CompanyName: string
+    + Specialty: string
+    + Phone: string
+    + Email: string
+    --
+    + GetAssignedTasks(): List<Task>
+}
+
+' Enumerations
+enum TaskCategory <<Enumeration>> ENUM_COLOR {
+    HVAC
+    Plumbing
+    Electrical
+    Landscaping
+    Roofing
+    Painting
+    Cleaning
+    Inspection
+    Other
+}
+
+enum TaskPriority <<Enumeration>> ENUM_COLOR {
+    Low
+    Medium
+    High
+    Critical
+}
+
+enum TaskStatus <<Enumeration>> ENUM_COLOR {
+    Scheduled
+    InProgress
+    Completed
+    Cancelled
+    Overdue
+    Postponed
+}
+
+enum RecurrencePattern <<Enumeration>> ENUM_COLOR {
+    None
+    Daily
+    Weekly
+    Monthly
+    Quarterly
+    SemiAnnually
+    Annually
+}
+
+' Value Objects
+class CompletionData <<Value Object>> VALUE_COLOR {
+    + CompletedDate: DateTime
+    + ActualCost: decimal?
+    + Notes: string
+    + PhotoUrls: List<string>
+    --
+    + Validate(): bool
+}
+
+class RecurrenceInfo <<Value Object>> VALUE_COLOR {
+    + Pattern: RecurrencePattern
+    + Interval: int
+    --
+    + CalculateNextDate(currentDate): DateTime
+    + IsRecurring(): bool
+}
+
+' Domain Events
+class TaskScheduledEvent <<Domain Event>> {
+    + TaskId: Guid
+    + Title: string
+    + ScheduledDate: DateTime
+    + RecurrencePattern: RecurrencePattern
+    + Priority: TaskPriority
+    + PropertyId: Guid
+    + OccurredAt: DateTime
+}
+
+class TaskCompletedEvent <<Domain Event>> {
+    + TaskId: Guid
+    + CompletionDate: DateTime
+    + Notes: string
+    + PhotoUrls: List<string>
+    + ActualCost: decimal?
+    + OccurredAt: DateTime
+}
+
+class TaskPostponedEvent <<Domain Event>> {
+    + TaskId: Guid
+    + OriginalDate: DateTime
+    + NewDate: DateTime
+    + Reason: string
+    + OccurredAt: DateTime
+}
+
+class TaskOverdueEvent <<Domain Event>> {
+    + TaskId: Guid
+    + DueDate: DateTime
+    + DaysOverdue: int
+    + Priority: TaskPriority
+    + OccurredAt: DateTime
+}
+
+class TaskCancelledEvent <<Domain Event>> {
+    + TaskId: Guid
+    + CancellationDate: DateTime
+    + Reason: string
+    + OccurredAt: DateTime
+}
+
+' Commands
+class CreateTaskCommand <<Command>> {
+    + Title: string
+    + Description: string
+    + Category: TaskCategory
+    + Priority: TaskPriority
+    + ScheduledDate: DateTime
+    + DueDate: DateTime
+    + RecurrencePattern: RecurrencePattern
+    + RecurrenceInterval: int?
+    + EstimatedCost: decimal?
+    + PropertyId: Guid
+    + AssignedProviderId: Guid?
+}
+
+class CompleteTaskCommand <<Command>> {
+    + TaskId: Guid
+    + CompletionData: CompletionData
+}
+
+class PostponeTaskCommand <<Command>> {
+    + TaskId: Guid
+    + NewDate: DateTime
+    + Reason: string
+}
+
+class CancelTaskCommand <<Command>> {
+    + TaskId: Guid
+    + Reason: string
+}
+
+' Queries
+class GetTaskByIdQuery <<Query>> {
+    + TaskId: Guid
+}
+
+class GetTasksQuery <<Query>> {
+    + PropertyId: Guid?
+    + Status: TaskStatus?
+    + Priority: TaskPriority?
+    + Category: TaskCategory?
+    + StartDate: DateTime?
+    + EndDate: DateTime?
+    + PageNumber: int
+    + PageSize: int
+}
+
+class GetUpcomingTasksQuery <<Query>> {
+    + Days: int
+    + PropertyId: Guid?
+}
+
+class GetOverdueTasksQuery <<Query>> {
+    + PropertyId: Guid?
+}
+
+class GetTaskStatisticsQuery <<Query>> {
+    + PropertyId: Guid?
+    + StartDate: DateTime?
+    + EndDate: DateTime?
+}
+
+' Handlers
+class CreateTaskCommandHandler <<Handler>> {
+    - _taskRepository: ITaskRepository
+    - _eventPublisher: IEventPublisher
+    --
+    + Handle(command): Task
+}
+
+class CompleteTaskCommandHandler <<Handler>> {
+    - _taskRepository: ITaskRepository
+    - _eventPublisher: IEventPublisher
+    --
+    + Handle(command): void
+}
+
+class GetTasksQueryHandler <<Handler>> {
+    - _taskRepository: ITaskRepository
+    --
+    + Handle(query): PagedResult<Task>
+}
+
+' Repositories
+interface ITaskRepository <<Repository>> {
+    + GetByIdAsync(id): Task
+    + GetAllAsync(filters): List<Task>
+    + CreateAsync(task): Task
+    + UpdateAsync(task): void
+    + DeleteAsync(id): void
+    + GetUpcomingAsync(days, propertyId): List<Task>
+    + GetOverdueAsync(propertyId): List<Task>
+    + GetStatisticsAsync(filters): TaskStatistics
+}
+
+' Services
+class TaskRecurrenceService <<Service>> {
+    + CreateNextInstance(task): Task
+    + CalculateNextDueDate(pattern, interval, currentDate): DateTime
+}
+
+class OverdueTaskService <<Service>> {
+    + CheckAndMarkOverdueTasks(): void
+    + SendOverdueNotifications(): void
+}
+
+class TaskNotificationService <<Service>> {
+    + SendTaskReminder(task, daysUntilDue): void
+    + SendOverdueAlert(task): void
+    + SendTaskCompletedNotification(task): void
+}
+
+' Relationships
+Task "1" --> "1" Property : belongs to
+Task "0..*" --> "0..1" ServiceProvider : assigned to
+Task --> TaskCategory : has
+Task --> TaskPriority : has
+Task --> TaskStatus : has
+Task --> RecurrencePattern : has
+Task ..> CompletionData : uses
+Task ..> RecurrenceInfo : uses
+
+CreateTaskCommand ..> TaskScheduledEvent : publishes
+CompleteTaskCommand ..> TaskCompletedEvent : publishes
+PostponeTaskCommand ..> TaskPostponedEvent : publishes
+CancelTaskCommand ..> TaskCancelledEvent : publishes
+
+CreateTaskCommandHandler --> ITaskRepository : uses
+CompleteTaskCommandHandler --> ITaskRepository : uses
+GetTasksQueryHandler --> ITaskRepository : uses
+
+CreateTaskCommandHandler ..> CreateTaskCommand : handles
+CompleteTaskCommandHandler ..> CompleteTaskCommand : handles
+GetTasksQueryHandler ..> GetTasksQuery : handles
+
+TaskRecurrenceService --> Task : creates instances
+OverdueTaskService --> ITaskRepository : queries
+OverdueTaskService ..> TaskOverdueEvent : publishes
+TaskNotificationService --> Task : notifies about
+
+@enduml

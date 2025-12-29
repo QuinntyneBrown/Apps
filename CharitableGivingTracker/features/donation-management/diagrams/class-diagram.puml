@@ -1,0 +1,433 @@
+@startuml Donation Management Class Diagram
+
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+' Aggregates
+class Donation <<Aggregate Root>> {
+  - donationId: Guid
+  - userId: Guid
+  - organizationId: Guid
+  - amount: decimal
+  - donationDate: DateTime
+  - paymentMethod: PaymentMethod
+  - isTaxDeductible: bool
+  - donationType: DonationType
+  - category: Category
+  - checkNumber: string
+  - confirmationNumber: string
+  - notes: string
+  - receiptUrl: string
+  - acknowledgmentLetterUrl: string
+  - acknowledgmentReceived: bool
+  - fairMarketValue: decimal?
+  - valuationMethod: string
+  - appraisalRequired: bool
+  - refundedAt: DateTime?
+  - refundAmount: decimal?
+  - refundReason: string
+  --
+  + RecordDonation(): void
+  + RecordRefund(amount, reason): void
+  + UploadAcknowledgment(url): void
+  + IsAcknowledgmentRequired(): bool
+  - RaiseDonationMade(): void
+  - RaiseDonationRefunded(): void
+  - RaiseAcknowledgmentReceived(): void
+}
+
+class RecurringDonation <<Aggregate Root>> {
+  - recurringDonationId: Guid
+  - userId: Guid
+  - organizationId: Guid
+  - amount: decimal
+  - frequency: Frequency
+  - startDate: DateTime
+  - endDate: DateTime?
+  - nextScheduledDate: DateTime
+  - paymentMethod: PaymentMethod
+  - isActive: bool
+  - pausedUntil: DateTime?
+  - donationsMade: int
+  - totalDonated: decimal
+  --
+  + Schedule(): void
+  + Execute(): Donation
+  + Modify(amount, frequency): void
+  + Pause(until: DateTime): void
+  + Cancel(): void
+  + CalculateNextDate(): DateTime
+  - RaiseRecurringDonationScheduled(): void
+  - RaiseRecurringDonationExecuted(): void
+}
+
+' Enumerations
+enum PaymentMethod {
+  Cash
+  Check
+  CreditCard
+  DebitCard
+  Stock
+  Property
+  Other
+}
+
+enum DonationType {
+  Cash
+  NonCash
+  Stock
+  Property
+}
+
+enum Category {
+  General
+  Education
+  Health
+  Environment
+  Religious
+  Arts
+  International
+  Other
+}
+
+enum Frequency {
+  Weekly
+  BiWeekly
+  Monthly
+  Quarterly
+  Annually
+}
+
+' Value Objects
+class Money <<Value Object>> {
+  - amount: decimal
+  - currency: string
+  --
+  + Add(other: Money): Money
+  + IsPositive(): bool
+}
+
+class DateRange <<Value Object>> {
+  - startDate: DateTime
+  - endDate: DateTime
+  --
+  + Contains(date: DateTime): bool
+  + GetDuration(): int
+}
+
+' Commands
+class RecordDonationCommand {
+  + UserId: Guid
+  + OrganizationId: Guid
+  + Amount: decimal
+  + DonationDate: DateTime
+  + PaymentMethod: PaymentMethod
+  + IsTaxDeductible: bool
+  + Category: Category
+  + Notes: string
+}
+
+class RecordNonCashDonationCommand {
+  + UserId: Guid
+  + OrganizationId: Guid
+  + ItemDescription: string
+  + Quantity: int
+  + FairMarketValue: decimal
+  + ValuationMethod: string
+  + DonationDate: DateTime
+}
+
+class ScheduleRecurringDonationCommand {
+  + UserId: Guid
+  + OrganizationId: Guid
+  + Amount: decimal
+  + Frequency: Frequency
+  + StartDate: DateTime
+  + EndDate: DateTime?
+  + PaymentMethod: PaymentMethod
+}
+
+class RefundDonationCommand {
+  + DonationId: Guid
+  + RefundAmount: decimal
+  + RefundReason: string
+}
+
+class UploadAcknowledgmentLetterCommand {
+  + DonationId: Guid
+  + DocumentContent: byte[]
+  + FileName: string
+}
+
+' Command Handlers
+class RecordDonationCommandHandler {
+  - donationRepository: IDonationRepository
+  - organizationRepository: IOrganizationRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: RecordDonationCommand): Guid
+}
+
+class ScheduleRecurringDonationCommandHandler {
+  - recurringDonationRepository: IRecurringDonationRepository
+  - organizationRepository: IOrganizationRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: ScheduleRecurringDonationCommand): Guid
+}
+
+class ExecuteRecurringDonationCommandHandler {
+  - recurringDonationRepository: IRecurringDonationRepository
+  - donationRepository: IDonationRepository
+  - paymentProcessor: IPaymentProcessor
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: ExecuteRecurringDonationCommand): Guid
+}
+
+class RefundDonationCommandHandler {
+  - donationRepository: IDonationRepository
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: RefundDonationCommand): void
+}
+
+class UploadAcknowledgmentCommandHandler {
+  - donationRepository: IDonationRepository
+  - documentStorage: IDocumentStorage
+  - eventPublisher: IEventPublisher
+  --
+  + Handle(command: UploadAcknowledgmentLetterCommand): string
+}
+
+' Queries
+class GetDonationsByUserIdQuery {
+  + UserId: Guid
+  + StartDate: DateTime?
+  + EndDate: DateTime?
+  + OrganizationId: Guid?
+  + TaxDeductibleOnly: bool
+  + Pagination: PaginationConfig
+}
+
+class GetDonationsByTaxYearQuery {
+  + UserId: Guid
+  + TaxYear: int
+}
+
+class GetMissingAcknowledgmentsQuery {
+  + UserId: Guid
+}
+
+class GetRecurringDonationsByUserIdQuery {
+  + UserId: Guid
+  + ActiveOnly: bool
+}
+
+' Query Handlers
+class GetDonationsByUserIdQueryHandler {
+  - donationRepository: IDonationRepository
+  --
+  + Handle(query: GetDonationsByUserIdQuery): PagedResult<DonationDto>
+}
+
+class GetDonationsByTaxYearQueryHandler {
+  - donationRepository: IDonationRepository
+  --
+  + Handle(query: GetDonationsByTaxYearQuery): DonationsByTaxYearDto
+}
+
+class GetMissingAcknowledgmentsQueryHandler {
+  - donationRepository: IDonationRepository
+  --
+  + Handle(query: GetMissingAcknowledgmentsQuery): List<DonationDto>
+}
+
+' DTOs
+class DonationDto {
+  + DonationId: Guid
+  + OrganizationName: string
+  + Amount: decimal
+  + DonationDate: DateTime
+  + PaymentMethod: string
+  + IsTaxDeductible: bool
+  + Category: string
+  + AcknowledgmentReceived: bool
+}
+
+class RecurringDonationDto {
+  + RecurringDonationId: Guid
+  + OrganizationName: string
+  + Amount: decimal
+  + Frequency: string
+  + NextScheduledDate: DateTime
+  + IsActive: bool
+  + DonationsMade: int
+  + TotalDonated: decimal
+}
+
+class DonationsByTaxYearDto {
+  + TaxYear: int
+  + TotalDeductible: decimal
+  + DonationCount: int
+  + OrganizationsSupported: int
+  + Donations: List<DonationDto>
+}
+
+' Domain Events
+class DonationMade <<Domain Event>> {
+  + DonationId: Guid
+  + OrganizationId: Guid
+  + UserId: Guid
+  + Amount: decimal
+  + DonationDate: DateTime
+  + PaymentMethod: string
+  + IsTaxDeductible: bool
+  + OccurredAt: DateTime
+}
+
+class RecurringDonationScheduled <<Domain Event>> {
+  + RecurringDonationId: Guid
+  + OrganizationId: Guid
+  + UserId: Guid
+  + Amount: decimal
+  + Frequency: string
+  + StartDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class RecurringDonationExecuted <<Domain Event>> {
+  + DonationId: Guid
+  + RecurringDonationId: Guid
+  + OrganizationId: Guid
+  + Amount: decimal
+  + ExecutionDate: DateTime
+  + NextScheduledDate: DateTime
+  + OccurredAt: DateTime
+}
+
+class DonationRefunded <<Domain Event>> {
+  + DonationId: Guid
+  + OriginalAmount: decimal
+  + RefundAmount: decimal
+  + RefundDate: DateTime
+  + RefundReason: string
+  + UserId: Guid
+  + OccurredAt: DateTime
+}
+
+class NonCashDonationValued <<Domain Event>> {
+  + DonationId: Guid
+  + ItemDescription: string
+  + AssessedValue: decimal
+  + ValuationMethod: string
+  + AppraisalRequired: bool
+  + UserId: Guid
+  + OccurredAt: DateTime
+}
+
+class AcknowledgmentLetterReceived <<Domain Event>> {
+  + DonationId: Guid
+  + OrganizationId: Guid
+  + AcknowledgmentDate: DateTime
+  + DocumentUrl: string
+  + UserId: Guid
+  + OccurredAt: DateTime
+}
+
+' Repository Interfaces
+interface IDonationRepository {
+  + Add(donation: Donation): void
+  + Update(donation: Donation): void
+  + GetById(id: Guid): Donation
+  + GetByUserId(userId: Guid, filters): PagedResult<Donation>
+  + GetByTaxYear(userId: Guid, year: int): List<Donation>
+  + GetMissingAcknowledgments(userId: Guid): List<Donation>
+}
+
+interface IRecurringDonationRepository {
+  + Add(recurring: RecurringDonation): void
+  + Update(recurring: RecurringDonation): void
+  + GetById(id: Guid): RecurringDonation
+  + GetByUserId(userId: Guid): List<RecurringDonation>
+  + GetDueForExecution(): List<RecurringDonation>
+}
+
+' Service Interfaces
+interface IPaymentProcessor {
+  + ProcessPayment(amount: decimal, method: PaymentMethod): PaymentResult
+}
+
+interface IDocumentStorage {
+  + UploadDocument(content: byte[], fileName: string): string
+  + GetDocument(url: string): byte[]
+  + DeleteDocument(url: string): void
+}
+
+interface IEventPublisher {
+  + Publish<T>(event: T): Task
+}
+
+' Relationships
+Donation *-- Money
+Donation *-- PaymentMethod
+Donation *-- DonationType
+Donation *-- Category
+RecurringDonation *-- Money
+RecurringDonation *-- Frequency
+RecurringDonation *-- PaymentMethod
+
+RecordDonationCommandHandler --> RecordDonationCommand
+RecordDonationCommandHandler --> IDonationRepository
+RecordDonationCommandHandler --> IEventPublisher
+RecordDonationCommandHandler --> Donation
+RecordDonationCommandHandler ..> DonationMade: publishes
+
+ScheduleRecurringDonationCommandHandler --> ScheduleRecurringDonationCommand
+ScheduleRecurringDonationCommandHandler --> IRecurringDonationRepository
+ScheduleRecurringDonationCommandHandler --> IEventPublisher
+ScheduleRecurringDonationCommandHandler --> RecurringDonation
+ScheduleRecurringDonationCommandHandler ..> RecurringDonationScheduled: publishes
+
+ExecuteRecurringDonationCommandHandler --> IRecurringDonationRepository
+ExecuteRecurringDonationCommandHandler --> IDonationRepository
+ExecuteRecurringDonationCommandHandler --> IPaymentProcessor
+ExecuteRecurringDonationCommandHandler --> IEventPublisher
+ExecuteRecurringDonationCommandHandler ..> RecurringDonationExecuted: publishes
+
+RefundDonationCommandHandler --> RefundDonationCommand
+RefundDonationCommandHandler --> IDonationRepository
+RefundDonationCommandHandler --> IEventPublisher
+RefundDonationCommandHandler ..> DonationRefunded: publishes
+
+UploadAcknowledgmentCommandHandler --> UploadAcknowledgmentLetterCommand
+UploadAcknowledgmentCommandHandler --> IDonationRepository
+UploadAcknowledgmentCommandHandler --> IDocumentStorage
+UploadAcknowledgmentCommandHandler --> IEventPublisher
+UploadAcknowledgmentCommandHandler ..> AcknowledgmentLetterReceived: publishes
+
+GetDonationsByUserIdQueryHandler --> GetDonationsByUserIdQuery
+GetDonationsByUserIdQueryHandler --> IDonationRepository
+GetDonationsByUserIdQueryHandler ..> DonationDto: returns
+
+GetDonationsByTaxYearQueryHandler --> GetDonationsByTaxYearQuery
+GetDonationsByTaxYearQueryHandler --> IDonationRepository
+GetDonationsByTaxYearQueryHandler ..> DonationsByTaxYearDto: returns
+
+GetMissingAcknowledgmentsQueryHandler --> GetMissingAcknowledgmentsQuery
+GetMissingAcknowledgmentsQueryHandler --> IDonationRepository
+GetMissingAcknowledgmentsQueryHandler ..> DonationDto: returns
+
+note right of Donation
+  Aggregate root for donation tracking.
+  Enforces $250 acknowledgment rule
+  and tax deductibility validation.
+end note
+
+note right of RecurringDonation
+  Manages automated recurring gifts.
+  Calculates next execution date based
+  on frequency pattern.
+end note
+
+@enduml

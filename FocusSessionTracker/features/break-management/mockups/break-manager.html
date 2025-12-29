@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Session Tracker - Break Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        /* Break Banner */
+        .break-banner {
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            color: #fff;
+            padding: 1rem 2.5rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            animation: pulse 2s infinite;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+
+        .break-banner-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .break-banner-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Timer Container */
+        .timer-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 2rem 0;
+        }
+
+        .timer-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-ring circle {
+            fill: none;
+            stroke-width: 10;
+        }
+
+        .timer-ring .bg {
+            stroke: rgba(255,255,255,0.15);
+        }
+
+        .timer-ring .progress {
+            stroke: #60a5fa;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .timer-time {
+            font-size: 3.5rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer-label {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .timer-type {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 0.25rem;
+        }
+
+        /* Activity Section */
+        .activity-section {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+
+        .activity-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .activity-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .activity-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 1rem 0.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .activity-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .activity-btn.selected {
+            background: rgba(96, 165, 250, 0.3);
+            border-color: #60a5fa;
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 140px;
+        }
+
+        .btn-primary {
+            background: #60a5fa;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(96, 165, 250, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(96, 165, 250, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 700px;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Recent Breaks */
+        .recent-breaks {
+            width: 100%;
+            max-width: 700px;
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .break-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        .break-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(4px);
+        }
+
+        .break-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .break-time {
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .break-activities {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .break-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .break-duration {
+            background: rgba(96, 165, 250, 0.3);
+            color: #60a5fa;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .break-duration.extended {
+            background: rgba(251, 146, 60, 0.3);
+            color: #fb923c;
+        }
+
+        .break-rating {
+            color: #fbbf24;
+            font-size: 0.875rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 450px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: rgba(255,255,255,0.8);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            margin: 1.5rem 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #60a5fa;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #60a5fa;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #60a5fa;
+            margin: 1rem 0;
+        }
+
+        .textarea-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.875rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .textarea-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .star {
+            font-size: 2rem;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Break Streak Badge */
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .warning-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .warning-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .activity-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Focus Session Tracker</div>
+        <div class="header-actions">
+            <button class="header-btn">History</button>
+            <button class="header-btn">Settings</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Break Banner -->
+        <div class="break-banner">
+            <div class="break-banner-title">BREAK IN PROGRESS</div>
+            <div class="break-banner-subtitle">Time to recharge and refocus</div>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-container">
+            <svg class="timer-ring" viewBox="0 0 100 100">
+                <circle class="bg" cx="50" cy="50" r="45"/>
+                <circle class="progress" cx="50" cy="50" r="45"
+                    stroke-dasharray="283"
+                    stroke-dashoffset="113"/>
+            </svg>
+            <div class="timer-display">
+                <div class="timer-time">03:42</div>
+                <div class="timer-label">Short Break</div>
+                <div class="timer-type">5 minutes</div>
+            </div>
+        </div>
+
+        <!-- Break Streak -->
+        <div class="streak-badge">
+            🔥 Break Streak: 5 days
+        </div>
+
+        <!-- Activity Section -->
+        <div class="activity-section">
+            <h3 class="activity-title">What are you doing?</h3>
+            <div class="activity-buttons">
+                <button class="activity-btn selected">
+                    <span class="activity-icon">🚶</span>
+                    <span>Walk</span>
+                </button>
+                <button class="activity-btn">
+                    <span class="activity-icon">☕</span>
+                    <span>Coffee</span>
+                </button>
+                <button class="activity-btn">
+                    <span class="activity-icon">🧘</span>
+                    <span>Meditate</span>
+                </button>
+                <button class="activity-btn">
+                    <span class="activity-icon">💧</span>
+                    <span>Water</span>
+                </button>
+                <button class="activity-btn">
+                    <span class="activity-icon">🍎</span>
+                    <span>Snack</span>
+                </button>
+                <button class="activity-btn">
+                    <span class="activity-icon">🤸</span>
+                    <span>Stretch</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="openExtendModal()">Extend +5 Min</button>
+            <button class="btn btn-primary">End Break</button>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Breaks Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1h 5m</div>
+                <div class="stat-label">Total Break Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4.2</div>
+                <div class="stat-label">Avg Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">8%</div>
+                <div class="stat-label">Skip Rate</div>
+            </div>
+        </div>
+
+        <!-- Recent Breaks -->
+        <div class="recent-breaks">
+            <h3 class="section-title">Recent Breaks</h3>
+            <div class="break-card">
+                <div class="break-info">
+                    <span class="break-time">Today, 2:30 PM</span>
+                    <span class="break-activities">Walk, Coffee, Water</span>
+                </div>
+                <div class="break-meta">
+                    <span class="break-duration">5 min</span>
+                    <span class="break-rating">⭐⭐⭐⭐⭐</span>
+                </div>
+            </div>
+            <div class="break-card">
+                <div class="break-info">
+                    <span class="break-time">Today, 12:00 PM</span>
+                    <span class="break-activities">Meditation, Stretch</span>
+                </div>
+                <div class="break-meta">
+                    <span class="break-duration extended">12 min</span>
+                    <span class="break-rating">⭐⭐⭐⭐</span>
+                </div>
+            </div>
+            <div class="break-card">
+                <div class="break-info">
+                    <span class="break-time">Today, 10:00 AM</span>
+                    <span class="break-activities">Walk</span>
+                </div>
+                <div class="break-meta">
+                    <span class="break-duration">5 min</span>
+                    <span class="break-rating">⭐⭐⭐⭐</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Extension Modal -->
+    <div class="modal-overlay" id="extendModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Extend Break</h2>
+                <button class="modal-close" onclick="closeExtendModal()">×</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Additional Minutes</label>
+                <div class="slider-container">
+                    <input type="range" min="1" max="15" value="5" class="slider" id="extendSlider" oninput="updateSliderValue(this.value)">
+                </div>
+                <div class="slider-value"><span id="sliderValue">5</span> minutes</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <textarea class="textarea-input" placeholder="Why do you need more time?"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeExtendModal()">Cancel</button>
+                <button class="btn btn-primary">Extend Break</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logger Modal -->
+    <div class="modal-overlay" id="activityModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Log Activity</h2>
+                <button class="modal-close" onclick="closeActivityModal()">×</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Activity Notes (optional)</label>
+                <textarea class="textarea-input" placeholder="What did you do during your break?">Took a walk around the office and got some fresh air</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">How effective was this break?</label>
+                <div class="rating-stars">
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star">★</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeActivityModal()">Cancel</button>
+                <button class="btn btn-primary">Log Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skip Break Modal -->
+    <div class="modal-overlay" id="skipModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Skip Break?</h2>
+                <button class="modal-close" onclick="closeSkipModal()">×</button>
+            </div>
+
+            <div class="warning-message">
+                <span class="warning-icon">⚠️</span>
+                <strong>Warning:</strong> You've skipped 3 breaks this week. Taking regular breaks helps prevent burnout and maintain focus.
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Why are you skipping this break?</label>
+                <textarea class="textarea-input" placeholder="In flow state, deadline pressure, not feeling tired, etc."></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary">Take Break Anyway</button>
+                <button class="btn btn-danger" onclick="closeSkipModal()">Skip Break</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openExtendModal() {
+            document.getElementById('extendModal').classList.add('active');
+        }
+
+        function closeExtendModal() {
+            document.getElementById('extendModal').classList.remove('active');
+        }
+
+        function openActivityModal() {
+            document.getElementById('activityModal').classList.add('active');
+        }
+
+        function closeActivityModal() {
+            document.getElementById('activityModal').classList.remove('active');
+        }
+
+        function openSkipModal() {
+            document.getElementById('skipModal').classList.add('active');
+        }
+
+        function closeSkipModal() {
+            document.getElementById('skipModal').classList.remove('active');
+        }
+
+        function updateSliderValue(value) {
+            document.getElementById('sliderValue').textContent = value;
+        }
+
+        // Handle activity button selection
+        document.querySelectorAll('.activity-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+
+        // Handle star rating
+        document.querySelectorAll('.star').forEach((star, index) => {
+            star.addEventListener('click', function() {
+                document.querySelectorAll('.star').forEach((s, i) => {
+                    if (i <= index) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

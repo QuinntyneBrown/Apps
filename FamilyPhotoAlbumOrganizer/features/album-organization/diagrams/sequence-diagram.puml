@@ -1,0 +1,33 @@
+@startuml Album Organization Sequence
+!theme plain
+
+actor User
+participant UI
+participant API
+participant CommandHandler
+participant AlbumAggregate
+participant Events
+
+== Create Album ==
+User -> UI: Create new album
+UI -> API: POST /api/albums
+API -> CommandHandler: CreateAlbumCommand
+CommandHandler -> AlbumAggregate: Create album
+AlbumAggregate --> CommandHandler: Album created
+CommandHandler -> Events: Publish AlbumCreated
+CommandHandler --> API: AlbumDto
+API --> UI: 201 Created
+UI --> User: Show new album
+
+== Add Photos to Album ==
+User -> UI: Add photos to album
+UI -> API: POST /api/albums/{id}/photos
+API -> CommandHandler: AddPhotosToAlbumCommand
+CommandHandler -> AlbumAggregate: Add photos
+AlbumAggregate --> CommandHandler: Photos added
+CommandHandler -> Events: Publish PhotoAddedToAlbum (each)
+CommandHandler --> API: Success
+API --> UI: 200 OK
+UI --> User: Photos added notification
+
+@enduml

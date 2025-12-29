@@ -1,0 +1,312 @@
+@startuml Environment Configuration - Sequence Diagram
+
+!define POSITIVE #90EE90
+!define NEGATIVE #FFB6C1
+!define NEUTRAL #87CEEB
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Environment Configuration - Key Interaction Flows
+
+' Actors and Participants
+actor User
+participant "UI" as UI
+participant "Environment\nController" as Controller
+participant "Focus Mode\nService" as FocusModeService
+participant "Environment\nService" as EnvService
+participant "Background Noise\nService" as NoiseService
+participant "Blocking\nService" as BlockService
+participant "Integration\nService" as IntegrationService
+participant "Event\nPublisher" as Events
+participant "Database" as DB
+participant "External\nServices" as External
+
+== Configure Environment Settings ==
+
+User -> UI: Open Environment Settings
+activate UI
+
+UI -> Controller: GET /api/environment/configuration
+activate Controller
+
+Controller -> EnvService: GetConfiguration(userId)
+activate EnvService
+
+EnvService -> DB: Query EnvironmentConfigurations
+activate DB
+DB --> EnvService: Configuration
+deactivate DB
+
+EnvService --> Controller: EnvironmentConfiguration
+deactivate EnvService
+
+Controller --> UI: 200 OK (configuration)
+deactivate Controller
+
+UI --> User: Display Current Settings
+deactivate UI
+
+...User modifies settings...
+
+User -> UI: Save Settings
+activate UI
+
+UI -> Controller: POST /api/environment/configure
+note right
+  {
+    "theme": "dark",
+    "notifications": {...},
+    "display": {...},
+    "integrations": {...}
+  }
+end note
+activate Controller
+
+Controller -> EnvService: ConfigureEnvironment(userId, settings)
+activate EnvService
+
+EnvService -> DB: Update EnvironmentConfigurations
+activate DB
+DB --> EnvService: Success
+deactivate DB
+
+EnvService -> Events: Publish(FocusEnvironmentConfigured)
+activate Events
+Events --> EnvService: Event Published
+deactivate Events
+
+EnvService --> Controller: Configuration Updated
+deactivate EnvService
+
+Controller --> UI: 200 OK
+deactivate Controller
+
+UI --> User: Success Message
+deactivate UI
+
+== Activate Focus Mode ==
+
+User -> UI: Click "Activate Focus Mode"
+activate UI
+
+UI --> User: Show Focus Mode Configuration
+deactivate UI
+
+User -> UI: Configure and Activate
+note right
+  Mode: Deep
+  Block: [websites, apps]
+  Auto-reply: Enabled
+  Duration: 25 min
+end note
+activate UI
+
+UI -> Controller: POST /api/environment/focus-mode
+activate Controller
+
+Controller -> FocusModeService: ActivateFocusMode(userId, config)
+activate FocusModeService
+
+' Validate and create focus mode
+FocusModeService -> DB: Create FocusMode record
+activate DB
+DB --> FocusModeService: FocusMode created
+deactivate DB
+
+FocusModeService -> DB: Create BlockRules
+activate DB
+DB --> FocusModeService: Rules created
+deactivate DB
+
+' Apply blocking
+FocusModeService -> BlockService: BlockWebsites(websites)
+activate BlockService
+BlockService -> External: Send blocking rules to browser
+activate External
+External --> BlockService: Rules applied
+deactivate External
+BlockService --> FocusModeService: Websites blocked
+deactivate BlockService
+
+FocusModeService -> BlockService: BlockApplications(apps)
+activate BlockService
+BlockService -> External: Send blocking rules to desktop app
+activate External
+External --> BlockService: Rules applied
+deactivate External
+BlockService --> FocusModeService: Applications blocked
+deactivate BlockService
+
+' Update integrations
+FocusModeService -> IntegrationService: UpdateIntegrationStatuses(userId, message)
+activate IntegrationService
+
+IntegrationService -> External: Update Slack status
+activate External
+External --> IntegrationService: Status updated
+deactivate External
+
+IntegrationService -> External: Update Teams status
+activate External
+External --> IntegrationService: Status updated
+deactivate External
+
+IntegrationService -> External: Block calendar time
+activate External
+External --> IntegrationService: Calendar blocked
+deactivate External
+
+IntegrationService --> FocusModeService: Integrations updated
+deactivate IntegrationService
+
+' Publish event
+FocusModeService -> Events: Publish(FocusModeActivated)
+activate Events
+Events --> FocusModeService: Event published
+deactivate Events
+
+FocusModeService --> Controller: FocusMode
+deactivate FocusModeService
+
+Controller --> UI: 201 Created (focusMode)
+deactivate Controller
+
+UI --> User: Focus Mode Active
+deactivate UI
+
+== Configure Background Noise ==
+
+User -> UI: Enable Background Noise
+activate UI
+
+UI -> Controller: POST /api/environment/background-noise
+note right
+  {
+    "enabled": true,
+    "type": "rain",
+    "volume": 0.6,
+    "autoStart": true
+  }
+end note
+activate Controller
+
+Controller -> NoiseService: UpdatePreferences(preferences)
+activate NoiseService
+
+NoiseService -> DB: Upsert BackgroundNoisePreferences
+activate DB
+DB --> NoiseService: Preferences saved
+deactivate DB
+
+NoiseService -> Events: Publish(BackgroundNoisePreferenceSet)
+activate Events
+Events --> NoiseService: Event published
+deactivate Events
+
+NoiseService --> Controller: Preferences updated
+deactivate NoiseService
+
+Controller --> UI: 200 OK
+deactivate Controller
+
+' Start audio playback
+UI -> Controller: Start audio playback
+activate Controller
+
+Controller -> NoiseService: StartAudio(userId)
+activate NoiseService
+
+NoiseService -> External: Stream audio (rain.mp3)
+activate External
+External --> NoiseService: Audio streaming
+deactivate External
+
+NoiseService --> Controller: Audio started
+deactivate NoiseService
+
+Controller --> UI: 200 OK
+deactivate Controller
+
+UI --> User: Audio Playing
+deactivate UI
+
+== Auto-Deactivate Focus Mode (Session End) ==
+
+External -> Controller: Session Completed Event
+activate Controller
+
+Controller -> FocusModeService: GetActiveFocusMode(userId)
+activate FocusModeService
+
+FocusModeService -> DB: Query active FocusMode
+activate DB
+DB --> FocusModeService: FocusMode
+deactivate DB
+
+FocusModeService --> Controller: FocusMode
+deactivate FocusModeService
+
+Controller -> FocusModeService: DeactivateFocusMode(focusModeId)
+activate FocusModeService
+
+FocusModeService -> DB: Update FocusMode (set deactivated)
+activate DB
+DB --> FocusModeService: Updated
+deactivate DB
+
+FocusModeService -> BlockService: UnblockAll()
+activate BlockService
+BlockService -> External: Remove all blocking rules
+activate External
+External --> BlockService: Rules removed
+deactivate External
+BlockService --> FocusModeService: Unblocked
+deactivate BlockService
+
+FocusModeService -> IntegrationService: RestoreStatuses(userId)
+activate IntegrationService
+IntegrationService -> External: Restore Slack/Teams/Calendar
+activate External
+External --> IntegrationService: Restored
+deactivate External
+IntegrationService --> FocusModeService: Statuses restored
+deactivate IntegrationService
+
+FocusModeService -> Events: Publish(FocusModeDeactivated)
+activate Events
+Events --> FocusModeService: Event published
+deactivate Events
+
+FocusModeService --> Controller: Deactivated
+deactivate FocusModeService
+
+Controller --> External: Success
+deactivate Controller
+
+== Preview Background Noise ==
+
+User -> UI: Click preview on "Cafe" noise
+activate UI
+
+UI -> Controller: GET /api/audio/preview/cafe
+activate Controller
+
+Controller -> NoiseService: StreamPreview("cafe")
+activate NoiseService
+
+NoiseService -> External: Get audio stream
+activate External
+External --> NoiseService: Audio data
+deactivate External
+
+NoiseService --> Controller: Audio stream
+deactivate NoiseService
+
+Controller --> UI: Audio stream
+deactivate Controller
+
+UI --> User: Play 10s preview
+deactivate UI
+
+@enduml

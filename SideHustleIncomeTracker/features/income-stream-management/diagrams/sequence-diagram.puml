@@ -1,0 +1,169 @@
+@startuml Income Stream Management Sequence Diagrams
+
+!define PARTICIPANT_COLOR #E1F5FE
+!define ACTOR_COLOR #C8E6C9
+!define DATABASE_COLOR #FFF9C4
+
+' Create Income Stream Sequence
+title Create Income Stream
+
+actor User ACTOR_COLOR
+participant "UI: Add Stream Form" as UI PARTICIPANT_COLOR
+participant "API: StreamController" as API PARTICIPANT_COLOR
+participant "Command Handler" as Handler PARTICIPANT_COLOR
+participant "IncomeStream" as Aggregate PARTICIPANT_COLOR
+participant "Repository" as Repo DATABASE_COLOR
+participant "Event Bus" as EventBus PARTICIPANT_COLOR
+
+User -> UI : Fill stream details
+User -> UI : Click "Save"
+UI -> UI : Validate form
+UI -> API : POST /api/income-streams\n(CreateIncomeStreamCommand)
+API -> API : Validate request
+API -> Handler : Handle(command)
+Handler -> Handler : Validate business rules
+Handler -> Aggregate : Create(name, type, startDate)
+Aggregate -> Aggregate : Set StreamId\nSet Status = Active
+Aggregate --> Handler : IncomeStream
+Handler -> Repo : Add(incomeStream)
+Repo --> Handler : Success
+Handler -> EventBus : Publish(IncomeStreamCreated)
+EventBus -> EventBus : Notify subscribers
+Handler --> API : StreamId
+API --> UI : 201 Created {StreamId}
+UI -> UI : Show success message
+UI -> UI : Refresh streams list
+UI --> User : "Stream created successfully"
+
+newpage
+
+' Close Income Stream Sequence
+title Close Income Stream
+
+actor User ACTOR_COLOR
+participant "UI: Stream Details" as UI PARTICIPANT_COLOR
+participant "UI: Close Modal" as Modal PARTICIPANT_COLOR
+participant "API: StreamController" as API PARTICIPANT_COLOR
+participant "Command Handler" as Handler PARTICIPANT_COLOR
+participant "Repository" as Repo DATABASE_COLOR
+participant "IncomeStream" as Aggregate PARTICIPANT_COLOR
+participant "Event Bus" as EventBus PARTICIPANT_COLOR
+
+User -> UI : Click "Close Stream"
+UI -> Modal : Open modal
+Modal --> User : Show confirmation
+User -> Modal : Enter closure reason
+User -> Modal : Click "Confirm Close"
+Modal -> API : POST /api/income-streams/{id}/close\n(CloseIncomeStreamCommand)
+API -> Handler : Handle(command)
+Handler -> Repo : GetById(streamId)
+Repo --> Handler : IncomeStream
+Handler -> Handler : Verify ownership
+Handler -> Aggregate : Close(endDate, reason)
+Aggregate -> Aggregate : Set Status = Closed\nSet EndDate\nCalculate total revenue
+Aggregate --> Handler : Updated
+Handler -> Repo : Update(incomeStream)
+Repo --> Handler : Success
+Handler -> EventBus : Publish(IncomeStreamClosed)
+EventBus -> EventBus : Notify subscribers\n(Dashboard, Analytics, Tax)
+Handler --> API : Success
+API --> Modal : 200 OK
+Modal -> Modal : Close modal
+Modal -> UI : Refresh
+UI -> UI : Remove from active list
+UI --> User : "Stream closed successfully"
+
+newpage
+
+' Reactivate Income Stream Sequence
+title Reactivate Income Stream
+
+actor User ACTOR_COLOR
+participant "UI: History View" as UI PARTICIPANT_COLOR
+participant "API: StreamController" as API PARTICIPANT_COLOR
+participant "Command Handler" as Handler PARTICIPANT_COLOR
+participant "Repository" as Repo DATABASE_COLOR
+participant "IncomeStream" as Aggregate PARTICIPANT_COLOR
+participant "Event Bus" as EventBus PARTICIPANT_COLOR
+
+User -> UI : Browse closed streams
+User -> UI : Click "Reactivate"
+UI -> UI : Show confirmation
+User -> UI : Confirm reactivation
+UI -> API : POST /api/income-streams/{id}/reactivate\n(ReactivateIncomeStreamCommand)
+API -> Handler : Handle(command)
+Handler -> Repo : GetById(streamId)
+Repo --> Handler : IncomeStream
+Handler -> Handler : Verify is Closed
+Handler -> Handler : Verify ownership
+Handler -> Aggregate : Reactivate(date)
+Aggregate -> Aggregate : Set Status = Reactivated\nSet ReactivationDate\nClear EndDate
+Aggregate --> Handler : Updated
+Handler -> Repo : Update(incomeStream)
+Repo --> Handler : Success
+Handler -> EventBus : Publish(IncomeStreamReactivated)
+EventBus -> EventBus : Notify subscribers
+Handler --> API : Success
+API --> UI : 200 OK
+UI -> UI : Remove from history
+UI -> UI : Show success message
+UI --> User : "Stream reactivated!"
+
+newpage
+
+' Get Active Income Streams Sequence
+title Get Active Income Streams
+
+actor User ACTOR_COLOR
+participant "UI: Dashboard" as UI PARTICIPANT_COLOR
+participant "API: StreamController" as API PARTICIPANT_COLOR
+participant "Query Handler" as Handler PARTICIPANT_COLOR
+participant "Repository" as Repo DATABASE_COLOR
+
+User -> UI : Navigate to Income Streams
+UI -> API : GET /api/income-streams?page=1&pageSize=10
+API -> Handler : Handle(GetActiveIncomeStreamsQuery)
+Handler -> Repo : GetActiveByUserId(userId)
+Repo --> Handler : List<IncomeStream>
+Handler -> Handler : Calculate actual revenues
+Handler -> Handler : Map to DTOs
+Handler --> API : List<IncomeStreamDto>
+API --> UI : 200 OK {streams}
+UI -> UI : Render streams list
+UI --> User : Display active streams
+
+newpage
+
+' Update Income Stream Sequence
+title Update Income Stream
+
+actor User ACTOR_COLOR
+participant "UI: Edit Form" as UI PARTICIPANT_COLOR
+participant "API: StreamController" as API PARTICIPANT_COLOR
+participant "Command Handler" as Handler PARTICIPANT_COLOR
+participant "Repository" as Repo DATABASE_COLOR
+participant "IncomeStream" as Aggregate PARTICIPANT_COLOR
+
+User -> UI : Click "Edit"
+UI -> UI : Load stream data
+UI --> User : Show populated form
+User -> UI : Modify fields
+User -> UI : Click "Save Changes"
+UI -> UI : Validate form
+UI -> API : PUT /api/income-streams/{id}\n(UpdateIncomeStreamCommand)
+API -> Handler : Handle(command)
+Handler -> Repo : GetById(streamId)
+Repo --> Handler : IncomeStream
+Handler -> Handler : Verify ownership
+Handler -> Aggregate : UpdateDetails(name, desc, revenue)
+Aggregate -> Aggregate : Update fields\nSet UpdatedAt
+Aggregate --> Handler : Updated
+Handler -> Repo : Update(incomeStream)
+Repo --> Handler : Success
+Handler --> API : Success
+API --> UI : 200 OK
+UI -> UI : Show success message
+UI -> UI : Refresh details
+UI --> User : "Stream updated"
+
+@enduml

@@ -1,0 +1,149 @@
+@startuml Retirement Savings Calculator - Domain Model
+
+skinparam class {
+    BackgroundColor<<AggregateRoot>> #FFE6E6
+    BackgroundColor<<Entity>> #E6F3FF
+    BackgroundColor<<ValueObject>> #E6FFE6
+    BorderColor #333333
+}
+
+package "Scenario Aggregate" {
+    class RetirementScenario <<AggregateRoot>> {
+        +ScenarioId: Guid
+        +UserId: Guid
+        +Name: string
+        +CurrentAge: int
+        +RetirementAge: int
+        +LifeExpectancy: int
+        +CurrentSavings: decimal
+        +MonthlyContribution: decimal
+        --
+        +UpdateRetirementAge()
+        +UpdateSavings()
+        +Duplicate()
+    }
+
+    class AssumptionSet <<ValueObject>> {
+        +InflationRate: decimal
+        +InvestmentReturnRate: decimal
+        +TaxRate: decimal
+    }
+}
+
+package "Income Aggregate" {
+    class IncomeStream <<AggregateRoot>> {
+        +IncomeStreamId: Guid
+        +ScenarioId: Guid
+        +SourceType: IncomeSourceType
+        +MonthlyAmount: decimal
+        +StartAge: int
+        +EndAge: int?
+        +InflationAdjusted: bool
+        --
+        +CalculateAmountAtAge()
+    }
+
+    enum IncomeSourceType {
+        SocialSecurity
+        Pension
+        RentalIncome
+        PartTimeWork
+        Annuity
+        Other
+    }
+
+    class SocialSecurityBenefit <<Entity>> {
+        +EstimatedMonthlyAmount: decimal
+        +ClaimingAge: int
+        +ReductionPercentage: decimal
+        --
+        +RecalculateForClaimingAge()
+    }
+}
+
+package "Expense Aggregate" {
+    class RetirementExpense <<AggregateRoot>> {
+        +ExpenseId: Guid
+        +ScenarioId: Guid
+        +CategoryName: string
+        +MonthlyAmount: decimal
+        +StartYear: int
+        +EndYear: int?
+        +InflationAdjusted: bool
+    }
+
+    enum ExpenseCategory {
+        Housing
+        Healthcare
+        Food
+        Transportation
+        Travel
+        Entertainment
+        Other
+    }
+}
+
+package "Projection Aggregate" {
+    class RetirementProjection <<AggregateRoot>> {
+        +ProjectionId: Guid
+        +ScenarioId: Guid
+        +TotalSavingsAtRetirement: decimal
+        +MonthlyRetirementIncome: decimal
+        +SavingsGap: decimal
+        +SuccessProbability: decimal
+        +CalculatedAt: DateTime
+        --
+        +Recalculate()
+    }
+
+    class YearByYearProjection <<Entity>> {
+        +Year: int
+        +Age: int
+        +BeginningBalance: decimal
+        +Contributions: decimal
+        +InvestmentGrowth: decimal
+        +Withdrawals: decimal
+        +EndingBalance: decimal
+    }
+
+    class MonteCarloResult <<ValueObject>> {
+        +SuccessRate: decimal
+        +MedianOutcome: decimal
+        +BestCase: decimal
+        +WorstCase: decimal
+        +Percentile25: decimal
+        +Percentile75: decimal
+    }
+}
+
+package "Comparison Aggregate" {
+    class ScenarioComparison <<AggregateRoot>> {
+        +ComparisonId: Guid
+        +ScenarioIds: List<Guid>
+        +BestScenarioId: Guid
+        +KeyDifferences: List<string>
+        +ComparedAt: DateTime
+    }
+
+    class OptimalStrategy <<ValueObject>> {
+        +RecommendedScenarioId: Guid
+        +KeyFactors: List<string>
+        +TradeOffs: List<string>
+        +ConfidenceScore: decimal
+    }
+}
+
+' Relationships
+RetirementScenario "1" *-- "1" AssumptionSet
+RetirementScenario "1" -- "*" IncomeStream : has
+RetirementScenario "1" -- "*" RetirementExpense : has
+RetirementScenario "1" -- "0..1" RetirementProjection : generates
+IncomeStream "1" *-- "1" IncomeSourceType
+IncomeStream "0..1" *-- "1" SocialSecurityBenefit
+RetirementExpense "1" *-- "1" ExpenseCategory
+RetirementProjection "1" *-- "*" YearByYearProjection
+RetirementProjection "1" *-- "1" MonteCarloResult
+ScenarioComparison "*" -- "*" RetirementScenario : compares
+ScenarioComparison "1" *-- "1" OptimalStrategy
+
+@enduml
