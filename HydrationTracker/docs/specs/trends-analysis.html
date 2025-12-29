@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydration Tracker - Trends & Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: #666;
+        }
+
+        .filter-btn:hover {
+            background: #eef1f7;
+            border-color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .stat-change.positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .stat-change.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 200px;
+            gap: 8px;
+        }
+
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar.goal-met {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .line-chart {
+            height: 200px;
+            background:
+                linear-gradient(90deg, transparent 0%, transparent calc(100% - 1px), #e0e0e0 calc(100% - 1px)),
+                linear-gradient(0deg, transparent 0%, transparent calc(100% - 1px), #e0e0e0 calc(100% - 1px));
+            background-size: 14.28% 25%;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .line-path {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .pattern-card {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .pattern-card:hover {
+            border-color: #667eea;
+            background: #eef1f7;
+        }
+
+        .pattern-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .pattern-icon {
+            font-size: 28px;
+        }
+
+        .pattern-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .pattern-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .pattern-stat {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pattern-stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .pattern-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            background: #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .heatmap-cell.level-1 {
+            background: #c7d2fe;
+            color: #3730a3;
+        }
+
+        .heatmap-cell.level-2 {
+            background: #a5b4fc;
+            color: #312e81;
+        }
+
+        .heatmap-cell.level-3 {
+            background: #818cf8;
+            color: white;
+        }
+
+        .heatmap-cell.level-4 {
+            background: #6366f1;
+            color: white;
+        }
+
+        .heatmap-cell.level-5 {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .heatmap-labels {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .insight-item {
+            background: #f7f9fc;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .insight-item.positive {
+            border-left-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .insight-item.warning {
+            border-left-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .insight-text {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .comparison-table th {
+            background: #f7f9fc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .comparison-table tr:hover {
+            background: #f7f9fc;
+        }
+
+        .progress-bar {
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📊 Trends & Analysis</h1>
+                <a href="#" class="back-link">← Back to Dashboard</a>
+            </div>
+            <div class="time-filter">
+                <button class="filter-btn">7 Days</button>
+                <button class="filter-btn active">30 Days</button>
+                <button class="filter-btn">90 Days</button>
+                <button class="filter-btn">1 Year</button>
+                <button class="filter-btn">All Time</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💧</div>
+                <div class="stat-value">2,315 ml</div>
+                <div class="stat-label">Daily Average</div>
+                <div class="stat-change positive">↑ 12% vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-value">76.7%</div>
+                <div class="stat-label">Goal Achievement</div>
+                <div class="stat-change positive">↑ 8% vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value">15 Days</div>
+                <div class="stat-label">Current Streak</div>
+                <div class="stat-change positive">↑ New record!</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value">97%</div>
+                <div class="stat-label">Consistency Score</div>
+                <div class="stat-change positive">↑ 5% vs last month</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Daily Intake Trend</h2>
+            <p class="card-description">Your hydration levels over the past 30 days</p>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Daily Water Intake (ml)</div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <span>Below Goal</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                            <span>Met Goal</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f59e0b;"></div>
+                            <span>Goal Line (2,400 ml)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bar-chart">
+                    <div class="bar-group">
+                        <div class="bar goal-met" style="height: 95%;"></div>
+                        <div class="bar-label">Mon</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar goal-met" style="height: 102%;"></div>
+                        <div class="bar-label">Tue</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 85%;"></div>
+                        <div class="bar-label">Wed</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar goal-met" style="height: 110%;"></div>
+                        <div class="bar-label">Thu</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar goal-met" style="height: 98%;"></div>
+                        <div class="bar-label">Fri</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 78%;"></div>
+                        <div class="bar-label">Sat</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar goal-met" style="height: 105%;"></div>
+                        <div class="bar-label">Sun</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🗓️ Hydration Heatmap</h2>
+            <p class="card-description">Your hydration consistency over the past 4 weeks</p>
+
+            <div class="heatmap-labels">
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+                <div>Sun</div>
+            </div>
+
+            <div class="heatmap">
+                <div class="heatmap-cell level-4">95%</div>
+                <div class="heatmap-cell level-5">102%</div>
+                <div class="heatmap-cell level-3">85%</div>
+                <div class="heatmap-cell level-5">110%</div>
+                <div class="heatmap-cell level-4">98%</div>
+                <div class="heatmap-cell level-2">78%</div>
+                <div class="heatmap-cell level-5">105%</div>
+            </div>
+
+            <div class="heatmap">
+                <div class="heatmap-cell level-5">108%</div>
+                <div class="heatmap-cell level-4">96%</div>
+                <div class="heatmap-cell level-4">92%</div>
+                <div class="heatmap-cell level-5">115%</div>
+                <div class="heatmap-cell level-3">88%</div>
+                <div class="heatmap-cell level-4">94%</div>
+                <div class="heatmap-cell level-5">103%</div>
+            </div>
+
+            <div class="heatmap">
+                <div class="heatmap-cell level-3">87%</div>
+                <div class="heatmap-cell level-5">100%</div>
+                <div class="heatmap-cell level-4">95%</div>
+                <div class="heatmap-cell level-2">76%</div>
+                <div class="heatmap-cell level-5">112%</div>
+                <div class="heatmap-cell level-3">84%</div>
+                <div class="heatmap-cell level-4">97%</div>
+            </div>
+
+            <div class="heatmap">
+                <div class="heatmap-cell level-5">106%</div>
+                <div class="heatmap-cell level-4">93%</div>
+                <div class="heatmap-cell level-5">101%</div>
+                <div class="heatmap-cell level-4">99%</div>
+                <div class="heatmap-cell level-5">104%</div>
+                <div class="heatmap-cell level-1">72%</div>
+                <div class="heatmap-cell level-5">110%</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔍 Patterns & Insights</h2>
+            <p class="card-description">Discovered patterns in your hydration behavior</p>
+
+            <div class="pattern-grid">
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">⏰</div>
+                        <div class="pattern-title">Peak Hydration Time</div>
+                    </div>
+                    <div class="pattern-description">
+                        You consistently drink the most water between 10 AM and 2 PM, accounting for 42% of your daily intake.
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Average during peak</span>
+                        <span class="pattern-stat-value">1,008 ml</span>
+                    </div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">📅</div>
+                        <div class="pattern-title">Weekday vs Weekend</div>
+                    </div>
+                    <div class="pattern-description">
+                        Your weekday hydration (2,450 ml avg) is 15% higher than weekends (2,120 ml avg).
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Improvement opportunity</span>
+                        <span class="pattern-stat-value">+330 ml</span>
+                    </div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">🔔</div>
+                        <div class="pattern-title">Reminder Effectiveness</div>
+                    </div>
+                    <div class="pattern-description">
+                        You respond to 87% of reminders within 10 minutes, showing excellent habit formation.
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Avg response time</span>
+                        <span class="pattern-stat-value">6.2 min</span>
+                    </div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">🌡️</div>
+                        <div class="pattern-title">Weather Impact</div>
+                    </div>
+                    <div class="pattern-description">
+                        On hot days (>85°F), your intake increases by 22% compared to cooler days.
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Hot day average</span>
+                        <span class="pattern-stat-value">2,928 ml</span>
+                    </div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">🏃</div>
+                        <div class="pattern-title">Activity Correlation</div>
+                    </div>
+                    <div class="pattern-description">
+                        Your hydration increases by 35% on days with recorded workout activity.
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Workout days</span>
+                        <span class="pattern-stat-value">3,240 ml</span>
+                    </div>
+                </div>
+
+                <div class="pattern-card">
+                    <div class="pattern-header">
+                        <div class="pattern-icon">☕</div>
+                        <div class="pattern-title">Beverage Mix</div>
+                    </div>
+                    <div class="pattern-description">
+                        Water makes up 78% of your hydration, with coffee (12%) and tea (10%) as supplements.
+                    </div>
+                    <div class="pattern-stat">
+                        <span class="pattern-stat-label">Pure water daily</span>
+                        <span class="pattern-stat-value">1,806 ml</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>💡 Personalized Insights</h2>
+            <p class="card-description">AI-powered recommendations based on your data</p>
+
+            <div class="insights-list">
+                <div class="insight-item positive">
+                    <div class="insight-title">🎉 Excellent Progress!</div>
+                    <div class="insight-text">
+                        You've maintained a 15-day streak and achieved your goal 87% of the time this month. You're in the top 10% of users!
+                    </div>
+                </div>
+
+                <div class="insight-item warning">
+                    <div class="insight-title">⚠️ Weekend Dip Detected</div>
+                    <div class="insight-text">
+                        Your weekend hydration drops by 15%. Consider setting additional reminders on Saturdays and Sundays to maintain consistency.
+                    </div>
+                </div>
+
+                <div class="insight-item positive">
+                    <div class="insight-title">✨ Optimal Timing</div>
+                    <div class="insight-text">
+                        Your current reminder schedule aligns perfectly with your natural drinking patterns. Keep up the great routine!
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-title">📈 Growth Opportunity</div>
+                    <div class="insight-text">
+                        Adding just one extra 480ml drink in the evening could help you consistently exceed your daily goal by 20%.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Monthly Comparison</h2>
+            <p class="card-description">Compare your performance across recent months</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Avg Daily Intake</th>
+                        <th>Goals Met</th>
+                        <th>Longest Streak</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>December 2025</strong></td>
+                        <td>2,315 ml</td>
+                        <td>23/30 (76.7%)</td>
+                        <td>15 days</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 77%;">77%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>November 2025</td>
+                        <td>2,065 ml</td>
+                        <td>18/30 (60%)</td>
+                        <td>8 days</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%;">60%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>October 2025</td>
+                        <td>1,920 ml</td>
+                        <td>14/31 (45%)</td>
+                        <td>5 days</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%;">45%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>September 2025</td>
+                        <td>1,755 ml</td>
+                        <td>11/30 (37%)</td>
+                        <td>4 days</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 37%;">37%</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

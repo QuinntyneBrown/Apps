@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Session Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            color: #1f2937;
+        }
+
+        .active-timer {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-label {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timer-btn-pause {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .timer-btn-stop {
+            background: #ef4444;
+            color: white;
+        }
+
+        .recent-sessions {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .session-info h4 {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .session-info p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .session-duration {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-section {
+            margin-bottom: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .progress-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .quick-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .quick-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .quick-stat-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .quick-stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .quick-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Focus Session Tracker</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">View Analytics</button>
+                <button class="btn btn-primary">+ New Session</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Today's Focus Time</h3>
+                <div class="stat-value">4h 35m</div>
+                <div class="stat-change">
+                    ↑ 23% from yesterday
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>This Week</h3>
+                <div class="stat-value">28h 12m</div>
+                <div class="stat-change">
+                    ↑ 15% from last week
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Current Streak</h3>
+                <div class="stat-value">12 days</div>
+                <div class="stat-change">
+                    🔥 Personal best!
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Sessions Today</h3>
+                <div class="stat-value">6</div>
+                <div class="stat-change">
+                    Average: 46 mins
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Active Session</h2>
+                </div>
+
+                <div class="active-timer">
+                    <div class="timer-display">45:23</div>
+                    <div class="timer-label">Deep Work - Writing Blog Post</div>
+
+                    <div class="timer-controls">
+                        <button class="timer-btn timer-btn-pause">⏸ Pause</button>
+                        <button class="timer-btn timer-btn-stop">⏹ Stop</button>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span class="progress-label">Daily Goal Progress</span>
+                        <span class="progress-value">4h 35m / 6h</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 76%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Today's Summary</h2>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="quick-stat-item">
+                        <span class="quick-stat-label">Most Productive</span>
+                        <span class="quick-stat-value">9:00 AM</span>
+                    </div>
+
+                    <div class="quick-stat-item">
+                        <span class="quick-stat-label">Longest Session</span>
+                        <span class="quick-stat-value">1h 24m</span>
+                    </div>
+
+                    <div class="quick-stat-item">
+                        <span class="quick-stat-label">Total Breaks</span>
+                        <span class="quick-stat-value">5</span>
+                    </div>
+
+                    <div class="quick-stat-item">
+                        <span class="quick-stat-label">Focus Score</span>
+                        <span class="quick-stat-value">94%</span>
+                    </div>
+
+                    <div class="quick-stat-item">
+                        <span class="quick-stat-label">Tasks Completed</span>
+                        <span class="quick-stat-value">8/10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Recent Sessions</h2>
+                <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">View All</button>
+            </div>
+
+            <div class="recent-sessions">
+                <div class="session-item">
+                    <div class="session-info">
+                        <h4>Deep Work - Writing Blog Post</h4>
+                        <p>Started at 2:15 PM • In Progress</p>
+                    </div>
+                    <div class="session-duration">45:23</div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <h4>Code Review Session</h4>
+                        <p>Completed at 1:30 PM • Project: Client Portal</p>
+                    </div>
+                    <div class="session-duration">52:00</div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <h4>Learning Time - React Advanced Patterns</h4>
+                        <p>Completed at 11:45 AM • Category: Education</p>
+                    </div>
+                    <div class="session-duration">1:24:00</div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <h4>Feature Development</h4>
+                        <p>Completed at 10:15 AM • Project: Mobile App</p>
+                    </div>
+                    <div class="session-duration">48:30</div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-info">
+                        <h4>Email Processing</h4>
+                        <p>Completed at 9:00 AM • Category: Admin</p>
+                    </div>
+                    <div class="session-duration">25:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

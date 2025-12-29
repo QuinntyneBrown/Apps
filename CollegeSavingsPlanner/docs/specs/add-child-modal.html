@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Child - College Savings Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 32px;
+            color: white;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .modal-header h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            opacity: 0.95;
+            font-size: 15px;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .progress-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 1;
+            background: white;
+            padding: 0 10px;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .step-circle.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .step-circle.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            color: #1a202c;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .radio-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-option input[type="radio"]:checked + .radio-label {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .radio-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .radio-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        .info-box-content {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .projection-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .projection-card h4 {
+            font-size: 16px;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .projection-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .projection-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 16px;
+            padding-top: 16px;
+        }
+
+        .projection-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .projection-value {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .modal-footer {
+            padding: 24px 32px;
+            background: #f8fafc;
+            border-radius: 0 0 24px 24px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Child's Education Plan</h2>
+                <p>Create a savings plan for your child's college education</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="progress-indicator">
+                    <div class="progress-step">
+                        <div class="step-circle active">1</div>
+                        <div class="step-label">Basic Info</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Education</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Plan Setup</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>👶</span>
+                            Child Information
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" placeholder="Enter first name" value="Sophia">
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" placeholder="Enter last name" value="Mitchell">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="birthDate">Date of Birth *</label>
+                                <input type="date" id="birthDate" value="2020-04-15">
+                                <div class="helper-text">Current age: 5 years old</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="relationship">Relationship *</label>
+                                <select id="relationship">
+                                    <option value="child">Child</option>
+                                    <option value="stepchild">Stepchild</option>
+                                    <option value="grandchild">Grandchild</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gender (Optional)</label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" name="gender" id="female" checked>
+                                    <label for="female" class="radio-label">
+                                        <div class="radio-icon">👧</div>
+                                        <div class="radio-text">Female</div>
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="gender" id="male">
+                                    <label for="male" class="radio-label">
+                                        <div class="radio-icon">👦</div>
+                                        <div class="radio-text">Male</div>
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="gender" id="other">
+                                    <label for="other" class="radio-label">
+                                        <div class="radio-icon">🧒</div>
+                                        <div class="radio-text">Other</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>🎓</span>
+                            College Planning
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="enrollmentYear">Expected College Start Year *</label>
+                                <select id="enrollmentYear">
+                                    <option value="2038" selected>Fall 2038 (Age 18)</option>
+                                    <option value="2037">Fall 2037 (Age 17)</option>
+                                    <option value="2039">Fall 2039 (Age 19)</option>
+                                </select>
+                                <div class="helper-text">13 years from now</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="schoolType">Anticipated Institution Type *</label>
+                                <select id="schoolType">
+                                    <option value="">Select type...</option>
+                                    <option value="public-instate">Public (In-State)</option>
+                                    <option value="public-outstate" selected>Public (Out-of-State)</option>
+                                    <option value="private">Private University</option>
+                                    <option value="community">Community College</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="yearsOfEducation">Years of Education to Fund *</label>
+                            <select id="yearsOfEducation">
+                                <option value="2">2 years</option>
+                                <option value="4" selected>4 years (Bachelor's)</option>
+                                <option value="5">5 years</option>
+                                <option value="6">6 years (Master's)</option>
+                            </select>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-header">
+                                <span>💡</span>
+                                Cost Projection
+                            </div>
+                            <div class="info-box-content">
+                                Based on current tuition rates for public out-of-state universities ($28,240/year) with 5% annual inflation, estimated total cost will be approximately <strong>$178,500</strong> for 4 years starting in 2038.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>💰</span>
+                            Initial Contribution
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="initialContribution">Initial Deposit (Optional)</label>
+                                <input type="number" id="initialContribution" placeholder="0.00" value="5000">
+                                <div class="helper-text">Lump sum to start the plan</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="monthlyContribution">Monthly Contribution *</label>
+                                <input type="number" id="monthlyContribution" placeholder="0.00" value="750">
+                                <div class="helper-text">Recommended: $850/month</div>
+                            </div>
+                        </div>
+
+                        <div class="projection-card">
+                            <h4>📊 Projected Outcome</h4>
+                            <div class="projection-item">
+                                <span class="projection-label">Initial deposit</span>
+                                <span class="projection-value">$5,000</span>
+                            </div>
+                            <div class="projection-item">
+                                <span class="projection-label">Total contributions (13 years)</span>
+                                <span class="projection-value">$117,000</span>
+                            </div>
+                            <div class="projection-item">
+                                <span class="projection-label">Estimated investment growth (7.5%)</span>
+                                <span class="projection-value">$64,200</span>
+                            </div>
+                            <div class="projection-item">
+                                <span class="projection-label">Projected total by 2038</span>
+                                <span class="projection-value" style="color: #10b981;">$186,200</span>
+                            </div>
+                        </div>
+
+                        <div class="info-box" style="background: #d1fae5; border-color: #86efac; margin-top: 16px;">
+                            <div class="info-box-header" style="color: #065f46;">
+                                <span>✓</span>
+                                Great News!
+                            </div>
+                            <div class="info-box-content">
+                                With these contributions, you're projected to exceed your goal by <strong>$7,700</strong>. This gives you a comfortable buffer for unexpected expenses.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span>🏦</span>
+                            529 Plan Selection
+                        </div>
+
+                        <div class="form-group">
+                            <label for="plan529">Choose 529 Plan *</label>
+                            <select id="plan529">
+                                <option value="">I'll select later</option>
+                                <option value="vanguard" selected>Vanguard 529 College Savings Plan</option>
+                                <option value="fidelity">Fidelity U.Fund College 529</option>
+                                <option value="ny529">New York's 529 College Savings</option>
+                                <option value="schwab">Schwab 529 Plan</option>
+                                <option value="troweprice">T. Rowe Price College Savings</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="investmentStrategy">Investment Strategy *</label>
+                            <select id="investmentStrategy">
+                                <option value="age-based" selected>Age-Based Portfolio (Recommended)</option>
+                                <option value="aggressive">Aggressive Growth</option>
+                                <option value="moderate">Moderate Growth</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="custom">Custom Allocation</option>
+                            </select>
+                            <div class="helper-text">Age-based portfolios automatically adjust risk as your child gets closer to college</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Continue to Step 2 →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydration Tracker - Intake History</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .log-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .log-header h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .export-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .date-section {
+            margin-bottom: 32px;
+        }
+
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 16px;
+        }
+
+        .date-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .date-total {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .date-total.goal-met {
+            color: #10b981;
+        }
+
+        .intake-entry {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f7f9fc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .intake-entry:hover {
+            background: #eef1f7;
+            transform: translateX(4px);
+        }
+
+        .entry-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .entry-details {
+            flex: 1;
+        }
+
+        .entry-amount {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .entry-type {
+            font-size: 14px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .entry-time {
+            color: #999;
+            font-size: 14px;
+            margin-right: 16px;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .action-btn.delete:hover {
+            color: #ef4444;
+        }
+
+        .load-more {
+            background: #f7f9fc;
+            border: 2px solid #e0e0e0;
+            color: #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .load-more:hover {
+            background: #eef1f7;
+            border-color: #667eea;
+        }
+
+        .goal-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #10b981;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .goal-badge.missed {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📋 Intake History</h1>
+                <a href="#" class="back-link">← Back to Dashboard</a>
+            </div>
+
+            <div class="filters">
+                <select class="filter-select">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last 90 Days</option>
+                    <option>All Time</option>
+                </select>
+                <select class="filter-select">
+                    <option selected>All Beverages</option>
+                    <option>Water Only</option>
+                    <option>Coffee</option>
+                    <option>Tea</option>
+                    <option>Juice</option>
+                    <option>Other</option>
+                </select>
+                <input type="text" class="search-box" placeholder="Search entries...">
+            </div>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon">📊</div>
+                <div class="summary-value">2,315 ml</div>
+                <div class="summary-label">Daily Average</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">🎯</div>
+                <div class="summary-value">23/30</div>
+                <div class="summary-label">Goals Met</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">💧</div>
+                <div class="summary-value">67,200 ml</div>
+                <div class="summary-label">Total Intake</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">🔥</div>
+                <div class="summary-value">15 Days</div>
+                <div class="summary-label">Current Streak</div>
+            </div>
+        </div>
+
+        <div class="log-container">
+            <div class="log-header">
+                <h2>Detailed Log</h2>
+                <button class="export-btn">📥 Export Data</button>
+            </div>
+
+            <!-- Today -->
+            <div class="date-section">
+                <div class="date-header">
+                    <div class="date-title">Monday, December 29, 2025</div>
+                    <div class="date-total goal-met">
+                        1,728 ml / 2,400 ml
+                        <span class="goal-badge">In Progress</span>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">2:30 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">☕</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Coffee</div>
+                    </div>
+                    <div class="entry-time">12:15 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">10:45 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🍵</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Green Tea</div>
+                    </div>
+                    <div class="entry-time">9:30 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">8:00 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yesterday -->
+            <div class="date-section">
+                <div class="date-header">
+                    <div class="date-title">Sunday, December 28, 2025</div>
+                    <div class="date-total goal-met">
+                        2,640 ml / 2,400 ml
+                        <span class="goal-badge">Goal Met ✓</span>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">8:45 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🥤</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Sports Drink</div>
+                    </div>
+                    <div class="entry-time">5:30 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">3:00 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🍵</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Iced Tea</div>
+                    </div>
+                    <div class="entry-time">1:15 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">600 ml (20 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">10:00 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">7:30 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saturday -->
+            <div class="date-section">
+                <div class="date-header">
+                    <div class="date-title">Saturday, December 27, 2025</div>
+                    <div class="date-total">
+                        2,160 ml / 2,400 ml
+                        <span class="goal-badge missed">90%</span>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">360 ml (12 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">9:00 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">☕</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">240 ml (8 oz)</div>
+                        <div class="entry-type">Coffee</div>
+                    </div>
+                    <div class="entry-time">6:30 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">2:45 PM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">💧</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">600 ml (20 oz)</div>
+                        <div class="entry-type">Water</div>
+                    </div>
+                    <div class="entry-time">11:30 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="intake-entry">
+                    <div class="entry-icon">🥤</div>
+                    <div class="entry-details">
+                        <div class="entry-amount">480 ml (16 oz)</div>
+                        <div class="entry-type">Orange Juice</div>
+                    </div>
+                    <div class="entry-time">8:00 AM</div>
+                    <div class="entry-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn delete">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="load-more">Load More Entries</button>
+        </div>
+    </div>
+</body>
+</html>

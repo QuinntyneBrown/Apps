@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search & Filter - Meeting Notes & Action Item Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .search-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .search-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .search-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .main-search {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .main-search-input {
+            width: 100%;
+            padding: 1.25rem 3.5rem 1.25rem 3.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-search-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.25rem;
+            color: #718096;
+        }
+
+        .main-search-clear {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e2e8f0;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-filter {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .quick-filter:hover,
+        .quick-filter.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .filters-sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+
+        .filter-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-filter {
+            color: #4c51bf;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .checkbox.checked {
+            background: #4c51bf;
+            border-color: #4c51bf;
+            position: relative;
+        }
+
+        .checkbox.checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+        }
+
+        .filter-label {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .filter-count {
+            font-size: 0.75rem;
+            color: #718096;
+            background: #edf2f7;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .results-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-count {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .results-sort {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .sort-label {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .active-filters {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .active-filters-label {
+            font-size: 0.875rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .filter-tag {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-filter {
+            background: transparent;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .remove-filter:hover {
+            color: #2d3748;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .result-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #edf2f7;
+            color: #4c51bf;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-snippet {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .highlight {
+            background: #fef5e7;
+            color: #744210;
+            padding: 0.125rem 0.25rem;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
+        .result-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #f7fafc;
+            color: #4a5568;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 8px;
+            padding: 4rem 2rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+
+        .saved-searches {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .saved-search {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .saved-search:hover {
+            background: #edf2f7;
+        }
+
+        .saved-search-name {
+            font-size: 0.875rem;
+            color: #2d3748;
+        }
+
+        .saved-search-icon {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📝 MeetingTracker</div>
+        <div class="header-actions">
+            <button class="btn btn-primary">+ New Meeting</button>
+            <div class="user-avatar">RL</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="search-hero">
+            <h1 class="search-title">Search Meetings & Notes</h1>
+            <p class="search-subtitle">Search across all meetings, notes, action items, and decisions</p>
+
+            <div class="main-search">
+                <span class="main-search-icon">🔍</span>
+                <input type="text" class="main-search-input" placeholder="Search by title, content, participants, or tags..." value="security compliance">
+                <button class="main-search-clear">×</button>
+            </div>
+
+            <div class="quick-filters">
+                <button class="quick-filter">Recent</button>
+                <button class="quick-filter active">This Week</button>
+                <button class="quick-filter">This Month</button>
+                <button class="quick-filter">My Meetings</button>
+                <button class="quick-filter">With Action Items</button>
+                <button class="quick-filter">With Decisions</button>
+            </div>
+        </div>
+
+        <div class="content-layout">
+            <div class="filters-sidebar">
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>📅 Date Range</span>
+                    </div>
+                    <input type="date" class="date-input" value="2025-01-01">
+                    <input type="date" class="date-input" value="2025-12-31">
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>📂 Content Type</span>
+                        <span class="clear-filter">Clear</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Meetings</span>
+                        <span class="filter-count">48</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Notes</span>
+                        <span class="filter-count">48</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Action Items</span>
+                        <span class="filter-count">156</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Decisions</span>
+                        <span class="filter-count">67</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Attachments</span>
+                        <span class="filter-count">124</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>📊 Status</span>
+                        <span class="clear-filter">Clear</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Scheduled</span>
+                        <span class="filter-count">8</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">In Progress</span>
+                        <span class="filter-count">2</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Completed</span>
+                        <span class="filter-count">35</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Cancelled</span>
+                        <span class="filter-count">3</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>👥 Participants</span>
+                        <span class="clear-filter">Clear</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Marcus Chen</span>
+                        <span class="filter-count">32</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Diana Edwards</span>
+                        <span class="filter-count">28</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Sarah Kim</span>
+                        <span class="filter-count">24</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">John Davis</span>
+                        <span class="filter-count">19</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Tom Stevens</span>
+                        <span class="filter-count">15</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>🏷️ Tags</span>
+                        <span class="clear-filter">Clear</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Security</span>
+                        <span class="filter-count">12</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Compliance</span>
+                        <span class="filter-count">8</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Product</span>
+                        <span class="filter-count">27</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Planning</span>
+                        <span class="filter-count">18</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Strategic</span>
+                        <span class="filter-count">14</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <span>💾 Saved Searches</span>
+                    </div>
+                    <div class="saved-searches">
+                        <div class="saved-search">
+                            <span class="saved-search-name">My Q4 Meetings</span>
+                            <span class="saved-search-icon">→</span>
+                        </div>
+                        <div class="saved-search">
+                            <span class="saved-search-name">High Priority Items</span>
+                            <span class="saved-search-icon">→</span>
+                        </div>
+                        <div class="saved-search">
+                            <span class="saved-search-name">Engineering Meetings</span>
+                            <span class="saved-search-icon">→</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Reset All Filters</button>
+            </div>
+
+            <div class="search-results">
+                <div class="results-header">
+                    <div class="results-count">Found 5 results for "security compliance"</div>
+                    <div class="results-sort">
+                        <span class="sort-label">Sort by:</span>
+                        <select class="select">
+                            <option>Relevance</option>
+                            <option>Date (Newest)</option>
+                            <option>Date (Oldest)</option>
+                            <option>Title (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="active-filters">
+                    <span class="active-filters-label">Active filters:</span>
+                    <div class="filter-tag">
+                        <span>This Week</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Meetings</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Notes</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Completed</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Marcus Chen</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Security</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                    <div class="filter-tag">
+                        <span>Compliance</span>
+                        <button class="remove-filter">×</button>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-type">📝 Meeting</div>
+                    <h3 class="result-title">Q4 Product Planning Review</h3>
+                    <div class="result-meta">
+                        <span>📅 Dec 29, 2025</span>
+                        <span>⏱️ 60 minutes</span>
+                        <span>👥 9 participants</span>
+                        <span>✓ 8 action items</span>
+                    </div>
+                    <p class="result-snippet">
+                        ...Complete SOC 2 <span class="highlight">compliance</span> gap analysis and create remediation plan. Diana approved an additional $150K budget for Q1 to support the <span class="highlight">security compliance</span> initiative. The team will hire 2 <span class="highlight">security</span> engineers and 1 <span class="highlight">compliance</span> specialist...
+                    </p>
+                    <div class="result-tags">
+                        <span class="tag">Product</span>
+                        <span class="tag">Planning</span>
+                        <span class="tag">Q4-Review</span>
+                        <span class="tag">Security</span>
+                        <span class="tag">Compliance</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-type">📝 Meeting</div>
+                    <h3 class="result-title">Security Audit Planning</h3>
+                    <div class="result-meta">
+                        <span>📅 Dec 20, 2025</span>
+                        <span>⏱️ 90 minutes</span>
+                        <span>👥 6 participants</span>
+                        <span>✓ 15 action items</span>
+                    </div>
+                    <p class="result-snippet">
+                        Team discussed the <span class="highlight">security</span> audit timeline and scope. Marcus presented the current <span class="highlight">compliance</span> status and identified gaps in our SOC 2 readiness. Sarah recommended three vendor options for conducting the <span class="highlight">security</span> assessment...
+                    </p>
+                    <div class="result-tags">
+                        <span class="tag">Security</span>
+                        <span class="tag">Compliance</span>
+                        <span class="tag">Audit</span>
+                        <span class="tag">Planning</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-type">✓ Action Item</div>
+                    <h3 class="result-title">Complete SOC 2 compliance gap analysis and create remediation plan</h3>
+                    <div class="result-meta">
+                        <span>📅 Created: Dec 29, 2025</span>
+                        <span>👤 Marcus Chen</span>
+                        <span>🎯 High Priority</span>
+                        <span>📅 Due: Jan 10, 2026</span>
+                    </div>
+                    <p class="result-snippet">
+                        Conduct a comprehensive gap analysis against SOC 2 requirements. Document all areas where we need to improve our <span class="highlight">security</span> controls and <span class="highlight">compliance</span> processes. Create detailed remediation plan with timeline and resource requirements...
+                    </p>
+                    <div class="result-tags">
+                        <span class="tag">From: Q4 Product Planning Review</span>
+                        <span class="tag">Not Started</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-type">🎯 Decision</div>
+                    <h3 class="result-title">Delay feature launch to Q2 to prioritize security audit</h3>
+                    <div class="result-meta">
+                        <span>📅 Dec 29, 2025</span>
+                        <span>👤 Rachel Lee, Diana Edwards</span>
+                        <span>📝 Q4 Product Planning Review</span>
+                    </div>
+                    <p class="result-snippet">
+                        Delay the social features launch to Q2 in order to prioritize <span class="highlight">security</span> audit and <span class="highlight">compliance</span> certifications in Q1. This decision was made to address client concerns and improve our enterprise market position. The <span class="highlight">security</span> and <span class="highlight">compliance</span> work will strengthen our competitive advantage...
+                    </p>
+                    <div class="result-tags">
+                        <span class="tag">Strategic</span>
+                        <span class="tag">Product</span>
+                        <span class="tag">Security</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-type">📄 Note</div>
+                    <h3 class="result-title">Engineering Team Standup - Security Discussion</h3>
+                    <div class="result-meta">
+                        <span>📅 Dec 23, 2025</span>
+                        <span>⏱️ 30 minutes</span>
+                        <span>👥 8 participants</span>
+                    </div>
+                    <p class="result-snippet">
+                        Marcus provided update on <span class="highlight">security</span> enhancements planned for Q1. Discussed the importance of achieving <span class="highlight">compliance</span> certifications for enterprise clients. Team committed to prioritizing <span class="highlight">security</span> tasks over new features in January...
+                    </p>
+                    <div class="result-tags">
+                        <span class="tag">Engineering</span>
+                        <span class="tag">Standup</span>
+                        <span class="tag">Security</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

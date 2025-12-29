@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Inventory - Home Gym Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-icon {
+            background: #f7fafc;
+            color: #718096;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-icon:hover {
+            background: #edf2f7;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        select {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f7fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .results-count {
+            font-size: 16px;
+            color: #718096;
+        }
+
+        .results-count strong {
+            color: #1a202c;
+            font-weight: 700;
+        }
+
+        .equipment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .equipment-table thead {
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .equipment-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 14px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .equipment-table td {
+            padding: 20px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .equipment-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .equipment-cell {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .equipment-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .equipment-image.treadmill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .equipment-image.weights {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .equipment-image.bike {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .equipment-image.bench {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .equipment-image.rack {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .equipment-image.cable {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .equipment-image.rower {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .equipment-image.mat {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .equipment-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .equipment-info p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.excellent {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-badge.good {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-badge.fair {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .status-badge.maintenance {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 15px;
+        }
+
+        .date {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px;
+            background: #f7fafc;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            background: #edf2f7;
+            color: #667eea;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>📦 Equipment Inventory</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📥 Import</button>
+                    <button class="btn btn-secondary">📤 Export</button>
+                    <button class="btn btn-primary">+ Add Equipment</button>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search equipment by name, brand, or model...">
+                </div>
+
+                <div class="filter-group">
+                    <select>
+                        <option>All Categories</option>
+                        <option>Cardio</option>
+                        <option>Strength</option>
+                        <option>Accessories</option>
+                        <option>Storage</option>
+                    </select>
+
+                    <select>
+                        <option>All Status</option>
+                        <option>Excellent</option>
+                        <option>Good</option>
+                        <option>Fair</option>
+                        <option>Needs Maintenance</option>
+                    </select>
+
+                    <select>
+                        <option>Sort by: Recent</option>
+                        <option>Sort by: Name A-Z</option>
+                        <option>Sort by: Name Z-A</option>
+                        <option>Sort by: Price High-Low</option>
+                        <option>Sort by: Price Low-High</option>
+                    </select>
+                </div>
+
+                <div class="view-toggle">
+                    <button class="view-btn active">📋</button>
+                    <button class="view-btn">🔲</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="content-header">
+                <div class="results-count">
+                    Showing <strong>12 items</strong> • Total value: <strong>$18,450</strong>
+                </div>
+                <button class="btn btn-icon">⚙️</button>
+            </div>
+
+            <table class="equipment-table">
+                <thead>
+                    <tr>
+                        <th>Equipment</th>
+                        <th>Category</th>
+                        <th>Purchase Date</th>
+                        <th>Price</th>
+                        <th>Condition</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image treadmill">🏃</div>
+                                <div class="equipment-info">
+                                    <h3>NordicTrack Commercial 1750</h3>
+                                    <p>Treadmill • Serial: NT1750-2023-8945</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Cardio</span></td>
+                        <td><span class="date">Nov 12, 2023</span></td>
+                        <td><span class="price">$2,499</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image bike">🚴</div>
+                                <div class="equipment-info">
+                                    <h3>Peloton Bike+</h3>
+                                    <p>Stationary Bike • Serial: PEL-BIKE-7823</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Cardio</span></td>
+                        <td><span class="date">Jul 8, 2023</span></td>
+                        <td><span class="price">$2,495</span></td>
+                        <td><span class="status-badge maintenance">Maint. Due</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image rack">🔲</div>
+                                <div class="equipment-info">
+                                    <h3>Rogue R-4 Power Rack</h3>
+                                    <p>Power Rack • Serial: RG-R4-2023-4521</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">May 20, 2023</span></td>
+                        <td><span class="price">$1,095</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image weights">💪</div>
+                                <div class="equipment-info">
+                                    <h3>Bowflex SelectTech 552</h3>
+                                    <p>Adjustable Dumbbells • Serial: BF-552-9234</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Sep 15, 2023</span></td>
+                        <td><span class="price">$549</span></td>
+                        <td><span class="status-badge good">Good</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image bench">🪑</div>
+                                <div class="equipment-info">
+                                    <h3>Rogue Adjustable Bench 3.0</h3>
+                                    <p>Weight Bench • Serial: RG-AB3-6712</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Jun 3, 2023</span></td>
+                        <td><span class="price">$625</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image cable">🔗</div>
+                                <div class="equipment-info">
+                                    <h3>Functional Trainer Cable Machine</h3>
+                                    <p>Cable Machine • Serial: FT-CM-3389</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Apr 10, 2023</span></td>
+                        <td><span class="price">$1,899</span></td>
+                        <td><span class="status-badge good">Good</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image rower">🚣</div>
+                                <div class="equipment-info">
+                                    <h3>Concept2 RowErg Model D</h3>
+                                    <p>Rowing Machine • Serial: C2-RERG-5567</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Cardio</span></td>
+                        <td><span class="date">Mar 22, 2023</span></td>
+                        <td><span class="price">$1,100</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image weights">🏋️</div>
+                                <div class="equipment-info">
+                                    <h3>Olympic Barbell Set</h3>
+                                    <p>Barbell + Plates • 300 lbs total</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Feb 14, 2023</span></td>
+                        <td><span class="price">$875</span></td>
+                        <td><span class="status-badge good">Good</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image mat">🧘</div>
+                                <div class="equipment-info">
+                                    <h3>Rogue Gym Flooring (200 sq ft)</h3>
+                                    <p>Rubber Floor Mats • 20 tiles</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Accessories</span></td>
+                        <td><span class="date">Jan 5, 2023</span></td>
+                        <td><span class="price">$480</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image weights">⚖️</div>
+                                <div class="equipment-info">
+                                    <h3>Kettlebell Set (10-50 lbs)</h3>
+                                    <p>5 Kettlebells • Cast Iron</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Dec 18, 2022</span></td>
+                        <td><span class="price">$325</span></td>
+                        <td><span class="status-badge good">Good</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image bench">📏</div>
+                                <div class="equipment-info">
+                                    <h3>Pull-Up Bar & Dip Station</h3>
+                                    <p>Multi-Function Station • Wall-Mounted</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Strength</span></td>
+                        <td><span class="date">Nov 28, 2022</span></td>
+                        <td><span class="price">$289</span></td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="equipment-cell">
+                                <div class="equipment-image mat">🪞</div>
+                                <div class="equipment-info">
+                                    <h3>Wall Mirrors (3-Panel, 6ft)</h3>
+                                    <p>Full-Length Mirrors • Frameless</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">Accessories</span></td>
+                        <td><span class="date">Oct 10, 2022</span></td>
+                        <td><span class="price">$219</span></td>
+                        <td><span class="status-badge good">Good</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn">👁️</button>
+                                <button class="action-btn">✏️</button>
+                                <button class="action-btn">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button class="page-btn">← Previous</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">Next →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

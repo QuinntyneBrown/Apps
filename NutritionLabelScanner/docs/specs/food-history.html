@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food History - NutritionLabelScanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 24px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-option:hover {
+            background: #f7fafc;
+        }
+
+        .filter-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .filter-checkbox.checked {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .filter-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #718096;
+            background: #f7fafc;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .timeline-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-date {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .date-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .food-items {
+            display: grid;
+            gap: 12px;
+        }
+
+        .food-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .food-item:hover {
+            background: #edf2f7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .food-details {
+            flex: 1;
+        }
+
+        .food-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .food-brand {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .food-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .food-nutrition {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .food-calories {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f39c12;
+        }
+
+        .food-macros {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .food-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-icon:hover {
+            background: #e2e8f0;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+        }
+
+        @media (max-width: 968px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: 2;
+            }
+
+            .main-content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1 class="header-title">Food History</h1>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">247</div>
+                        <div class="stat-label">Total Scans</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">89</div>
+                        <div class="stat-label">Unique Products</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">30</div>
+                        <div class="stat-label">Days Tracked</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="Search by product name, brand, or ingredients...">
+                <div class="filter-group">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">This Week</button>
+                    <button class="filter-btn">This Month</button>
+                    <button class="filter-btn">Custom</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-title">Categories</div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox checked">✓</div>
+                        <div class="filter-label">All Categories</div>
+                        <div class="filter-count">247</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Dairy</div>
+                        <div class="filter-count">48</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Grains</div>
+                        <div class="filter-count">36</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Proteins</div>
+                        <div class="filter-count">42</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Snacks</div>
+                        <div class="filter-count">54</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Beverages</div>
+                        <div class="filter-count">38</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Frozen</div>
+                        <div class="filter-count">29</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Dietary Filters</div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Organic</div>
+                        <div class="filter-count">67</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Gluten Free</div>
+                        <div class="filter-count">82</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Vegan</div>
+                        <div class="filter-count">34</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">Low Sodium</div>
+                        <div class="filter-count">45</div>
+                    </div>
+                    <div class="filter-option">
+                        <div class="filter-checkbox"></div>
+                        <div class="filter-label">High Protein</div>
+                        <div class="filter-count">56</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="timeline-section">
+                    <div class="timeline-date">
+                        Monday, December 29, 2025
+                        <span class="date-badge">Today</span>
+                    </div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div class="food-icon">🥛</div>
+                            <div class="food-details">
+                                <div class="food-name">Organic Whole Milk</div>
+                                <div class="food-brand">Horizon Organic</div>
+                                <div class="food-meta">
+                                    <span>⏰ 8:30 AM</span>
+                                    <span>📏 1 cup</span>
+                                    <span>🏷️ Dairy</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">150 cal</div>
+                                <div class="food-macros">P: 8g • C: 12g • F: 8g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🥪</div>
+                            <div class="food-details">
+                                <div class="food-name">Whole Wheat Bread</div>
+                                <div class="food-brand">Dave's Killer Bread</div>
+                                <div class="food-meta">
+                                    <span>⏰ 8:35 AM</span>
+                                    <span>📏 2 slices</span>
+                                    <span>🏷️ Grains</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">220 cal</div>
+                                <div class="food-macros">P: 10g • C: 38g • F: 4g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🍌</div>
+                            <div class="food-details">
+                                <div class="food-name">Natural Peanut Butter</div>
+                                <div class="food-brand">Skippy Natural</div>
+                                <div class="food-meta">
+                                    <span>⏰ 8:40 AM</span>
+                                    <span>📏 2 tbsp</span>
+                                    <span>🏷️ Proteins</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">190 cal</div>
+                                <div class="food-macros">P: 7g • C: 8g • F: 16g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">☕</div>
+                            <div class="food-details">
+                                <div class="food-name">Black Coffee</div>
+                                <div class="food-brand">Starbucks Pike Place</div>
+                                <div class="food-meta">
+                                    <span>⏰ 9:00 AM</span>
+                                    <span>📏 12 oz</span>
+                                    <span>🏷️ Beverages</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">5 cal</div>
+                                <div class="food-macros">P: 0g • C: 0g • F: 0g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-section">
+                    <div class="timeline-date">Sunday, December 28, 2025</div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div class="food-icon">🥗</div>
+                            <div class="food-details">
+                                <div class="food-name">Greek Yogurt Plain</div>
+                                <div class="food-brand">Chobani</div>
+                                <div class="food-meta">
+                                    <span>⏰ 7:45 AM</span>
+                                    <span>📏 1 container (5.3 oz)</span>
+                                    <span>🏷️ Dairy</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">140 cal</div>
+                                <div class="food-macros">P: 18g • C: 6g • F: 4g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🍓</div>
+                            <div class="food-details">
+                                <div class="food-name">Organic Blueberries</div>
+                                <div class="food-brand">Driscoll's</div>
+                                <div class="food-meta">
+                                    <span>⏰ 7:50 AM</span>
+                                    <span>📏 1/2 cup</span>
+                                    <span>🏷️ Fruits</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">42 cal</div>
+                                <div class="food-macros">P: 1g • C: 11g • F: 0g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🍗</div>
+                            <div class="food-details">
+                                <div class="food-name">Grilled Chicken Breast</div>
+                                <div class="food-brand">Perdue Simply Smart</div>
+                                <div class="food-meta">
+                                    <span>⏰ 12:30 PM</span>
+                                    <span>📏 4 oz</span>
+                                    <span>🏷️ Proteins</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">165 cal</div>
+                                <div class="food-macros">P: 31g • C: 0g • F: 4g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🥦</div>
+                            <div class="food-details">
+                                <div class="food-name">Steamed Broccoli</div>
+                                <div class="food-brand">Green Giant</div>
+                                <div class="food-meta">
+                                    <span>⏰ 12:35 PM</span>
+                                    <span>📏 1 cup</span>
+                                    <span>🏷️ Vegetables</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">55 cal</div>
+                                <div class="food-macros">P: 4g • C: 11g • F: 0g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🍚</div>
+                            <div class="food-details">
+                                <div class="food-name">Brown Rice</div>
+                                <div class="food-brand">Uncle Ben's</div>
+                                <div class="food-meta">
+                                    <span>⏰ 12:40 PM</span>
+                                    <span>📏 1/2 cup cooked</span>
+                                    <span>🏷️ Grains</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">108 cal</div>
+                                <div class="food-macros">P: 3g • C: 22g • F: 1g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-section">
+                    <div class="timeline-date">Saturday, December 27, 2025</div>
+                    <div class="food-items">
+                        <div class="food-item">
+                            <div class="food-icon">🥓</div>
+                            <div class="food-details">
+                                <div class="food-name">Turkey Bacon</div>
+                                <div class="food-brand">Butterball</div>
+                                <div class="food-meta">
+                                    <span>⏰ 8:00 AM</span>
+                                    <span>📏 3 slices</span>
+                                    <span>🏷️ Proteins</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">105 cal</div>
+                                <div class="food-macros">P: 12g • C: 1g • F: 6g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="food-item">
+                            <div class="food-icon">🍳</div>
+                            <div class="food-details">
+                                <div class="food-name">Large Eggs</div>
+                                <div class="food-brand">Eggland's Best</div>
+                                <div class="food-meta">
+                                    <span>⏰ 8:05 AM</span>
+                                    <span>📏 2 eggs</span>
+                                    <span>🏷️ Proteins</span>
+                                </div>
+                            </div>
+                            <div class="food-nutrition">
+                                <div class="food-calories">140 cal</div>
+                                <div class="food-macros">P: 12g • C: 1g • F: 10g</div>
+                            </div>
+                            <div class="food-actions">
+                                <button class="action-icon" title="View details">👁️</button>
+                                <button class="action-icon" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

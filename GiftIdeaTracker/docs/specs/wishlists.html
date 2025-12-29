@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlists - Gift Idea Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .person-selector {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+        }
+
+        .person-chip {
+            padding: 12px 20px;
+            border-radius: 24px;
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            border: 2px solid transparent;
+        }
+
+        .person-chip:hover {
+            background: #e5e7eb;
+        }
+
+        .person-chip.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .wishlist-header-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .wishlist-owner {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .owner-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .owner-info h2 {
+            font-size: 24px;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .owner-details {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .wishlist-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f3f4f6;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filters-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .filter-select {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .filter-select:hover {
+            border-color: #667eea;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .wishlist-item {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .wishlist-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .item-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-sale {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+        }
+
+        .badge-price-drop {
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+        }
+
+        .badge-claimed {
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+        }
+
+        .item-content {
+            padding: 20px;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .item-source {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .price-section {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .current-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .original-price {
+            font-size: 16px;
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+
+        .price-drop {
+            padding: 4px 8px;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .item-priority {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .priority-stars {
+            color: #fbbf24;
+        }
+
+        .priority-label {
+            color: #6b7280;
+        }
+
+        .item-notes {
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        .item-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .action-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .action-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .action-btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .action-btn-claimed {
+            background: #dbeafe;
+            color: #1e40af;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        .empty-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .person-selector {
+                overflow-x: scroll;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span>📝</span>
+                Wishlists
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Dashboard</button>
+                <button class="btn btn-primary">+ Add Wishlist Item</button>
+            </div>
+        </div>
+
+        <div class="person-selector">
+            <div class="person-chip active">Jessica Martinez</div>
+            <div class="person-chip">Sarah Johnson</div>
+            <div class="person-chip">Michael Brown</div>
+            <div class="person-chip">Emily Davis</div>
+            <div class="person-chip">Amanda Miller</div>
+            <div class="person-chip">Robert Johnson</div>
+        </div>
+
+        <div class="wishlist-header-card">
+            <div class="wishlist-owner">
+                <div class="owner-avatar">JM</div>
+                <div class="owner-info">
+                    <h2>Jessica Martinez's Wishlist</h2>
+                    <div class="owner-details">
+                        Partner • Birthday: August 22 • Next occasion: Valentine's Day (42 days away)
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-stats">
+                <div class="stat-box">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Items</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Price Drops</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Claimed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">$487</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <span class="filter-label">Filter by:</span>
+            <select class="filter-select">
+                <option>All Items</option>
+                <option>Available</option>
+                <option>Claimed by Me</option>
+                <option>Price Drops</option>
+            </select>
+            <select class="filter-select">
+                <option>All Priorities</option>
+                <option>High Priority</option>
+                <option>Medium Priority</option>
+                <option>Low Priority</option>
+            </select>
+            <select class="filter-select">
+                <option>Sort: Date Added</option>
+                <option>Sort: Price (Low to High)</option>
+                <option>Sort: Price (High to Low)</option>
+                <option>Sort: Priority</option>
+            </select>
+        </div>
+
+        <div class="items-grid">
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <div class="item-badge badge-price-drop">Price Drop!</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-name">Premium Yoga Mat with Alignment Lines</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>Amazon • Added 2 weeks ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$69.99</div>
+                        <div class="original-price">$89.99</div>
+                        <div class="price-drop">-22%</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★★</div>
+                        <div class="priority-label">High Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Would love this in purple or teal. The alignment lines would really help with my practice!"
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <div class="item-badge badge-claimed">Claimed by You</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-name">Instant Camera with Film Bundle</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>B&H Photo • Added 1 month ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$139.99</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★★</div>
+                        <div class="priority-label">High Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Always wanted to try instant photography! Would be perfect for capturing memories with friends."
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-claimed">✓ Claimed for Valentine's Day</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                <div class="item-content">
+                    <div class="item-name">Wireless Earbuds Pro</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>Apple Store • Added 3 days ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$249.00</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★☆</div>
+                        <div class="priority-label">Medium Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "For running and workouts. The noise cancellation would be amazing for the gym!"
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                    <div class="item-badge badge-sale">On Sale</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-name">Essential Oil Diffuser Set</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>Target • Added 1 week ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$42.99</div>
+                        <div class="original-price">$59.99</div>
+                        <div class="price-drop">-28%</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★☆☆</div>
+                        <div class="priority-label">Low Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Would be nice for creating a relaxing atmosphere during meditation and yoga."
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #30cfd0, #330867);"></div>
+                <div class="item-content">
+                    <div class="item-name">Travel Photography Course (Online)</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>MasterClass • Added 2 weeks ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$180.00</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★★</div>
+                        <div class="priority-label">High Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "I've been wanting to improve my travel photography skills for our next trip!"
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Course</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #a8edea, #fed6e3);"></div>
+                <div class="item-content">
+                    <div class="item-name">Stainless Steel Water Bottle Set</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>REI • Added 4 days ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$54.99</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★☆</div>
+                        <div class="priority-label">Medium Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "One for hot drinks, one for cold. Perfect for staying hydrated throughout the day!"
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">
+                    <div class="item-badge badge-price-drop">Price Drop!</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-name">Cozy Oversized Blanket</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>Pottery Barn • Added 3 weeks ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$79.99</div>
+                        <div class="original-price">$119.99</div>
+                        <div class="price-drop">-33%</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★☆</div>
+                        <div class="priority-label">Medium Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Soft and warm for movie nights. Love the cream or light gray color!"
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);">
+                    <div class="item-badge badge-claimed">Claimed by You</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-name">Bamboo Yoga Block Set</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>Gaiam • Added 1 month ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$32.99</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★★☆</div>
+                        <div class="priority-label">Medium Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Eco-friendly blocks to help with balance poses and stretching."
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-claimed">✓ Claimed for Birthday</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wishlist-item">
+                <div class="item-image" style="background: linear-gradient(135deg, #e0c3fc, #8ec5fc);"></div>
+                <div class="item-content">
+                    <div class="item-name">Succulent Plant Collection</div>
+                    <div class="item-source">
+                        <span>🛒</span>
+                        <span>The Sill • Added 5 days ago</span>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">$48.00</div>
+                    </div>
+                    <div class="item-priority">
+                        <div class="priority-stars">★★★☆☆</div>
+                        <div class="priority-label">Low Priority</div>
+                    </div>
+                    <div class="item-notes">
+                        "Low-maintenance plants for my desk and bedroom windowsill."
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn action-btn-primary">Claim & Buy</button>
+                        <button class="action-btn action-btn-secondary">View Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

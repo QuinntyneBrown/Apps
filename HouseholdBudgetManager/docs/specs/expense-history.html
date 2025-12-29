@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense History - HouseholdBudgetManager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdf;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .breadcrumb a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+
+        .filters-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        .filter-input {
+            padding: 0.7rem 1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .expense-list {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .list-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background: #f8f9fa;
+            padding: 0.3rem;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .expense-group {
+            margin-bottom: 2rem;
+        }
+
+        .group-date {
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .expense-item:hover {
+            background: #f8f9fa;
+            border-color: #ecf0f1;
+        }
+
+        .expense-main {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex: 1;
+        }
+
+        .expense-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .icon-groceries { background: #e3f2fd; }
+        .icon-dining { background: #fff3e0; }
+        .icon-transport { background: #f3e5f5; }
+        .icon-entertainment { background: #fce4ec; }
+        .icon-health { background: #e8f5e9; }
+        .icon-shopping { background: #fff9c4; }
+        .icon-housing { background: #e0f2f1; }
+
+        .expense-details {
+            flex: 1;
+        }
+
+        .expense-merchant {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            color: #2c3e50;
+        }
+
+        .expense-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .expense-amount {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-right: 1rem;
+        }
+
+        .expense-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 8px;
+            background: #ecf0f1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #d5dbdf;
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .receipt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: #e8f5e9;
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ecf0f1;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .expense-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .expense-main {
+                width: 100%;
+            }
+
+            .expense-amount {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">💰 HouseholdBudget</div>
+            <div class="header-actions">
+                <button class="btn btn-primary">+ Add Expense</button>
+                <button class="btn btn-secondary">Export</button>
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="#">Dashboard</a>
+                <span>/</span>
+                <span>Expense History</span>
+            </div>
+            <h1 class="page-title">Expense History</h1>
+        </div>
+
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" placeholder="Search by merchant or description...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-input">
+                        <option>All Categories</option>
+                        <option>Groceries</option>
+                        <option>Dining & Restaurants</option>
+                        <option>Transportation</option>
+                        <option>Entertainment</option>
+                        <option>Health & Fitness</option>
+                        <option>Shopping</option>
+                        <option>Housing & Utilities</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date From</label>
+                    <input type="date" class="filter-input" value="2025-12-01">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date To</label>
+                    <input type="date" class="filter-input" value="2025-12-19">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Paid By</label>
+                    <select class="filter-input">
+                        <option>All Members</option>
+                        <option>John Doe</option>
+                        <option>Jane Doe</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary">Apply Filters</button>
+                <button class="btn btn-secondary">Clear All</button>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-label">Total Expenses</div>
+                <div class="stat-value">127</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Amount</div>
+                <div class="stat-value">$3,245</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average per Day</div>
+                <div class="stat-value">$171</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">With Receipts</div>
+                <div class="stat-value">89</div>
+            </div>
+        </div>
+
+        <div class="expense-list">
+            <div class="list-header">
+                <h2 class="list-title">All Transactions</h2>
+                <div class="view-toggle">
+                    <button class="toggle-btn active">List View</button>
+                    <button class="toggle-btn">Calendar View</button>
+                </div>
+            </div>
+
+            <div class="expense-group">
+                <div class="group-date">Today, December 19</div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-groceries">🛒</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Whole Foods Market</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Groceries</span>
+                                </span>
+                                <span class="meta-item">⏰ 2:30 PM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                                <span class="receipt-badge">📎 Receipt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$87.45</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-dining">☕</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Starbucks Coffee</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Dining</span>
+                                </span>
+                                <span class="meta-item">⏰ 8:15 AM</span>
+                                <span class="meta-item">👤 Jane Doe</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$12.50</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expense-group">
+                <div class="group-date">Yesterday, December 18</div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-transport">⛽</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Shell Gas Station</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Transportation</span>
+                                </span>
+                                <span class="meta-item">⏰ 6:45 PM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                                <span class="receipt-badge">📎 Receipt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$52.00</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-dining">🍕</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Domino's Pizza</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Dining</span>
+                                </span>
+                                <span class="meta-item">⏰ 7:45 PM</span>
+                                <span class="meta-item">👤 Jane Doe</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$34.99</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-groceries">🛒</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Target</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Groceries</span>
+                                </span>
+                                <span class="meta-item">⏰ 3:20 PM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                                <span class="receipt-badge">📎 Receipt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$145.67</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expense-group">
+                <div class="group-date">December 17, 2025</div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-entertainment">📺</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Netflix Subscription</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Entertainment</span>
+                                </span>
+                                <span class="meta-item">⏰ 12:00 PM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$15.99</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-shopping">👕</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">H&M Fashion Store</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Shopping</span>
+                                </span>
+                                <span class="meta-item">⏰ 5:30 PM</span>
+                                <span class="meta-item">👤 Jane Doe</span>
+                                <span class="receipt-badge">📎 Receipt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$89.99</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expense-group">
+                <div class="group-date">December 15, 2025</div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-health">💪</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Planet Fitness</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Health & Fitness</span>
+                                </span>
+                                <span class="meta-item">⏰ 9:00 AM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$24.99</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-main">
+                        <div class="expense-icon icon-housing">💡</div>
+                        <div class="expense-details">
+                            <div class="expense-merchant">Electric Company</div>
+                            <div class="expense-meta">
+                                <span class="meta-item">
+                                    <span class="category-tag">Housing & Utilities</span>
+                                </span>
+                                <span class="meta-item">⏰ 2:15 PM</span>
+                                <span class="meta-item">👤 John Doe</span>
+                                <span class="receipt-badge">📎 Receipt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-amount">$125.00</div>
+                    <div class="expense-actions">
+                        <button class="action-btn">✏️</button>
+                        <button class="action-btn">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn">←</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">5</button>
+                <button class="page-btn">→</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Detail - Photography Session Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .session-title-section h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .session-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-info {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .photo-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            color: white;
+            font-size: 12px;
+        }
+
+        .photo-item:hover .photo-overlay {
+            opacity: 1;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .notes-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            color: #666;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .setting-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .setting-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .setting-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .equipment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .equipment-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .equipment-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .equipment-info {
+            flex: 1;
+        }
+
+        .equipment-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .equipment-meta {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+        }
+
+        .timeline-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .timeline-time {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .tag-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: #667eea20;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumb">
+                <a href="#">Dashboard</a> / <a href="#">Sessions</a> / Golden Hour Family Portraits
+            </div>
+            <div class="session-header">
+                <div class="session-title-section">
+                    <h1>Golden Hour Family Portraits</h1>
+                    <div class="session-meta">
+                        <div class="meta-item">📅 December 26, 2025</div>
+                        <div class="meta-item">⏰ 14:30 - 17:00</div>
+                        <div class="meta-item">📍 Riverside Park</div>
+                        <div class="meta-item">👤 Johnson Family</div>
+                        <div class="meta-item">💰 $450.00</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary">✏️ Edit Session</button>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Photos Captured</div>
+                <div class="stat-value">156</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Selected for Editing</div>
+                <div class="stat-value">45</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Final Delivered</div>
+                <div class="stat-value">28</div>
+            </div>
+        </div>
+
+        <div class="content-layout">
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Selected Photos</h2>
+                        <span class="badge badge-success">Completed</span>
+                    </div>
+
+                    <div class="photo-grid">
+                        <div class="photo-item">
+                            <span>🌅</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0247.RAW</div>
+                                <div>f/2.8 • 1/250 • ISO 400</div>
+                            </div>
+                        </div>
+                        <div class="photo-item">
+                            <span>🌆</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0248.RAW</div>
+                                <div>f/2.8 • 1/250 • ISO 400</div>
+                            </div>
+                        </div>
+                        <div class="photo-item">
+                            <span>🌄</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0249.RAW</div>
+                                <div>f/2.8 • 1/320 • ISO 400</div>
+                            </div>
+                        </div>
+                        <div class="photo-item">
+                            <span>🎨</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0250.RAW</div>
+                                <div>f/2.8 • 1/250 • ISO 400</div>
+                            </div>
+                        </div>
+                        <div class="photo-item">
+                            <span>📸</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0251.RAW</div>
+                                <div>f/2.8 • 1/250 • ISO 400</div>
+                            </div>
+                        </div>
+                        <div class="photo-item">
+                            <span>🖼️</span>
+                            <div class="photo-overlay">
+                                <div style="font-weight: 600;">IMG_0252.RAW</div>
+                                <div>f/2.8 • 1/320 • ISO 400</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Session Information</h2>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Client Name</div>
+                            <div class="info-value">Johnson Family</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Session Type</div>
+                            <div class="info-value">Family Portrait</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Location</div>
+                            <div class="info-value">Riverside Park</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">2.5 hours</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Weather</div>
+                            <div class="info-value">Clear, 72°F</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Lighting</div>
+                            <div class="info-value">Natural Golden Hour</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="info-label" style="margin-bottom: 10px; font-weight: 600;">Session Notes</div>
+                        <div class="notes-section">
+                            Beautiful golden hour lighting throughout the session. The Johnson family was very cooperative and we got some amazing shots near the waterfront. Used primarily natural light with minimal reflector work. Client requested warm tones for final edits. Delivered 28 edited images via online gallery. Family was extremely happy with results and mentioned they'll refer friends.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Camera Settings</h2>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-label">ISO Range</div>
+                            <div class="setting-value">400-800</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">Aperture</div>
+                            <div class="setting-value">f/2.8</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">Shutter Speed</div>
+                            <div class="setting-value">1/250s</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">White Balance</div>
+                            <div class="setting-value">5200K</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">Focus Mode</div>
+                            <div class="setting-value">Eye AF</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">Metering</div>
+                            <div class="setting-value">Evaluative</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Equipment Used</h2>
+                    </div>
+
+                    <div class="equipment-list">
+                        <div class="equipment-item">
+                            <div class="equipment-icon">📷</div>
+                            <div class="equipment-info">
+                                <div class="equipment-name">Canon EOS R5</div>
+                                <div class="equipment-meta">Primary Camera Body</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🔍</div>
+                            <div class="equipment-info">
+                                <div class="equipment-name">RF 24-70mm f/2.8L</div>
+                                <div class="equipment-meta">Primary Lens</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🔍</div>
+                            <div class="equipment-info">
+                                <div class="equipment-name">RF 85mm f/1.2L</div>
+                                <div class="equipment-meta">Portrait Lens</div>
+                            </div>
+                        </div>
+
+                        <div class="equipment-item">
+                            <div class="equipment-icon">💿</div>
+                            <div class="equipment-info">
+                                <div class="equipment-name">5-in-1 Reflector</div>
+                                <div class="equipment-meta">Light Modifier</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Session Timeline</h2>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Session Created</div>
+                                <div class="timeline-time">Dec 20, 2025 at 10:30 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Session Completed</div>
+                                <div class="timeline-time">Dec 26, 2025 at 5:00 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Photos Imported</div>
+                                <div class="timeline-time">Dec 26, 2025 at 6:15 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Culling Complete</div>
+                                <div class="timeline-time">Dec 27, 2025 at 11:00 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Editing Complete</div>
+                                <div class="timeline-time">Dec 27, 2025 at 4:30 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Delivered to Client</div>
+                                <div class="timeline-time">Dec 27, 2025 at 5:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Tags</h2>
+                    </div>
+
+                    <div class="tag-list">
+                        <span class="tag">outdoor</span>
+                        <span class="tag">golden-hour</span>
+                        <span class="tag">family</span>
+                        <span class="tag">natural-light</span>
+                        <span class="tag">riverside</span>
+                        <span class="tag">portrait</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Reading Item - Professional Reading List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-navigation {
+            display: flex;
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #edf2f7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            color: #1a202c;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: #f56565;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input.large {
+            font-size: 16px;
+            padding: 14px 18px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-help {
+            color: #718096;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .url-input-group .form-input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .type-option {
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-option:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .type-option.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .type-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .type-label {
+            color: #1a202c;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .tag-input-container:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .tag-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 150px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .suggested-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .suggested-tag {
+            background: #f7fafc;
+            color: #4a5568;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .suggested-tag:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            gap: 10px;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auto-fill-info {
+            background: #e6fffa;
+            border: 2px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-icon {
+            color: #047857;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-title {
+            color: #047857;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .info-text {
+            color: #065f46;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">📚 Add Reading Item</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="tab-navigation">
+                <button class="tab active">From URL</button>
+                <button class="tab">Book (ISBN)</button>
+                <button class="tab">Manual Entry</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Article or Content URL <span class="required">*</span></label>
+                    <div class="url-input-group">
+                        <input type="text" class="form-input large" placeholder="https://example.com/article-title" value="https://hbr.org/2024/12/the-future-of-remote-work">
+                        <button class="btn btn-primary">Fetch Details</button>
+                    </div>
+                    <div class="form-help">Paste a URL to automatically extract article details, metadata, and content</div>
+                </div>
+
+                <div class="auto-fill-info">
+                    <div class="info-icon">✓</div>
+                    <div class="info-content">
+                        <div class="info-title">Content Extracted Successfully</div>
+                        <div class="info-text">We automatically extracted the title, author, publication date, and estimated reading time from the URL.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Content Type <span class="required">*</span></label>
+                    <div class="type-selector">
+                        <div class="type-option selected">
+                            <div class="type-icon">📄</div>
+                            <div class="type-label">Article</div>
+                        </div>
+                        <div class="type-option">
+                            <div class="type-icon">📚</div>
+                            <div class="type-label">Book</div>
+                        </div>
+                        <div class="type-option">
+                            <div class="type-icon">🔬</div>
+                            <div class="type-label">Research Paper</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Title <span class="required">*</span></label>
+                    <input type="text" class="form-input" value="The Future of Remote Work: Building Hybrid Teams That Thrive">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Author(s)</label>
+                        <input type="text" class="form-input" value="Sarah Martinez, PhD">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Source / Publication</label>
+                        <input type="text" class="form-input" value="Harvard Business Review">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Publication Date</label>
+                        <input type="date" class="form-input" value="2024-12-15">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reading Time</label>
+                        <input type="text" class="form-input" value="22 minutes">
+                        <div class="form-help">Estimated reading time</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description / Summary</label>
+                    <textarea class="form-textarea" placeholder="Add a brief description or summary...">An in-depth analysis of how organizations can build effective hybrid teams, covering communication strategies, tool selection, and maintaining company culture in distributed work environments.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags & Categories</label>
+                    <div class="tag-input-container">
+                        <span class="tag-item">
+                            Remote Work
+                            <span class="tag-remove">✕</span>
+                        </span>
+                        <span class="tag-item">
+                            Management
+                            <span class="tag-remove">✕</span>
+                        </span>
+                        <span class="tag-item">
+                            Leadership
+                            <span class="tag-remove">✕</span>
+                        </span>
+                        <input type="text" class="tag-input" placeholder="Add tags...">
+                    </div>
+                    <div class="suggested-tags">
+                        <span class="suggested-tag">+ Team Building</span>
+                        <span class="suggested-tag">+ Communication</span>
+                        <span class="suggested-tag">+ Culture</span>
+                        <span class="suggested-tag">+ Productivity</span>
+                        <span class="suggested-tag">+ Collaboration</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Priority / Reading Goal</label>
+                    <select class="form-input">
+                        <option>None - Save for later</option>
+                        <option selected>High - Read this week</option>
+                        <option>Medium - Read this month</option>
+                        <option>Low - Someday/Maybe</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Personal Notes</label>
+                    <textarea class="form-textarea" placeholder="Add any personal notes or context for why you're adding this...">Recommended by James from the engineering team. Relevant for our upcoming hybrid work policy planning.</textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-left">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: #4a5568;">
+                        <input type="checkbox" checked>
+                        <span>Start reading now</span>
+                    </label>
+                </div>
+                <div class="footer-right">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Add to Reading List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

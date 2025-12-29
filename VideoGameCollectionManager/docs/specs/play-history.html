@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play History - Video Game Collection Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-period-selector {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .period-btn.active {
+            background: #00d4ff;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .chart-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-header h2 {
+            font-size: 20px;
+            color: #00d4ff;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #00d4ff, #00ff88);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            color: #00d4ff;
+        }
+
+        .filter-dropdown {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .session-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .session-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00d4ff;
+            transition: all 0.3s;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .session-game {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .session-date {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .session-duration {
+            font-size: 18px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .session-details {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        .session-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .top-games-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .top-game-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .game-rank {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+            width: 40px;
+            text-align: center;
+        }
+
+        .game-cover-small {
+            width: 50px;
+            height: 65px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            flex-shrink: 0;
+        }
+
+        .game-stats {
+            flex: 1;
+        }
+
+        .game-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .game-time {
+            font-size: 13px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .game-sessions {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .milestone-item {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .milestone-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .milestone-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 3px;
+        }
+
+        .milestone-date {
+            font-size: 11px;
+            color: #888;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span>⏱️</span>
+            Play History & Statistics
+        </h1>
+        <div class="time-period-selector">
+            <button class="period-btn">All Time</button>
+            <button class="period-btn">This Year</button>
+            <button class="period-btn active">This Month</button>
+            <button class="period-btn">This Week</button>
+        </div>
+    </div>
+
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-label">Total Playtime</div>
+            <div class="stat-value">127.5 hrs</div>
+            <div class="stat-subtitle">December 2025</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Sessions Played</div>
+            <div class="stat-value">42</div>
+            <div class="stat-subtitle">+8 from last month</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg. Session</div>
+            <div class="stat-value">3.0 hrs</div>
+            <div class="stat-subtitle">Per gaming session</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Games Played</div>
+            <div class="stat-value">18</div>
+            <div class="stat-subtitle">Different titles</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Longest Session</div>
+            <div class="stat-value">8.5 hrs</div>
+            <div class="stat-subtitle">Elden Ring</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Most Active Day</div>
+            <div class="stat-value">Sunday</div>
+            <div class="stat-subtitle">32.5 hours</div>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <h2>📊 Daily Playtime (December 2025)</h2>
+            <select class="filter-dropdown">
+                <option>All Games</option>
+                <option>Elden Ring</option>
+                <option>Zelda: TOTK</option>
+                <option>Cyberpunk 2077</option>
+            </select>
+        </div>
+        <div class="chart-placeholder">
+            <div class="chart-bar" style="height: 45%;"></div>
+            <div class="chart-bar" style="height: 60%;"></div>
+            <div class="chart-bar" style="height: 35%;"></div>
+            <div class="chart-bar" style="height: 70%;"></div>
+            <div class="chart-bar" style="height: 25%;"></div>
+            <div class="chart-bar" style="height: 80%;"></div>
+            <div class="chart-bar" style="height: 90%;"></div>
+            <div class="chart-bar" style="height: 40%;"></div>
+            <div class="chart-bar" style="height: 55%;"></div>
+            <div class="chart-bar" style="height: 30%;"></div>
+            <div class="chart-bar" style="height: 75%;"></div>
+            <div class="chart-bar" style="height: 50%;"></div>
+            <div class="chart-bar" style="height: 65%;"></div>
+            <div class="chart-bar" style="height: 45%;"></div>
+            <div class="chart-bar" style="height: 85%;"></div>
+            <div class="chart-bar" style="height: 55%;"></div>
+            <div class="chart-bar" style="height: 40%;"></div>
+            <div class="chart-bar" style="height: 60%;"></div>
+            <div class="chart-bar" style="height: 70%;"></div>
+            <div class="chart-bar" style="height: 35%;"></div>
+            <div class="chart-bar" style="height: 80%;"></div>
+            <div class="chart-bar" style="height: 45%;"></div>
+            <div class="chart-bar" style="height: 95%;"></div>
+            <div class="chart-bar" style="height: 50%;"></div>
+            <div class="chart-bar" style="height: 65%;"></div>
+            <div class="chart-bar" style="height: 75%;"></div>
+            <div class="chart-bar" style="height: 40%;"></div>
+            <div class="chart-bar" style="height: 85%;"></div>
+            <div class="chart-bar" style="height: 60%;"></div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="section">
+            <div class="section-header">
+                <h2>🎮 Recent Sessions</h2>
+                <select class="filter-dropdown">
+                    <option>All Games</option>
+                    <option>This Week</option>
+                    <option>By Game</option>
+                </select>
+            </div>
+
+            <div class="session-list">
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">Elden Ring</div>
+                            <div class="session-date">Today, 3:45 PM - 8:00 PM</div>
+                        </div>
+                        <div class="session-duration">4.2 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 68% (+8%)</div>
+                        <div class="session-detail-item">🏆 Achievements: 2 unlocked</div>
+                        <div class="session-detail-item">💀 Boss defeated: Fire Giant</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">The Legend of Zelda: Tears of the Kingdom</div>
+                            <div class="session-date">Yesterday, 2:00 PM - 5:30 PM</div>
+                        </div>
+                        <div class="session-duration">3.5 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 45% (+5%)</div>
+                        <div class="session-detail-item">🗺️ Explored new region: Hebra Mountains</div>
+                        <div class="session-detail-item">⭐ Shrines completed: 3</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">Cyberpunk 2077: Phantom Liberty</div>
+                            <div class="session-date">Dec 27, 7:00 PM - 9:45 PM</div>
+                        </div>
+                        <div class="session-duration">2.8 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 23% (+4%)</div>
+                        <div class="session-detail-item">🎯 Main missions: 2 completed</div>
+                        <div class="session-detail-item">💬 Side quests: 1 started</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">Elden Ring</div>
+                            <div class="session-date">Dec 26, 8:00 PM - 1:05 AM</div>
+                        </div>
+                        <div class="session-duration">5.1 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 60% (+12%)</div>
+                        <div class="session-detail-item">🏆 Achievements: 3 unlocked</div>
+                        <div class="session-detail-item">💀 Bosses defeated: Godskin Duo, Maliketh</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">Hollow Knight</div>
+                            <div class="session-date">Dec 25, 11:00 AM - 2:30 PM</div>
+                        </div>
+                        <div class="session-duration">3.5 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 100% (Completed!)</div>
+                        <div class="session-detail-item">🏆 Final achievement unlocked</div>
+                        <div class="session-detail-item">💯 112% completion achieved</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">The Legend of Zelda: Tears of the Kingdom</div>
+                            <div class="session-date">Dec 24, 4:15 PM - 7:00 PM</div>
+                        </div>
+                        <div class="session-duration">2.8 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 40% (+3%)</div>
+                        <div class="session-detail-item">🗺️ Tower activated: Gerudo Canyon</div>
+                        <div class="session-detail-item">⭐ Shrines completed: 2</div>
+                    </div>
+                </div>
+
+                <div class="session-item">
+                    <div class="session-header">
+                        <div>
+                            <div class="session-game">Elden Ring</div>
+                            <div class="session-date">Dec 23, 9:00 PM - 11:45 PM</div>
+                        </div>
+                        <div class="session-duration">2.8 hrs</div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-detail-item">📈 Progress: 48% (+4%)</div>
+                        <div class="session-detail-item">🏆 Achievement unlocked: Shardbearer Malenia</div>
+                        <div class="session-detail-item">💀 Boss defeated: Malenia (27 attempts!)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section" style="margin-bottom: 30px;">
+                <div class="section-header">
+                    <h2>🔥 Most Played (This Month)</h2>
+                </div>
+
+                <div class="top-games-list">
+                    <div class="top-game-item">
+                        <div class="game-rank">#1</div>
+                        <div class="game-cover-small" style="background: linear-gradient(135deg, #c94b4b, #4b134f);"></div>
+                        <div class="game-stats">
+                            <div class="game-name">Elden Ring</div>
+                            <div class="game-time">42.3 hours</div>
+                            <div class="game-sessions">15 sessions</div>
+                        </div>
+                    </div>
+
+                    <div class="top-game-item">
+                        <div class="game-rank">#2</div>
+                        <div class="game-cover-small" style="background: linear-gradient(135deg, #1e3c72, #2a5298);"></div>
+                        <div class="game-stats">
+                            <div class="game-name">Zelda: TOTK</div>
+                            <div class="game-time">28.7 hours</div>
+                            <div class="game-sessions">9 sessions</div>
+                        </div>
+                    </div>
+
+                    <div class="top-game-item">
+                        <div class="game-rank">#3</div>
+                        <div class="game-cover-small" style="background: linear-gradient(135deg, #141e30, #243b55);"></div>
+                        <div class="game-stats">
+                            <div class="game-name">Hollow Knight</div>
+                            <div class="game-time">18.5 hours</div>
+                            <div class="game-sessions">6 sessions</div>
+                        </div>
+                    </div>
+
+                    <div class="top-game-item">
+                        <div class="game-rank">#4</div>
+                        <div class="game-cover-small" style="background: linear-gradient(135deg, #0f2027, #203a43);"></div>
+                        <div class="game-stats">
+                            <div class="game-name">Cyberpunk 2077</div>
+                            <div class="game-time">15.2 hours</div>
+                            <div class="game-sessions">5 sessions</div>
+                        </div>
+                    </div>
+
+                    <div class="top-game-item">
+                        <div class="game-rank">#5</div>
+                        <div class="game-cover-small" style="background: linear-gradient(135deg, #f12711, #f5af19);"></div>
+                        <div class="game-stats">
+                            <div class="game-name">Hades</div>
+                            <div class="game-time">12.8 hours</div>
+                            <div class="game-sessions">7 sessions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>🎯 Recent Milestones</h2>
+                </div>
+
+                <div class="milestone-item">
+                    <div class="milestone-icon">🎉</div>
+                    <div class="milestone-title">100 Hours in Elden Ring!</div>
+                    <div class="milestone-date">Reached 2 days ago</div>
+                </div>
+
+                <div class="milestone-item">
+                    <div class="milestone-icon">💯</div>
+                    <div class="milestone-title">10th Game 100% Completed</div>
+                    <div class="milestone-date">Hollow Knight • 5 days ago</div>
+                </div>
+
+                <div class="milestone-item">
+                    <div class="milestone-icon">⏱️</div>
+                    <div class="milestone-title">500 Total Hours This Year</div>
+                    <div class="milestone-date">Reached 1 week ago</div>
+                </div>
+
+                <div class="milestone-item">
+                    <div class="milestone-icon">🔥</div>
+                    <div class="milestone-title">7-Day Gaming Streak</div>
+                    <div class="milestone-date">Active now</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

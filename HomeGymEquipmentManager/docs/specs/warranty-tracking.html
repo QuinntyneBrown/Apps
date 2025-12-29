@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warranty Tracking - Home Gym Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #718096;
+        }
+
+        .filter-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.active {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-icon.expiring {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-icon.expired {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-icon.claims {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #fed7d7 0%, #feebc8 100%);
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #f56565;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .alert-icon {
+            font-size: 32px;
+        }
+
+        .alert-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #742a2a;
+            margin-bottom: 4px;
+        }
+
+        .alert-content p {
+            font-size: 14px;
+            color: #7c2d12;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-action {
+            color: #667eea;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .warranty-item {
+            padding: 24px;
+            border-radius: 12px;
+            background: #f7fafc;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .warranty-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+
+        .warranty-item.expiring-soon {
+            background: #fffaf0;
+            border: 2px solid #feebc8;
+        }
+
+        .warranty-item.expired {
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+            opacity: 0.8;
+        }
+
+        .warranty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .warranty-equipment {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .equipment-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .equipment-icon.treadmill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .equipment-icon.bike {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .equipment-icon.weights {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .equipment-icon.rack {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .equipment-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .equipment-info p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .warranty-status-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .warranty-status-badge.active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .warranty-status-badge.expiring {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .warranty-status-badge.expired {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .warranty-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .detail-group h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-group p {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .warranty-progress {
+            margin-bottom: 16px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .progress-label {
+            color: #718096;
+        }
+
+        .progress-percentage {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            transition: width 0.3s;
+        }
+
+        .progress-fill.expiring {
+            background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .progress-fill.expired {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .warranty-coverage {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .coverage-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .coverage-list {
+            list-style: none;
+            display: grid;
+            gap: 8px;
+        }
+
+        .coverage-list li {
+            font-size: 13px;
+            color: #718096;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .coverage-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: 700;
+        }
+
+        .warranty-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .action-btn.claim {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.extend {
+            background: #ed8936;
+            color: white;
+        }
+
+        .action-btn.view {
+            background: #e2e8f0;
+            color: #718096;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .claims-section {
+            margin-top: 24px;
+        }
+
+        .claim-item {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .claim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .claim-header h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .claim-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .claim-status.pending {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .claim-status.approved {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .claim-status.in-progress {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .claim-details {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .claim-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>🛡️ Warranty Tracking</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📥 Import Warranties</button>
+                    <button class="btn btn-primary">+ File Claim</button>
+                </div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active">All Warranties</button>
+                <button class="filter-btn">Active (9)</button>
+                <button class="filter-btn">Expiring Soon (2)</button>
+                <button class="filter-btn">Expired (1)</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon active">✅</div>
+                </div>
+                <div class="stat-value">9</div>
+                <div class="stat-label">Active Warranties</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon expiring">⚠️</div>
+                </div>
+                <div class="stat-value">2</div>
+                <div class="stat-label">Expiring Soon (90d)</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon expired">❌</div>
+                </div>
+                <div class="stat-value">1</div>
+                <div class="stat-label">Expired</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon claims">📋</div>
+                </div>
+                <div class="stat-value">3</div>
+                <div class="stat-label">Active Claims</div>
+            </div>
+        </div>
+
+        <div class="alert-banner">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <h3>2 Warranties Expiring Soon</h3>
+                <p>Peloton Bike+ warranty expires in 7 months. Consider extended warranty options.</p>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Equipment Warranties</h2>
+                    <span class="card-action">Export Report →</span>
+                </div>
+
+                <div class="warranty-item">
+                    <div class="warranty-header">
+                        <div class="warranty-equipment">
+                            <div class="equipment-icon treadmill">🏃</div>
+                            <div class="equipment-info">
+                                <h3>NordicTrack Commercial 1750</h3>
+                                <p>Treadmill • Serial: NT1750-2023-8945</p>
+                            </div>
+                        </div>
+                        <div class="warranty-status-badge active">
+                            Active
+                        </div>
+                    </div>
+
+                    <div class="warranty-details">
+                        <div class="detail-group">
+                            <h4>Start Date</h4>
+                            <p>Nov 12, 2023</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>End Date</h4>
+                            <p>Nov 12, 2033</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>Provider</h4>
+                            <p>NordicTrack</p>
+                        </div>
+                    </div>
+
+                    <div class="warranty-progress">
+                        <div class="progress-info">
+                            <span class="progress-label">Warranty Duration: 1 year of 10 years used</span>
+                            <span class="progress-percentage">90% remaining</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 10%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="warranty-coverage">
+                        <div class="coverage-title">Coverage Includes:</div>
+                        <ul class="coverage-list">
+                            <li>10-year frame warranty</li>
+                            <li>2-year parts warranty</li>
+                            <li>1-year labor warranty</li>
+                            <li>90-day in-home service</li>
+                        </ul>
+                    </div>
+
+                    <div class="warranty-actions">
+                        <button class="action-btn claim">File Claim</button>
+                        <button class="action-btn view">View Documents</button>
+                    </div>
+                </div>
+
+                <div class="warranty-item expiring-soon">
+                    <div class="warranty-header">
+                        <div class="warranty-equipment">
+                            <div class="equipment-icon bike">🚴</div>
+                            <div class="equipment-info">
+                                <h3>Peloton Bike+</h3>
+                                <p>Stationary Bike • Serial: PEL-BIKE-7823</p>
+                            </div>
+                        </div>
+                        <div class="warranty-status-badge expiring">
+                            Expiring Soon
+                        </div>
+                    </div>
+
+                    <div class="warranty-details">
+                        <div class="detail-group">
+                            <h4>Start Date</h4>
+                            <p>Jul 8, 2023</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>End Date</h4>
+                            <p>Jul 8, 2026</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>Provider</h4>
+                            <p>Peloton</p>
+                        </div>
+                    </div>
+
+                    <div class="warranty-progress">
+                        <div class="progress-info">
+                            <span class="progress-label">Warranty Duration: 2.5 years of 3 years used</span>
+                            <span class="progress-percentage">17% remaining (7 months)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill expiring" style="width: 83%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="warranty-coverage">
+                        <div class="coverage-title">Coverage Includes:</div>
+                        <ul class="coverage-list">
+                            <li>36-month limited warranty</li>
+                            <li>Touchscreen display coverage</li>
+                            <li>Mechanical parts warranty</li>
+                            <li>Free technical support</li>
+                        </ul>
+                    </div>
+
+                    <div class="warranty-actions">
+                        <button class="action-btn claim">File Claim</button>
+                        <button class="action-btn extend">Extend Warranty</button>
+                        <button class="action-btn view">View Documents</button>
+                    </div>
+                </div>
+
+                <div class="warranty-item">
+                    <div class="warranty-header">
+                        <div class="warranty-equipment">
+                            <div class="equipment-icon rack">🔲</div>
+                            <div class="equipment-info">
+                                <h3>Rogue R-4 Power Rack</h3>
+                                <p>Power Rack • Serial: RG-R4-2023-4521</p>
+                            </div>
+                        </div>
+                        <div class="warranty-status-badge active">
+                            Active
+                        </div>
+                    </div>
+
+                    <div class="warranty-details">
+                        <div class="detail-group">
+                            <h4>Start Date</h4>
+                            <p>May 20, 2023</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>End Date</h4>
+                            <p>Lifetime</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>Provider</h4>
+                            <p>Rogue Fitness</p>
+                        </div>
+                    </div>
+
+                    <div class="warranty-coverage">
+                        <div class="coverage-title">Coverage Includes:</div>
+                        <ul class="coverage-list">
+                            <li>Lifetime frame warranty</li>
+                            <li>Manufacturing defects coverage</li>
+                            <li>Weld integrity guarantee</li>
+                            <li>Finish warranty (1 year)</li>
+                        </ul>
+                    </div>
+
+                    <div class="warranty-actions">
+                        <button class="action-btn claim">File Claim</button>
+                        <button class="action-btn view">View Documents</button>
+                    </div>
+                </div>
+
+                <div class="warranty-item">
+                    <div class="warranty-header">
+                        <div class="warranty-equipment">
+                            <div class="equipment-icon weights">💪</div>
+                            <div class="equipment-info">
+                                <h3>Bowflex SelectTech 552</h3>
+                                <p>Adjustable Dumbbells • Serial: BF-552-9234</p>
+                            </div>
+                        </div>
+                        <div class="warranty-status-badge active">
+                            Active
+                        </div>
+                    </div>
+
+                    <div class="warranty-details">
+                        <div class="detail-group">
+                            <h4>Start Date</h4>
+                            <p>Sep 15, 2023</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>End Date</h4>
+                            <p>Sep 15, 2025</p>
+                        </div>
+                        <div class="detail-group">
+                            <h4>Provider</h4>
+                            <p>Bowflex</p>
+                        </div>
+                    </div>
+
+                    <div class="warranty-progress">
+                        <div class="progress-info">
+                            <span class="progress-label">Warranty Duration: 1.3 years of 2 years used</span>
+                            <span class="progress-percentage">35% remaining (9 months)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill expiring" style="width: 65%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="warranty-coverage">
+                        <div class="coverage-title">Coverage Includes:</div>
+                        <ul class="coverage-list">
+                            <li>2-year warranty on parts</li>
+                            <li>Weight plate mechanism coverage</li>
+                            <li>Handle and grip warranty</li>
+                            <li>Replacement parts available</li>
+                        </ul>
+                    </div>
+
+                    <div class="warranty-actions">
+                        <button class="action-btn claim">File Claim</button>
+                        <button class="action-btn view">View Documents</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card claims-section">
+                <div class="card-header">
+                    <h2 class="card-title">Active Warranty Claims</h2>
+                    <span class="card-action">View All →</span>
+                </div>
+
+                <div class="claim-item">
+                    <div class="claim-header">
+                        <h4>Belt Replacement - NordicTrack Treadmill</h4>
+                        <span class="claim-status in-progress">In Progress</span>
+                    </div>
+                    <div class="claim-details">
+                        Claim #NT-2025-8394 • Filed on Dec 10, 2025<br>
+                        Belt showing excessive wear. Replacement approved under parts warranty. Technician scheduled for Jan 8, 2026.
+                    </div>
+                    <div class="claim-meta">
+                        <span>📅 Expected Resolution: Jan 8, 2026</span>
+                        <span>💰 Covered: $280</span>
+                        <span>📞 Contact: 1-800-NORDIC</span>
+                    </div>
+                </div>
+
+                <div class="claim-item">
+                    <div class="claim-header">
+                        <h4>Resistance Calibration - Peloton Bike</h4>
+                        <span class="claim-status pending">Pending Review</span>
+                    </div>
+                    <div class="claim-details">
+                        Claim #PEL-2025-1247 • Filed on Dec 22, 2025<br>
+                        Resistance knob not calibrating correctly. Awaiting technician assessment for warranty coverage determination.
+                    </div>
+                    <div class="claim-meta">
+                        <span>📅 Submitted: 7 days ago</span>
+                        <span>📞 Contact: support@onepeloton.com</span>
+                    </div>
+                </div>
+
+                <div class="claim-item">
+                    <div class="claim-header">
+                        <h4>Weight Plate Selector - Bowflex Dumbbells</h4>
+                        <span class="claim-status approved">Approved</span>
+                    </div>
+                    <div class="claim-details">
+                        Claim #BF-2025-5621 • Filed on Dec 1, 2025<br>
+                        Weight selection mechanism sticking. Replacement parts shipped. Received on Dec 18, ready for installation.
+                    </div>
+                    <div class="claim-meta">
+                        <span>✅ Parts Received</span>
+                        <span>💰 Covered: $45</span>
+                        <span>📦 Tracking: BF-456789</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

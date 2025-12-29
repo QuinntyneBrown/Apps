@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Dashboard - Retirement Savings Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+
+        .welcome p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card.success {
+            border-left-color: #48bb78;
+        }
+
+        .stat-card.warning {
+            border-left-color: #f6ad55;
+        }
+
+        .stat-card.info {
+            border-left-color: #4299e1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-subtext {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .stat-change {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stat-change.positive {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .stat-change.negative {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            height: 300px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 200px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><path d="M 0 180 Q 50 150 100 140 T 200 100 T 300 60 T 400 20" stroke="%23667eea" stroke-width="3" fill="none"/><path d="M 0 180 Q 50 150 100 140 T 200 100 T 300 60 T 400 20 L 400 200 L 0 200 Z" fill="%23667eea" opacity="0.2"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+
+        .milestone-list {
+            list-style: none;
+        }
+
+        .milestone-item {
+            padding: 1rem;
+            border-left: 3px solid #e2e8f0;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .milestone-item.completed {
+            border-left-color: #48bb78;
+        }
+
+        .milestone-item.current {
+            border-left-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .milestone-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .milestone-amount {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .milestone-date {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .scenario-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .scenario-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            background: #e2e8f0;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scenario-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .action-items {
+            list-style: none;
+        }
+
+        .action-item {
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-item-content h4 {
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .action-item-content p {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .impact-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                💰 Retirement Savings Calculator
+            </div>
+            <nav class="nav">
+                <a href="dashboard-main.html" class="nav-link active">Dashboard</a>
+                <a href="scenario-builder.html" class="nav-link">Scenarios</a>
+                <a href="income-streams.html" class="nav-link">Income</a>
+                <a href="expense-projections.html" class="nav-link">Expenses</a>
+                <a href="savings-progress.html" class="nav-link">Progress</a>
+                <a href="settings-profile.html" class="nav-link">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="welcome">
+            <h1>Welcome back, Sarah! 👋</h1>
+            <p>You're on track to retire comfortably at age 65 with your current plan.</p>
+        </div>
+
+        <div class="alert alert-success">
+            <div>
+                <strong>Great News!</strong> Your retirement success probability increased to 87% this month based on your recent contribution increase.
+            </div>
+        </div>
+
+        <div class="scenario-selector">
+            <button class="scenario-tab active">Conservative Plan</button>
+            <button class="scenario-tab">Moderate Plan</button>
+            <button class="scenario-tab">Aggressive Growth</button>
+            <button class="btn btn-secondary">+ New Scenario</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-label">Projected Retirement Savings</div>
+                <div class="stat-value">$1,847,250</div>
+                <div class="stat-subtext">At age 65 (in 20 years)</div>
+                <div class="stat-change positive">↑ $42,500 this year</div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-label">Current Total Savings</div>
+                <div class="stat-value">$387,500</div>
+                <div class="stat-subtext">401(k), IRA & Investments</div>
+                <div class="stat-change positive">↑ 12.3% YTD</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Monthly Retirement Income</div>
+                <div class="stat-value">$7,850</div>
+                <div class="stat-subtext">Estimated at retirement</div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-label">Success Probability</div>
+                <div class="stat-value">87%</div>
+                <div class="stat-subtext">Based on Monte Carlo simulation</div>
+                <div class="stat-change positive">↑ 4% this month</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Savings Growth Projection</h2>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+                <div class="card-body">
+                    <div class="chart-placeholder">
+                        <div class="chart-line"></div>
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between; color: #718096; font-size: 0.875rem;">
+                        <span>Current: $387.5K</span>
+                        <span>Age 55: $982K</span>
+                        <span>Age 65: $1.85M</span>
+                        <span>Age 75: $2.41M</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Savings Milestones</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="milestone-list">
+                        <li class="milestone-item completed">
+                            <div class="milestone-title">First $100K</div>
+                            <div class="milestone-amount">$100,000</div>
+                            <div class="milestone-date">Completed: March 2020</div>
+                        </li>
+                        <li class="milestone-item completed">
+                            <div class="milestone-title">Quarter Million</div>
+                            <div class="milestone-amount">$250,000</div>
+                            <div class="milestone-date">Completed: August 2023</div>
+                        </li>
+                        <li class="milestone-item current">
+                            <div class="milestone-title">Half Million</div>
+                            <div class="milestone-amount">$500,000</div>
+                            <div class="milestone-date">Projected: June 2027</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 77.5%;"></div>
+                            </div>
+                        </li>
+                        <li class="milestone-item">
+                            <div class="milestone-title">First Million</div>
+                            <div class="milestone-amount">$1,000,000</div>
+                            <div class="milestone-date">Projected: April 2034</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recommended Actions</h2>
+                    <button class="btn btn-primary">View All</button>
+                </div>
+                <div class="card-body">
+                    <ul class="action-items">
+                        <li class="action-item">
+                            <div class="action-item-content">
+                                <h4>Increase 401(k) contribution to maximize employer match</h4>
+                                <p>You're leaving $2,400/year on the table</p>
+                            </div>
+                            <div class="impact-badge">High Impact</div>
+                        </li>
+                        <li class="action-item">
+                            <div class="action-item-content">
+                                <h4>Consider delaying Social Security to age 70</h4>
+                                <p>Could increase monthly benefit by $850</p>
+                            </div>
+                            <div class="impact-badge">Medium Impact</div>
+                        </li>
+                        <li class="action-item">
+                            <div class="action-item-content">
+                                <h4>Review healthcare cost estimates</h4>
+                                <p>Medical expenses may be underestimated</p>
+                            </div>
+                            <div class="impact-badge">Medium Impact</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Retirement Income Breakdown</h2>
+                </div>
+                <div class="card-body">
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">Social Security</span>
+                            <span style="color: #667eea; font-weight: 600;">$2,850/mo</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 36%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">401(k) Withdrawals</span>
+                            <span style="color: #667eea; font-weight: 600;">$3,200/mo</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 41%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">IRA Withdrawals</span>
+                            <span style="color: #667eea; font-weight: 600;">$1,200/mo</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 15%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">Investment Income</span>
+                            <span style="color: #667eea; font-weight: 600;">$600/mo</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 8%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 1.125rem;">
+                            <span style="font-weight: 700;">Total Monthly Income</span>
+                            <span style="color: #667eea; font-weight: 700;">$7,850</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Quick Stats</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Years to Retirement</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">20 years</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Current Age</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">45</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Target Retirement Age</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">65</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Monthly Contribution</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">$1,850</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Employer Match</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">$650/mo</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: #718096; margin-bottom: 0.25rem;">Average Return</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1a202c;">7.2%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievements - Couples Goal Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .celebration-banner {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
+            text-align: center;
+            color: white;
+        }
+
+        .celebration-icon {
+            font-size: 72px;
+            margin-bottom: 15px;
+        }
+
+        .celebration-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .celebration-text {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .achievements-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f3f4f6;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .achievement-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .achievement-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .achievement-card.locked {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .achievement-card.locked:hover {
+            transform: none;
+            border-color: #e5e7eb;
+            box-shadow: none;
+        }
+
+        .achievement-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .achievement-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .achievement-card.locked .achievement-icon {
+            background: #d1d5db;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .achievement-date {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .achievement-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .achievement-progress {
+            margin-top: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .achievement-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .achievement-category {
+            padding: 4px 10px;
+            background: #ddd6fe;
+            color: #6d28d9;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .achievement-points {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        .completed-goals {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .goal-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #10b981;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .goal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .goal-completion {
+            font-size: 24px;
+        }
+
+        .goal-details {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .goal-celebration {
+            background: #d1fae5;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #065f46;
+            font-style: italic;
+        }
+
+        .timeline-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            margin-top: 25px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .timeline-item::before {
+            content: '✓';
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 0 0 4px white;
+        }
+
+        .timeline-date {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .timeline-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>🏆 Achievements & Celebrations</h1>
+                <p class="header-subtitle">Celebrate your successes and track your journey together</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📤 Share</button>
+                <button class="btn btn-primary">🎉 Add Celebration</button>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value">23</div>
+                <div class="stat-label">Goals Completed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏅</div>
+                <div class="stat-value">37</div>
+                <div class="stat-label">Achievements Unlocked</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-value">2,450</div>
+                <div class="stat-label">Points Earned</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value">156</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+
+        <div class="celebration-banner">
+            <div class="celebration-icon">🎊</div>
+            <div class="celebration-title">Latest Achievement Unlocked!</div>
+            <div class="celebration-text">Paris Saver - Reached 75% of your vacation savings goal!</div>
+        </div>
+
+        <div class="achievements-section">
+            <div class="section-header">
+                <h2 class="section-title">🏆 Achievements</h2>
+                <div class="filter-tabs">
+                    <button class="tab active">All</button>
+                    <button class="tab">Travel</button>
+                    <button class="tab">Financial</button>
+                    <button class="tab">Fitness</button>
+                    <button class="tab">Relationship</button>
+                </div>
+            </div>
+
+            <div class="achievements-grid">
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">💰</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Savings Superstar</div>
+                            <div class="achievement-date">Unlocked: Oct 15, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Saved $5,000 or more in a single month towards your shared goals.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Financial</span>
+                        <span class="achievement-points">+150 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">✈️</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">World Travelers</div>
+                            <div class="achievement-date">Unlocked: Mar 5, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Completed your first international trip together.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Travel</span>
+                        <span class="achievement-points">+200 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">💪</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Fitness Duo</div>
+                            <div class="achievement-date">Unlocked: Sep 12, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Completed 10 workouts together in a single month.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Fitness</span>
+                        <span class="achievement-points">+100 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">❤️</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Communication Champions</div>
+                            <div class="achievement-date">Unlocked: Nov 28, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Completed 25 relationship check-ins without missing one.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Relationship</span>
+                        <span class="achievement-points">+250 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">🏠</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Nest Builders</div>
+                            <div class="achievement-date">Unlocked: Aug 1, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Moved in together and created your first shared home.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Home</span>
+                        <span class="achievement-points">+300 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Goal Crusher</div>
+                            <div class="achievement-date">Unlocked: Jul 15, 2025</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Completed 10 shared goals together.
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Goals</span>
+                        <span class="achievement-points">+200 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card locked">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">🔒</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Marathon Masters</div>
+                            <div class="achievement-date">Not yet unlocked</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Complete a full marathon together.
+                    </div>
+                    <div class="achievement-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 35%"></div>
+                        </div>
+                        <div class="progress-text">Training progress: 35%</div>
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Fitness</span>
+                        <span class="achievement-points">+500 points</span>
+                    </div>
+                </div>
+
+                <div class="achievement-card locked">
+                    <div class="achievement-header">
+                        <div class="achievement-icon">🔒</div>
+                        <div class="achievement-info">
+                            <div class="achievement-title">Homeowners</div>
+                            <div class="achievement-date">Not yet unlocked</div>
+                        </div>
+                    </div>
+                    <div class="achievement-description">
+                        Purchase your first home together.
+                    </div>
+                    <div class="achievement-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 53%"></div>
+                        </div>
+                        <div class="progress-text">Down payment saved: 53%</div>
+                    </div>
+                    <div class="achievement-meta">
+                        <span class="achievement-category">Financial</span>
+                        <span class="achievement-points">+1000 points</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="completed-goals">
+            <h2 class="section-title" style="margin-bottom: 25px;">✅ Completed Goals</h2>
+
+            <div class="goal-card">
+                <div class="goal-header">
+                    <div class="goal-title">Emergency Fund - $10,000</div>
+                    <div class="goal-completion">🎉</div>
+                </div>
+                <div class="goal-details">
+                    📅 Completed: November 30, 2025 | 💰 Financial Goal | ⏱️ 8 months
+                </div>
+                <div class="goal-celebration">
+                    "We did it! Built a solid emergency fund that gives us so much peace of mind. Celebrated with a nice dinner out!"
+                </div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-header">
+                    <div class="goal-title">Move In Together</div>
+                    <div class="goal-completion">🏠</div>
+                </div>
+                <div class="goal-details">
+                    📅 Completed: August 1, 2025 | 🏠 Home Goal | ⏱️ 4 months
+                </div>
+                <div class="goal-celebration">
+                    "Found our perfect apartment and took the big step! Living together has been even better than we imagined."
+                </div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-header">
+                    <div class="goal-title">Mexico Vacation</div>
+                    <div class="goal-completion">✈️</div>
+                </div>
+                <div class="goal-details">
+                    📅 Completed: March 5, 2025 | ✈️ Travel Goal | ⏱️ 6 months
+                </div>
+                <div class="goal-celebration">
+                    "Amazing week in Mexico! Swam in cenotes, explored ruins, and made incredible memories. We're already planning our next adventure!"
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h2 class="section-title" style="margin-bottom: 25px;">📅 Achievement Timeline</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">November 30, 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Emergency Fund Completed</div>
+                        <div class="timeline-description">Reached $10,000 emergency fund goal - financial security achieved!</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">October 15, 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">3 Year Anniversary</div>
+                        <div class="timeline-description">Celebrated three amazing years together with a weekend getaway</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">August 1, 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Moved In Together</div>
+                        <div class="timeline-description">Big milestone! Found our perfect apartment and combined our lives</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">May 12, 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Michael's Graduation</div>
+                        <div class="timeline-description">Celebrated Michael completing his Master's degree</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">March 5, 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">First International Trip</div>
+                        <div class="timeline-description">Unforgettable adventure to Mexico - first of many travels!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

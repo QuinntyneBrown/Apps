@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Add Liability - Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem 2.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f9fafb;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .liability-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .liability-type-card {
+            padding: 1.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .liability-type-card:hover {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .liability-type-card.selected {
+            border-color: #ef4444;
+            background: #ef4444;
+            color: white;
+        }
+        .liability-type-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .liability-type-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .form-label .required {
+            color: #ef4444;
+        }
+        .form-label .optional {
+            color: #999;
+            font-weight: 400;
+            font-size: 0.85rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-with-prefix {
+            position: relative;
+        }
+        .input-prefix {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+        .input-with-prefix .form-input {
+            padding-left: 2rem;
+        }
+        .input-suffix {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 600;
+        }
+        .input-with-suffix .form-input {
+            padding-right: 2.5rem;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border: 2px solid #fde68a;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-top: 1rem;
+        }
+        .info-box-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .info-box-text {
+            font-size: 0.9rem;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .calculation-preview {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .calculation-preview h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        .calc-label {
+            color: #3b82f6;
+        }
+        .calc-value {
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .calc-total {
+            border-top: 2px solid #93c5fd;
+            margin-top: 0.5rem;
+            padding-top: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2.5rem;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-cancel {
+            background: white;
+            color: #666;
+            border: 2px solid #e5e7eb;
+        }
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+        .btn-primary {
+            background: #ef4444;
+            color: white;
+            border: none;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 Add New Liability</h2>
+            <button class="close-btn">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <form>
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>1️⃣</span>
+                        <span>Select Liability Type</span>
+                    </div>
+                    <div class="liability-type-grid">
+                        <div class="liability-type-card selected">
+                            <div class="liability-type-icon">🏡</div>
+                            <div class="liability-type-name">Mortgage</div>
+                        </div>
+                        <div class="liability-type-card">
+                            <div class="liability-type-icon">🚗</div>
+                            <div class="liability-type-name">Auto Loan</div>
+                        </div>
+                        <div class="liability-type-card">
+                            <div class="liability-type-icon">🎓</div>
+                            <div class="liability-type-name">Student Loan</div>
+                        </div>
+                        <div class="liability-type-card">
+                            <div class="liability-type-icon">💳</div>
+                            <div class="liability-type-name">Credit Card</div>
+                        </div>
+                        <div class="liability-type-card">
+                            <div class="liability-type-icon">💰</div>
+                            <div class="liability-type-name">Personal Loan</div>
+                        </div>
+                        <div class="liability-type-card">
+                            <div class="liability-type-icon">📦</div>
+                            <div class="liability-type-name">Other Debt</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>2️⃣</span>
+                        <span>Liability Details</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Liability Name <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" placeholder="e.g., Primary Residence Mortgage" value="">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Creditor / Lender <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-input" placeholder="e.g., Wells Fargo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Account Number (Last 4) <span class="optional">(optional)</span>
+                            </label>
+                            <input type="text" class="form-input" placeholder="e.g., 1234" maxlength="4">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Current Balance <span class="required">*</span>
+                            </label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input type="number" class="form-input" placeholder="0.00" step="0.01" value="345820.00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Original Amount <span class="optional">(optional)</span>
+                            </label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input type="number" class="form-input" placeholder="0.00" step="0.01" value="450000.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>3️⃣</span>
+                        <span>Loan Terms</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Interest Rate (APR) <span class="required">*</span>
+                            </label>
+                            <div class="input-with-suffix">
+                                <input type="number" class="form-input" placeholder="0.00" step="0.01" value="3.25">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Monthly Payment <span class="required">*</span>
+                            </label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input type="number" class="form-input" placeholder="0.00" step="0.01" value="1890.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Loan Term <span class="optional">(optional)</span>
+                            </label>
+                            <select class="form-input">
+                                <option value="">Select term...</option>
+                                <option>6 months</option>
+                                <option>12 months</option>
+                                <option>24 months</option>
+                                <option>36 months</option>
+                                <option>48 months</option>
+                                <option>60 months</option>
+                                <option>15 years</option>
+                                <option selected>30 years</option>
+                                <option>Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Payment Due Day
+                            </label>
+                            <select class="form-input">
+                                <option selected>1st of month</option>
+                                <option>5th of month</option>
+                                <option>10th of month</option>
+                                <option>15th of month</option>
+                                <option>20th of month</option>
+                                <option>25th of month</option>
+                                <option>Last day of month</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Start Date <span class="optional">(optional)</span>
+                            </label>
+                            <input type="date" class="form-input" value="2020-06-01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Payoff Date <span class="optional">(estimated)</span>
+                            </label>
+                            <input type="date" class="form-input" value="2050-06-01">
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-icon">💡</div>
+                        <div class="info-box-text">
+                            <strong>Tip:</strong> The more details you provide, the better we can track your debt payoff progress and calculate interest paid over time.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>4️⃣</span>
+                        <span>Additional Information</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Category
+                        </label>
+                        <select class="form-input">
+                            <option selected>Mortgage - Primary Residence</option>
+                            <option>Mortgage - Investment Property</option>
+                            <option>Auto Loan</option>
+                            <option>Student Loan - Federal</option>
+                            <option>Student Loan - Private</option>
+                            <option>Credit Card</option>
+                            <option>Personal Loan</option>
+                            <option>Business Loan</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Notes <span class="optional">(optional)</span>
+                        </label>
+                        <textarea class="form-input" placeholder="Add any additional notes about this liability...">30-year fixed mortgage for primary residence at 123 Oak Street.</textarea>
+                    </div>
+                </div>
+
+                <div class="calculation-preview">
+                    <h4>📊 Estimated Calculations</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Estimated Remaining Term:</span>
+                        <span class="calc-value">22.5 years</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Total Remaining Payments:</span>
+                        <span class="calc-value">270 payments</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Principal Remaining:</span>
+                        <span class="calc-value">$345,820.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Estimated Interest Remaining:</span>
+                        <span class="calc-value">$164,480.00</span>
+                    </div>
+                    <div class="calc-row calc-total">
+                        <span class="calc-label"><strong>Total Amount to be Paid:</strong></span>
+                        <span class="calc-value">$510,300.00</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-primary">Add Liability</button>
+        </div>
+    </div>
+</body>
+</html>

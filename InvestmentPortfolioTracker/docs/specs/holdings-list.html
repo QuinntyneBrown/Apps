@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Holdings - Investment Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-btn:hover:not(.active) {
+            background: #f7fafc;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .summary-change {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .summary-change.positive {
+            color: #0f9960;
+        }
+
+        .summary-change.negative {
+            color: #db2c3e;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .holdings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .holdings-table thead {
+            background: #f7fafc;
+            position: sticky;
+            top: 0;
+        }
+
+        .holdings-table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .holdings-table th:hover {
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .holdings-table td {
+            padding: 20px;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .holdings-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .holdings-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .stock-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stock-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .stock-info {
+            flex: 1;
+        }
+
+        .stock-symbol {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 15px;
+        }
+
+        .stock-name {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .gain-positive {
+            color: #0f9960;
+            font-weight: 600;
+        }
+
+        .gain-negative {
+            color: #db2c3e;
+            font-weight: 600;
+        }
+
+        .account-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .action-menu {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .action-menu:hover {
+            background: #edf2f7;
+        }
+
+        .performance-bar {
+            width: 60px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .performance-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .performance-fill.positive {
+            background: linear-gradient(90deg, #0f9960, #38f9d7);
+        }
+
+        .performance-fill.negative {
+            background: linear-gradient(90deg, #db2c3e, #f5576c);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📊 All Holdings</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📥 Export</button>
+                    <button class="btn btn-secondary">🔄 Sync</button>
+                    <button class="btn btn-primary">+ Add Position</button>
+                </div>
+            </div>
+
+            <div class="search-filter-bar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search by symbol, name, or account...">
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn active">All Assets</button>
+                    <button class="filter-btn">Stocks</button>
+                    <button class="filter-btn">ETFs</button>
+                    <button class="filter-btn">Bonds</button>
+                    <button class="filter-btn">Crypto</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total Holdings</div>
+                <div class="summary-value">42</div>
+                <div class="summary-change">Across 3 accounts</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Value</div>
+                <div class="summary-value">$847,392</div>
+                <div class="summary-change positive">+$12,458 today</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Gain/Loss</div>
+                <div class="summary-value">+$142,391</div>
+                <div class="summary-change positive">+20.19%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Winners</div>
+                <div class="summary-value">34</div>
+                <div class="summary-change positive">81% of holdings</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Losers</div>
+                <div class="summary-value">8</div>
+                <div class="summary-change negative">19% of holdings</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-container">
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Asset ▼</th>
+                            <th>Account</th>
+                            <th>Shares</th>
+                            <th>Price</th>
+                            <th>Market Value</th>
+                            <th>Cost Basis</th>
+                            <th>Total Gain/Loss</th>
+                            <th>% Return</th>
+                            <th>Today's Change</th>
+                            <th>Performance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">A</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">AAPL</div>
+                                        <div class="stock-name">Apple Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Fidelity 401k</span></td>
+                            <td>542</td>
+                            <td>$184.92</td>
+                            <td>$100,226.64</td>
+                            <td>$82,460.00</td>
+                            <td class="gain-positive">+$17,766.64</td>
+                            <td class="gain-positive">+21.55%</td>
+                            <td class="gain-positive">+$1,842.32</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 85%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">M</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">MSFT</div>
+                                        <div class="stock-name">Microsoft Corporation</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Vanguard IRA</span></td>
+                            <td>235</td>
+                            <td>$374.58</td>
+                            <td>$88,026.30</td>
+                            <td>$71,200.00</td>
+                            <td class="gain-positive">+$16,826.30</td>
+                            <td class="gain-positive">+23.64%</td>
+                            <td class="gain-positive">+$987.50</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 90%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">G</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">GOOGL</div>
+                                        <div class="stock-name">Alphabet Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Schwab Brokerage</span></td>
+                            <td>485</td>
+                            <td>$139.67</td>
+                            <td>$67,739.95</td>
+                            <td>$58,800.00</td>
+                            <td class="gain-positive">+$8,939.95</td>
+                            <td class="gain-positive">+15.20%</td>
+                            <td class="gain-positive">+$678.45</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 60%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">N</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">NVDA</div>
+                                        <div class="stock-name">NVIDIA Corporation</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Fidelity 401k</span></td>
+                            <td>98</td>
+                            <td>$495.22</td>
+                            <td>$48,531.56</td>
+                            <td>$32,240.00</td>
+                            <td class="gain-positive">+$16,291.56</td>
+                            <td class="gain-positive">+50.53%</td>
+                            <td class="gain-positive">+$2,156.78</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 100%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">T</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">TSLA</div>
+                                        <div class="stock-name">Tesla, Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Schwab Brokerage</span></td>
+                            <td>168</td>
+                            <td>$248.50</td>
+                            <td>$41,748.00</td>
+                            <td>$47,320.00</td>
+                            <td class="gain-negative">-$5,572.00</td>
+                            <td class="gain-negative">-11.77%</td>
+                            <td class="gain-negative">-$756.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill negative" style="width: 45%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">A</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">AMZN</div>
+                                        <div class="stock-name">Amazon.com Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Vanguard IRA</span></td>
+                            <td>287</td>
+                            <td>$151.94</td>
+                            <td>$43,606.78</td>
+                            <td>$38,700.00</td>
+                            <td class="gain-positive">+$4,906.78</td>
+                            <td class="gain-positive">+12.68%</td>
+                            <td class="gain-positive">+$574.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 55%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">M</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">META</div>
+                                        <div class="stock-name">Meta Platforms Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Fidelity 401k</span></td>
+                            <td>125</td>
+                            <td>$338.06</td>
+                            <td>$42,257.50</td>
+                            <td>$35,000.00</td>
+                            <td class="gain-positive">+$7,257.50</td>
+                            <td class="gain-positive">+20.74%</td>
+                            <td class="gain-positive">+$437.50</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 80%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">V</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">VOO</div>
+                                        <div class="stock-name">Vanguard S&P 500 ETF</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Vanguard IRA</span></td>
+                            <td>85</td>
+                            <td>$432.56</td>
+                            <td>$36,767.60</td>
+                            <td>$32,450.00</td>
+                            <td class="gain-positive">+$4,317.60</td>
+                            <td class="gain-positive">+13.30%</td>
+                            <td class="gain-positive">+$340.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 58%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">N</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">NFLX</div>
+                                        <div class="stock-name">Netflix Inc.</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Schwab Brokerage</span></td>
+                            <td>72</td>
+                            <td>$485.73</td>
+                            <td>$34,972.56</td>
+                            <td>$28,800.00</td>
+                            <td class="gain-positive">+$6,172.56</td>
+                            <td class="gain-positive">+21.43%</td>
+                            <td class="gain-positive">+$288.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 82%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">A</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">AMD</div>
+                                        <div class="stock-name">Advanced Micro Devices</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Fidelity 401k</span></td>
+                            <td>245</td>
+                            <td>$134.78</td>
+                            <td>$33,021.10</td>
+                            <td>$29,400.00</td>
+                            <td class="gain-positive">+$3,621.10</td>
+                            <td class="gain-positive">+12.32%</td>
+                            <td class="gain-positive">+$294.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 54%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">V</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">VTI</div>
+                                        <div class="stock-name">Vanguard Total Stock Market ETF</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Vanguard IRA</span></td>
+                            <td>135</td>
+                            <td>$234.12</td>
+                            <td>$31,606.20</td>
+                            <td>$28,350.00</td>
+                            <td class="gain-positive">+$3,256.20</td>
+                            <td class="gain-positive">+11.49%</td>
+                            <td class="gain-positive">+$270.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill positive" style="width: 52%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="stock-cell">
+                                    <div class="stock-logo">D</div>
+                                    <div class="stock-info">
+                                        <div class="stock-symbol">DIS</div>
+                                        <div class="stock-name">The Walt Disney Company</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="account-badge">Schwab Brokerage</span></td>
+                            <td>325</td>
+                            <td>$91.23</td>
+                            <td>$29,649.75</td>
+                            <td>$32,500.00</td>
+                            <td class="gain-negative">-$2,850.25</td>
+                            <td class="gain-negative">-8.77%</td>
+                            <td class="gain-negative">-$195.00</td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill negative" style="width: 35%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="action-menu">⋮</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

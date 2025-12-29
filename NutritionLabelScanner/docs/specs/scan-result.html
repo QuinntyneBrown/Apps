@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Result - NutritionLabelScanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f7fafc;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #edf2f7;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            border: none;
+            background: #f7fafc;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon-button:hover {
+            background: #edf2f7;
+            transform: scale(1.05);
+        }
+
+        .icon-button.active {
+            background: #fef5e7;
+        }
+
+        .product-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-main {
+            display: flex;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .product-image {
+            width: 160px;
+            height: 160px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            flex-shrink: 0;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .product-brand {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 16px;
+        }
+
+        .product-meta {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-warning {
+            background: #fef5e7;
+            color: #975a16;
+        }
+
+        .badge-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nutrition-label {
+            border: 3px solid #1a202c;
+            border-radius: 8px;
+            padding: 16px;
+            background: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .label-title {
+            font-size: 28px;
+            font-weight: 700;
+            border-bottom: 12px solid #1a202c;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+
+        .serving-info {
+            border-bottom: 4px solid #1a202c;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .serving-size {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .servings-per {
+            font-size: 12px;
+        }
+
+        .calories-section {
+            border-bottom: 8px solid #1a202c;
+            padding: 12px 0;
+            margin-bottom: 8px;
+        }
+
+        .calories-label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .calories-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .nutrient-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #cbd5e0;
+        }
+
+        .nutrient-row.major {
+            font-weight: 700;
+            border-bottom: 4px solid #1a202c;
+        }
+
+        .nutrient-row.indent {
+            padding-left: 16px;
+            font-size: 14px;
+        }
+
+        .daily-value {
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .macro-cards {
+            display: grid;
+            gap: 16px;
+        }
+
+        .macro-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .macro-info {
+            flex: 1;
+        }
+
+        .macro-name {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 6px;
+        }
+
+        .macro-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .macro-icon {
+            font-size: 40px;
+        }
+
+        .allergen-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .allergen-item {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .allergen-present {
+            background: #fff5f5;
+            color: #c53030;
+            border: 2px solid #fc8181;
+        }
+
+        .allergen-free {
+            background: #f0fff4;
+            color: #22543d;
+            border: 2px solid #9ae6b4;
+        }
+
+        .ingredient-list {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #2d3748;
+            line-height: 1.8;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-main {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .product-meta {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button">
+                ← Back
+            </button>
+            <div class="header-title">Scan Result</div>
+            <div class="header-actions">
+                <button class="icon-button active" title="Add to favorites">⭐</button>
+                <button class="icon-button" title="Share">↗️</button>
+                <button class="icon-button" title="More options">⋮</button>
+            </div>
+        </div>
+
+        <div class="product-header">
+            <div class="product-main">
+                <div class="product-image">🥛</div>
+                <div class="product-info">
+                    <h1 class="product-name">Organic Whole Milk</h1>
+                    <div class="product-brand">Horizon Organic</div>
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span>📦</span>
+                            <span>Half Gallon (64 fl oz)</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🏪</span>
+                            <span>Whole Foods Market</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📅</span>
+                            <span>Scanned today</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge badge-success">✓ Organic</span>
+                        <span class="badge badge-info">High Protein</span>
+                        <span class="badge badge-warning">Contains Dairy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">
+                    <span>📋</span>
+                    Nutrition Facts
+                </h2>
+                <div class="nutrition-label">
+                    <div class="label-title">Nutrition Facts</div>
+                    <div class="serving-info">
+                        <div class="serving-size">Serving size: 1 cup (240ml)</div>
+                        <div class="servings-per">Servings per container: About 8</div>
+                    </div>
+                    <div class="calories-section">
+                        <div class="calories-label">Amount per serving</div>
+                        <div class="calories-value">150 Calories</div>
+                    </div>
+                    <div style="text-align: right; font-size: 12px; font-weight: 600; margin-bottom: 8px;">% Daily Value*</div>
+                    <div class="nutrient-row major">
+                        <span>Total Fat 8g</span>
+                        <span>10%</span>
+                    </div>
+                    <div class="nutrient-row indent">
+                        <span>Saturated Fat 5g</span>
+                        <span>25%</span>
+                    </div>
+                    <div class="nutrient-row indent">
+                        <span>Trans Fat 0g</span>
+                        <span></span>
+                    </div>
+                    <div class="nutrient-row major">
+                        <span>Cholesterol 35mg</span>
+                        <span>12%</span>
+                    </div>
+                    <div class="nutrient-row major">
+                        <span>Sodium 120mg</span>
+                        <span>5%</span>
+                    </div>
+                    <div class="nutrient-row major">
+                        <span>Total Carbohydrate 12g</span>
+                        <span>4%</span>
+                    </div>
+                    <div class="nutrient-row indent">
+                        <span>Dietary Fiber 0g</span>
+                        <span>0%</span>
+                    </div>
+                    <div class="nutrient-row indent">
+                        <span>Total Sugars 12g</span>
+                        <span></span>
+                    </div>
+                    <div class="nutrient-row major" style="border-bottom: 8px solid #1a202c;">
+                        <span>Protein 8g</span>
+                        <span>16%</span>
+                    </div>
+                    <div class="nutrient-row">
+                        <span>Vitamin D 2.5mcg</span>
+                        <span>15%</span>
+                    </div>
+                    <div class="nutrient-row">
+                        <span>Calcium 300mg</span>
+                        <span>25%</span>
+                    </div>
+                    <div class="nutrient-row">
+                        <span>Potassium 370mg</span>
+                        <span>8%</span>
+                    </div>
+                    <div class="nutrient-row">
+                        <span>Vitamin A 150mcg</span>
+                        <span>15%</span>
+                    </div>
+                    <div class="daily-value" style="margin-top: 12px;">
+                        *The % Daily Value tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice.
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2 class="card-title">
+                        <span>💪</span>
+                        Macronutrients
+                    </h2>
+                    <div class="macro-cards">
+                        <div class="macro-card">
+                            <div class="macro-info">
+                                <div class="macro-name">Protein</div>
+                                <div class="macro-value">8g</div>
+                            </div>
+                            <div class="macro-icon">🥩</div>
+                        </div>
+                        <div class="macro-card">
+                            <div class="macro-info">
+                                <div class="macro-name">Carbohydrates</div>
+                                <div class="macro-value">12g</div>
+                            </div>
+                            <div class="macro-icon">🌾</div>
+                        </div>
+                        <div class="macro-card">
+                            <div class="macro-info">
+                                <div class="macro-name">Fat</div>
+                                <div class="macro-value">8g</div>
+                            </div>
+                            <div class="macro-icon">🥑</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <h2 class="card-title">
+                        <span>⚠️</span>
+                        Allergen Information
+                    </h2>
+                    <div class="allergen-list">
+                        <div class="allergen-item allergen-present">
+                            <span>🥛</span>
+                            <span>Contains Milk</span>
+                        </div>
+                        <div class="allergen-item allergen-free">
+                            <span>✓</span>
+                            <span>Gluten Free</span>
+                        </div>
+                        <div class="allergen-item allergen-free">
+                            <span>✓</span>
+                            <span>No Nuts</span>
+                        </div>
+                        <div class="allergen-item allergen-free">
+                            <span>✓</span>
+                            <span>No Soy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+            <h2 class="card-title">
+                <span>🧪</span>
+                Ingredients
+            </h2>
+            <div class="ingredient-list">
+                Organic Grade A Milk, Vitamin D3
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary">
+                <span>➕</span>
+                Add to Daily Log
+            </button>
+            <button class="btn btn-secondary">
+                <span>⚖️</span>
+                Compare Similar
+            </button>
+            <button class="btn btn-secondary">
+                <span>📊</span>
+                View Analysis
+            </button>
+        </div>
+    </div>
+</body>
+</html>

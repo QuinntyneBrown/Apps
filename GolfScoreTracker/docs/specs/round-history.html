@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round History - Golf Score Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+
+        .logo span {
+            color: #4CAF50;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:hover, .filter-select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rounds-container {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .rounds-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .rounds-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .rounds-count {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e0e0;
+        }
+
+        .timeline-month {
+            margin-bottom: 32px;
+        }
+
+        .month-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 16px;
+            margin-left: -40px;
+            padding-left: 40px;
+            position: sticky;
+            top: 20px;
+            background: white;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            z-index: 10;
+        }
+
+        .round-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .round-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .round-card::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 32px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4CAF50;
+            border: 3px solid white;
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .round-course {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .round-date {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .round-score {
+            text-align: right;
+        }
+
+        .score-main {
+            font-size: 36px;
+            font-weight: 800;
+            color: #333;
+            line-height: 1;
+        }
+
+        .score-relative {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .score-relative.good { color: #4CAF50; }
+        .score-relative.average { color: #FF9800; }
+        .score-relative.poor { color: #f44336; }
+
+        .round-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .round-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .round-stat-icon {
+            font-size: 16px;
+        }
+
+        .round-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-green { background: #E8F5E9; color: #2E7D32; }
+        .badge-blue { background: #E3F2FD; color: #1976D2; }
+        .badge-orange { background: #FFF3E0; color: #F57C00; }
+        .badge-purple { background: #F3E5F5; color: #7B1FA2; }
+        .badge-red { background: #FFEBEE; color: #C62828; }
+
+        .view-scorecard {
+            margin-top: 12px;
+            color: #4CAF50;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .view-scorecard:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                ⛳ Golf<span>Score</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary">+ Start New Round</button>
+            </div>
+        </header>
+
+        <div class="page-header">
+            <h1 class="page-title">Round History</h1>
+            <p class="page-subtitle">Complete record of all your golf rounds</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <div class="filter-label">Time Period</div>
+                    <select class="filter-select">
+                        <option>All Time</option>
+                        <option selected>Last 6 Months</option>
+                        <option>Last Year</option>
+                        <option>This Year</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Course</div>
+                    <select class="filter-select">
+                        <option selected>All Courses</option>
+                        <option>Pebble Beach</option>
+                        <option>Torrey Pines</option>
+                        <option>Spyglass Hill</option>
+                        <option>Bethpage Black</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Score Range</div>
+                    <select class="filter-select">
+                        <option selected>All Scores</option>
+                        <option>Under 80</option>
+                        <option>80-89</option>
+                        <option>90-99</option>
+                        <option>100+</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Sort By</div>
+                    <select class="filter-select">
+                        <option selected>Newest First</option>
+                        <option>Oldest First</option>
+                        <option>Best Score</option>
+                        <option>Worst Score</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">⛳</div>
+                <div class="stat-value">42</div>
+                <div class="stat-label">Total Rounds</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value">84.3</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-value">79</div>
+                <div class="stat-label">Best Round</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value">-2.4</div>
+                <div class="stat-label">Improvement</div>
+            </div>
+        </div>
+
+        <div class="rounds-container">
+            <div class="rounds-header">
+                <h2 class="rounds-title">All Rounds</h2>
+                <div class="rounds-count">Showing 18 of 42 rounds</div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-month">
+                    <div class="month-label">December 2025</div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Pebble Beach Golf Links</div>
+                                <div class="round-date">Monday, December 24, 2025 • 9:30 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">82</div>
+                                <div class="score-relative good">+10 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>10/14 Fairways (71%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>9/18 GIR (50%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>30 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>0 Penalties</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-green">Personal Best</span>
+                            <span class="badge badge-blue">2 Birdies</span>
+                            <span class="badge badge-purple">Blue Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Torrey Pines South Course</div>
+                                <div class="round-date">Wednesday, December 18, 2025 • 7:15 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">87</div>
+                                <div class="score-relative average">+15 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>8/14 Fairways (57%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>7/18 GIR (39%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>33 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>2 Penalties</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-blue">1 Birdie</span>
+                            <span class="badge badge-orange">Eagle on #13</span>
+                            <span class="badge badge-purple">White Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Spyglass Hill Golf Course</div>
+                                <div class="round-date">Thursday, December 12, 2025 • 11:00 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">85</div>
+                                <div class="score-relative average">+13 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>9/14 Fairways (64%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>8/18 GIR (44%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>32 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>1 Penalty</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-blue">3 Birdies</span>
+                            <span class="badge badge-purple">Blue Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Bethpage Black Course</div>
+                                <div class="round-date">Friday, December 6, 2025 • 8:30 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">91</div>
+                                <div class="score-relative poor">+20 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>6/14 Fairways (43%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>5/18 GIR (28%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>36 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>3 Penalties</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-red">Tough Course</span>
+                            <span class="badge badge-purple">Black Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+                </div>
+
+                <div class="timeline-month">
+                    <div class="month-label">November 2025</div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Augusta National Golf Club</div>
+                                <div class="round-date">Saturday, November 30, 2025 • 10:00 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">79</div>
+                                <div class="score-relative good">+7 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>11/14 Fairways (79%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>11/18 GIR (61%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>28 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>0 Penalties</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-green">Career Best</span>
+                            <span class="badge badge-orange">Eagle on #15</span>
+                            <span class="badge badge-blue">4 Birdies</span>
+                            <span class="badge badge-purple">Member Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">Pinehurst No. 2</div>
+                                <div class="round-date">Sunday, November 24, 2025 • 1:00 PM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">86</div>
+                                <div class="score-relative average">+14 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>7/14 Fairways (50%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>8/18 GIR (44%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>34 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>1 Penalty</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-blue">2 Birdies</span>
+                            <span class="badge badge-purple">Blue Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+
+                    <div class="round-card">
+                        <div class="round-header">
+                            <div>
+                                <div class="round-course">TPC Sawgrass (Stadium Course)</div>
+                                <div class="round-date">Tuesday, November 19, 2025 • 9:45 AM</div>
+                            </div>
+                            <div class="round-score">
+                                <div class="score-main">88</div>
+                                <div class="score-relative average">+16 to par</div>
+                            </div>
+                        </div>
+                        <div class="round-stats">
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🎯</span>
+                                <span>9/14 Fairways (64%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">🟢</span>
+                                <span>6/18 GIR (33%)</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⛳</span>
+                                <span>35 Putts</span>
+                            </div>
+                            <div class="round-stat">
+                                <span class="round-stat-icon">⚠️</span>
+                                <span>2 Penalties</span>
+                            </div>
+                        </div>
+                        <div class="round-badges">
+                            <span class="badge badge-blue">1 Birdie</span>
+                            <span class="badge badge-red">Island Green #17</span>
+                            <span class="badge badge-purple">White Tees</span>
+                        </div>
+                        <a href="#" class="view-scorecard">View Full Scorecard →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

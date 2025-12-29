@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Calendar - Running Log & Race Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-unit {
+            color: #999;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .race-item {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border-left: 5px solid #667eea;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .race-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .race-item.featured {
+            border-left-color: #f5576c;
+            background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%);
+        }
+
+        .race-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .race-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .race-date {
+            font-size: 14px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .race-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .race-badge.marathon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .race-badge.half {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .race-badge.ten-k {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .race-badge.five-k {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .race-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .race-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .race-detail-icon {
+            font-size: 18px;
+        }
+
+        .race-countdown {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .race-goal {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .race-goal-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .race-goal-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .race-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .race-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .race-action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            background: #f9fafb;
+            padding: 12px 15px;
+            border-radius: 8px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .timeline-desc {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-tab:hover {
+            border-color: #667eea;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .upcoming-race-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+
+        .upcoming-race-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .upcoming-race-name {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .upcoming-race-date {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .countdown-large {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .countdown-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .countdown-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .race-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏁 Race Calendar</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Find Races</button>
+                <button class="btn btn-primary">+ Add Race</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Upcoming Races</div>
+                <div class="stat-value">5 <span class="stat-unit">races</span></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Races Completed</div>
+                <div class="stat-value">12 <span class="stat-unit">races</span></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Next Race In</div>
+                <div class="stat-value">14 <span class="stat-unit">days</span></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">PR This Year</div>
+                <div class="stat-value">3 <span class="stat-unit">PRs</span></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">My Races</h2>
+                </div>
+
+                <div class="filter-tabs">
+                    <div class="filter-tab active">All</div>
+                    <div class="filter-tab">Upcoming</div>
+                    <div class="filter-tab">Past</div>
+                    <div class="filter-tab">Marathon</div>
+                    <div class="filter-tab">Half Marathon</div>
+                    <div class="filter-tab">10K</div>
+                    <div class="filter-tab">5K</div>
+                </div>
+
+                <div class="race-item featured">
+                    <div class="race-header">
+                        <div class="race-info">
+                            <h3>Boston Marathon 2025</h3>
+                            <div class="race-date">📅 April 21, 2025 • 📍 Boston, MA</div>
+                        </div>
+                        <span class="race-badge marathon">Marathon</span>
+                    </div>
+
+                    <div class="race-details">
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🏃</span>
+                            <span>26.2 miles</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">⏰</span>
+                            <span>8:00 AM Start</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🌡️</span>
+                            <span>Est. 48-55°F</span>
+                        </div>
+                    </div>
+
+                    <div class="race-countdown">⏱️ 113 days remaining</div>
+
+                    <div class="race-goal">
+                        <div class="race-goal-label">Goal Time</div>
+                        <div class="race-goal-value">3:15:00 (7:26/mile pace)</div>
+                    </div>
+
+                    <div class="race-actions">
+                        <button class="race-action-btn">📋 View Training Plan</button>
+                        <button class="race-action-btn">📊 Race Predictions</button>
+                        <button class="race-action-btn">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="race-item">
+                    <div class="race-header">
+                        <div class="race-info">
+                            <h3>City Half Marathon</h3>
+                            <div class="race-date">📅 March 15, 2025 • 📍 Downtown</div>
+                        </div>
+                        <span class="race-badge half">Half Marathon</span>
+                    </div>
+
+                    <div class="race-details">
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🏃</span>
+                            <span>13.1 miles</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">⏰</span>
+                            <span>7:30 AM Start</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🌡️</span>
+                            <span>Est. 42-50°F</span>
+                        </div>
+                    </div>
+
+                    <div class="race-countdown">⏱️ 76 days remaining</div>
+
+                    <div class="race-goal">
+                        <div class="race-goal-label">Goal Time</div>
+                        <div class="race-goal-value">1:32:00 (7:02/mile pace)</div>
+                    </div>
+
+                    <div class="race-actions">
+                        <button class="race-action-btn">📋 View Training Plan</button>
+                        <button class="race-action-btn">📊 Race Predictions</button>
+                        <button class="race-action-btn">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="race-item">
+                    <div class="race-header">
+                        <div class="race-info">
+                            <h3>New Year Resolution 10K</h3>
+                            <div class="race-date">📅 January 12, 2025 • 📍 City Park</div>
+                        </div>
+                        <span class="race-badge ten-k">10K</span>
+                    </div>
+
+                    <div class="race-details">
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🏃</span>
+                            <span>6.2 miles</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">⏰</span>
+                            <span>9:00 AM Start</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🌡️</span>
+                            <span>Est. 35-42°F</span>
+                        </div>
+                    </div>
+
+                    <div class="race-countdown">⏱️ 14 days remaining</div>
+
+                    <div class="race-goal">
+                        <div class="race-goal-label">Goal Time</div>
+                        <div class="race-goal-value">45:00 (7:15/mile pace)</div>
+                    </div>
+
+                    <div class="race-actions">
+                        <button class="race-action-btn">📋 View Training Plan</button>
+                        <button class="race-action-btn">📊 Race Predictions</button>
+                        <button class="race-action-btn">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <div class="race-item" style="opacity: 0.7;">
+                    <div class="race-header">
+                        <div class="race-info">
+                            <h3>Turkey Trot 10K</h3>
+                            <div class="race-date">📅 November 27, 2025 • 📍 Downtown</div>
+                        </div>
+                        <span class="race-badge ten-k">10K</span>
+                    </div>
+
+                    <div class="race-details">
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🏃</span>
+                            <span>6.2 miles</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">⏰</span>
+                            <span>Time: 48:36</span>
+                        </div>
+                        <div class="race-detail">
+                            <span class="race-detail-icon">🏆</span>
+                            <span>Place: 23/485</span>
+                        </div>
+                    </div>
+
+                    <div style="padding: 10px 20px; background: #43e97b; color: white; border-radius: 8px; font-weight: 700; display: inline-block;">
+                        ✓ Completed - Personal Record!
+                    </div>
+
+                    <div class="race-actions">
+                        <button class="race-action-btn">📊 View Results</button>
+                        <button class="race-action-btn">📸 Photos</button>
+                        <button class="race-action-btn">🔗 Share</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Next Race</h2>
+                    </div>
+
+                    <div class="upcoming-race-card" style="border-color: #667eea;">
+                        <div class="upcoming-race-name">New Year Resolution 10K</div>
+                        <div class="upcoming-race-date">January 12, 2025</div>
+
+                        <div class="countdown-large">
+                            <div class="countdown-number">14</div>
+                            <div class="countdown-label">days until race day</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;">Race Day Checklist</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Timeline</h2>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Jan 12, 2025</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Resolution 10K</div>
+                                <div class="timeline-desc">Race day • 9:00 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Jan 5, 2025</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Taper Week Begins</div>
+                                <div class="timeline-desc">Reduce mileage 30%</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Mar 15, 2025</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">City Half Marathon</div>
+                                <div class="timeline-desc">Race day • 7:30 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Apr 21, 2025</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Boston Marathon</div>
+                                <div class="timeline-desc">Race day • 8:00 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Apr 1, 2025</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Peak Week</div>
+                                <div class="timeline-desc">Highest mileage week</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

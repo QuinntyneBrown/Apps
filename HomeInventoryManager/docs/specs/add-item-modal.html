@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item - Home Inventory Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a202c;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #4299e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #cbd5e0;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: white;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4299e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .form-label .required {
+            color: #e53e3e;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .photo-upload {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .photo-upload:hover {
+            border-color: #4299e1;
+            background: #f7fafc;
+        }
+
+        .photo-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .photo-upload-text {
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .photo-upload-hint {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .photo-remove {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-remove:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .value-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-prefix {
+            display: flex;
+            align-items: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .input-prefix:focus-within {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .prefix {
+            background: #f7fafc;
+            padding: 0.75rem;
+            color: #4a5568;
+            font-weight: 600;
+            border-right: 2px solid #e2e8f0;
+        }
+
+        .input-prefix input {
+            border: none;
+            padding: 0.75rem;
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        .input-prefix input:focus {
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f7fafc;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #cbd5e0;
+            background: #f7fafc;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: #718096;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-text:hover {
+            color: #4a5568;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: -1;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .step.active .step-number {
+            background: #4299e1;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #48bb78;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: #718096;
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .value-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                margin: 1rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🏠</div>
+                <span>Home Inventory Manager</span>
+            </div>
+            <nav class="nav">
+                <a href="#">Dashboard</a>
+                <a href="#" class="active">Inventory</a>
+                <a href="#">Rooms</a>
+                <a href="#">Insurance</a>
+                <a href="#">Reports</a>
+            </nav>
+            <div class="user-menu">
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Item</h2>
+                <button class="modal-close">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="progress-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Basic Info</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Photos</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Details</div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <h3 class="section-title">📝 Basic Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    Item Name <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-input" placeholder="e.g., Samsung 65 QLED TV" value="Sony A7 IV Camera">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Category <span class="required">*</span>
+                                </label>
+                                <select class="form-select">
+                                    <option value="">Select a category</option>
+                                    <option value="electronics" selected>Electronics</option>
+                                    <option value="furniture">Furniture</option>
+                                    <option value="jewelry">Jewelry</option>
+                                    <option value="art">Art & Decor</option>
+                                    <option value="cookware">Cookware</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="tools">Tools & Equipment</option>
+                                    <option value="sports">Sports & Recreation</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Room/Location <span class="required">*</span>
+                                </label>
+                                <select class="form-select">
+                                    <option value="">Select a room</option>
+                                    <option value="living">Living Room</option>
+                                    <option value="master">Master Bedroom</option>
+                                    <option value="kitchen">Kitchen</option>
+                                    <option value="office" selected>Home Office</option>
+                                    <option value="garage">Garage</option>
+                                    <option value="basement">Basement</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-textarea" placeholder="Add any additional details about this item...">Professional mirrorless camera with 33MP full-frame sensor. Includes 24-70mm f/2.8 lens, 2 batteries, charger, and camera bag.</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">📸 Photos & Documentation</h3>
+
+                        <div class="photo-upload">
+                            <div class="photo-upload-icon">📷</div>
+                            <div class="photo-upload-text">Click to upload or drag and drop</div>
+                            <div class="photo-upload-hint">PNG, JPG up to 10MB (Multiple files allowed)</div>
+                        </div>
+
+                        <div class="photo-grid">
+                            <div class="photo-item">
+                                📷
+                                <button class="photo-remove">×</button>
+                            </div>
+                            <div class="photo-item">
+                                📄
+                                <button class="photo-remove">×</button>
+                            </div>
+                            <div class="photo-item">
+                                🧾
+                                <button class="photo-remove">×</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">💰 Purchase & Value Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Purchase Date</label>
+                                <input type="date" class="form-input" value="2024-02-14">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Purchase Price</label>
+                                <div class="input-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" placeholder="0.00" step="0.01" value="2498.00">
+                                </div>
+                                <span class="form-hint">Original purchase price</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Current Value</label>
+                                <div class="input-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" placeholder="0.00" step="0.01" value="2498.00">
+                                </div>
+                                <span class="form-hint">Estimated current market value</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Condition</label>
+                                <select class="form-select">
+                                    <option value="excellent" selected>Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">Receipt/Invoice Number</label>
+                                <input type="text" class="form-input" placeholder="e.g., INV-2024-001234" value="B&H-20240214-9876">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">🔖 Additional Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Brand/Manufacturer</label>
+                                <input type="text" class="form-input" placeholder="e.g., Samsung" value="Sony">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Model Number</label>
+                                <input type="text" class="form-input" placeholder="e.g., QN65Q80C" value="ILCE-7M4">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Serial Number</label>
+                                <input type="text" class="form-input" placeholder="e.g., SN123456789" value="6543210">
+                                <span class="form-hint">Important for insurance claims and theft recovery</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Warranty Expiration</label>
+                                <input type="date" class="form-input" value="2027-02-14">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">Purchase Location</label>
+                                <input type="text" class="form-input" placeholder="e.g., Best Buy, Amazon" value="B&H Photo Video">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="high-value" class="checkbox" checked>
+                                    <label for="high-value" class="form-label" style="margin: 0;">
+                                        Mark as high-value item (requires special insurance coverage)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="notify" class="checkbox">
+                                    <label for="notify" class="form-label" style="margin: 0;">
+                                        Send notification when depreciation exceeds 20%
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-text">Save as Draft</button>
+                <div class="button-group">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Add Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

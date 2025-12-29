@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expiring Documents - DocumentVaultOrganizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #2563eb;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: #64748b;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            width: 48px;
+            height: 48px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .alert-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-text {
+            color: #78350f;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-card.critical {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .stat-card.critical .stat-value {
+            color: #dc2626;
+        }
+
+        .stat-card.warning {
+            background: #fef3c7;
+            border-color: #fde047;
+        }
+
+        .stat-card.warning .stat-value {
+            color: #d97706;
+        }
+
+        .stat-card.info {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .stat-card.info .stat-value {
+            color: #2563eb;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+
+        .tab:hover {
+            color: #2563eb;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: background 0.2s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+
+        .document-item:hover {
+            background: #f8fafc;
+        }
+
+        .document-item.critical {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+
+        .document-item.warning {
+            background: #fffbeb;
+            border-color: #fde047;
+        }
+
+        .document-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .doc-pdf { background: #fee2e2; color: #dc2626; }
+        .doc-docx { background: #dbeafe; color: #2563eb; }
+        .doc-jpg { background: #fef3c7; color: #d97706; }
+        .doc-png { background: #e0e7ff; color: #6366f1; }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .document-meta {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .expiry-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-right: 1rem;
+        }
+
+        .expiry-date {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .expiry-date.critical {
+            color: #dc2626;
+        }
+
+        .expiry-date.warning {
+            color: #d97706;
+        }
+
+        .expiry-date.info {
+            color: #2563eb;
+        }
+
+        .expiry-countdown {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #475569;
+        }
+
+        .action-btn:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .action-btn.primary {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .action-btn.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge.critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.info {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: #94a3b8;
+        }
+
+        .empty-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            color: #64748b;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -2.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2563eb;
+        }
+
+        .timeline-marker.critical {
+            background: #dc2626;
+        }
+
+        .timeline-marker.warning {
+            background: #f59e0b;
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                DocumentVault
+            </div>
+            <nav class="nav">
+                <a href="#">Dashboard</a>
+                <a href="#">Documents</a>
+                <a href="#">Categories</a>
+                <a href="#">Shared</a>
+                <a href="#" class="active">Compliance</a>
+            </nav>
+            <div class="user-menu">
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Expiring Documents</h1>
+            <p class="page-description">Track and manage documents with expiration dates - licenses, certificates, policies, and more</p>
+        </div>
+
+        <div class="alert-banner">
+            <div class="alert-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div class="alert-content">
+                <div class="alert-title">Immediate Action Required</div>
+                <div class="alert-text">
+                    You have 5 documents expiring within the next 30 days. 2 require urgent renewal to maintain compliance.
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card critical">
+                <div class="stat-label">Expired</div>
+                <div class="stat-value">2</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Expiring Soon (30 days)</div>
+                <div class="stat-value">5</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-label">Expiring This Quarter</div>
+                <div class="stat-value">12</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Tracked</div>
+                <div class="stat-value">47</div>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab active">All Expiring</button>
+            <button class="tab">Expired</button>
+            <button class="tab">Next 30 Days</button>
+            <button class="tab">Next Quarter</button>
+            <button class="tab">Licenses</button>
+            <button class="tab">Certificates</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Critical - Immediate Action Required</h2>
+                <button class="action-btn primary">Renew All</button>
+            </div>
+
+            <div class="document-item critical">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Business Operating License 2024.pdf</div>
+                    <div class="document-meta">Legal • License • Updated 2 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date critical">Dec 15, 2024</div>
+                    <div class="expiry-countdown">EXPIRED 14 days ago</div>
+                </div>
+                <span class="status-badge critical">⚠️ Expired</span>
+                <button class="action-btn primary">Renew Now</button>
+            </div>
+
+            <div class="document-item critical">
+                <div class="document-icon doc-jpg">JPG</div>
+                <div class="document-info">
+                    <div class="document-name">Health & Safety Certificate.jpg</div>
+                    <div class="document-meta">Compliance • Certificate • Updated 3 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date critical">Dec 20, 2024</div>
+                    <div class="expiry-countdown">EXPIRED 9 days ago</div>
+                </div>
+                <span class="status-badge critical">⚠️ Expired</span>
+                <button class="action-btn primary">Renew Now</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Expiring Within 30 Days</h2>
+                <button class="action-btn">Set Reminders</button>
+            </div>
+
+            <div class="document-item warning">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Property Insurance Policy 2024.pdf</div>
+                    <div class="document-meta">Legal • Insurance • Updated 1 month ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date warning">Jan 15, 2025</div>
+                    <div class="expiry-countdown">Expires in 17 days</div>
+                </div>
+                <span class="status-badge warning">⏰ Urgent</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item warning">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Professional Liability Insurance.pdf</div>
+                    <div class="document-meta">Legal • Insurance • Updated 1 month ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date warning">Jan 20, 2025</div>
+                    <div class="expiry-countdown">Expires in 22 days</div>
+                </div>
+                <span class="status-badge warning">⏰ Urgent</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item warning">
+                <div class="document-icon doc-png">PNG</div>
+                <div class="document-info">
+                    <div class="document-name">ISO 9001 Certification.png</div>
+                    <div class="document-meta">Compliance • Certificate • Updated 6 weeks ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date warning">Jan 25, 2025</div>
+                    <div class="expiry-countdown">Expires in 27 days</div>
+                </div>
+                <span class="status-badge warning">⏰ Urgent</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item warning">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Fire Safety Inspection Certificate.pdf</div>
+                    <div class="document-meta">Compliance • Certificate • Updated 2 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date warning">Jan 28, 2025</div>
+                    <div class="expiry-countdown">Expires in 30 days</div>
+                </div>
+                <span class="status-badge warning">⏰ Urgent</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item warning">
+                <div class="document-icon doc-jpg">JPG</div>
+                <div class="document-info">
+                    <div class="document-name">Data Protection Registration.jpg</div>
+                    <div class="document-meta">Legal • License • Updated 2 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date warning">Jan 30, 2025</div>
+                    <div class="expiry-countdown">Expires in 32 days</div>
+                </div>
+                <span class="status-badge warning">⏰ Urgent</span>
+                <button class="action-btn">View Details</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Expiring This Quarter (Next 90 Days)</h2>
+                <button class="action-btn">Export List</button>
+            </div>
+
+            <div class="document-item">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Employee Health & Safety Training.pdf</div>
+                    <div class="document-meta">HR • Certificate • Updated 3 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date info">Feb 15, 2025</div>
+                    <div class="expiry-countdown">Expires in 48 days</div>
+                </div>
+                <span class="status-badge info">📅 Upcoming</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Anti-Money Laundering Certificate.pdf</div>
+                    <div class="document-meta">Compliance • Certificate • Updated 3 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date info">Feb 28, 2025</div>
+                    <div class="expiry-countdown">Expires in 61 days</div>
+                </div>
+                <span class="status-badge info">📅 Upcoming</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item">
+                <div class="document-icon doc-jpg">JPG</div>
+                <div class="document-info">
+                    <div class="document-name">Building Permit 2024.jpg</div>
+                    <div class="document-meta">Legal • Permit • Updated 4 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date info">Mar 10, 2025</div>
+                    <div class="expiry-countdown">Expires in 71 days</div>
+                </div>
+                <span class="status-badge info">📅 Upcoming</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item">
+                <div class="document-icon doc-png">PNG</div>
+                <div class="document-info">
+                    <div class="document-name">Cybersecurity Certification.png</div>
+                    <div class="document-meta">Compliance • Certificate • Updated 4 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date info">Mar 20, 2025</div>
+                    <div class="expiry-countdown">Expires in 81 days</div>
+                </div>
+                <span class="status-badge info">📅 Upcoming</span>
+                <button class="action-btn">View Details</button>
+            </div>
+
+            <div class="document-item">
+                <div class="document-icon doc-pdf">PDF</div>
+                <div class="document-info">
+                    <div class="document-name">Professional Indemnity Insurance.pdf</div>
+                    <div class="document-meta">Legal • Insurance • Updated 5 months ago</div>
+                </div>
+                <div class="expiry-info">
+                    <div class="expiry-date info">Mar 31, 2025</div>
+                    <div class="expiry-countdown">Expires in 92 days</div>
+                </div>
+                <span class="status-badge info">📅 Upcoming</span>
+                <button class="action-btn">View Details</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title" style="margin-bottom: 2rem;">Expiration Timeline</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker critical"></div>
+                    <div class="timeline-date">Expired (Dec 2024)</div>
+                    <div class="document-meta">2 documents expired - Business License, Health Certificate</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker warning"></div>
+                    <div class="timeline-date">January 2025</div>
+                    <div class="document-meta">5 documents expiring - Insurance policies, certifications, licenses</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-date">February 2025</div>
+                    <div class="document-meta">4 documents expiring - Training certificates, compliance documents</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-date">March 2025</div>
+                    <div class="document-meta">3 documents expiring - Permits, certifications, insurance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

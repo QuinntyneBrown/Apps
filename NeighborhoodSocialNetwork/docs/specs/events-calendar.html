@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Calendar - Neighborhood Social Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .filters {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #e8ebff;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .calendar-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .calendar {
+            margin-bottom: 30px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            padding: 10px 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .calendar-day.has-events {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .calendar-day.today.has-events {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .day-indicator {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #ffc107;
+            border-radius: 50%;
+        }
+
+        .calendar-day.today .day-indicator {
+            background: white;
+        }
+
+        .events-list {
+            margin-top: 30px;
+        }
+
+        .events-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .event-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .event-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-time {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .event-location {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .event-attendees {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .upcoming-event {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .upcoming-event:last-child {
+            margin-bottom: 0;
+        }
+
+        .upcoming-date {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upcoming-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .upcoming-location {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8ebff;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Events Calendar</h1>
+            <button class="btn btn-primary">+ Create Event</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <button class="filter-btn active">All Events</button>
+                <button class="filter-btn">Social</button>
+                <button class="filter-btn">Community</button>
+                <button class="filter-btn">Sports</button>
+                <button class="filter-btn">Kids</button>
+                <button class="filter-btn">HOA</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-title">May 2024</div>
+                    <div class="calendar-nav">
+                        <button class="nav-btn">‹</button>
+                        <button class="nav-btn">›</button>
+                    </div>
+                </div>
+
+                <div class="calendar">
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">Sun</div>
+                        <div class="calendar-day-header">Mon</div>
+                        <div class="calendar-day-header">Tue</div>
+                        <div class="calendar-day-header">Wed</div>
+                        <div class="calendar-day-header">Thu</div>
+                        <div class="calendar-day-header">Fri</div>
+                        <div class="calendar-day-header">Sat</div>
+
+                        <div class="calendar-day"><div class="day-number">28</div></div>
+                        <div class="calendar-day"><div class="day-number">29</div></div>
+                        <div class="calendar-day"><div class="day-number">30</div></div>
+                        <div class="calendar-day"><div class="day-number">1</div></div>
+                        <div class="calendar-day"><div class="day-number">2</div></div>
+                        <div class="calendar-day"><div class="day-number">3</div></div>
+                        <div class="calendar-day"><div class="day-number">4</div></div>
+
+                        <div class="calendar-day"><div class="day-number">5</div></div>
+                        <div class="calendar-day"><div class="day-number">6</div></div>
+                        <div class="calendar-day"><div class="day-number">7</div></div>
+                        <div class="calendar-day"><div class="day-number">8</div></div>
+                        <div class="calendar-day"><div class="day-number">9</div></div>
+                        <div class="calendar-day"><div class="day-number">10</div></div>
+                        <div class="calendar-day"><div class="day-number">11</div></div>
+
+                        <div class="calendar-day"><div class="day-number">12</div></div>
+                        <div class="calendar-day"><div class="day-number">13</div></div>
+                        <div class="calendar-day"><div class="day-number">14</div></div>
+                        <div class="calendar-day today has-events">
+                            <div class="day-number">15</div>
+                            <div class="day-indicator"></div>
+                        </div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">16</div>
+                            <div class="day-indicator"></div>
+                        </div>
+                        <div class="calendar-day"><div class="day-number">17</div></div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">18</div>
+                            <div class="day-indicator"></div>
+                        </div>
+
+                        <div class="calendar-day"><div class="day-number">19</div></div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">20</div>
+                            <div class="day-indicator"></div>
+                        </div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">21</div>
+                            <div class="day-indicator"></div>
+                        </div>
+                        <div class="calendar-day"><div class="day-number">22</div></div>
+                        <div class="calendar-day"><div class="day-number">23</div></div>
+                        <div class="calendar-day"><div class="day-number">24</div></div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">25</div>
+                            <div class="day-indicator"></div>
+                        </div>
+
+                        <div class="calendar-day"><div class="day-number">26</div></div>
+                        <div class="calendar-day"><div class="day-number">27</div></div>
+                        <div class="calendar-day has-events">
+                            <div class="day-number">28</div>
+                            <div class="day-indicator"></div>
+                        </div>
+                        <div class="calendar-day"><div class="day-number">29</div></div>
+                        <div class="calendar-day"><div class="day-number">30</div></div>
+                        <div class="calendar-day"><div class="day-number">31</div></div>
+                        <div class="calendar-day"><div class="day-number">1</div></div>
+                    </div>
+                </div>
+
+                <div class="events-list">
+                    <div class="events-header">Today's Events</div>
+
+                    <div class="event-card">
+                        <div class="event-time">Today, 6:00 PM - 9:00 PM</div>
+                        <div class="event-title">🎉 Spring Block Party</div>
+                        <div class="event-location">📍 Main Street (between 1st & 2nd Ave)</div>
+                        <div class="event-attendees">👥 47 neighbors attending</div>
+                        <div class="category-tag">Social</div>
+                    </div>
+
+                    <div class="events-header" style="margin-top: 30px;">Upcoming Events</div>
+
+                    <div class="event-card">
+                        <div class="event-time">Tomorrow, 10:00 AM - 12:00 PM</div>
+                        <div class="event-title">🌳 Neighborhood Cleanup Day</div>
+                        <div class="event-location">📍 Community Park</div>
+                        <div class="event-attendees">👥 23 neighbors attending</div>
+                        <div class="category-tag">Community</div>
+                    </div>
+
+                    <div class="event-card">
+                        <div class="event-time">Thu, May 18, 7:00 PM - 8:30 PM</div>
+                        <div class="event-title">📋 Monthly HOA Meeting</div>
+                        <div class="event-location">📍 Community Center - Main Hall</div>
+                        <div class="event-attendees">👥 15 neighbors attending</div>
+                        <div class="category-tag">HOA</div>
+                    </div>
+
+                    <div class="event-card">
+                        <div class="event-time">Sat, May 20, 9:00 AM - 2:00 PM</div>
+                        <div class="event-title">🏪 Community Yard Sale</div>
+                        <div class="event-location">📍 Various locations</div>
+                        <div class="event-attendees">👥 32 neighbors participating</div>
+                        <div class="category-tag">Community</div>
+                    </div>
+
+                    <div class="event-card">
+                        <div class="event-time">Sun, May 21, 3:00 PM - 5:00 PM</div>
+                        <div class="event-title">⚽ Kids Soccer Practice</div>
+                        <div class="event-location">📍 Community Park Soccer Field</div>
+                        <div class="event-attendees">👥 18 neighbors attending</div>
+                        <div class="category-tag">Kids</div>
+                        <div class="category-tag">Sports</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <div class="sidebar-title">🔥 Popular This Week</div>
+                    <div class="upcoming-event">
+                        <div class="upcoming-date">Today, 6:00 PM</div>
+                        <div class="upcoming-name">Spring Block Party</div>
+                        <div class="upcoming-location">Main Street</div>
+                    </div>
+                    <div class="upcoming-event">
+                        <div class="upcoming-date">Sat, May 20, 9:00 AM</div>
+                        <div class="upcoming-name">Community Yard Sale</div>
+                        <div class="upcoming-location">Various locations</div>
+                    </div>
+                    <div class="upcoming-event">
+                        <div class="upcoming-date">Sat, May 25, 7:00 PM</div>
+                        <div class="upcoming-name">Movie Night in the Park</div>
+                        <div class="upcoming-location">Community Park</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-title">📊 Event Stats</div>
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div style="font-size: 48px; font-weight: 700; color: #667eea; margin-bottom: 10px;">12</div>
+                        <div style="color: #666; margin-bottom: 20px;">Events This Month</div>
+                        <div style="font-size: 36px; font-weight: 700; color: #764ba2; margin-bottom: 10px;">156</div>
+                        <div style="color: #666;">Total Attendees</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Create New Event</button>
+                    <button class="btn btn-primary" style="width: 100%; background: white; color: #667eea; border: 2px solid #667eea;">View My Events</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

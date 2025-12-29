@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share & Export - Personal Library Lessons Learned</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .export-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .export-option:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .export-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .export-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+
+        .export-description {
+            color: #718096;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .filter-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .filter-group {
+            margin-bottom: 16px;
+        }
+
+        .filter-label {
+            display: block;
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-option label {
+            color: #4a5568;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .share-link-box {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .share-link-input {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .preview-box {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .preview-item {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .share-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-twitter {
+            background: #1DA1F2;
+            color: white;
+        }
+
+        .btn-linkedin {
+            background: #0A66C2;
+            color: white;
+        }
+
+        .btn-email {
+            background: #ea4335;
+            color: white;
+        }
+
+        .btn-copy {
+            background: #48bb78;
+            color: white;
+        }
+
+        .permission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .permission-info {
+            flex: 1;
+        }
+
+        .permission-name {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .permission-desc {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #cbd5e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #667eea;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        @media (max-width: 768px) {
+            .export-options {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>↗️ Share & Export</h1>
+            <p>Share your wisdom or export your lessons for backup and analysis</p>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">📤 Export Formats</h2>
+
+            <div class="export-options">
+                <div class="export-option">
+                    <div class="export-icon">📄</div>
+                    <div class="export-title">PDF Document</div>
+                    <div class="export-description">
+                        Professional formatted document with all lessons, perfect for archiving or printing
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">📊</div>
+                    <div class="export-title">Excel Spreadsheet</div>
+                    <div class="export-description">
+                        Structured data format for analysis, filtering, and custom reporting
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">📝</div>
+                    <div class="export-title">Markdown</div>
+                    <div class="export-description">
+                        Plain text format ideal for version control, wikis, and note apps
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">🔗</div>
+                    <div class="export-title">JSON Export</div>
+                    <div class="export-description">
+                        Complete data export for backup, migration, or custom integrations
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">📋 Customize Your Export</div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select class="filter-select">
+                        <option>All Time</option>
+                        <option>This Year</option>
+                        <option>Last 6 Months</option>
+                        <option>Last 3 Months</option>
+                        <option>This Month</option>
+                        <option>Custom Range...</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Categories to Include</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="cat-all" checked/>
+                            <label for="cat-all">All Categories</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="cat-lead" checked/>
+                            <label for="cat-lead">Leadership</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="cat-product" checked/>
+                            <label for="cat-product">Product Management</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="cat-prod" checked/>
+                            <label for="cat-prod">Productivity</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="cat-comm" checked/>
+                            <label for="cat-comm">Communication</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Include</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="inc-context" checked/>
+                            <label for="inc-context">Context & Stories</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="inc-tags" checked/>
+                            <label for="inc-tags">Tags</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="inc-app" checked/>
+                            <label for="inc-app">Application History</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="inc-meta"/>
+                            <label for="inc-meta">Metadata</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <div class="stat-value">127</div>
+                    <div class="stat-label">Lessons Selected</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~45</div>
+                    <div class="stat-label">Pages (PDF)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2.4 MB</div>
+                    <div class="stat-label">Est. File Size</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary">📥 Download Export</button>
+            <button class="btn btn-secondary">👁️ Preview Export</button>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">🌐 Share Publicly</h2>
+
+            <p style="color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
+                Create a shareable link to your lessons. You can control what gets shared and who can access it.
+            </p>
+
+            <div class="filter-section">
+                <div class="filter-title">🔒 Privacy & Permissions</div>
+
+                <div class="permission-item">
+                    <div class="permission-info">
+                        <div class="permission-name">Public Access</div>
+                        <div class="permission-desc">Anyone with the link can view your shared lessons</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="permission-item">
+                    <div class="permission-info">
+                        <div class="permission-name">Allow Comments</div>
+                        <div class="permission-desc">Viewers can leave feedback and comments on lessons</div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+
+                <div class="permission-item">
+                    <div class="permission-info">
+                        <div class="permission-name">Show Personal Details</div>
+                        <div class="permission-desc">Include your name and profile information</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="permission-item">
+                    <div class="permission-info">
+                        <div class="permission-name">Password Protection</div>
+                        <div class="permission-desc">Require password to access shared content</div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+            </div>
+
+            <div class="share-link-box">
+                <div style="font-weight: 600; color: #1a202c; margin-bottom: 8px; font-size: 14px;">
+                    Shareable Link
+                </div>
+                <input
+                    type="text"
+                    class="share-link-input"
+                    value="https://lessonslearned.app/share/alex-johnson/leadership-2024"
+                    readonly
+                />
+                <div class="share-options">
+                    <button class="social-btn btn-copy">📋 Copy Link</button>
+                    <button class="social-btn btn-twitter">🐦 Share on Twitter</button>
+                    <button class="social-btn btn-linkedin">💼 Share on LinkedIn</button>
+                    <button class="social-btn btn-email">📧 Email Link</button>
+                </div>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-title">Preview: Selected Lessons for Sharing</div>
+                <div class="preview-item">
+                    ✓ Always validate assumptions before major decisions (Leadership)
+                </div>
+                <div class="preview-item">
+                    ✓ Customer feedback is gold, even when negative (Product Management)
+                </div>
+                <div class="preview-item">
+                    ✓ Delegation isn't abdication - follow up matters (Leadership)
+                </div>
+                <div class="preview-item">
+                    ✓ Time blocking increases productivity by 3x (Productivity)
+                </div>
+                <div class="preview-item">
+                    ✓ Written communication prevents misunderstandings (Communication)
+                </div>
+                <div style="text-align: center; padding: 12px; color: #718096; font-size: 13px;">
+                    + 122 more lessons
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">👥 Share with Team</h2>
+
+            <p style="color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
+                Share selected lessons directly with your team members or mentees. Perfect for onboarding
+                new team members or sharing context on specific topics.
+            </p>
+
+            <div class="filter-section">
+                <div class="filter-title">Select Lessons to Share</div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Quick Selections</label>
+                    <select class="filter-select">
+                        <option>Custom Selection...</option>
+                        <option>All Leadership Lessons (28)</option>
+                        <option>This Month's Lessons (8)</option>
+                        <option>High Impact Lessons (47)</option>
+                        <option>Most Applied Lessons (15)</option>
+                        <option>Product Management Bundle (22)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Recipients</label>
+                    <input
+                        type="text"
+                        class="filter-select"
+                        placeholder="Enter email addresses (comma separated)"
+                        style="cursor: text;"
+                    />
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Personal Message (Optional)</label>
+                    <textarea
+                        class="filter-select"
+                        rows="4"
+                        placeholder="Add a personal message to accompany your lessons..."
+                        style="resize: vertical; cursor: text; font-family: inherit;"
+                    ></textarea>
+                </div>
+            </div>
+
+            <button class="btn btn-primary">📧 Send to Team</button>
+            <button class="btn btn-secondary">💾 Save as Template</button>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">🔄 Backup & Sync</h2>
+
+            <div class="export-options">
+                <div class="export-option">
+                    <div class="export-icon">☁️</div>
+                    <div class="export-title">Cloud Backup</div>
+                    <div class="export-description">
+                        Automatic daily backups to Google Drive, Dropbox, or iCloud
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">🔁</div>
+                    <div class="export-title">Sync Across Devices</div>
+                    <div class="export-description">
+                        Keep your lessons synchronized across all your devices
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">📱</div>
+                    <div class="export-title">Mobile Export</div>
+                    <div class="export-description">
+                        Export to mobile-friendly formats for on-the-go access
+                    </div>
+                </div>
+
+                <div class="export-option">
+                    <div class="export-icon">🔌</div>
+                    <div class="export-title">API Access</div>
+                    <div class="export-description">
+                        Connect with other tools via REST API for custom integrations
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 16px; background: #f7fafc; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #1a202c; margin-bottom: 4px;">
+                            Last Backup
+                        </div>
+                        <div style="color: #718096; font-size: 13px;">
+                            Today at 3:45 PM • Google Drive • 2.4 MB
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary">Backup Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

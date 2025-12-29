@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar View - Life Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .calendar-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .current-month {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .view-switcher {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .calendar-header-cell {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 12px 8px;
+        }
+
+        .calendar-cell {
+            min-height: 120px;
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+            position: relative;
+        }
+
+        .calendar-cell.other-month {
+            opacity: 0.4;
+        }
+
+        .calendar-cell.today {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+
+        .cell-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .cell-tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .task-pill {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-pill:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .task-pill.insurance {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .task-pill.financial {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 3px solid #10b981;
+        }
+
+        .task-pill.health {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 3px solid #ef4444;
+        }
+
+        .task-pill.home {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .task-pill.documents {
+            background: #e0e7ff;
+            color: #3730a3;
+            border-left: 3px solid #6366f1;
+        }
+
+        .task-pill.travel {
+            background: #f3e8ff;
+            color: #6b21a8;
+            border-left: 3px solid #a855f7;
+        }
+
+        .more-tasks {
+            font-size: 11px;
+            color: #6b7280;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Calendar View</h1>
+                <p>Visualize all your tasks and deadlines</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Dashboard</button>
+                <button class="btn btn-primary">+ Add Task</button>
+            </div>
+        </div>
+
+        <div class="calendar-controls">
+            <div class="calendar-nav">
+                <button class="nav-btn">← Previous</button>
+                <div class="current-month">March 2024</div>
+                <button class="nav-btn">Next →</button>
+                <button class="nav-btn">Today</button>
+            </div>
+            <div class="view-switcher">
+                <button class="view-btn active">Month</button>
+                <button class="view-btn">Week</button>
+                <button class="view-btn">Day</button>
+            </div>
+        </div>
+
+        <div class="calendar-card">
+            <div class="calendar-grid">
+                <div class="calendar-header-cell">Sunday</div>
+                <div class="calendar-header-cell">Monday</div>
+                <div class="calendar-header-cell">Tuesday</div>
+                <div class="calendar-header-cell">Wednesday</div>
+                <div class="calendar-header-cell">Thursday</div>
+                <div class="calendar-header-cell">Friday</div>
+                <div class="calendar-header-cell">Saturday</div>
+
+                <!-- Week 1 -->
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">25</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">26</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">27</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">28</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">29</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">1</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill financial">Pay utility bills</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">2</div>
+                </div>
+
+                <!-- Week 2 -->
+                <div class="calendar-cell">
+                    <div class="cell-date">3</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">4</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">5</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill home">HVAC inspection</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">6</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">7</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">8</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill health">Doctor appointment</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">9</div>
+                </div>
+
+                <!-- Week 3 -->
+                <div class="calendar-cell">
+                    <div class="cell-date">10</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">11</div>
+                </div>
+                <div class="calendar-cell today">
+                    <div class="cell-date">12</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill insurance">Renew car insurance</div>
+                        <div class="task-pill health">Annual checkup</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">13</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill financial">Review bills</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">14</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">15</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill documents">Update passport</div>
+                        <div class="task-pill financial">Tax payment</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">16</div>
+                </div>
+
+                <!-- Week 4 -->
+                <div class="calendar-cell">
+                    <div class="cell-date">17</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">18</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill home">HVAC maintenance</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">19</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">20</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill financial">Organize tax docs</div>
+                        <div class="task-pill health">Gym renewal</div>
+                        <div class="task-pill insurance">Home insurance</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">21</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill travel">Book flights</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">22</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">23</div>
+                </div>
+
+                <!-- Week 5 -->
+                <div class="calendar-cell">
+                    <div class="cell-date">24</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">25</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill health">Dentist appointment</div>
+                        <div class="task-pill financial">Review investments</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">26</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">27</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">28</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill documents">File taxes</div>
+                    </div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">29</div>
+                </div>
+                <div class="calendar-cell">
+                    <div class="cell-date">30</div>
+                </div>
+
+                <!-- Week 6 -->
+                <div class="calendar-cell">
+                    <div class="cell-date">31</div>
+                    <div class="cell-tasks">
+                        <div class="task-pill financial">Monthly budget review</div>
+                    </div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">1</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">2</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">3</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">4</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">5</div>
+                </div>
+                <div class="calendar-cell other-month">
+                    <div class="cell-date">6</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <div class="legend-label">Insurance</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <div class="legend-label">Financial</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ef4444;"></div>
+                    <div class="legend-label">Health</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <div class="legend-label">Home</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #6366f1;"></div>
+                    <div class="legend-label">Documents</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #a855f7;"></div>
+                    <div class="legend-label">Travel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

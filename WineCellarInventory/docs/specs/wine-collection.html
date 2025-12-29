@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Collection - Wine Cellar Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .breadcrumb {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .filters-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-size: 18px;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: white;
+            color: #2d3748;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: #f7fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .collection-stats {
+            display: flex;
+            gap: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .wine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .wine-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .wine-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .wine-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .wine-bottle-icon {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .wine-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-red {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-white {
+            background: #fef5e7;
+            color: #744210;
+        }
+
+        .badge-sparkling {
+            background: #e6fffa;
+            color: #234e52;
+        }
+
+        .wine-info {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .wine-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 6px;
+        }
+
+        .wine-producer {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .wine-region {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .wine-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .wine-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wine-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.ready {
+            background: #48bb78;
+        }
+
+        .status-dot.aging {
+            background: #ed8936;
+        }
+
+        .status-dot.peak {
+            background: #f56565;
+        }
+
+        .status-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .wine-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .collection-stats {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .wine-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Wine Collection</h1>
+                <div class="breadcrumb">
+                    <a href="#">Dashboard</a> / Collection
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Export CSV</button>
+                <button class="btn btn-primary">+ Add Wine</button>
+            </div>
+        </div>
+
+        <div class="filters-card">
+            <div class="filters-row">
+                <div class="search-box">
+                    <input type="text" placeholder="Search by name, producer, region, or vintage...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <select class="filter-select">
+                    <option>All Types</option>
+                    <option>Red Wine</option>
+                    <option>White Wine</option>
+                    <option>Sparkling</option>
+                    <option>Rosé</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Regions</option>
+                    <option>Bordeaux</option>
+                    <option>Burgundy</option>
+                    <option>Napa Valley</option>
+                    <option>Tuscany</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Status</option>
+                    <option>Ready to Drink</option>
+                    <option>Still Aging</option>
+                    <option>Past Peak</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active">Grid</button>
+                    <button class="view-btn">List</button>
+                </div>
+            </div>
+
+            <div class="collection-stats">
+                <div class="stat">
+                    <span class="stat-label">Total Bottles:</span>
+                    <span class="stat-value">347</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Value:</span>
+                    <span class="stat-value">$52,480</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Average per Bottle:</span>
+                    <span class="stat-value">$151</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Showing:</span>
+                    <span class="stat-value">18 wines</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wine-grid">
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Château Margaux</div>
+                    <div class="wine-name">Grand Vin 2015</div>
+                    <div class="wine-region">Margaux, Bordeaux, France</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2015</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">3 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack A4-S2</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Mar 2018</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$385</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Opus One</div>
+                    <div class="wine-name">Proprietary Red 2016</div>
+                    <div class="wine-region">Oakville, Napa Valley, California</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2016</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">6 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack B2-S3</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Jun 2019</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$420</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Domaine de la Romanée-Conti</div>
+                    <div class="wine-name">La Tâche Grand Cru 2014</div>
+                    <div class="wine-region">Vosne-Romanée, Burgundy, France</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2014</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">1 bottle</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack C1-S1</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Dec 2017</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$3,200</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Screaming Eagle</div>
+                    <div class="wine-name">Cabernet Sauvignon 2017</div>
+                    <div class="wine-region">Oakville, Napa Valley, California</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2017</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">2 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack A1-S1</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Jan 2020</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$2,850</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Penfolds</div>
+                    <div class="wine-name">Grange Shiraz 2013</div>
+                    <div class="wine-region">South Australia</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2013</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">4 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack B5-S2</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Sep 2016</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$650</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-white">White</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Domaine Leflaive</div>
+                    <div class="wine-name">Montrachet Grand Cru 2016</div>
+                    <div class="wine-region">Puligny-Montrachet, Burgundy, France</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2016</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">2 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack D1-S3</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Apr 2019</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot aging"></span>
+                        <span class="status-text">Aging</span>
+                    </div>
+                    <div class="wine-value">$1,850</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-sparkling">Sparkling</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Dom Pérignon</div>
+                    <div class="wine-name">Vintage Brut 2010</div>
+                    <div class="wine-region">Champagne, France</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2010</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">6 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack E2-S1</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Nov 2018</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot ready"></span>
+                        <span class="status-text">Peak Now</span>
+                    </div>
+                    <div class="wine-value">$285</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Sassicaia</div>
+                    <div class="wine-name">Bolgheri Sassicaia 2016</div>
+                    <div class="wine-region">Bolgheri, Tuscany, Italy</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2016</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">3 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack B3-S4</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Jul 2019</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot aging"></span>
+                        <span class="status-text">Aging</span>
+                    </div>
+                    <div class="wine-value">$380</div>
+                </div>
+            </div>
+
+            <div class="wine-card">
+                <div class="wine-card-header">
+                    <div class="wine-bottle-icon">🍷</div>
+                    <div class="wine-badge badge-red">Red</div>
+                </div>
+                <div class="wine-info">
+                    <div class="wine-producer">Caymus Vineyards</div>
+                    <div class="wine-name">Special Selection Cabernet 2018</div>
+                    <div class="wine-region">Napa Valley, California</div>
+                </div>
+                <div class="wine-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Vintage</div>
+                        <div class="detail-value">2018</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Quantity</div>
+                        <div class="detail-value">12 bottles</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Rack A3-S2</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acquired</div>
+                        <div class="detail-value">Feb 2021</div>
+                    </div>
+                </div>
+                <div class="wine-footer">
+                    <div class="wine-status">
+                        <span class="status-dot aging"></span>
+                        <span class="status-text">Aging</span>
+                    </div>
+                    <div class="wine-value">$145</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

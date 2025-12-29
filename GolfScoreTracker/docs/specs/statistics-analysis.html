@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics & Analysis - Golf Score Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+
+        .logo span {
+            color: #4CAF50;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .time-filter {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .time-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            font-size: 28px;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-up { color: #4CAF50; }
+        .trend-down { color: #f44336; }
+        .trend-neutral { color: #FF9800; }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .chart-area {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 32px;
+            position: relative;
+            height: 300px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 240px;
+            gap: 8px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -24px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .line-chart {
+            position: relative;
+            height: 240px;
+        }
+
+        .line-path {
+            stroke: #4CAF50;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .line-area {
+            fill: url(#gradient);
+            opacity: 0.2;
+        }
+
+        .line-point {
+            fill: #4CAF50;
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        .chart-grid {
+            stroke: #e0e0e0;
+            stroke-width: 1;
+            stroke-dasharray: 4;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .performance-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .performance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .performance-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .performance-icon {
+            font-size: 32px;
+        }
+
+        .progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 12px;
+            height: 24px;
+            overflow: hidden;
+            margin: 16px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .performance-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .comparison-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .comparison-change {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .change-positive {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .change-negative {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .breakdown-item {
+            text-align: center;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .breakdown-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #4CAF50;
+            margin-bottom: 4px;
+        }
+
+        .breakdown-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                ⛳ Golf<span>Score</span>
+            </div>
+        </header>
+
+        <div class="page-header">
+            <h1 class="page-title">Statistics & Analysis</h1>
+            <p class="page-subtitle">Comprehensive performance insights to improve your game</p>
+        </div>
+
+        <div class="time-filter">
+            <button class="time-btn">All Time</button>
+            <button class="time-btn">This Year</button>
+            <button class="time-btn active">Last 3 Months</button>
+            <button class="time-btn">Last Month</button>
+            <button class="time-btn">Custom Range</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Scoring Average</span>
+                    <span class="stat-icon">🎯</span>
+                </div>
+                <div class="stat-value">84.3</div>
+                <div class="stat-trend trend-up">
+                    <span>↓ 2.4 strokes</span>
+                    <span style="color: #999; font-size: 12px;">vs. last period</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Rounds Played</span>
+                    <span class="stat-icon">⛳</span>
+                </div>
+                <div class="stat-value">18</div>
+                <div class="stat-trend trend-up">
+                    <span>↑ 6 rounds</span>
+                    <span style="color: #999; font-size: 12px;">vs. last period</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Best Round</span>
+                    <span class="stat-icon">🏆</span>
+                </div>
+                <div class="stat-value">79</div>
+                <div class="stat-trend trend-up">
+                    <span>↓ 3 strokes</span>
+                    <span style="color: #999; font-size: 12px;">personal best</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Consistency</span>
+                    <span class="stat-icon">📊</span>
+                </div>
+                <div class="stat-value">±4.2</div>
+                <div class="stat-trend trend-up">
+                    <span>↓ 1.8 strokes</span>
+                    <span style="color: #999; font-size: 12px;">std. deviation</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">Score Trend</h2>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #4CAF50;"></div>
+                        <span>Score</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #2196F3;"></div>
+                        <span>Average</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-area">
+                <svg width="100%" height="240" viewBox="0 0 1200 240">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:#4CAF50;stop-opacity:0" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Grid lines -->
+                    <line class="chart-grid" x1="0" y1="40" x2="1200" y2="40" />
+                    <line class="chart-grid" x1="0" y1="80" x2="1200" y2="80" />
+                    <line class="chart-grid" x1="0" y1="120" x2="1200" y2="120" />
+                    <line class="chart-grid" x1="0" y1="160" x2="1200" y2="160" />
+                    <line class="chart-grid" x1="0" y1="200" x2="1200" y2="200" />
+
+                    <!-- Score line -->
+                    <path class="line-area" d="M 0 140 L 100 130 L 200 150 L 300 135 L 400 145 L 500 125 L 600 120 L 700 115 L 800 130 L 900 110 L 1000 105 L 1100 100 L 1200 95 L 1200 240 L 0 240 Z" />
+                    <path class="line-path" d="M 0 140 L 100 130 L 200 150 L 300 135 L 400 145 L 500 125 L 600 120 L 700 115 L 800 130 L 900 110 L 1000 105 L 1100 100 L 1200 95" />
+
+                    <!-- Data points -->
+                    <circle class="line-point" cx="0" cy="140" r="5" />
+                    <circle class="line-point" cx="100" cy="130" r="5" />
+                    <circle class="line-point" cx="200" cy="150" r="5" />
+                    <circle class="line-point" cx="300" cy="135" r="5" />
+                    <circle class="line-point" cx="400" cy="145" r="5" />
+                    <circle class="line-point" cx="500" cy="125" r="5" />
+                    <circle class="line-point" cx="600" cy="120" r="5" />
+                    <circle class="line-point" cx="700" cy="115" r="5" />
+                    <circle class="line-point" cx="800" cy="130" r="5" />
+                    <circle class="line-point" cx="900" cy="110" r="5" />
+                    <circle class="line-point" cx="1000" cy="105" r="5" />
+                    <circle class="line-point" cx="1100" cy="100" r="5" />
+                    <circle class="line-point" cx="1200" cy="95" r="5" />
+
+                    <!-- Average line -->
+                    <line stroke="#2196F3" stroke-width="2" stroke-dasharray="6" x1="0" y1="120" x2="1200" y2="120" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="performance-grid">
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h3 class="performance-title">Driving Accuracy</h3>
+                    <div class="performance-icon">🎯</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 62%; background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);">
+                        <span class="progress-text">62%</span>
+                    </div>
+                </div>
+                <div class="performance-detail">
+                    <span>Fairways Hit</span>
+                    <span class="detail-value">156 / 252</span>
+                </div>
+                <div class="breakdown-grid">
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">68%</div>
+                        <div class="breakdown-label">Par 4s</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">54%</div>
+                        <div class="breakdown-label">Par 5s</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">62%</div>
+                        <div class="breakdown-label">Overall</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h3 class="performance-title">Greens in Regulation</h3>
+                    <div class="performance-icon">🟢</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 48%; background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);">
+                        <span class="progress-text">48%</span>
+                    </div>
+                </div>
+                <div class="performance-detail">
+                    <span>GIR Total</span>
+                    <span class="detail-value">155 / 324</span>
+                </div>
+                <div class="breakdown-grid">
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">35%</div>
+                        <div class="breakdown-label">Par 3s</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">46%</div>
+                        <div class="breakdown-label">Par 4s</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">61%</div>
+                        <div class="breakdown-label">Par 5s</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h3 class="performance-title">Putting Performance</h3>
+                    <div class="performance-icon">⛳</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 68%; background: linear-gradient(90deg, #9C27B0 0%, #7B1FA2 100%);">
+                        <span class="progress-text">32.1</span>
+                    </div>
+                </div>
+                <div class="performance-detail">
+                    <span>Putts Per Round</span>
+                    <span class="detail-value">32.1 avg</span>
+                </div>
+                <div class="breakdown-grid">
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">1.78</div>
+                        <div class="breakdown-label">Per GIR</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">2.12</div>
+                        <div class="breakdown-label">Scramble</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">85%</div>
+                        <div class="breakdown-label">1-Putt %</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card" style="margin-top: 24px;">
+            <div class="chart-header">
+                <h2 class="chart-title">Score Distribution</h2>
+            </div>
+            <div class="chart-area">
+                <div class="bar-chart">
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div class="bar" style="height: 15%;">
+                            <div class="bar-value">2</div>
+                        </div>
+                        <div class="bar-label">Eagles</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div class="bar" style="height: 45%; background: linear-gradient(180deg, #66BB6A 0%, #4CAF50 100%);">
+                            <div class="bar-value">28</div>
+                        </div>
+                        <div class="bar-label">Birdies</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div class="bar" style="height: 85%; background: linear-gradient(180deg, #42A5F5 0%, #2196F3 100%);">
+                            <div class="bar-value">142</div>
+                        </div>
+                        <div class="bar-label">Pars</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div class="bar" style="height: 65%; background: linear-gradient(180deg, #FFA726 0%, #FF9800 100%);">
+                            <div class="bar-value">96</div>
+                        </div>
+                        <div class="bar-label">Bogeys</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                        <div class="bar" style="height: 35%; background: linear-gradient(180deg, #EF5350 0%, #F44336 100%);">
+                            <div class="bar-value">42</div>
+                        </div>
+                        <div class="bar-label">Dbl+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">Key Performance Metrics</h2>
+            </div>
+            <div class="comparison-table">
+                <div class="comparison-row">
+                    <span class="comparison-label">Sand Save Percentage</span>
+                    <span class="comparison-value">42%</span>
+                    <span class="comparison-change change-positive">+8%</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Scrambling Success</span>
+                    <span class="comparison-value">38%</span>
+                    <span class="comparison-change change-positive">+5%</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Penalty Strokes Per Round</span>
+                    <span class="comparison-value">1.2</span>
+                    <span class="comparison-change change-negative">+0.3</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Three-Putt Avoidance</span>
+                    <span class="comparison-value">94%</span>
+                    <span class="comparison-change change-positive">+2%</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Birdie Conversion (Par 5s)</span>
+                    <span class="comparison-value">28%</span>
+                    <span class="comparison-change change-positive">+12%</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Up and Down Percentage</span>
+                    <span class="comparison-value">45%</span>
+                    <span class="comparison-change change-positive">+7%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

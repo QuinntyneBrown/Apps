@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - PersonalWiki</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 52px;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip:hover {
+            background: #e9ecef;
+        }
+
+        .filter-chip.active {
+            background: #e0e7ff;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .results-header {
+            background: white;
+            border-radius: 15px;
+            padding: 24px 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-info {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .results-count {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .results-sort {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sort-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .sort-select {
+            padding: 8px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .results-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .result-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .result-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .result-content {
+            flex: 1;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .result-title mark {
+            background: #fef08a;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .result-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .result-excerpt {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .result-excerpt mark {
+            background: #fef08a;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            background: #e0e7ff;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 15px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .suggestion-item:hover {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cloud-tag {
+            padding: 6px 14px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cloud-tag:hover {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">📚</div>
+                <h1>PersonalWiki</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">
+                    <span>🏠</span>
+                    Dashboard
+                </button>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" value="machine learning" placeholder="Search your wiki...">
+            </div>
+
+            <div class="search-filters">
+                <div class="filter-chip active">All Results</div>
+                <div class="filter-chip">Pages</div>
+                <div class="filter-chip">Tags</div>
+                <div class="filter-chip">Code</div>
+                <div class="filter-chip">Links</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div>
+                <div class="results-header">
+                    <div class="results-info">
+                        Found <span class="results-count">24 results</span> for "machine learning"
+                    </div>
+                    <div class="results-sort">
+                        <span class="sort-label">Sort by:</span>
+                        <select class="sort-select">
+                            <option>Relevance</option>
+                            <option>Date Modified</option>
+                            <option>Date Created</option>
+                            <option>Title A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="results-container">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon" style="background: #e0e7ff; color: #667eea;">🤖</div>
+                            <div class="result-content">
+                                <h3 class="result-title"><mark>Machine Learning</mark> Best Practices</h3>
+                                <div class="result-breadcrumb">
+                                    <span>Programming</span>
+                                    <span>›</span>
+                                    <span>AI & ML</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-excerpt">
+                            <mark>Machine learning</mark> has revolutionized how we approach complex problems in computer science. This guide covers essential best practices for building robust ML systems including data preprocessing, model selection, hyperparameter tuning, and <mark>machine learning</mark> deployment strategies...
+                        </div>
+                        <div class="result-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>Updated 2 hours ago</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>👁️</span>
+                                <span>47 views</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>✍️</span>
+                                <span>342 words</span>
+                            </div>
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">AI</span>
+                            <span class="tag">Tutorial</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon" style="background: #dbeafe; color: #3b82f6;">🧠</div>
+                            <div class="result-content">
+                                <h3 class="result-title">Deep <mark>Learning</mark> Architectures</h3>
+                                <div class="result-breadcrumb">
+                                    <span>Programming</span>
+                                    <span>›</span>
+                                    <span>AI & ML</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-excerpt">
+                            Comprehensive guide to neural network architectures for deep <mark>learning</mark>. Covers CNNs, RNNs, LSTMs, Transformers, and their applications in computer vision, NLP, and time series analysis. Includes practical examples with TensorFlow and PyTorch...
+                        </div>
+                        <div class="result-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>Updated 1 week ago</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>👁️</span>
+                                <span>89 views</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>✍️</span>
+                                <span>1,245 words</span>
+                            </div>
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag">Deep Learning</span>
+                            <span class="tag">Neural Networks</span>
+                            <span class="tag">AI</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon" style="background: #dcfce7; color: #10b981;">📊</div>
+                            <div class="result-content">
+                                <h3 class="result-title"><mark>Machine Learning</mark> Model Evaluation</h3>
+                                <div class="result-breadcrumb">
+                                    <span>Programming</span>
+                                    <span>›</span>
+                                    <span>Data Science</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-excerpt">
+                            Understanding metrics for evaluating <mark>machine learning</mark> models: accuracy, precision, recall, F1-score, ROC-AUC, and confusion matrices. Learn when to use each metric and how to interpret results for different problem types...
+                        </div>
+                        <div class="result-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>Updated 3 days ago</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>👁️</span>
+                                <span>65 views</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>✍️</span>
+                                <span>587 words</span>
+                            </div>
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">Metrics</span>
+                            <span class="tag">Evaluation</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon" style="background: #fef3c7; color: #f59e0b;">🐍</div>
+                            <div class="result-content">
+                                <h3 class="result-title">Python for <mark>Machine Learning</mark></h3>
+                                <div class="result-breadcrumb">
+                                    <span>Programming</span>
+                                    <span>›</span>
+                                    <span>Python</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-excerpt">
+                            Essential Python libraries and tools for <mark>machine learning</mark>: NumPy, Pandas, Scikit-<mark>learn</mark>, TensorFlow, PyTorch, and more. Includes setup guides, code examples, and best practices for data manipulation and model building...
+                        </div>
+                        <div class="result-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>Updated 5 days ago</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>👁️</span>
+                                <span>102 views</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>✍️</span>
+                                <span>892 words</span>
+                            </div>
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">Libraries</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon" style="background: #fce7f3; color: #ec4899;">🔧</div>
+                            <div class="result-content">
+                                <h3 class="result-title">Feature Engineering for ML</h3>
+                                <div class="result-breadcrumb">
+                                    <span>Programming</span>
+                                    <span>›</span>
+                                    <span>Data Science</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-excerpt">
+                            Advanced feature engineering techniques for <mark>machine learning</mark>: encoding categorical variables, scaling numerical features, creating interaction terms, polynomial features, and automated feature selection methods...
+                        </div>
+                        <div class="result-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>Updated 1 week ago</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>👁️</span>
+                                <span>73 views</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>✍️</span>
+                                <span>654 words</span>
+                            </div>
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag">Feature Engineering</span>
+                            <span class="tag">Data Science</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">🔍 Related Searches</h3>
+                    <div class="suggestion-item">deep learning</div>
+                    <div class="suggestion-item">neural networks</div>
+                    <div class="suggestion-item">supervised learning</div>
+                    <div class="suggestion-item">model training</div>
+                    <div class="suggestion-item">data preprocessing</div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">🏷️ Popular Tags</h3>
+                    <div class="tag-cloud">
+                        <div class="cloud-tag">Machine Learning</div>
+                        <div class="cloud-tag">AI</div>
+                        <div class="cloud-tag">Python</div>
+                        <div class="cloud-tag">Deep Learning</div>
+                        <div class="cloud-tag">Data Science</div>
+                        <div class="cloud-tag">Neural Networks</div>
+                        <div class="cloud-tag">TensorFlow</div>
+                        <div class="cloud-tag">PyTorch</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">📁 Categories</h3>
+                    <div class="suggestion-item">Programming (142)</div>
+                    <div class="suggestion-item">AI & ML (38)</div>
+                    <div class="suggestion-item">Data Science (27)</div>
+                    <div class="suggestion-item">Tutorials (19)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

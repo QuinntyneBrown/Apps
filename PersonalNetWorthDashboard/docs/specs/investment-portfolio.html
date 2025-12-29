@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Investment Portfolio - Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 1.8rem; color: #667eea; font-weight: 700; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+
+        .nav-tabs {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .portfolio-summary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 16px;
+            padding: 2.5rem;
+            color: white;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            margin-bottom: 2rem;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        .summary-item h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .summary-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .summary-change {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .card-action {
+            color: #667eea;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .allocation-chart {
+            position: relative;
+            padding: 2rem 0;
+        }
+        .allocation-item {
+            margin-bottom: 1.5rem;
+        }
+        .allocation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .allocation-name {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .allocation-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        .allocation-value {
+            font-weight: 700;
+            color: #666;
+        }
+        .allocation-bar {
+            height: 12px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .allocation-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .metric {
+            padding: 1.25rem;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .metric-value.positive { color: #10b981; }
+        .metric-value.negative { color: #ef4444; }
+
+        .holdings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .holdings-table thead {
+            background: #f9fafb;
+        }
+        .holdings-table th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #666;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .holdings-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+        .holdings-table tr:hover {
+            background: #f9fafb;
+        }
+        .ticker {
+            font-weight: 700;
+            color: #333;
+            font-size: 1rem;
+        }
+        .company-name {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+        .price {
+            font-weight: 600;
+            color: #333;
+        }
+        .change-positive {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .change-negative {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .account-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .account-tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: #666;
+        }
+        .account-tab.active {
+            border-bottom-color: #10b981;
+            color: #10b981;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .quick-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .quick-stat {
+            text-align: center;
+        }
+        .quick-stat-label {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .quick-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .account-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .badge-401k {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-ira {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-taxable {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>💰 Personal Net Worth Dashboard</h1>
+        <div class="header-actions">
+            <button class="btn-secondary">📊 Rebalance</button>
+            <button class="btn-secondary">⚙️ Settings</button>
+            <button class="btn-primary">+ Add Position</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab">Dashboard</div>
+            <div class="tab">Assets</div>
+            <div class="tab">Liabilities</div>
+            <div class="tab active">Investments</div>
+            <div class="tab">Accounts</div>
+            <div class="tab">Reports</div>
+        </div>
+
+        <div class="portfolio-summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Total Portfolio Value</h3>
+                    <div class="summary-value">$577,410</div>
+                    <div class="summary-change">Across 3 accounts</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Total Gain/Loss</h3>
+                    <div class="summary-value">+$68,450</div>
+                    <div class="summary-change">+13.45% all-time</div>
+                </div>
+                <div class="summary-item">
+                    <h3>YTD Performance</h3>
+                    <div class="summary-value">+12.4%</div>
+                    <div class="summary-change">+$64,120 this year</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Today's Change</h3>
+                    <div class="summary-value">+$1,245</div>
+                    <div class="summary-change">+0.22%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Asset Allocation</h2>
+                    <a href="#" class="card-action">Rebalance →</a>
+                </div>
+                <div class="allocation-chart">
+                    <div class="allocation-item">
+                        <div class="allocation-header">
+                            <div class="allocation-name">
+                                <div class="allocation-color" style="background: #3b82f6;"></div>
+                                <span>US Stocks</span>
+                            </div>
+                            <div class="allocation-value">$288,705 (50%)</div>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: 50%; background: #3b82f6;"></div>
+                        </div>
+                    </div>
+                    <div class="allocation-item">
+                        <div class="allocation-header">
+                            <div class="allocation-name">
+                                <div class="allocation-color" style="background: #8b5cf6;"></div>
+                                <span>International Stocks</span>
+                            </div>
+                            <div class="allocation-value">$115,482 (20%)</div>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: 20%; background: #8b5cf6;"></div>
+                        </div>
+                    </div>
+                    <div class="allocation-item">
+                        <div class="allocation-header">
+                            <div class="allocation-name">
+                                <div class="allocation-color" style="background: #10b981;"></div>
+                                <span>Bonds</span>
+                            </div>
+                            <div class="allocation-value">$115,482 (20%)</div>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: 20%; background: #10b981;"></div>
+                        </div>
+                    </div>
+                    <div class="allocation-item">
+                        <div class="allocation-header">
+                            <div class="allocation-name">
+                                <div class="allocation-color" style="background: #f59e0b;"></div>
+                                <span>Real Estate (REITs)</span>
+                            </div>
+                            <div class="allocation-value">$34,644 (6%)</div>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: 6%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                    <div class="allocation-item">
+                        <div class="allocation-header">
+                            <div class="allocation-name">
+                                <div class="allocation-color" style="background: #6b7280;"></div>
+                                <span>Cash & Other</span>
+                            </div>
+                            <div class="allocation-value">$23,097 (4%)</div>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: 4%; background: #6b7280;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Performance Metrics</h2>
+                    <a href="#" class="card-action">View Details →</a>
+                </div>
+                <div class="performance-metrics">
+                    <div class="metric">
+                        <div class="metric-label">1 Month Return</div>
+                        <div class="metric-value positive">+2.8%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">3 Month Return</div>
+                        <div class="metric-value positive">+8.5%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">YTD Return</div>
+                        <div class="metric-value positive">+12.4%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">1 Year Return</div>
+                        <div class="metric-value positive">+18.2%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Total Cost Basis</div>
+                        <div class="metric-value">$508,960</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Unrealized Gain</div>
+                        <div class="metric-value positive">+$68,450</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Dividend Income YTD</div>
+                        <div class="metric-value">$8,240</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Avg Annual Return</div>
+                        <div class="metric-value positive">+15.8%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <div class="card-header">
+                <h2 class="card-title">Investment Holdings</h2>
+                <div class="card-action">
+                    <button class="btn-secondary">📥 Export</button>
+                </div>
+            </div>
+
+            <div class="account-tabs">
+                <div class="account-tab active">All Accounts</div>
+                <div class="account-tab">Vanguard 401(k)</div>
+                <div class="account-tab">Fidelity Brokerage</div>
+                <div class="account-tab">Roth IRA</div>
+            </div>
+
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <div class="quick-stat-label">Total Holdings</div>
+                    <div class="quick-stat-value">14</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-label">Market Value</div>
+                    <div class="quick-stat-value">$577,410</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-label">Cost Basis</div>
+                    <div class="quick-stat-value">$508,960</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-label">Gain/Loss</div>
+                    <div class="quick-stat-value" style="color: #10b981;">+$68,450</div>
+                </div>
+            </div>
+
+            <table class="holdings-table">
+                <thead>
+                    <tr>
+                        <th>Symbol / Name</th>
+                        <th style="text-align: right;">Shares</th>
+                        <th style="text-align: right;">Price</th>
+                        <th style="text-align: right;">Cost Basis</th>
+                        <th style="text-align: right;">Market Value</th>
+                        <th style="text-align: right;">Gain/Loss</th>
+                        <th style="text-align: right;">Return</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="ticker">VTI <span class="account-badge badge-401k">401(k)</span></div>
+                            <div class="company-name">Vanguard Total Stock Market ETF</div>
+                        </td>
+                        <td style="text-align: right;">850</td>
+                        <td style="text-align: right;" class="price">$245.30</td>
+                        <td style="text-align: right;">$185,420</td>
+                        <td style="text-align: right;"><strong>$208,505</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$23,085</td>
+                        <td style="text-align: right;" class="change-positive">+12.4%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">VXUS <span class="account-badge badge-401k">401(k)</span></div>
+                            <div class="company-name">Vanguard Total Intl Stock ETF</div>
+                        </td>
+                        <td style="text-align: right;">1,200</td>
+                        <td style="text-align: right;" class="price">$68.50</td>
+                        <td style="text-align: right;">$72,340</td>
+                        <td style="text-align: right;"><strong>$82,200</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$9,860</td>
+                        <td style="text-align: right;" class="change-positive">+13.6%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">BND <span class="account-badge badge-401k">401(k)</span></div>
+                            <div class="company-name">Vanguard Total Bond Market ETF</div>
+                        </td>
+                        <td style="text-align: right;">650</td>
+                        <td style="text-align: right;" class="price">$78.90</td>
+                        <td style="text-align: right;">$48,920</td>
+                        <td style="text-align: right;"><strong>$51,285</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$2,365</td>
+                        <td style="text-align: right;" class="change-positive">+4.8%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">AAPL <span class="account-badge badge-taxable">Taxable</span></div>
+                            <div class="company-name">Apple Inc.</div>
+                        </td>
+                        <td style="text-align: right;">150</td>
+                        <td style="text-align: right;" class="price">$182.50</td>
+                        <td style="text-align: right;">$22,840</td>
+                        <td style="text-align: right;"><strong>$27,375</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$4,535</td>
+                        <td style="text-align: right;" class="change-positive">+19.9%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">MSFT <span class="account-badge badge-taxable">Taxable</span></div>
+                            <div class="company-name">Microsoft Corporation</div>
+                        </td>
+                        <td style="text-align: right;">85</td>
+                        <td style="text-align: right;" class="price">$385.20</td>
+                        <td style="text-align: right;">$28,450</td>
+                        <td style="text-align: right;"><strong>$32,742</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$4,292</td>
+                        <td style="text-align: right;" class="change-positive">+15.1%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">GOOGL <span class="account-badge badge-taxable">Taxable</span></div>
+                            <div class="company-name">Alphabet Inc. Class A</div>
+                        </td>
+                        <td style="text-align: right;">120</td>
+                        <td style="text-align: right;" class="price">$145.80</td>
+                        <td style="text-align: right;">$15,230</td>
+                        <td style="text-align: right;"><strong>$17,496</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$2,266</td>
+                        <td style="text-align: right;" class="change-positive">+14.9%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">VNQ <span class="account-badge badge-ira">Roth IRA</span></div>
+                            <div class="company-name">Vanguard Real Estate ETF</div>
+                        </td>
+                        <td style="text-align: right;">380</td>
+                        <td style="text-align: right;" class="price">$91.20</td>
+                        <td style="text-align: right;">$32,450</td>
+                        <td style="text-align: right;"><strong>$34,656</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$2,206</td>
+                        <td style="text-align: right;" class="change-positive">+6.8%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">VXUS <span class="account-badge badge-ira">Roth IRA</span></div>
+                            <div class="company-name">Vanguard Total Intl Stock ETF</div>
+                        </td>
+                        <td style="text-align: right;">485</td>
+                        <td style="text-align: right;" class="price">$68.50</td>
+                        <td style="text-align: right;">$29,870</td>
+                        <td style="text-align: right;"><strong>$33,223</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$3,353</td>
+                        <td style="text-align: right;" class="change-positive">+11.2%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">NVDA <span class="account-badge badge-taxable">Taxable</span></div>
+                            <div class="company-name">NVIDIA Corporation</div>
+                        </td>
+                        <td style="text-align: right;">45</td>
+                        <td style="text-align: right;" class="price">$495.30</td>
+                        <td style="text-align: right;">$18,900</td>
+                        <td style="text-align: right;"><strong>$22,289</strong></td>
+                        <td style="text-align: right;" class="change-positive">+$3,389</td>
+                        <td style="text-align: right;" class="change-positive">+17.9%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="ticker">TSLA <span class="account-badge badge-taxable">Taxable</span></div>
+                            <div class="company-name">Tesla, Inc.</div>
+                        </td>
+                        <td style="text-align: right;">75</td>
+                        <td style="text-align: right;" class="price">$248.60</td>
+                        <td style="text-align: right;">$21,340</td>
+                        <td style="text-align: right;"><strong>$18,645</strong></td>
+                        <td style="text-align: right;" class="change-negative">-$2,695</td>
+                        <td style="text-align: right;" class="change-negative">-12.6%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

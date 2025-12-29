@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Position - Investment Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 28px 32px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #edf2f7;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover:not(.active) {
+            color: #4a5568;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: #db2c3e;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #db2c3e;
+        }
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        select.form-input {
+            cursor: pointer;
+        }
+
+        .symbol-search {
+            position: relative;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .search-result-item:hover {
+            background: #f7fafc;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-symbol {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 14px;
+        }
+
+        .result-name {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .result-exchange {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .info-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .calculated-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .calculated-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .calculated-row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 2px solid #667eea;
+        }
+
+        .calculated-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .calculated-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .calculated-value.large {
+            font-size: 24px;
+        }
+
+        .modal-footer {
+            padding: 24px 32px;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .radio-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .radio-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-label {
+            display: block;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .radio-option input:checked + .radio-label {
+            border-color: #667eea;
+            background: #667eea15;
+            color: #667eea;
+        }
+
+        .radio-label:hover {
+            border-color: #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">📈 Add New Position</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab active">Buy</button>
+                    <button class="tab">Sell</button>
+                    <button class="tab">Dividend</button>
+                    <button class="tab">Transfer</button>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <div class="section-title">🎯 Asset Information</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Symbol <span class="required">*</span>
+                                </label>
+                                <div class="symbol-search">
+                                    <input type="text" class="form-input" placeholder="e.g., AAPL" value="AAPL">
+                                    <div class="search-results">
+                                        <div class="search-result-item" style="background: #f7fafc;">
+                                            <div class="result-symbol">AAPL</div>
+                                            <div class="result-name">Apple Inc.</div>
+                                            <div class="result-exchange">NASDAQ • Common Stock</div>
+                                        </div>
+                                        <div class="search-result-item">
+                                            <div class="result-symbol">AAPL.SW</div>
+                                            <div class="result-name">Apple Inc.</div>
+                                            <div class="result-exchange">SIX Swiss Exchange</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Account <span class="required">*</span>
+                                </label>
+                                <select class="form-input">
+                                    <option>Fidelity 401(k) - ****6842</option>
+                                    <option>Vanguard Roth IRA - ****3921</option>
+                                    <option>Charles Schwab Brokerage - ****7156</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-title">📊 Current Market Data</div>
+                            <div class="info-row">
+                                <span class="info-label">Current Price</span>
+                                <span class="info-value">$184.92</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Today's Change</span>
+                                <span class="info-value" style="color: #0f9960;">+$2.34 (+1.28%)</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">52 Week Range</span>
+                                <span class="info-value">$124.17 - $199.62</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">💵 Transaction Details</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Number of Shares <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-input" placeholder="0.00" value="100" step="0.001">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Price per Share <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-input" placeholder="$0.00" value="184.92" step="0.01">
+                                <div class="help-text">Use current market price or your purchase price</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Transaction Date <span class="required">*</span>
+                                </label>
+                                <input type="date" class="form-input" value="2025-12-29">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Commission & Fees</label>
+                                <input type="number" class="form-input" placeholder="$0.00" value="0.00" step="0.01">
+                                <div class="help-text">Optional brokerage fees</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">📝 Additional Options</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Order Type</label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" name="orderType" id="market" checked>
+                                    <label for="market" class="radio-label">Market Order</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="orderType" id="limit">
+                                    <label for="limit" class="radio-label">Limit Order</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label">Notes (Optional)</label>
+                                <textarea class="form-input" rows="3" placeholder="Add notes about this transaction..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calculated-box">
+                        <div class="calculated-row">
+                            <span class="calculated-label">Shares</span>
+                            <span class="calculated-value">100</span>
+                        </div>
+                        <div class="calculated-row">
+                            <span class="calculated-label">Price per Share</span>
+                            <span class="calculated-value">$184.92</span>
+                        </div>
+                        <div class="calculated-row">
+                            <span class="calculated-label">Commission</span>
+                            <span class="calculated-value">$0.00</span>
+                        </div>
+                        <div class="calculated-row">
+                            <span class="calculated-label">Total Cost</span>
+                            <span class="calculated-value large">$18,492.00</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Add Position</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

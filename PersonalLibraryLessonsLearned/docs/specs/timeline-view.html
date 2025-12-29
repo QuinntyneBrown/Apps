@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - Personal Library Lessons Learned</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .timeline-period {
+            margin-bottom: 40px;
+        }
+
+        .period-header {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            position: relative;
+            left: -40px;
+        }
+
+        .period-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .period-count {
+            font-size: 13px;
+            color: #718096;
+            margin-left: 8px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -34px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .timeline-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timeline-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .timeline-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .lesson-date {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .lesson-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .category-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .lesson-excerpt {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .lesson-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .meta-tag {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .impact-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .impact-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .impact-high {
+            background: #f56565;
+        }
+
+        .impact-medium {
+            background: #ed8936;
+        }
+
+        .impact-low {
+            background: #48bb78;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .period-header {
+                left: -30px;
+            }
+
+            .timeline-dot {
+                left: -26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Learning Timeline</h1>
+            <p>Your journey of growth and insights over time</p>
+        </div>
+
+        <div class="filters">
+            <select class="filter-select">
+                <option>All Time</option>
+                <option>This Year</option>
+                <option>Last 6 Months</option>
+                <option>Last 3 Months</option>
+                <option>This Month</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Categories</option>
+                <option>💼 Leadership</option>
+                <option>🚀 Product Management</option>
+                <option>⚡ Productivity</option>
+                <option>💬 Communication</option>
+                <option>🎯 Decision Making</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Impact Levels</option>
+                <option>High Impact</option>
+                <option>Medium Impact</option>
+                <option>Low Impact</option>
+            </select>
+        </div>
+
+        <div class="timeline">
+            <!-- This Week -->
+            <div class="timeline-period">
+                <div class="period-header">
+                    <span class="period-title">This Week</span>
+                    <span class="period-count">5 lessons</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Monday, January 15, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Always validate assumptions before major decisions</div>
+                            </div>
+                            <span class="category-badge">Leadership</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            During Q3 planning, I assumed the team was aligned on priorities. This led to wasted effort.
+                            Lesson: Schedule explicit alignment meetings before execution.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">assumptions</span>
+                            <span class="meta-tag">alignment</span>
+                            <span class="meta-tag">planning</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Sunday, January 14, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Customer feedback is gold, even when negative</div>
+                            </div>
+                            <span class="category-badge">Product Management</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Received harsh feedback on new feature. Initially defensive, but the criticism revealed blind
+                            spots in our UX design. Implemented changes that increased adoption by 40%.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">feedback</span>
+                            <span class="meta-tag">product-design</span>
+                            <span class="meta-tag">ux</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Week -->
+            <div class="timeline-period">
+                <div class="period-header">
+                    <span class="period-title">Last Week</span>
+                    <span class="period-count">3 lessons</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Friday, January 12, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Delegation isn't abdication - follow up matters</div>
+                            </div>
+                            <span class="category-badge">Leadership</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Delegated critical task but didn't establish checkpoints. Discovered issues too late.
+                            Now I use the 30-60-90 check-in framework for important delegations.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">delegation</span>
+                            <span class="meta-tag">accountability</span>
+                            <span class="meta-tag">management</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-medium"></span>
+                                <span>Medium Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Wednesday, January 10, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Time blocking increases productivity by 3x</div>
+                            </div>
+                            <span class="category-badge">Productivity</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Switched from reactive schedule to time-blocked calendar. Deep work sessions of 90 minutes
+                            with 15-minute breaks transformed my output quality and quantity.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">time-management</span>
+                            <span class="meta-tag">deep-work</span>
+                            <span class="meta-tag">focus</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Monday, January 8, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Written communication prevents misunderstandings</div>
+                            </div>
+                            <span class="category-badge">Communication</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Had three verbal agreements that people remembered differently. Created conflict and delays.
+                            Now I follow up all important discussions with written summaries and action items.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">communication</span>
+                            <span class="meta-tag">documentation</span>
+                            <span class="meta-tag">clarity</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-medium"></span>
+                                <span>Medium Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2 Weeks Ago -->
+            <div class="timeline-period">
+                <div class="period-header">
+                    <span class="period-title">2 Weeks Ago</span>
+                    <span class="period-count">4 lessons</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Saturday, January 6, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Early mornings are my peak creative time</div>
+                            </div>
+                            <span class="category-badge">Productivity</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Tracked my energy and creativity levels for a month. Discovered 6-9 AM is when I do my best
+                            thinking and creative work. Restructured my schedule accordingly.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">energy-management</span>
+                            <span class="meta-tag">scheduling</span>
+                            <span class="meta-tag">self-awareness</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-low"></span>
+                                <span>Low Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Thursday, January 4, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">One-on-ones build stronger teams</div>
+                            </div>
+                            <span class="category-badge">Leadership</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Skipped regular 1:1s for a month due to "busy schedule." Team engagement dropped noticeably.
+                            Resumed weekly 1:1s and saw immediate improvement in morale and performance.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">management</span>
+                            <span class="meta-tag">team-building</span>
+                            <span class="meta-tag">engagement</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Tuesday, January 2, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Ship small, ship often</div>
+                            </div>
+                            <span class="category-badge">Product Management</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Held a feature for 3 months to make it "perfect." Competitors shipped similar feature first.
+                            Learned that shipping iteratively beats waiting for perfection.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">iteration</span>
+                            <span class="meta-tag">shipping</span>
+                            <span class="meta-tag">perfection</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Monday, January 1, 2024</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Annual reflection reveals patterns</div>
+                            </div>
+                            <span class="category-badge">Personal Growth</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Reviewed my year-end notes and discovered recurring themes I hadn't noticed week-to-week.
+                            This bird's-eye view helped identify areas for improvement and growth.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">reflection</span>
+                            <span class="meta-tag">self-awareness</span>
+                            <span class="meta-tag">patterns</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-medium"></span>
+                                <span>Medium Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- December 2023 -->
+            <div class="timeline-period">
+                <div class="period-header">
+                    <span class="period-title">December 2023</span>
+                    <span class="period-count">12 lessons</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Friday, December 29, 2023</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Set boundaries to prevent burnout</div>
+                            </div>
+                            <span class="category-badge">Health & Wellness</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Worked through weekends for a month and crashed hard. Learned that sustainable performance
+                            requires protecting personal time and setting clear work boundaries.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">work-life-balance</span>
+                            <span class="meta-tag">boundaries</span>
+                            <span class="meta-tag">burnout</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-high"></span>
+                                <span>High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="lesson-date">Wednesday, December 20, 2023</div>
+                        <div class="timeline-card-header">
+                            <div style="flex: 1;">
+                                <div class="lesson-title">Celebrate small wins with the team</div>
+                            </div>
+                            <span class="category-badge">Leadership</span>
+                        </div>
+                        <div class="lesson-excerpt">
+                            Only celebrated major milestones, missing opportunities to boost morale. Started
+                            acknowledging small wins weekly. Team motivation and engagement improved significantly.
+                        </div>
+                        <div class="lesson-meta">
+                            <span class="meta-tag">motivation</span>
+                            <span class="meta-tag">recognition</span>
+                            <span class="meta-tag">team-culture</span>
+                            <div class="impact-indicator">
+                                <span class="impact-dot impact-medium"></span>
+                                <span>Medium Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; padding: 20px;">
+                    <a href="#" style="color: white; text-decoration: none; font-weight: 600;">
+                        View 10 more lessons from December →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

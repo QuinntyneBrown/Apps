@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cellar Map - Wine Cellar Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .breadcrumb {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .controls-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .controls-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: white;
+            color: #2d3748;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .cellar-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .rack-section {
+            margin-bottom: 40px;
+        }
+
+        .rack-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .rack-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .rack-info {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .rack-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(12, 1fr);
+            gap: 8px;
+        }
+
+        .shelf-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .slot {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .slot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .slot-empty {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .slot-empty:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+        }
+
+        .slot-occupied-red {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+        }
+
+        .slot-occupied-white {
+            background: linear-gradient(135deg, #fef5e7 0%, #fde68a 100%);
+            color: #744210;
+            box-shadow: 0 2px 8px rgba(253, 230, 138, 0.3);
+        }
+
+        .slot-occupied-sparkling {
+            background: linear-gradient(135deg, #b2f5ea 0%, #81e6d9 100%);
+            color: #234e52;
+            box-shadow: 0 2px 8px rgba(129, 230, 217, 0.3);
+        }
+
+        .slot-occupied-premium {
+            background: linear-gradient(135deg, #fbb6ce 0%, #f687b3 100%);
+            color: #742a2a;
+            box-shadow: 0 2px 8px rgba(246, 135, 179, 0.3);
+        }
+
+        .slot-reserved {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+            color: #4a5568;
+            border: 2px solid #a0aec0;
+        }
+
+        .position-tooltip {
+            position: fixed;
+            background: #2d3748;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip-visible {
+            display: block;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .rack-grid {
+                grid-template-columns: 50px repeat(8, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rack-grid {
+                grid-template-columns: 40px repeat(6, 1fr);
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .legend {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Cellar Map</h1>
+                <div class="breadcrumb">
+                    <a href="#">Dashboard</a> / Cellar Map
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Print Map</button>
+                <button class="btn btn-primary">+ Add Rack</button>
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="controls-left">
+                <label style="font-size: 14px; font-weight: 600; color: #2d3748;">Filter by:</label>
+                <select class="filter-select">
+                    <option>All Wine Types</option>
+                    <option>Red Wine Only</option>
+                    <option>White Wine Only</option>
+                    <option>Sparkling Only</option>
+                    <option>Premium Only ($500+)</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Status</option>
+                    <option>Ready to Drink</option>
+                    <option>Still Aging</option>
+                    <option>Past Peak</option>
+                </select>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);"></div>
+                    <span>Red Wine</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #fef5e7 0%, #fde68a 100%);"></div>
+                    <span>White Wine</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #b2f5ea 0%, #81e6d9 100%);"></div>
+                    <span>Sparkling</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #fbb6ce 0%, #f687b3 100%);"></div>
+                    <span>Premium</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f7fafc; border: 2px dashed #cbd5e0;"></div>
+                    <span>Empty</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cellar-container">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value">347</div>
+                    <div class="stat-label">Total Bottles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">153</div>
+                    <div class="stat-label">Empty Slots</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">69%</div>
+                    <div class="stat-label">Capacity Used</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Active Racks</div>
+                </div>
+            </div>
+
+            <!-- Rack A -->
+            <div class="rack-section">
+                <div class="rack-header">
+                    <h3 class="rack-title">Rack A - Premium Bordeaux & Burgundy</h3>
+                    <div class="rack-info">72 bottles • 28 empty slots</div>
+                </div>
+                <div class="rack-grid">
+                    <div class="shelf-label">Shelf 1</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 2</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 3</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 4</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                </div>
+            </div>
+
+            <!-- Rack B -->
+            <div class="rack-section">
+                <div class="rack-header">
+                    <h3 class="rack-title">Rack B - Napa Valley & California</h3>
+                    <div class="rack-info">88 bottles • 12 empty slots</div>
+                </div>
+                <div class="rack-grid">
+                    <div class="shelf-label">Shelf 1</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+
+                    <div class="shelf-label">Shelf 2</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-premium">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 3</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 4</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                </div>
+            </div>
+
+            <!-- Rack C -->
+            <div class="rack-section">
+                <div class="rack-header">
+                    <h3 class="rack-title">Rack C - Italian & Spanish</h3>
+                    <div class="rack-info">64 bottles • 36 empty slots</div>
+                </div>
+                <div class="rack-grid">
+                    <div class="shelf-label">Shelf 1</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 2</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 3</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 4</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-occupied-red">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                </div>
+            </div>
+
+            <!-- Rack D -->
+            <div class="rack-section">
+                <div class="rack-header">
+                    <h3 class="rack-title">Rack D - White Wines & Rosé</h3>
+                    <div class="rack-info">56 bottles • 44 empty slots</div>
+                </div>
+                <div class="rack-grid">
+                    <div class="shelf-label">Shelf 1</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 2</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 3</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 4</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-occupied-white">🍷</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                </div>
+            </div>
+
+            <!-- Rack E -->
+            <div class="rack-section">
+                <div class="rack-header">
+                    <h3 class="rack-title">Rack E - Sparkling & Champagne</h3>
+                    <div class="rack-info">67 bottles • 33 empty slots</div>
+                </div>
+                <div class="rack-grid">
+                    <div class="shelf-label">Shelf 1</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 2</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 3</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+                    <div class="slot slot-empty"></div>
+
+                    <div class="shelf-label">Shelf 4</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                    <div class="slot slot-occupied-sparkling">🍾</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-tooltip" id="tooltip"></div>
+</body>
+</html>

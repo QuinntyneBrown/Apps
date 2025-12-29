@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patterns & Insights - Stress & Mood Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .insight-banner {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .banner-icon {
+            font-size: 48px;
+        }
+
+        .banner-content {
+            flex: 1;
+        }
+
+        .banner-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .banner-text {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 32px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .insight-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .insight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .confidence-badge {
+            padding: 4px 10px;
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .insight-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .insight-action {
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .insight-action:hover {
+            text-decoration: underline;
+        }
+
+        .correlation-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .correlation-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .correlation-labels {
+            flex: 1;
+        }
+
+        .correlation-from {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .correlation-arrow {
+            color: #667eea;
+            margin: 0 5px;
+        }
+
+        .correlation-to {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .correlation-strength {
+            width: 120px;
+        }
+
+        .strength-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .strength-label {
+            font-size: 11px;
+            color: #999;
+            text-align: right;
+        }
+
+        .pattern-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            margin-top: 5px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .timeline-dot::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 40px;
+            background: #e0e0e0;
+        }
+
+        .timeline-item:last-child .timeline-dot::after {
+            display: none;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .timeline-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .day-name {
+            margin-bottom: 3px;
+            color: #666;
+        }
+
+        .level-very-low { background: #e8f5e9; color: #2e7d32; }
+        .level-low { background: #fff9c4; color: #f57f17; }
+        .level-medium { background: #ffe082; color: #ef6c00; }
+        .level-high { background: #ffab91; color: #d84315; }
+        .level-very-high { background: #ef5350; color: white; }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+        }
+
+        .rec-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .rec-icon {
+            font-size: 28px;
+        }
+
+        .rec-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .rec-description {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .rec-impact {
+            font-size: 13px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .comparison-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comparison-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .comparison-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .comparison-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .trend-down {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .prediction-chart {
+            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.02) 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 150px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea, #a89df0);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            background: linear-gradient(to top, #764ba2, #b896f5);
+        }
+
+        .chart-bar.predicted {
+            background: linear-gradient(to top, rgba(102, 126, 234, 0.4), rgba(168, 157, 240, 0.4));
+            border: 2px dashed #667eea;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Patterns & Insights</h1>
+            <p class="header-subtitle">AI-powered analysis of your mental health journey</p>
+        </div>
+
+        <div class="insight-banner">
+            <span class="banner-icon">🎯</span>
+            <div class="banner-content">
+                <div class="banner-title">Key Insight of the Week</div>
+                <div class="banner-text">
+                    Your mood improves by an average of 2.8 points on days when you exercise in the morning. Consider making morning workouts a regular habit to boost your overall wellbeing!
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-value">7.2</div>
+                <div class="stat-label">Average Mood</div>
+                <div class="stat-change trend-up">↑ 0.8 vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4.3</div>
+                <div class="stat-label">Average Stress</div>
+                <div class="stat-change trend-up">↓ 1.2 vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">78%</div>
+                <div class="stat-label">Positive Days</div>
+                <div class="stat-change trend-up">↑ 12% vs last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">14</div>
+                <div class="stat-label">Day Streak</div>
+                <div class="stat-change trend-up">Personal best!</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">💡</span>
+                    <h2 class="card-title">AI Insights</h2>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-header">
+                        <div class="insight-title">Exercise & Mood Connection</div>
+                        <span class="confidence-badge">95% Confident</span>
+                    </div>
+                    <div class="insight-description">
+                        Morning exercise sessions show a strong positive correlation with improved mood throughout the day. Your mood averages 8.1/10 on exercise days vs 6.5/10 on non-exercise days.
+                    </div>
+                    <span class="insight-action">View detailed analysis →</span>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-header">
+                        <div class="insight-title">Sleep Quality Impact</div>
+                        <span class="confidence-badge">92% Confident</span>
+                    </div>
+                    <div class="insight-description">
+                        Less than 7 hours of sleep consistently leads to increased stress levels the following day. On well-rested days (7.5+ hours), your stress is 40% lower on average.
+                    </div>
+                    <span class="insight-action">See sleep patterns →</span>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-header">
+                        <div class="insight-title">Monday Morning Pattern</div>
+                        <span class="confidence-badge">88% Confident</span>
+                    </div>
+                    <div class="insight-description">
+                        Mondays show 42% higher stress levels, particularly in the morning. Sunday evening planning and Monday morning meditation could help smooth this transition.
+                    </div>
+                    <span class="insight-action">View weekly patterns →</span>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-header">
+                        <div class="insight-title">Social Connection Boost</div>
+                        <span class="confidence-badge">85% Confident</span>
+                    </div>
+                    <div class="insight-description">
+                        Days with meaningful social interactions (family, close friends) correlate with 55% higher mood scores and better sleep quality that night.
+                    </div>
+                    <span class="insight-action">Explore social impact →</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🔗</span>
+                    <h2 class="card-title">Key Correlations</h2>
+                </div>
+
+                <div class="correlation-chart">
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">Morning Exercise</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Mood ↑</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 91%;"></div>
+                            </div>
+                            <div class="strength-label">91% correlation</div>
+                        </div>
+                    </div>
+
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">7+ Hours Sleep</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Stress ↓</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 87%;"></div>
+                            </div>
+                            <div class="strength-label">87% correlation</div>
+                        </div>
+                    </div>
+
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">Social Time</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Happiness ↑</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 82%;"></div>
+                            </div>
+                            <div class="strength-label">82% correlation</div>
+                        </div>
+                    </div>
+
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">High Caffeine</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Anxiety ↑</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 76%;"></div>
+                            </div>
+                            <div class="strength-label">76% correlation</div>
+                        </div>
+                    </div>
+
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">Journaling</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Clarity ↑</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 74%;"></div>
+                            </div>
+                            <div class="strength-label">74% correlation</div>
+                        </div>
+                    </div>
+
+                    <div class="correlation-item">
+                        <div class="correlation-labels">
+                            <span class="correlation-from">Work Deadlines</span>
+                            <span class="correlation-arrow">→</span>
+                            <span class="correlation-to">Stress ↑</span>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: 85%;"></div>
+                            </div>
+                            <div class="strength-label">85% correlation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <h2 class="card-title">Weekly Patterns</h2>
+                </div>
+
+                <div class="heatmap-grid">
+                    <div class="heatmap-cell level-high">
+                        <div class="day-name">Mon</div>
+                        <div>6.2</div>
+                    </div>
+                    <div class="heatmap-cell level-medium">
+                        <div class="day-name">Tue</div>
+                        <div>7.1</div>
+                    </div>
+                    <div class="heatmap-cell level-low">
+                        <div class="day-name">Wed</div>
+                        <div>7.8</div>
+                    </div>
+                    <div class="heatmap-cell level-medium">
+                        <div class="day-name">Thu</div>
+                        <div>7.3</div>
+                    </div>
+                    <div class="heatmap-cell level-very-low">
+                        <div class="day-name">Fri</div>
+                        <div>8.5</div>
+                    </div>
+                    <div class="heatmap-cell level-very-low">
+                        <div class="day-name">Sat</div>
+                        <div>8.9</div>
+                    </div>
+                    <div class="heatmap-cell level-low">
+                        <div class="day-name">Sun</div>
+                        <div>7.6</div>
+                    </div>
+                </div>
+
+                <div class="pattern-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Morning Dip (6-8 AM)</div>
+                            <div class="timeline-description">
+                                Mood tends to be lowest in early morning, especially Mondays. Meditation and light exercise help.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Midday Peak (12-2 PM)</div>
+                            <div class="timeline-description">
+                                Mood reaches daily high after lunch, particularly on days with physical activity.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Evening Stability (6-9 PM)</div>
+                            <div class="timeline-description">
+                                Evenings are emotionally stable, great time for reflection and journaling.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🎯</span>
+                    <h2 class="card-title">Personalized Recommendations</h2>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <span class="rec-icon">🏃</span>
+                        <div class="rec-title">Make Morning Exercise a Habit</div>
+                    </div>
+                    <div class="rec-description">
+                        Your data shows morning exercise has the strongest positive impact on your daily mood. Try scheduling 30-minute workouts 4-5 times per week.
+                    </div>
+                    <div class="rec-impact">Expected impact: +1.6 points average mood</div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <span class="rec-icon">💤</span>
+                        <div class="rec-title">Prioritize Sleep Consistency</div>
+                    </div>
+                    <div class="rec-description">
+                        Aim for a consistent 10:30 PM bedtime to get 7.5+ hours. This could reduce your average stress by 40% based on your patterns.
+                    </div>
+                    <div class="rec-impact">Expected impact: -1.7 points average stress</div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <span class="rec-icon">📅</span>
+                        <div class="rec-title">Sunday Evening Planning</div>
+                    </div>
+                    <div class="rec-description">
+                        A 15-minute Sunday planning session could help reduce Monday morning stress by 35% based on similar users' data.
+                    </div>
+                    <div class="rec-impact">Expected impact: -2.1 points Monday stress</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <div class="card-header">
+                <span class="card-icon">📊</span>
+                <h2 class="card-title">Mood Prediction & Trends</h2>
+            </div>
+
+            <div class="prediction-chart">
+                <div class="chart-title">Next 7 Days Mood Forecast</div>
+                <div class="chart-bars">
+                    <div class="chart-bar" style="height: 72%;">
+                        <span class="bar-label">Mon</span>
+                    </div>
+                    <div class="chart-bar" style="height: 78%;">
+                        <span class="bar-label">Tue</span>
+                    </div>
+                    <div class="chart-bar" style="height: 85%;">
+                        <span class="bar-label">Wed</span>
+                    </div>
+                    <div class="chart-bar" style="height: 81%;">
+                        <span class="bar-label">Thu</span>
+                    </div>
+                    <div class="chart-bar predicted" style="height: 88%;">
+                        <span class="bar-label">Fri*</span>
+                    </div>
+                    <div class="chart-bar predicted" style="height: 92%;">
+                        <span class="bar-label">Sat*</span>
+                    </div>
+                    <div class="chart-bar predicted" style="height: 84%;">
+                        <span class="bar-label">Sun*</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-section">
+                    <div class="comparison-title">
+                        <span>📈</span>
+                        <span>This Month vs Last Month</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Average Mood</span>
+                        <span class="comparison-value">7.2 vs 6.4 (+0.8)</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Average Stress</span>
+                        <span class="comparison-value">4.3 vs 5.5 (-1.2)</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Positive Days</span>
+                        <span class="comparison-value">78% vs 66% (+12%)</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Check-in Streak</span>
+                        <span class="comparison-value">14 vs 8 (+6)</span>
+                    </div>
+                </div>
+
+                <div class="comparison-section">
+                    <div class="comparison-title">
+                        <span>⭐</span>
+                        <span>Best vs Typical Days</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Exercise</span>
+                        <span class="comparison-value">60 min vs 15 min</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Sleep</span>
+                        <span class="comparison-value">8 hrs vs 6.5 hrs</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Caffeine</span>
+                        <span class="comparison-value">1 cup vs 3 cups</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Social Time</span>
+                        <span class="comparison-value">2 hrs vs 30 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

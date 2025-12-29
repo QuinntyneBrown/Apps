@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChoreAssignmentTracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .date-info {
+            text-align: right;
+        }
+
+        .date-info .date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .date-info .streak {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .chore-card {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .chore-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chore-card.high-priority {
+            border-left-color: #ee0979;
+        }
+
+        .chore-card.completed {
+            opacity: 0.6;
+            border-left-color: #38ef7d;
+        }
+
+        .chore-info {
+            flex: 1;
+        }
+
+        .chore-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .chore-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .priority-badge {
+            background: #ee0979;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .chore-meta {
+            display: flex;
+            gap: 20px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .chore-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .assignee {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .avatar.emma {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .avatar.lucas {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .avatar.olivia {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .points-badge {
+            background: #fbbf24;
+            color: #78350f;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .complete-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .complete-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .complete-btn.completed {
+            background: #cbd5e0;
+            cursor: default;
+        }
+
+        .member-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .member-stats {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 18px;
+        }
+
+        .rank.first {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .rank.second {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        }
+
+        .rank.third {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-score {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>🏡 ChoreAssignmentTracker</h1>
+                    <p style="color: #718096; margin-top: 5px;">Welcome back, Sarah!</p>
+                </div>
+                <div class="date-info">
+                    <div class="date">Monday, December 29, 2025</div>
+                    <div class="streak">🔥 Family Streak: 12 Days</div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Today's Chores</div>
+                    <div class="stat-value">8/12</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Completion Rate</div>
+                    <div class="stat-value">67%</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">Total Points Today</div>
+                    <div class="stat-value">420</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Active Members</div>
+                    <div class="stat-value">5/5</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div>
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Today's Chores</h2>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+
+                    <div class="chore-card completed">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">✓ Walk the Dog</div>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ 7:00 AM</span>
+                                <span>⚡ Easy</span>
+                                <span>✅ Completed at 7:15 AM</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar emma">E</div>
+                            <div>
+                                <div style="font-weight: 600;">Emma</div>
+                                <div class="points-badge">+30 pts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chore-card high-priority">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">Do the Dishes</div>
+                                <span class="priority-badge">High Priority</span>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ Due: 6:00 PM</span>
+                                <span>⚡ Medium</span>
+                                <span>⏱️ 20 min</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar lucas">L</div>
+                            <div>
+                                <div style="font-weight: 600;">Lucas</div>
+                                <div class="points-badge">+50 pts</div>
+                            </div>
+                        </div>
+                        <button class="complete-btn">Mark Complete</button>
+                    </div>
+
+                    <div class="chore-card completed">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">✓ Clean Bedroom</div>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ 9:00 AM</span>
+                                <span>⚡ Easy</span>
+                                <span>✅ Completed at 9:30 AM</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar olivia">O</div>
+                            <div>
+                                <div style="font-weight: 600;">Olivia</div>
+                                <div class="points-badge">+40 pts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chore-card">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">Vacuum Living Room</div>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ Due: 4:00 PM</span>
+                                <span>⚡ Hard</span>
+                                <span>⏱️ 30 min</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar emma">E</div>
+                            <div>
+                                <div style="font-weight: 600;">Emma</div>
+                                <div class="points-badge">+75 pts</div>
+                            </div>
+                        </div>
+                        <button class="complete-btn">Mark Complete</button>
+                    </div>
+
+                    <div class="chore-card">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">Take Out Trash & Recycling</div>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ Due: 7:00 PM</span>
+                                <span>⚡ Medium</span>
+                                <span>⏱️ 15 min</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar lucas">L</div>
+                            <div>
+                                <div style="font-weight: 600;">Lucas</div>
+                                <div class="points-badge">+45 pts</div>
+                            </div>
+                        </div>
+                        <button class="complete-btn">Mark Complete</button>
+                    </div>
+
+                    <div class="chore-card completed">
+                        <div class="chore-info">
+                            <div class="chore-header">
+                                <div class="chore-title">✓ Set Dinner Table</div>
+                            </div>
+                            <div class="chore-meta">
+                                <span>⏰ 5:30 PM</span>
+                                <span>⚡ Easy</span>
+                                <span>✅ Completed at 5:25 PM</span>
+                            </div>
+                        </div>
+                        <div class="assignee">
+                            <div class="avatar olivia">O</div>
+                            <div>
+                                <div style="font-weight: 600;">Olivia</div>
+                                <div class="points-badge">+25 pts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section" style="margin-bottom: 30px;">
+                    <div class="section-header">
+                        <h2 class="section-title">Today's Leaderboard</h2>
+                    </div>
+
+                    <div class="leaderboard-item">
+                        <div class="rank first">1</div>
+                        <div class="avatar emma" style="width: 50px; height: 50px; font-size: 20px;">E</div>
+                        <div class="leaderboard-info">
+                            <div style="font-weight: 600; color: #2d3748;">Emma</div>
+                            <div style="font-size: 13px; color: #718096;">2 chores completed</div>
+                        </div>
+                        <div class="leaderboard-score">105 pts</div>
+                    </div>
+
+                    <div class="leaderboard-item">
+                        <div class="rank second">2</div>
+                        <div class="avatar olivia" style="width: 50px; height: 50px; font-size: 20px;">O</div>
+                        <div class="leaderboard-info">
+                            <div style="font-weight: 600; color: #2d3748;">Olivia</div>
+                            <div style="font-size: 13px; color: #718096;">2 chores completed</div>
+                        </div>
+                        <div class="leaderboard-score">65 pts</div>
+                    </div>
+
+                    <div class="leaderboard-item">
+                        <div class="rank third">3</div>
+                        <div class="avatar lucas" style="width: 50px; height: 50px; font-size: 20px;">L</div>
+                        <div class="leaderboard-info">
+                            <div style="font-weight: 600; color: #2d3748;">Lucas</div>
+                            <div style="font-size: 13px; color: #718096;">0 chores completed</div>
+                        </div>
+                        <div class="leaderboard-score">0 pts</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Family Members</h2>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar emma" style="width: 50px; height: 50px; font-size: 20px;">E</div>
+                        <div class="member-info">
+                            <div class="member-name">Emma (14)</div>
+                            <div class="member-stats">2/3 chores today • 1,245 total points</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 67%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar lucas" style="width: 50px; height: 50px; font-size: 20px;">L</div>
+                        <div class="member-info">
+                            <div class="member-name">Lucas (11)</div>
+                            <div class="member-stats">0/2 chores today • 980 total points</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar olivia" style="width: 50px; height: 50px; font-size: 20px;">O</div>
+                        <div class="member-info">
+                            <div class="member-name">Olivia (8)</div>
+                            <div class="member-stats">2/2 chores today • 756 total points</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <a href="#" class="action-btn">Add Chore</a>
+                        <a href="#" class="action-btn secondary">View Schedule</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

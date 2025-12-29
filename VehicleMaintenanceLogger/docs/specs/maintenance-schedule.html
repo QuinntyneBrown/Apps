@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Schedule - Vehicle Maintenance Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-content h1 {
+            color: #1a202c;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header-content p {
+            color: #718096;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-group label {
+            display: block;
+            color: #4a5568;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+        .section-icon.overdue {
+            background: #fee2e2;
+        }
+        .section-icon.upcoming {
+            background: #fef3c7;
+        }
+        .section-icon.scheduled {
+            background: #dbeafe;
+        }
+        .section-title {
+            flex: 1;
+        }
+        .section-title h2 {
+            color: #1a202c;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .section-title p {
+            color: #718096;
+            font-size: 13px;
+        }
+        .maintenance-grid {
+            display: grid;
+            gap: 16px;
+        }
+        .maintenance-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.2s;
+        }
+        .maintenance-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        .maintenance-card.overdue {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .maintenance-card.urgent {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .vehicle-badge {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+            min-width: 120px;
+            text-align: center;
+        }
+        .vehicle-badge-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .vehicle-badge-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .maintenance-info {
+            flex: 1;
+        }
+        .maintenance-title {
+            color: #1a202c;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .maintenance-details {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .maintenance-description {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .maintenance-status {
+            text-align: right;
+            min-width: 150px;
+        }
+        .status-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .status-label.overdue {
+            color: #dc2626;
+        }
+        .status-label.urgent {
+            color: #f59e0b;
+        }
+        .status-label.upcoming {
+            color: #3b82f6;
+        }
+        .status-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+        .status-subtitle {
+            color: #718096;
+            font-size: 12px;
+        }
+        .maintenance-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-complete {
+            background: #10b981;
+            color: white;
+        }
+        .btn-reschedule {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .maintenance-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .maintenance-status {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>Maintenance Schedule</h1>
+                <p>Upcoming and overdue maintenance for all vehicles</p>
+            </div>
+            <button class="btn-primary">+ Schedule Maintenance</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Vehicle</label>
+                <select>
+                    <option>All Vehicles</option>
+                    <option>2020 Honda Accord</option>
+                    <option>2018 Toyota RAV4</option>
+                    <option>2019 Ford F-150</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Service Type</label>
+                <select>
+                    <option>All Services</option>
+                    <option>Oil Change</option>
+                    <option>Tire Service</option>
+                    <option>Brake Service</option>
+                    <option>Inspection</option>
+                    <option>Filter Replacement</option>
+                </select>
+            </div>
+            <div class="filter-tabs">
+                <button class="tab-btn active">All</button>
+                <button class="tab-btn">Overdue</button>
+                <button class="tab-btn">This Week</button>
+                <button class="tab-btn">This Month</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon overdue">⚠️</div>
+                <div class="section-title">
+                    <h2>Overdue Maintenance</h2>
+                    <p>These services are past their due date</p>
+                </div>
+            </div>
+
+            <div class="maintenance-grid">
+                <div class="maintenance-card overdue">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚗</div>
+                        <div class="vehicle-badge-name">Honda Accord</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">Oil Change</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: March 15, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 48,000 mi</span>
+                            <span class="detail-item">📍 Current: 45,280 mi</span>
+                        </div>
+                        <div class="maintenance-description">Full synthetic oil change with filter replacement</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label overdue">Overdue</div>
+                        <div class="status-value">280 mi</div>
+                        <div class="status-subtitle">past due</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon upcoming">⏰</div>
+                <div class="section-title">
+                    <h2>Due Soon (Next 30 Days)</h2>
+                    <p>Upcoming maintenance that needs attention</p>
+                </div>
+            </div>
+
+            <div class="maintenance-grid">
+                <div class="maintenance-card urgent">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚙</div>
+                        <div class="vehicle-badge-name">Toyota RAV4</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">Tire Rotation</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: March 20, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 65,000 mi</span>
+                            <span class="detail-item">📍 Current: 62,450 mi</span>
+                        </div>
+                        <div class="maintenance-description">Rotate all four tires and check alignment</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label urgent">Due Soon</div>
+                        <div class="status-value">12 days</div>
+                        <div class="status-subtitle">remaining</div>
+                    </div>
+                </div>
+
+                <div class="maintenance-card">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚐</div>
+                        <div class="vehicle-badge-name">Ford F-150</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">Brake Inspection</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: April 5, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 40,000 mi</span>
+                            <span class="detail-item">📍 Current: 38,920 mi</span>
+                        </div>
+                        <div class="maintenance-description">Full brake system inspection and fluid check</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label upcoming">Upcoming</div>
+                        <div class="status-value">27 days</div>
+                        <div class="status-subtitle">remaining</div>
+                    </div>
+                </div>
+
+                <div class="maintenance-card">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚗</div>
+                        <div class="vehicle-badge-name">Honda Accord</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">Air Filter Replacement</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: April 12, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 50,000 mi</span>
+                            <span class="detail-item">📍 Current: 45,280 mi</span>
+                        </div>
+                        <div class="maintenance-description">Replace engine air filter</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label upcoming">Upcoming</div>
+                        <div class="status-value">34 days</div>
+                        <div class="status-subtitle">remaining</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon scheduled">📅</div>
+                <div class="section-title">
+                    <h2>Scheduled Maintenance (Beyond 30 Days)</h2>
+                    <p>Future maintenance to keep in mind</p>
+                </div>
+            </div>
+
+            <div class="maintenance-grid">
+                <div class="maintenance-card">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚙</div>
+                        <div class="vehicle-badge-name">Toyota RAV4</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">30,000 Mile Service</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: May 15, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 70,000 mi</span>
+                            <span class="detail-item">📍 Current: 62,450 mi</span>
+                        </div>
+                        <div class="maintenance-description">Major service including oil change, tire rotation, fluid checks</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label upcoming">Scheduled</div>
+                        <div class="status-value">66 days</div>
+                        <div class="status-subtitle">remaining</div>
+                    </div>
+                </div>
+
+                <div class="maintenance-card">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-badge-icon">🚐</div>
+                        <div class="vehicle-badge-name">Ford F-150</div>
+                    </div>
+                    <div class="maintenance-info">
+                        <div class="maintenance-title">Transmission Service</div>
+                        <div class="maintenance-details">
+                            <span class="detail-item">📅 Due: June 1, 2024</span>
+                            <span class="detail-item">🛣️ Due at: 45,000 mi</span>
+                            <span class="detail-item">📍 Current: 38,920 mi</span>
+                        </div>
+                        <div class="maintenance-description">Transmission fluid change and filter</div>
+                        <div class="maintenance-actions">
+                            <button class="btn-small btn-complete">Mark Complete</button>
+                            <button class="btn-small btn-reschedule">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-status">
+                        <div class="status-label upcoming">Scheduled</div>
+                        <div class="status-value">83 days</div>
+                        <div class="status-subtitle">remaining</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

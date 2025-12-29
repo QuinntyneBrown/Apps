@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Bill Modal - Bill Payment Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-help {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-group:hover {
+            background: #f1f5f9;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            flex: 1;
+            font-weight: 500;
+            color: #1a202c;
+            cursor: pointer;
+        }
+
+        .checkbox-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .recurring-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .recurring-btn {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .recurring-btn:hover {
+            border-color: #cbd5e1;
+        }
+
+        .recurring-btn.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .category-btn {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-btn:hover {
+            border-color: #cbd5e1;
+        }
+
+        .category-btn.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .category-icon {
+            font-size: 1.5rem;
+        }
+
+        .category-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .category-btn.active .category-name {
+            color: #3b82f6;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .alert {
+            padding: 1rem;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert-icon {
+            color: #f59e0b;
+            font-size: 1.25rem;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-text {
+            font-size: 0.875rem;
+            color: #78350f;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-prefix {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            padding: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .input-group .form-input {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .reminder-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .reminder-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .reminder-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .reminder-label {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Bill</h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert">
+                    <div class="alert-icon">💡</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Tip</div>
+                        <div class="alert-text">Adding accurate bill information helps us send timely reminders and manage your cash flow better.</div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-group">
+                        <label class="form-label" for="payee">Payee / Bill Name *</label>
+                        <input
+                            type="text"
+                            id="payee"
+                            class="form-input"
+                            placeholder="e.g., Pacific Gas & Electric, Comcast, Netflix"
+                            value="Comcast Internet"
+                        >
+                        <div class="form-help">Who do you pay this bill to?</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <div class="category-grid">
+                            <button type="button" class="category-btn">
+                                <div class="category-icon">🏠</div>
+                                <div class="category-name">Housing</div>
+                            </button>
+                            <button type="button" class="category-btn active">
+                                <div class="category-icon">⚡</div>
+                                <div class="category-name">Utilities</div>
+                            </button>
+                            <button type="button" class="category-btn">
+                                <div class="category-icon">📱</div>
+                                <div class="category-name">Phone</div>
+                            </button>
+                            <button type="button" class="category-btn">
+                                <div class="category-icon">🛡️</div>
+                                <div class="category-name">Insurance</div>
+                            </button>
+                            <button type="button" class="category-btn">
+                                <div class="category-icon">📺</div>
+                                <div class="category-name">Subscription</div>
+                            </button>
+                            <button type="button" class="category-btn">
+                                <div class="category-icon">🚗</div>
+                                <div class="category-name">Transportation</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="amount">Amount *</label>
+                            <div class="input-group">
+                                <div class="input-prefix">$</div>
+                                <input
+                                    type="number"
+                                    id="amount"
+                                    class="form-input"
+                                    placeholder="0.00"
+                                    value="120.00"
+                                    step="0.01"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="due-date">Due Date *</label>
+                            <input
+                                type="date"
+                                id="due-date"
+                                class="form-input"
+                                value="2024-02-18"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Recurring Bill?</label>
+                        <div class="recurring-options">
+                            <button type="button" class="recurring-btn">One-time</button>
+                            <button type="button" class="recurring-btn active">Monthly</button>
+                            <button type="button" class="recurring-btn">Quarterly</button>
+                            <button type="button" class="recurring-btn">Yearly</button>
+                            <button type="button" class="recurring-btn">Weekly</button>
+                            <button type="button" class="recurring-btn">Custom</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="account">Payment Account</label>
+                        <select id="account" class="form-select">
+                            <option value="">Select payment account...</option>
+                            <option value="checking" selected>Chase Checking (...4892)</option>
+                            <option value="savings">Chase Savings (...7234)</option>
+                            <option value="credit">Visa Credit Card (...3456)</option>
+                            <option value="new">+ Add New Account</option>
+                        </select>
+                        <div class="form-help">Choose which account to pay this bill from</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Reminders</label>
+                        <div class="reminder-options">
+                            <div class="reminder-item">
+                                <input type="checkbox" id="remind-7" class="reminder-checkbox" checked>
+                                <label for="remind-7" class="reminder-label">7 days before due date</label>
+                            </div>
+                            <div class="reminder-item">
+                                <input type="checkbox" id="remind-3" class="reminder-checkbox" checked>
+                                <label for="remind-3" class="reminder-label">3 days before due date</label>
+                            </div>
+                            <div class="reminder-item">
+                                <input type="checkbox" id="remind-1" class="reminder-checkbox" checked>
+                                <label for="remind-1" class="reminder-label">1 day before due date</label>
+                            </div>
+                            <div class="reminder-item">
+                                <input type="checkbox" id="remind-due" class="reminder-checkbox">
+                                <label for="remind-due" class="reminder-label">On due date</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autopay" class="checkbox">
+                            <div>
+                                <label for="autopay" class="checkbox-label">Enable Autopay</label>
+                                <div class="checkbox-description">Automatically pay this bill on the due date</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="notes">Notes (Optional)</label>
+                        <textarea
+                            id="notes"
+                            class="form-input"
+                            rows="3"
+                            placeholder="Add any additional notes about this bill..."
+                        >Account #: 1234-5678-90. Customer service: 1-800-COMCAST</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="website">Website URL (Optional)</label>
+                        <input
+                            type="url"
+                            id="website"
+                            class="form-input"
+                            placeholder="https://www.example.com"
+                            value="https://www.xfinity.com/billing"
+                        >
+                        <div class="form-help">Link to the bill payment website for quick access</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Add Bill</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

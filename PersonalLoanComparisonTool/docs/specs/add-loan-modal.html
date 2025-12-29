@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Loan Offer - Personal Loan Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .modal-header {
+            padding: 32px 32px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .modal-subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #64748b;
+        }
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+        .modal-body {
+            padding: 32px;
+        }
+        .form-section {
+            margin-bottom: 32px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+        .input-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .input-prefix {
+            position: relative;
+        }
+        .input-prefix::before {
+            content: attr(data-prefix);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-weight: 600;
+        }
+        .input-prefix .form-input {
+            padding-left: 32px;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 12px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .toggle-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .toggle-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .calculation-preview {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        .preview-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .preview-item {
+            text-align: center;
+        }
+        .preview-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .preview-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .preview-value.highlight {
+            color: #667eea;
+        }
+        .modal-footer {
+            padding: 24px 32px 32px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .info-box-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .info-box-text {
+            color: #1e40af;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Add Loan Offer</h2>
+                    <p class="modal-subtitle">Enter the details from your loan offer letter</p>
+                </div>
+                <button class="close-btn">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-box-title">💡 Where to find this information</div>
+                    <div class="info-box-text">
+                        All these details should be in your loan offer letter or pre-qualification email. Look for the "Loan Terms" or "Offer Details" section.
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-section">
+                        <div class="section-title">🏦 Lender Information</div>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">Lender Name</label>
+                                <select class="form-input">
+                                    <option>Select lender...</option>
+                                    <option>Marcus by Goldman Sachs</option>
+                                    <option>SoFi</option>
+                                    <option>LendingClub</option>
+                                    <option>Upgrade</option>
+                                    <option>Upstart</option>
+                                    <option>Prosper</option>
+                                    <option>Discover Personal Loans</option>
+                                    <option>Best Egg</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label">Offer Expiration Date</label>
+                                <input type="date" class="form-input" value="2025-01-15">
+                                <span class="input-hint">When does this offer expire?</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">💰 Loan Terms</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Loan Amount</label>
+                                <div class="input-prefix" data-prefix="$">
+                                    <input type="text" class="form-input" placeholder="30,000" value="30,000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">APR (Annual Percentage Rate)</label>
+                                <div class="input-prefix" data-prefix="%">
+                                    <input type="text" class="form-input" placeholder="7.49" value="7.49">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Loan Term</label>
+                                <select class="form-input">
+                                    <option>12 months</option>
+                                    <option>24 months</option>
+                                    <option>36 months</option>
+                                    <option>48 months</option>
+                                    <option selected>60 months</option>
+                                    <option>72 months</option>
+                                    <option>84 months</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Monthly Payment</label>
+                                <div class="input-prefix" data-prefix="$">
+                                    <input type="text" class="form-input" placeholder="601" value="601">
+                                </div>
+                                <span class="input-hint">We'll calculate this if left empty</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">📋 Fees & Charges</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Origination Fee</label>
+                                <div class="toggle-group">
+                                    <button type="button" class="toggle-btn active">None</button>
+                                    <button type="button" class="toggle-btn">%</button>
+                                    <button type="button" class="toggle-btn">$</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fee Amount</label>
+                                <input type="text" class="form-input" placeholder="0" value="0" disabled style="background: #f8fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Late Payment Fee</label>
+                                <div class="input-prefix" data-prefix="$">
+                                    <input type="text" class="form-input" placeholder="25">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Prepayment Penalty</label>
+                                <select class="form-input">
+                                    <option selected>None</option>
+                                    <option>1% of remaining balance</option>
+                                    <option>2% of remaining balance</option>
+                                    <option>3% of remaining balance</option>
+                                    <option>Fixed dollar amount</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">🎁 Benefits & Discounts</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Auto-Pay Discount</label>
+                                <div class="input-prefix" data-prefix="%">
+                                    <input type="text" class="form-input" placeholder="0.25" value="0.25">
+                                </div>
+                                <span class="input-hint">Rate reduction for auto-pay</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hardship Options</label>
+                                <select class="form-input">
+                                    <option selected>Yes - Payment deferral available</option>
+                                    <option>Limited options</option>
+                                    <option>None</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calculation-preview">
+                        <div class="preview-title">Calculated Totals</div>
+                        <div class="preview-grid">
+                            <div class="preview-item">
+                                <div class="preview-label">Total Interest</div>
+                                <div class="preview-value">$6,060</div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-label">Total Fees</div>
+                                <div class="preview-value">$0</div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-label">Total Cost</div>
+                                <div class="preview-value highlight">$36,060</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Add Loan Offer</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

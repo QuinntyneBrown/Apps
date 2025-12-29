@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Events - Anniversary & Birthday Reminder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .events-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+            padding: 15px 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .event-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .event-row:hover {
+            background: #f8f9ff;
+        }
+        .event-row:last-child {
+            border-bottom: none;
+        }
+        .person-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .person-details h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .person-details p {
+            font-size: 13px;
+            color: #666;
+        }
+        .event-date {
+            font-size: 15px;
+            color: #333;
+        }
+        .event-type-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-birthday {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .badge-anniversary {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        .days-until {
+            font-size: 15px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        .days-until.urgent {
+            color: #ff6b6b;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #e0e0e0;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .page-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 All Events</h1>
+            <button class="btn btn-primary">+ Add Event</button>
+        </header>
+
+        <div class="card">
+            <div class="filters">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="🔍 Search by name...">
+                </div>
+                <select class="filter-select">
+                    <option>All Types</option>
+                    <option>Birthdays</option>
+                    <option>Anniversaries</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Relationships</option>
+                    <option>Family</option>
+                    <option>Friends</option>
+                    <option>Colleagues</option>
+                    <option>Partner</option>
+                </select>
+                <select class="filter-select">
+                    <option>Sort by Date</option>
+                    <option>Sort by Name</option>
+                    <option>Sort by Type</option>
+                </select>
+            </div>
+
+            <div class="events-header">
+                <div>Person</div>
+                <div>Date</div>
+                <div>Type</div>
+                <div>Days Until</div>
+                <div></div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">SJ</div>
+                    <div class="person-details">
+                        <h3>Sarah Johnson</h3>
+                        <p>Friend • sarah.j@email.com</p>
+                    </div>
+                </div>
+                <div class="event-date">Jan 2, 2026</div>
+                <div><span class="event-type-badge badge-birthday">Birthday</span></div>
+                <div class="days-until urgent">3 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">WA</div>
+                    <div class="person-details">
+                        <h3>Wedding Anniversary</h3>
+                        <p>Partner • 5 years</p>
+                    </div>
+                </div>
+                <div class="event-date">Jan 5, 2026</div>
+                <div><span class="event-type-badge badge-anniversary">Anniversary</span></div>
+                <div class="days-until urgent">6 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">MB</div>
+                    <div class="person-details">
+                        <h3>Mom's Birthday</h3>
+                        <p>Family • mom@email.com</p>
+                    </div>
+                </div>
+                <div class="event-date">Jan 15, 2026</div>
+                <div><span class="event-type-badge badge-birthday">Birthday</span></div>
+                <div class="days-until">16 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">MC</div>
+                    <div class="person-details">
+                        <h3>Michael Chen</h3>
+                        <p>Colleague • michael.c@company.com</p>
+                    </div>
+                </div>
+                <div class="event-date">Jan 22, 2026</div>
+                <div><span class="event-type-badge badge-birthday">Birthday</span></div>
+                <div class="days-until">23 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">ED</div>
+                    <div class="person-details">
+                        <h3>Emma & David</h3>
+                        <p>Friends • 10 years</p>
+                    </div>
+                </div>
+                <div class="event-date">Jan 28, 2026</div>
+                <div><span class="event-type-badge badge-anniversary">Anniversary</span></div>
+                <div class="days-until">29 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">DB</div>
+                    <div class="person-details">
+                        <h3>Dad's Birthday</h3>
+                        <p>Family • dad@email.com</p>
+                    </div>
+                </div>
+                <div class="event-date">Feb 8, 2026</div>
+                <div><span class="event-type-badge badge-birthday">Birthday</span></div>
+                <div class="days-until">40 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="event-row">
+                <div class="person-info">
+                    <div class="avatar">LM</div>
+                    <div class="person-details">
+                        <h3>Lisa Martinez</h3>
+                        <p>Friend • lisa.m@email.com</p>
+                    </div>
+                </div>
+                <div class="event-date">Feb 14, 2026</div>
+                <div><span class="event-type-badge badge-birthday">Birthday</span></div>
+                <div class="days-until">46 days</div>
+                <div class="actions">
+                    <button class="action-btn" title="View details">👁️</button>
+                    <button class="action-btn" title="Edit">✏️</button>
+                    <button class="action-btn" title="Delete">🗑️</button>
+                </div>
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn">«</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">»</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

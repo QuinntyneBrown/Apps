@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Calendar - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            padding: 32px;
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+        .family-member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .family-member:hover {
+            background: #f9fafb;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .member-info {
+            flex: 1;
+        }
+        .member-name {
+            font-weight: 500;
+            color: #1f2937;
+            font-size: 14px;
+        }
+        .member-events {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .calendar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .calendar-nav button {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .current-date {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        .view-toggle button {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 12px;
+        }
+        .mini-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 8px 4px;
+        }
+        .mini-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+        }
+        .mini-day:hover {
+            background: #f3f4f6;
+        }
+        .mini-day.today {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        .mini-day.has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+        .mini-day.today.has-events::after {
+            background: white;
+        }
+        .mini-day.other-month {
+            color: #d1d5db;
+        }
+        .upcoming-events {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .event-card {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .event-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .event-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .event-details {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .event-attendees {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .attendee-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: white;
+        }
+        .conflict-badge {
+            display: inline-block;
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Family Calendar & Event Planner</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Settings</button>
+                <button class="btn btn-primary">+ Add Event</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="card">
+                    <h2>Family Members</h2>
+                    <div class="family-member">
+                        <div class="avatar" style="background: #ef4444;">MJ</div>
+                        <div class="member-info">
+                            <div class="member-name">Mom (Jennifer)</div>
+                            <div class="member-events">5 events today</div>
+                        </div>
+                    </div>
+                    <div class="family-member">
+                        <div class="avatar" style="background: #3b82f6;">DJ</div>
+                        <div class="member-info">
+                            <div class="member-name">Dad (John)</div>
+                            <div class="member-events">3 events today</div>
+                        </div>
+                    </div>
+                    <div class="family-member">
+                        <div class="avatar" style="background: #10b981;">ES</div>
+                        <div class="member-info">
+                            <div class="member-name">Emma (14)</div>
+                            <div class="member-events">4 events today</div>
+                        </div>
+                    </div>
+                    <div class="family-member">
+                        <div class="avatar" style="background: #f59e0b;">LW</div>
+                        <div class="member-info">
+                            <div class="member-name">Liam (11)</div>
+                            <div class="member-events">2 events today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>December 2025</h2>
+                    <div class="mini-calendar">
+                        <div class="mini-day-header">Su</div>
+                        <div class="mini-day-header">Mo</div>
+                        <div class="mini-day-header">Tu</div>
+                        <div class="mini-day-header">We</div>
+                        <div class="mini-day-header">Th</div>
+                        <div class="mini-day-header">Fr</div>
+                        <div class="mini-day-header">Sa</div>
+
+                        <div class="mini-day other-month">30</div>
+                        <div class="mini-day has-events">1</div>
+                        <div class="mini-day">2</div>
+                        <div class="mini-day has-events">3</div>
+                        <div class="mini-day">4</div>
+                        <div class="mini-day has-events">5</div>
+                        <div class="mini-day">6</div>
+
+                        <div class="mini-day">7</div>
+                        <div class="mini-day has-events">8</div>
+                        <div class="mini-day">9</div>
+                        <div class="mini-day has-events">10</div>
+                        <div class="mini-day">11</div>
+                        <div class="mini-day has-events">12</div>
+                        <div class="mini-day">13</div>
+
+                        <div class="mini-day">14</div>
+                        <div class="mini-day has-events">15</div>
+                        <div class="mini-day">16</div>
+                        <div class="mini-day has-events">17</div>
+                        <div class="mini-day">18</div>
+                        <div class="mini-day has-events">19</div>
+                        <div class="mini-day">20</div>
+
+                        <div class="mini-day">21</div>
+                        <div class="mini-day has-events">22</div>
+                        <div class="mini-day">23</div>
+                        <div class="mini-day has-events">24</div>
+                        <div class="mini-day">25</div>
+                        <div class="mini-day has-events">26</div>
+                        <div class="mini-day">27</div>
+
+                        <div class="mini-day">28</div>
+                        <div class="mini-day today has-events">29</div>
+                        <div class="mini-day has-events">30</div>
+                        <div class="mini-day has-events">31</div>
+                        <div class="mini-day other-month">1</div>
+                        <div class="mini-day other-month">2</div>
+                        <div class="mini-day other-month">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button>← Previous</button>
+                        <div class="current-date">Monday, December 29, 2025</div>
+                        <button>Next →</button>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="active">Day</button>
+                        <button>Week</button>
+                        <button>Month</button>
+                        <button>Agenda</button>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">14</div>
+                        <div class="stat-label">Events This Week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">Conflicts Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Pending RSVPs</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Today's Events</h2>
+                    <div class="upcoming-events">
+                        <div class="event-card" style="border-color: #3b82f6;">
+                            <div class="event-time">7:00 AM - 8:00 AM</div>
+                            <div class="event-title">Family Breakfast</div>
+                            <div class="event-details">📍 Home - Kitchen</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #ef4444;">MJ</span>
+                                <span class="attendee-badge" style="background: #3b82f6;">DJ</span>
+                                <span class="attendee-badge" style="background: #10b981;">ES</span>
+                                <span class="attendee-badge" style="background: #f59e0b;">LW</span>
+                            </div>
+                        </div>
+
+                        <div class="event-card" style="border-color: #10b981;">
+                            <div class="event-time">9:00 AM - 3:30 PM</div>
+                            <div class="event-title">
+                                School Day
+                                <span class="conflict-badge">⚠️ Conflict</span>
+                            </div>
+                            <div class="event-details">📍 Lincoln Middle School</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #10b981;">ES</span>
+                                <span class="attendee-badge" style="background: #f59e0b;">LW</span>
+                            </div>
+                        </div>
+
+                        <div class="event-card" style="border-color: #ef4444;">
+                            <div class="event-time">10:00 AM - 11:30 AM</div>
+                            <div class="event-title">Dentist Appointment</div>
+                            <div class="event-details">📍 Bright Smiles Dental - 456 Oak Ave</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #ef4444;">MJ</span>
+                                <span class="attendee-badge" style="background: #f59e0b;">LW</span>
+                            </div>
+                        </div>
+
+                        <div class="event-card" style="border-color: #10b981;">
+                            <div class="event-time">4:00 PM - 5:30 PM</div>
+                            <div class="event-title">Soccer Practice</div>
+                            <div class="event-details">📍 Community Sports Complex - Field 3</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #10b981;">ES</span>
+                                <span class="attendee-badge" style="background: #3b82f6;">DJ</span>
+                            </div>
+                        </div>
+
+                        <div class="event-card" style="border-color: #f59e0b;">
+                            <div class="event-time">5:00 PM - 6:00 PM</div>
+                            <div class="event-title">
+                                Piano Lesson
+                                <span class="conflict-badge">⚠️ Conflict</span>
+                            </div>
+                            <div class="event-details">📍 Music Academy - Studio 2</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #f59e0b;">LW</span>
+                                <span class="attendee-badge" style="background: #ef4444;">MJ</span>
+                            </div>
+                        </div>
+
+                        <div class="event-card" style="border-color: #667eea;">
+                            <div class="event-time">6:30 PM - 7:30 PM</div>
+                            <div class="event-title">Family Dinner Night</div>
+                            <div class="event-details">📍 Home - Dining Room | 🍝 Italian Night</div>
+                            <div class="event-attendees">
+                                <span class="attendee-badge" style="background: #ef4444;">MJ</span>
+                                <span class="attendee-badge" style="background: #3b82f6;">DJ</span>
+                                <span class="attendee-badge" style="background: #10b981;">ES</span>
+                                <span class="attendee-badge" style="background: #f59e0b;">LW</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

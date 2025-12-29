@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Meetings - Meeting Notes & Action Item Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #434190;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #edf2f7;
+            border-radius: 6px;
+            padding: 0.25rem;
+        }
+
+        .view-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .view-btn.active {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #718096;
+            letter-spacing: 0.05em;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .meeting-title-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .meeting-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .meeting-info {
+            flex: 1;
+        }
+
+        .meeting-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .meeting-subtitle {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .participants {
+            display: flex;
+            gap: -0.5rem;
+        }
+
+        .participant-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-left: -0.5rem;
+        }
+
+        .participant-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge.scheduled {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge.in-progress {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .badge.cancelled {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .action-menu {
+            position: relative;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #718096;
+            font-size: 1.25rem;
+        }
+
+        .menu-btn:hover {
+            color: #2d3748;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem 1.5rem;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        .stat {
+            color: #718096;
+        }
+
+        .stat strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .pagination-info {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .page-btn:hover {
+            background: #f7fafc;
+        }
+
+        .page-btn.active {
+            background: #4c51bf;
+            color: white;
+            border-color: #4c51bf;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📝 MeetingTracker</div>
+        <div class="header-actions">
+            <button class="btn btn-secondary">🔍 Search</button>
+            <button class="btn btn-primary">+ New Meeting</button>
+            <div class="user-avatar">RL</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">All Meetings</h1>
+            <div class="view-toggle">
+                <button class="view-btn active">📋 List</button>
+                <button class="view-btn">📅 Calendar</button>
+                <button class="view-btn">📊 Timeline</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search meetings by title, participants, or notes...">
+            </div>
+
+            <div class="filter-group">
+                <select class="select">
+                    <option>All Status</option>
+                    <option>Scheduled</option>
+                    <option>In Progress</option>
+                    <option>Completed</option>
+                    <option>Cancelled</option>
+                </select>
+
+                <select class="select">
+                    <option>All Time</option>
+                    <option>Today</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                    <option>This Quarter</option>
+                    <option>Custom Range</option>
+                </select>
+
+                <select class="select">
+                    <option>All Participants</option>
+                    <option>Marcus Chen</option>
+                    <option>Diana Edwards</option>
+                    <option>Sarah Kim</option>
+                    <option>Tom Stevens</option>
+                </select>
+
+                <button class="btn btn-secondary">🎯 Advanced Filters</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stats-bar">
+                <div class="stat"><strong>48</strong> Total Meetings</div>
+                <div class="stat"><strong>8</strong> Upcoming</div>
+                <div class="stat"><strong>35</strong> Completed</div>
+                <div class="stat"><strong>3</strong> This Week</div>
+                <div class="stat"><strong>156</strong> Total Action Items</div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Meeting</th>
+                        <th>Date & Time</th>
+                        <th>Participants</th>
+                        <th>Status</th>
+                        <th>Action Items</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">📊</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Q4 Product Planning Review</div>
+                                    <div class="meeting-subtitle">60 minutes • Conference Room A</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Today, 2:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 29, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                <div class="participant-avatar" style="background: #ed8936;">DE</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">+3</div>
+                            </div>
+                        </td>
+                        <td><span class="badge scheduled">Scheduled</span></td>
+                        <td>
+                            <div style="font-weight: 500;">8 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">5 pending</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">👥</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Engineering Team Standup</div>
+                                    <div class="meeting-subtitle">30 minutes • Zoom</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Yesterday, 9:00 AM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 28, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                <div class="participant-avatar" style="background: #ed8936;">SK</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">JD</div>
+                            </div>
+                        </td>
+                        <td><span class="badge completed">Completed</span></td>
+                        <td>
+                            <div style="font-weight: 500;">5 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">3 completed</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">🎯</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Client Feedback Session - Acme Corp</div>
+                                    <div class="meeting-subtitle">45 minutes • Google Meet</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Dec 26, 3:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 26, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">DE</div>
+                                <div class="participant-avatar" style="background: #ed8936;">+2</div>
+                            </div>
+                        </td>
+                        <td><span class="badge completed">Completed</span></td>
+                        <td>
+                            <div style="font-weight: 500;">12 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">8 completed</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">💡</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Marketing Campaign Brainstorm</div>
+                                    <div class="meeting-subtitle">90 minutes • Conference Room B</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Dec 24, 10:00 AM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 24, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #ed8936;">TS</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">KL</div>
+                            </div>
+                        </td>
+                        <td><span class="badge completed">Completed</span></td>
+                        <td>
+                            <div style="font-weight: 500;">6 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">6 completed</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">🚀</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Sprint Planning - Team Alpha</div>
+                                    <div class="meeting-subtitle">120 minutes • Zoom</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Today, 4:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 29, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                <div class="participant-avatar" style="background: #ed8936;">SK</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">+5</div>
+                            </div>
+                        </td>
+                        <td><span class="badge scheduled">Scheduled</span></td>
+                        <td>
+                            <div style="font-weight: 500;">0 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Not started</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">👤</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">1:1 with Marcus</div>
+                                    <div class="meeting-subtitle">30 minutes • Microsoft Teams</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Tomorrow, 10:00 AM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 30, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                            </div>
+                        </td>
+                        <td><span class="badge scheduled">Scheduled</span></td>
+                        <td>
+                            <div style="font-weight: 500;">3 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">From last meeting</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">🎨</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Design Review - Mobile App</div>
+                                    <div class="meeting-subtitle">60 minutes • Google Meet</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Tomorrow, 2:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 30, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #ed8936;">TS</div>
+                                <div class="participant-avatar" style="background: #9f7aea;">KL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">+2</div>
+                            </div>
+                        </td>
+                        <td><span class="badge scheduled">Scheduled</span></td>
+                        <td>
+                            <div style="font-weight: 500;">0 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Not started</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">📈</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Weekly Sales Review</div>
+                                    <div class="meeting-subtitle">45 minutes • Conference Room C</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Dec 23, 11:00 AM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 23, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">DE</div>
+                                <div class="participant-avatar" style="background: #ed8936;">+4</div>
+                            </div>
+                        </td>
+                        <td><span class="badge completed">Completed</span></td>
+                        <td>
+                            <div style="font-weight: 500;">7 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">5 completed</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">🔒</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Security Audit Planning</div>
+                                    <div class="meeting-subtitle">90 minutes • Zoom</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Dec 20, 2:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 20, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                <div class="participant-avatar" style="background: #ed8936;">SK</div>
+                            </div>
+                        </td>
+                        <td><span class="badge completed">Completed</span></td>
+                        <td>
+                            <div style="font-weight: 500;">15 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">12 completed</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="meeting-title-cell">
+                                <div class="meeting-icon">❌</div>
+                                <div class="meeting-info">
+                                    <div class="meeting-title">Budget Review Q4</div>
+                                    <div class="meeting-subtitle">60 minutes • Conference Room A</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">Dec 19, 4:00 PM</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Dec 19, 2025</div>
+                        </td>
+                        <td>
+                            <div class="participants">
+                                <div class="participant-avatar" style="background: #667eea;">RL</div>
+                                <div class="participant-avatar" style="background: #48bb78;">DE</div>
+                            </div>
+                        </td>
+                        <td><span class="badge cancelled">Cancelled</span></td>
+                        <td>
+                            <div style="font-weight: 500;">0 items</div>
+                            <div style="font-size: 0.75rem; color: #718096;">Rescheduled</div>
+                        </td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="menu-btn">⋯</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <div class="pagination-info">Showing 1-10 of 48 meetings</div>
+                <div class="pagination-controls">
+                    <button class="page-btn" disabled>← Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

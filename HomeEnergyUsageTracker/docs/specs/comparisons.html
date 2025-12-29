@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparisons - Home Energy Usage Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .comparison-tabs {
+            display: flex;
+            gap: 12px;
+            background: white;
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-tab {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .comparison-tab.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 12px;
+        }
+
+        .summary-comparison {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .summary-value {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .summary-value.you {
+            color: #4facfe;
+        }
+
+        .summary-value.average {
+            color: #a0aec0;
+        }
+
+        .summary-vs {
+            font-size: 20px;
+            color: #718096;
+        }
+
+        .summary-result {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 178, 172, 0.1) 100%);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #22543d;
+        }
+
+        .summary-result.worse {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(252, 129, 129, 0.1) 100%);
+            color: #742a2a;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-card h3 {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .bar-comparison {
+            margin-bottom: 20px;
+        }
+
+        .bar-item {
+            margin-bottom: 16px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .bar-label-text {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .bar-label-value {
+            color: #718096;
+        }
+
+        .bar-container {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+
+        .bar-fill.you {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .bar-fill.average {
+            background: linear-gradient(90deg, #a0aec0 0%, #cbd5e0 100%);
+        }
+
+        .bar-fill.efficient {
+            background: linear-gradient(90deg, #48bb78 0%, #38b2ac 100%);
+        }
+
+        .insight-box {
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.05) 0%, rgba(0, 242, 254, 0.05) 100%);
+            border-radius: 12px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .insight-box p {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-section h2 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100%;
+            padding: 20px 0;
+            gap: 16px;
+        }
+
+        .chart-group {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            justify-content: center;
+            max-width: 100px;
+        }
+
+        .chart-bar {
+            width: 40px;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: translateY(-4px);
+        }
+
+        .chart-bar.you {
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .chart-bar.average {
+            background: linear-gradient(180deg, #a0aec0 0%, #cbd5e0 100%);
+        }
+
+        .chart-label {
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .leaderboard {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaderboard h2 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .leaderboard-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+
+        .leaderboard-item.you {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border: 2px solid #4facfe;
+        }
+
+        .leaderboard-rank {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .leaderboard-rank.gold {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .leaderboard-rank.silver {
+            background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+        }
+
+        .leaderboard-rank.bronze {
+            background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%);
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .leaderboard-details {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .leaderboard-value {
+            text-align: right;
+        }
+
+        .leaderboard-score {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        .leaderboard-label {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-tabs {
+                flex-direction: column;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-comparison {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="breadcrumb">
+                    <a href="dashboard-main.html">Dashboard</a> / Comparisons
+                </div>
+                <h1>
+                    <div class="header-icon">📊</div>
+                    Usage Comparisons
+                </h1>
+            </div>
+        </div>
+
+        <div class="comparison-tabs">
+            <button class="comparison-tab active">vs. Last Month</button>
+            <button class="comparison-tab">vs. Last Year</button>
+            <button class="comparison-tab">vs. Neighbors</button>
+            <button class="comparison-tab">vs. Similar Homes</button>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Your December Usage vs November</div>
+            <div class="summary-comparison">
+                <div>
+                    <div style="font-size: 14px; color: #718096; margin-bottom: 8px;">This Month</div>
+                    <div class="summary-value you">845 kWh</div>
+                </div>
+                <div class="summary-vs">vs</div>
+                <div>
+                    <div style="font-size: 14px; color: #718096; margin-bottom: 8px;">Last Month</div>
+                    <div class="summary-value average">687 kWh</div>
+                </div>
+            </div>
+            <div class="summary-result worse">⬆ 23% Higher • +158 kWh • +$35.12</div>
+        </div>
+
+        <div class="comparison-grid">
+            <div class="comparison-card">
+                <h3>Electric Usage Comparison</h3>
+                <div class="bar-comparison">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">This Month (Dec)</span>
+                            <span class="bar-label-value">845 kWh</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill you" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Last Month (Nov)</span>
+                            <span class="bar-label-value">687 kWh</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 81%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Dec 2024</span>
+                            <span class="bar-label-value">792 kWh</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 94%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <p><strong>Insight:</strong> Your usage increased due to colder weather requiring more heating. This is typical for December.</p>
+                </div>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Gas Usage Comparison</h3>
+                <div class="bar-comparison">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">This Month (Dec)</span>
+                            <span class="bar-label-value">42 therms</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill you" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Last Month (Nov)</span>
+                            <span class="bar-label-value">38 therms</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill efficient" style="width: 90%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Dec 2024</span>
+                            <span class="bar-label-value">48 therms</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 114%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <p><strong>Good news!</strong> Your gas usage is down 12% compared to last December, showing improved heating efficiency.</p>
+                </div>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Water Usage Comparison</h3>
+                <div class="bar-comparison">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">This Month (Dec)</span>
+                            <span class="bar-label-value">5,200 gal</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill you" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Last Month (Nov)</span>
+                            <span class="bar-label-value">5,500 gal</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 106%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Dec 2024</span>
+                            <span class="bar-label-value">6,100 gal</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 117%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <p><strong>Great progress!</strong> Water usage is down 15% from last year, saving you money and conserving resources.</p>
+                </div>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Total Cost Comparison</h3>
+                <div class="bar-comparison">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">This Month (Dec)</span>
+                            <span class="bar-label-value">$347.80</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill you" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Last Month (Nov)</span>
+                            <span class="bar-label-value">$311.23</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 89%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span class="bar-label-text">Dec 2024</span>
+                            <span class="bar-label-value">$389.45</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill average" style="width: 112%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <p><strong>Year-over-year:</strong> You're saving $41.65/month compared to last December despite rate increases.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h2>12-Month Trend Comparison</h2>
+            <div class="chart-container">
+                <div class="chart-bars">
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 48%;"></div>
+                        <div class="chart-bar average" style="height: 45%;"></div>
+                        <div class="chart-label">Jan</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 52%;"></div>
+                        <div class="chart-bar average" style="height: 50%;"></div>
+                        <div class="chart-label">Feb</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 38%;"></div>
+                        <div class="chart-bar average" style="height: 42%;"></div>
+                        <div class="chart-label">Mar</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 42%;"></div>
+                        <div class="chart-bar average" style="height: 45%;"></div>
+                        <div class="chart-label">Apr</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 48%;"></div>
+                        <div class="chart-bar average" style="height: 52%;"></div>
+                        <div class="chart-label">May</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 65%;"></div>
+                        <div class="chart-bar average" style="height: 68%;"></div>
+                        <div class="chart-label">Jun</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 72%;"></div>
+                        <div class="chart-bar average" style="height: 78%;"></div>
+                        <div class="chart-label">Jul</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 78%;"></div>
+                        <div class="chart-bar average" style="height: 85%;"></div>
+                        <div class="chart-label">Aug</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 58%;"></div>
+                        <div class="chart-bar average" style="height: 62%;"></div>
+                        <div class="chart-label">Sep</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 44%;"></div>
+                        <div class="chart-bar average" style="height: 48%;"></div>
+                        <div class="chart-label">Oct</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 51%;"></div>
+                        <div class="chart-bar average" style="height: 52%;"></div>
+                        <div class="chart-label">Nov</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar you" style="height: 62%;"></div>
+                        <div class="chart-bar average" style="height: 58%;"></div>
+                        <div class="chart-label">Dec</div>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 24px; margin-top: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 4px;"></div>
+                    <span style="font-size: 14px; color: #718096;">This Year</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #a0aec0 0%, #cbd5e0 100%); border-radius: 4px;"></div>
+                    <span style="font-size: 14px; color: #718096;">Last Year</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="leaderboard">
+            <h2>Neighborhood Efficiency Leaderboard</h2>
+            <p style="font-size: 14px; color: #718096; margin-bottom: 20px;">Compare your usage with similar homes in your area (anonymous data)</p>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank gold">1</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Maple St</div>
+                    <div class="leaderboard-details">2,400 sq ft • 4 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">542 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank silver">2</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Oak Ave</div>
+                    <div class="leaderboard-details">2,200 sq ft • 3 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">598 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank bronze">3</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Pine Rd</div>
+                    <div class="leaderboard-details">2,600 sq ft • 4 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">634 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank">4</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Cedar Ln</div>
+                    <div class="leaderboard-details">2,500 sq ft • 3 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">712 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item you">
+                <div class="leaderboard-rank">5</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Your Home (123 Main St)</div>
+                    <div class="leaderboard-details">2,800 sq ft • 4 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">845 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank">6</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Birch Dr</div>
+                    <div class="leaderboard-details">3,000 sq ft • 5 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">923 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank">7</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">Home on Elm St</div>
+                    <div class="leaderboard-details">2,700 sq ft • 4 occupants</div>
+                </div>
+                <div class="leaderboard-value">
+                    <div class="leaderboard-score">1,048 kWh</div>
+                    <div class="leaderboard-label">This month</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, rgba(79, 172, 254, 0.05) 0%, rgba(0, 242, 254, 0.05) 100%); border-radius: 12px;">
+                <p style="font-size: 14px; color: #718096; line-height: 1.6;">
+                    <strong>You're in the middle of the pack!</strong> By implementing energy-saving tips, you could move up to the top 3 and save approximately $80/month.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

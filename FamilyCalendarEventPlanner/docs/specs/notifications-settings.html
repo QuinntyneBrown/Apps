@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications & Settings - Family Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .page-header {
+            padding: 32px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .page-description {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .content {
+            padding: 32px;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 32px;
+        }
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            color: #667eea;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .settings-section {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-description {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-info {
+            flex: 1;
+        }
+        .setting-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .setting-hint {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #d1d5db;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .switch.active {
+            background: #10b981;
+        }
+        .switch-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .switch.active .switch-knob {
+            left: 26px;
+        }
+        .dropdown-select {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            background: white;
+            min-width: 150px;
+        }
+        .dropdown-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .notification-preview {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        .preview-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .notification-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        .notification-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .notification-time {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .notification-body {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .reminder-times {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .reminder-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .reminder-chip.active {
+            background: #eff6ff;
+            border-color: #667eea;
+        }
+        .chip-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .chip-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .delivery-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .delivery-card {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .delivery-card:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        .delivery-card.active {
+            background: #eff6ff;
+            border-color: #667eea;
+        }
+        .delivery-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .delivery-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .delivery-status {
+            font-size: 11px;
+            color: #10b981;
+            font-weight: 600;
+        }
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .day-slot {
+            text-align: center;
+            padding: 12px 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .day-slot:hover {
+            border-color: #667eea;
+        }
+        .day-slot.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .day-name {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .time-input {
+            margin-top: 8px;
+            padding: 6px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 100%;
+        }
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            padding-top: 20px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f9fafb;
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .action-btn.primary:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Notifications & Settings</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Calendar</button>
+                <button class="btn btn-primary">Save All Changes</button>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <h2 class="page-title">Notification Preferences & Reminders</h2>
+            <p class="page-description">Customize how and when you receive notifications about family events and calendar updates.</p>
+        </div>
+
+        <div class="content">
+            <div class="stats-overview">
+                <div class="stat-box">
+                    <div class="stat-number">48</div>
+                    <div class="stat-label">Notifications This Week</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Upcoming Reminders</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Active Channels</div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active">Reminders</button>
+                <button class="tab">Delivery Methods</button>
+                <button class="tab">Quiet Hours</button>
+                <button class="tab">Event Updates</button>
+            </div>
+
+            <!-- Reminders Tab -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">⏰ Default Event Reminders</div>
+                        <div class="section-description">
+                            Set default reminder times for all new events. You can override these for individual events.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reminder-times">
+                    <div class="reminder-chip active">
+                        <div>
+                            <div class="chip-label">1 Day Before</div>
+                            <div class="chip-description">Sent at 9:00 AM the day before</div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reminder-chip active">
+                        <div>
+                            <div class="chip-label">1 Hour Before</div>
+                            <div class="chip-description">Sent 60 minutes before event start</div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reminder-chip active">
+                        <div>
+                            <div class="chip-label">15 Minutes Before</div>
+                            <div class="chip-description">Sent 15 minutes before event start</div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reminder-chip">
+                        <div>
+                            <div class="chip-label">At Event Time</div>
+                            <div class="chip-description">Sent when event starts</div>
+                        </div>
+                        <div class="toggle-switch">
+                            <div class="switch">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">📬 Delivery Methods</div>
+                        <div class="section-description">
+                            Choose how you want to receive notifications and reminders.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delivery-methods">
+                    <div class="delivery-card active">
+                        <div class="delivery-icon">🔔</div>
+                        <div class="delivery-name">Push Notifications</div>
+                        <div class="delivery-status">✓ Enabled</div>
+                    </div>
+
+                    <div class="delivery-card active">
+                        <div class="delivery-icon">📧</div>
+                        <div class="delivery-name">Email</div>
+                        <div class="delivery-status">✓ Enabled</div>
+                    </div>
+
+                    <div class="delivery-card active">
+                        <div class="delivery-icon">💬</div>
+                        <div class="delivery-name">SMS/Text</div>
+                        <div class="delivery-status">✓ Enabled</div>
+                    </div>
+
+                    <div class="delivery-card">
+                        <div class="delivery-icon">📱</div>
+                        <div class="delivery-name">In-App Only</div>
+                        <div class="delivery-status" style="color: #6b7280;">Disabled</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">🌙 Quiet Hours</div>
+                        <div class="section-description">
+                            Set times when you don't want to receive notifications (except urgent alerts).
+                        </div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Quiet Hours Start</div>
+                        <div class="setting-hint">No notifications will be sent after this time</div>
+                    </div>
+                    <input type="time" class="dropdown-select" value="22:00">
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Quiet Hours End</div>
+                        <div class="setting-hint">Notifications will resume after this time</div>
+                    </div>
+                    <input type="time" class="dropdown-select" value="07:00">
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Active Days</div>
+                        <div class="setting-hint">Select which days quiet hours apply</div>
+                    </div>
+                </div>
+
+                <div class="schedule-grid">
+                    <div class="day-slot active">
+                        <div class="day-name">Sun</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Mon</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Tue</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Wed</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Thu</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Fri</div>
+                    </div>
+                    <div class="day-slot active">
+                        <div class="day-name">Sat</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">📅 Event Update Notifications</div>
+                        <div class="section-description">
+                            Control when you're notified about changes to events.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Event Created</div>
+                        <div class="setting-hint">Notify when a family member creates a new event</div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Event Modified</div>
+                        <div class="setting-hint">Notify when event details are changed</div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Event Cancelled</div>
+                        <div class="setting-hint">Notify when an event is cancelled</div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">RSVP Updates</div>
+                        <div class="setting-hint">Notify when someone responds to an event invitation</div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Conflict Detected</div>
+                        <div class="setting-hint">Notify immediately when a scheduling conflict is detected</div>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="switch active">
+                            <div class="switch-knob"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">📊 Daily & Weekly Summaries</div>
+                        <div class="section-description">
+                            Receive scheduled summaries of your family's calendar.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Daily Summary</div>
+                        <div class="setting-hint">Get a summary of today's events every morning</div>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="time" class="dropdown-select" value="07:00" style="min-width: 100px;">
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Weekly Summary</div>
+                        <div class="setting-hint">Get a summary of the week ahead every Sunday evening</div>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <select class="dropdown-select">
+                            <option>Sunday 6:00 PM</option>
+                            <option>Monday 8:00 AM</option>
+                        </select>
+                        <div class="toggle-switch">
+                            <div class="switch active">
+                                <div class="switch-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">📱 Notification Preview</div>
+                <div class="notification-preview">
+                    <div class="preview-title">Example Notification</div>
+                    <div class="notification-card">
+                        <div class="notification-header">
+                            <div class="notification-title">⚽ Soccer Practice - Starting in 1 hour</div>
+                            <div class="notification-time">3:00 PM</div>
+                        </div>
+                        <div class="notification-body">
+                            Emma's soccer practice starts at 4:00 PM at Community Sports Complex - Field 3.
+                            Don't forget to bring water bottle and shin guards!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn">Reset to Defaults</button>
+                <button class="action-btn">Test Notifications</button>
+                <button class="action-btn primary">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

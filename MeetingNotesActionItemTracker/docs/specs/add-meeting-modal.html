@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Meeting - Meeting Notes & Action Item Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .template-selector {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .template-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .template-option {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .template-option:hover {
+            border-color: #4c51bf;
+            background: #f7fafc;
+        }
+
+        .template-option.selected {
+            border-color: #4c51bf;
+            background: #edf2f7;
+        }
+
+        .template-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .required {
+            color: #f56565;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4c51bf;
+            box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+        }
+
+        .input-with-icon .form-input {
+            padding-left: 2.5rem;
+        }
+
+        .participant-input-wrapper {
+            position: relative;
+        }
+
+        .participant-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .participant-tag {
+            background: #edf2f7;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .participant-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .remove-participant {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #718096;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .remove-participant:hover {
+            color: #2d3748;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .integration-options {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .integration-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .integration-btn:hover {
+            border-color: #4c51bf;
+            background: #f7fafc;
+        }
+
+        .integration-btn.connected {
+            background: #c6f6d5;
+            border-color: #48bb78;
+            color: #22543d;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f7fafc;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #434190;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .recurring-options {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .recurring-pattern {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Create New Meeting</h2>
+            <button class="close-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="template-selector">
+                <label class="template-label">Start with a template (optional)</label>
+                <div class="template-grid">
+                    <div class="template-option">
+                        <div class="template-icon">📝</div>
+                        <div class="template-name">Blank</div>
+                    </div>
+                    <div class="template-option">
+                        <div class="template-icon">👥</div>
+                        <div class="template-name">Team Standup</div>
+                    </div>
+                    <div class="template-option">
+                        <div class="template-icon">🎯</div>
+                        <div class="template-name">Sprint Planning</div>
+                    </div>
+                    <div class="template-option">
+                        <div class="template-icon">👤</div>
+                        <div class="template-name">1-on-1</div>
+                    </div>
+                    <div class="template-option selected">
+                        <div class="template-icon">📊</div>
+                        <div class="template-name">Project Review</div>
+                    </div>
+                </div>
+            </div>
+
+            <form>
+                <div class="form-section">
+                    <div class="section-title">📋 Basic Information</div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Meeting Title <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" placeholder="e.g., Q1 Planning Session" value="Q1 Planning Session">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" placeholder="Add meeting description, objectives, or context...">Review Q1 goals, discuss resource allocation, and plan major initiatives for the quarter.</textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">📅 Date & Time</div>
+
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Date <span class="required">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <span class="input-icon">📅</span>
+                                <input type="date" class="form-input" value="2025-01-03">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Start Time <span class="required">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <span class="input-icon">🕐</span>
+                                <input type="time" class="form-input" value="14:00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Duration <span class="required">*</span>
+                            </label>
+                            <select class="form-input">
+                                <option>15 minutes</option>
+                                <option>30 minutes</option>
+                                <option>45 minutes</option>
+                                <option selected>60 minutes</option>
+                                <option>90 minutes</option>
+                                <option>120 minutes</option>
+                                <option>Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Time Zone</label>
+                            <select class="form-input">
+                                <option selected>Pacific Time (PT)</option>
+                                <option>Eastern Time (ET)</option>
+                                <option>Central Time (CT)</option>
+                                <option>Mountain Time (MT)</option>
+                                <option>UTC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="recurring" class="checkbox">
+                        <label for="recurring" class="checkbox-label">Make this a recurring meeting</label>
+                    </div>
+
+                    <div class="recurring-options" style="display: none;">
+                        <div class="recurring-pattern">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Repeat</label>
+                                <select class="form-input">
+                                    <option>Daily</option>
+                                    <option selected>Weekly</option>
+                                    <option>Bi-weekly</option>
+                                    <option>Monthly</option>
+                                    <option>Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Ends</label>
+                                <select class="form-input">
+                                    <option>Never</option>
+                                    <option>After X occurrences</option>
+                                    <option selected>On date</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">👥 Participants</div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Add Participants <span class="required">*</span>
+                        </label>
+                        <div class="participant-input-wrapper">
+                            <input type="text" class="form-input" placeholder="Search by name or email...">
+                            <div class="participant-tags">
+                                <div class="participant-tag">
+                                    <div class="participant-avatar" style="background: #48bb78;">MC</div>
+                                    <span>Marcus Chen</span>
+                                    <button class="remove-participant">×</button>
+                                </div>
+                                <div class="participant-tag">
+                                    <div class="participant-avatar" style="background: #ed8936;">DE</div>
+                                    <span>Diana Edwards</span>
+                                    <button class="remove-participant">×</button>
+                                </div>
+                                <div class="participant-tag">
+                                    <div class="participant-avatar" style="background: #9f7aea;">SK</div>
+                                    <span>Sarah Kim</span>
+                                    <button class="remove-participant">×</button>
+                                </div>
+                                <div class="participant-tag">
+                                    <div class="participant-avatar" style="background: #f56565;">JD</div>
+                                    <span>John Davis</span>
+                                    <button class="remove-participant">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="help-text">Start typing to search for team members</div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="optional" class="checkbox">
+                        <label for="optional" class="checkbox-label">Mark some participants as optional</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">🎥 Location & Virtual Meeting</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Meeting Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="meeting-type" class="radio" id="virtual" checked>
+                                <label for="virtual" class="checkbox-label">Virtual</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="meeting-type" class="radio" id="in-person">
+                                <label for="in-person" class="checkbox-label">In-Person</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="meeting-type" class="radio" id="hybrid">
+                                <label for="hybrid" class="checkbox-label">Hybrid</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Video Conference Link</label>
+                        <div class="integration-options">
+                            <button class="integration-btn" type="button">
+                                <span>🎥</span> Generate Zoom Link
+                            </button>
+                            <button class="integration-btn" type="button">
+                                <span>📹</span> Generate Teams Link
+                            </button>
+                            <button class="integration-btn connected" type="button">
+                                <span>✓</span> Google Meet
+                            </button>
+                        </div>
+                        <input type="url" class="form-input" placeholder="Or paste a meeting link" value="https://meet.google.com/abc-defg-hij" style="margin-top: 0.75rem;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Location / Room</label>
+                        <input type="text" class="form-input" placeholder="e.g., Conference Room A, Building 2">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">📝 Agenda</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Meeting Agenda</label>
+                        <textarea class="form-input" placeholder="Add agenda items, discussion topics, or talking points...">1. Review Q4 performance metrics
+2. Discuss Q1 objectives and key results
+3. Resource allocation and budget planning
+4. Risk assessment and mitigation strategies
+5. Action items and next steps</textarea>
+                        <div class="help-text">This will be added to the meeting notes automatically</div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="send-agenda" class="checkbox" checked>
+                        <label for="send-agenda" class="checkbox-label">Send agenda to participants before the meeting</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">🔔 Reminders & Notifications</div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="calendar-invite" class="checkbox" checked>
+                        <label for="calendar-invite" class="checkbox-label">Send calendar invites to all participants</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="reminder-1day" class="checkbox" checked>
+                        <label for="reminder-1day" class="checkbox-label">Send reminder 1 day before</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="reminder-1hour" class="checkbox" checked>
+                        <label for="reminder-1hour" class="checkbox-label">Send reminder 1 hour before</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <div>
+                <button class="btn btn-secondary">Save as Draft</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Create Meeting</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

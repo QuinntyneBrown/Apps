@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Tracking - MealPrepPlanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #10b981;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .date-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .date-arrow:hover {
+            background: #f8fafc;
+            border-color: #10b981;
+        }
+
+        .current-date {
+            font-weight: 600;
+            color: #1a202c;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .macros-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .macro-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .macro-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .macro-card.calories::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .macro-card.protein::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .macro-card.carbs::before {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        }
+
+        .macro-card.fats::before {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        }
+
+        .macro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .macro-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .macro-icon {
+            font-size: 1.5rem;
+        }
+
+        .macro-values {
+            margin-bottom: 1rem;
+        }
+
+        .macro-current {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1;
+        }
+
+        .macro-goal {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+        }
+
+        .ring-background,
+        .ring-progress {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .ring-background {
+            stroke: #e2e8f0;
+        }
+
+        .ring-progress {
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.calories {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .progress-fill.protein {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .progress-fill.carbs {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        }
+
+        .progress-fill.fats {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1.5rem;
+        }
+
+        .meals-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .meal-entry {
+            border-left: 3px solid #10b981;
+            padding-left: 1.25rem;
+            position: relative;
+        }
+
+        .meal-entry::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 0.25rem;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .meal-time-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meal-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .meal-time {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .meal-calories {
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .meal-foods {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .food-item {
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .food-name {
+            font-weight: 500;
+            color: #1a202c;
+        }
+
+        .food-macros {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .macro-value {
+            color: #64748b;
+        }
+
+        .macro-value strong {
+            color: #1a202c;
+        }
+
+        .micronutrients-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .micro-item {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .micro-name {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .micro-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .micro-bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .micro-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 3px;
+        }
+
+        .micro-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a202c;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .chart-container {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, #10b981, #059669);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-height: 20px;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .goal-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .goal-status {
+            padding: 0.25rem 0.625rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .goal-status.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .goal-progress {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            🍽️ MealPrepPlanner
+        </div>
+        <nav class="nav">
+            <a href="#">Dashboard</a>
+            <a href="#">Meal Plans</a>
+            <a href="#">Recipes</a>
+            <a href="#">Grocery Lists</a>
+            <a href="#" class="active">Nutrition</a>
+        </nav>
+        <div class="user-menu">
+            <div class="avatar">JD</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">Nutrition Tracking</h1>
+                <p class="page-subtitle">Monitor your daily nutrition and achieve your goals</p>
+            </div>
+            <div class="date-selector">
+                <div class="date-arrow">←</div>
+                <div class="current-date">Today, Dec 29</div>
+                <div class="date-arrow">→</div>
+            </div>
+        </div>
+
+        <div class="macros-overview">
+            <div class="macro-card calories">
+                <div class="macro-header">
+                    <span class="macro-label">Calories</span>
+                    <span class="macro-icon">🔥</span>
+                </div>
+                <div class="macro-values">
+                    <div class="macro-current">1,550</div>
+                    <div class="macro-goal">of 2,200 kcal</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill calories" style="width: 70%"></div>
+                </div>
+            </div>
+
+            <div class="macro-card protein">
+                <div class="macro-header">
+                    <span class="macro-label">Protein</span>
+                    <span class="macro-icon">💪</span>
+                </div>
+                <div class="macro-values">
+                    <div class="macro-current">95g</div>
+                    <div class="macro-goal">of 150g goal</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill protein" style="width: 63%"></div>
+                </div>
+            </div>
+
+            <div class="macro-card carbs">
+                <div class="macro-header">
+                    <span class="macro-label">Carbohydrates</span>
+                    <span class="macro-icon">🌾</span>
+                </div>
+                <div class="macro-values">
+                    <div class="macro-current">175g</div>
+                    <div class="macro-goal">of 250g goal</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill carbs" style="width: 70%"></div>
+                </div>
+            </div>
+
+            <div class="macro-card fats">
+                <div class="macro-header">
+                    <span class="macro-label">Fats</span>
+                    <span class="macro-icon">🥑</span>
+                </div>
+                <div class="macro-values">
+                    <div class="macro-current">48g</div>
+                    <div class="macro-goal">of 75g goal</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill fats" style="width: 64%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">Today's Meals</h2>
+                <div class="meals-timeline">
+                    <div class="meal-entry">
+                        <div class="meal-header">
+                            <div class="meal-time-label">
+                                <span class="meal-name">Breakfast</span>
+                                <span class="meal-time">8:00 AM</span>
+                            </div>
+                            <span class="meal-calories">385 cal</span>
+                        </div>
+                        <div class="meal-foods">
+                            <div class="food-item">
+                                <span class="food-name">Greek Yogurt Bowl</span>
+                                <div class="food-macros">
+                                    <span class="macro-value"><strong>25g</strong> protein</span>
+                                    <span class="macro-value"><strong>45g</strong> carbs</span>
+                                    <span class="macro-value"><strong>8g</strong> fat</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meal-entry">
+                        <div class="meal-header">
+                            <div class="meal-time-label">
+                                <span class="meal-name">Lunch</span>
+                                <span class="meal-time">12:30 PM</span>
+                            </div>
+                            <span class="meal-calories">520 cal</span>
+                        </div>
+                        <div class="meal-foods">
+                            <div class="food-item">
+                                <span class="food-name">Chicken Caesar Salad</span>
+                                <div class="food-macros">
+                                    <span class="macro-value"><strong>45g</strong> protein</span>
+                                    <span class="macro-value"><strong>28g</strong> carbs</span>
+                                    <span class="macro-value"><strong>22g</strong> fat</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meal-entry">
+                        <div class="meal-header">
+                            <div class="meal-time-label">
+                                <span class="meal-name">Dinner</span>
+                                <span class="meal-time">6:00 PM</span>
+                            </div>
+                            <span class="meal-calories">645 cal</span>
+                        </div>
+                        <div class="meal-foods">
+                            <div class="food-item">
+                                <span class="food-name">Salmon with Roasted Vegetables</span>
+                                <div class="food-macros">
+                                    <span class="macro-value"><strong>48g</strong> protein</span>
+                                    <span class="macro-value"><strong>42g</strong> carbs</span>
+                                    <span class="macro-value"><strong>28g</strong> fat</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2 class="card-title">Daily Goals</h2>
+                    <div class="goals-list">
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <span class="goal-name">Calorie Target</span>
+                                <span class="goal-status">On Track</span>
+                            </div>
+                            <div class="goal-progress">1,550 / 2,200 kcal (70%)</div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <span class="goal-name">Protein Intake</span>
+                                <span class="goal-status warning">Below Target</span>
+                            </div>
+                            <div class="goal-progress">95 / 150g (63%)</div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <span class="goal-name">Water Intake</span>
+                                <span class="goal-status">On Track</span>
+                            </div>
+                            <div class="goal-progress">6 / 8 cups (75%)</div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <span class="goal-name">Fiber Intake</span>
+                                <span class="goal-status">On Track</span>
+                            </div>
+                            <div class="goal-progress">28 / 35g (80%)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2 class="card-title">Micronutrients</h2>
+                    <div class="micronutrients-grid">
+                        <div class="micro-item">
+                            <div class="micro-name">Vitamin A</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 85%"></div>
+                                </div>
+                                <div class="micro-value">850 / 1000 IU</div>
+                            </div>
+                        </div>
+                        <div class="micro-item">
+                            <div class="micro-name">Vitamin C</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 120%"></div>
+                                </div>
+                                <div class="micro-value">108 / 90 mg</div>
+                            </div>
+                        </div>
+                        <div class="micro-item">
+                            <div class="micro-name">Calcium</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 75%"></div>
+                                </div>
+                                <div class="micro-value">750 / 1000 mg</div>
+                            </div>
+                        </div>
+                        <div class="micro-item">
+                            <div class="micro-name">Iron</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 90%"></div>
+                                </div>
+                                <div class="micro-value">16.2 / 18 mg</div>
+                            </div>
+                        </div>
+                        <div class="micro-item">
+                            <div class="micro-name">Vitamin D</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 65%"></div>
+                                </div>
+                                <div class="micro-value">390 / 600 IU</div>
+                            </div>
+                        </div>
+                        <div class="micro-item">
+                            <div class="micro-name">Potassium</div>
+                            <div class="micro-progress">
+                                <div class="micro-bar">
+                                    <div class="micro-fill" style="width: 80%"></div>
+                                </div>
+                                <div class="micro-value">2800 / 3500 mg</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Weekly Calorie Trend</h2>
+            <div class="chart-container">
+                <div class="chart-bars">
+                    <div class="bar-group">
+                        <div class="bar" style="height: 85%;">
+                            <span class="bar-value">2,125</span>
+                        </div>
+                        <span class="bar-label">Mon</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 78%;">
+                            <span class="bar-value">1,950</span>
+                        </div>
+                        <span class="bar-label">Tue</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 92%;">
+                            <span class="bar-value">2,280</span>
+                        </div>
+                        <span class="bar-label">Wed</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 82%;">
+                            <span class="bar-value">2,050</span>
+                        </div>
+                        <span class="bar-label">Thu</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 88%;">
+                            <span class="bar-value">2,200</span>
+                        </div>
+                        <span class="bar-label">Fri</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 95%;">
+                            <span class="bar-value">2,375</span>
+                        </div>
+                        <span class="bar-label">Sat</span>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar" style="height: 70%;" style="background: linear-gradient(180deg, #cbd5e1, #94a3b8);">
+                            <span class="bar-value">1,550</span>
+                        </div>
+                        <span class="bar-label">Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Allocation Analysis - Investment Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .three-col-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .donut-chart {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .donut-chart svg {
+            transform: rotate(-90deg);
+        }
+
+        .donut-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .donut-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .donut-label {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .legend {
+            margin-top: 24px;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .legend-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .legend-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .legend-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .allocation-comparison {
+            margin-bottom: 20px;
+        }
+
+        .allocation-row {
+            margin-bottom: 24px;
+        }
+
+        .allocation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .allocation-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .allocation-values {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .current-value {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .target-value {
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .drift-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .drift-high {
+            background: #fff4e6;
+            color: #f59e0b;
+        }
+
+        .drift-low {
+            background: #ffeaea;
+            color: #db2c3e;
+        }
+
+        .drift-ok {
+            background: #d4f8e8;
+            color: #0f9960;
+        }
+
+        .bars-container {
+            display: flex;
+            gap: 8px;
+            height: 40px;
+        }
+
+        .bar {
+            flex: 1;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .bar-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-size: 11px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .rebalance-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .rebalance-table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .rebalance-table td {
+            padding: 16px 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rebalance-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .action-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .action-buy {
+            background: #d4f8e8;
+            color: #0f9960;
+        }
+
+        .action-sell {
+            background: #ffeaea;
+            color: #db2c3e;
+        }
+
+        .action-hold {
+            background: #edf2f7;
+            color: #718096;
+        }
+
+        .alert-box {
+            background: #fff4e6;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .alert-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 8px;
+        }
+
+        .alert-description {
+            font-size: 14px;
+            color: #92400e;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .diversification-score {
+            text-align: center;
+            padding: 32px;
+        }
+
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .score-value {
+            font-size: 56px;
+            font-weight: 700;
+        }
+
+        .score-max {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .score-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .score-description {
+            font-size: 14px;
+            color: #718096;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>⚖️ Asset Allocation Analysis</h1>
+                    <div class="header-subtitle">Monitor your portfolio balance and rebalancing recommendations</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">📊 Set Target Allocation</button>
+                    <button class="btn btn-primary">🔄 Rebalance Portfolio</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">Allocation Drift Detected</div>
+                <div class="alert-description">
+                    Your US Stocks allocation has drifted 8.3% above your target. Consider rebalancing to maintain
+                    your desired risk profile. Technology stocks have contributed most to this drift due to strong
+                    recent performance.
+                </div>
+                <button class="btn btn-primary" style="margin-top: 8px;">View Rebalancing Plan →</button>
+            </div>
+        </div>
+
+        <div class="two-col-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Current Allocation</h2>
+                        <div class="card-subtitle">Your portfolio composition by asset class</div>
+                    </div>
+                </div>
+
+                <div class="donut-chart">
+                    <svg viewBox="0 0 200 200">
+                        <!-- US Stocks: 58.3% -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#667eea" stroke-width="40"
+                                stroke-dasharray="366.52 366.52" stroke-dashoffset="0"/>
+                        <!-- International: 18.2% -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#f093fb" stroke-width="40"
+                                stroke-dasharray="114.41 366.52" stroke-dashoffset="-366.52"/>
+                        <!-- Bonds: 12.5% -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#4facfe" stroke-width="40"
+                                stroke-dasharray="78.54 366.52" stroke-dashoffset="-480.93"/>
+                        <!-- Real Estate: 6.0% -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#43e97b" stroke-width="40"
+                                stroke-dasharray="37.70 366.52" stroke-dashoffset="-559.47"/>
+                        <!-- Cash: 5.0% -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#a8edea" stroke-width="40"
+                                stroke-dasharray="31.42 366.52" stroke-dashoffset="-597.17"/>
+                    </svg>
+                    <div class="donut-center">
+                        <div class="donut-value">100%</div>
+                        <div class="donut-label">Allocated</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                            <span class="legend-name">US Stocks</span>
+                        </div>
+                        <span class="legend-value">58.3%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                            <span class="legend-name">International Stocks</span>
+                        </div>
+                        <span class="legend-value">18.2%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                            <span class="legend-name">Bonds</span>
+                        </div>
+                        <span class="legend-value">12.5%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+                            <span class="legend-name">Real Estate</span>
+                        </div>
+                        <span class="legend-value">6.0%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: linear-gradient(135deg, #a8edea, #fed6e3);"></div>
+                            <span class="legend-name">Cash</span>
+                        </div>
+                        <span class="legend-value">5.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Diversification Score</h2>
+                        <div class="card-subtitle">Portfolio diversification health check</div>
+                    </div>
+                </div>
+
+                <div class="diversification-score">
+                    <div class="score-circle">
+                        <div class="score-value">8.2</div>
+                        <div class="score-max">/10</div>
+                    </div>
+                    <div class="score-label">Very Good Diversification</div>
+                    <div class="score-description">
+                        Your portfolio is well-diversified across asset classes, sectors, and geographies.
+                        Consider adding more international exposure to reach excellent diversification.
+                    </div>
+                </div>
+
+                <div class="metric-grid" style="margin-top: 32px;">
+                    <div class="metric-box">
+                        <div class="metric-label">Asset Classes</div>
+                        <div class="metric-value">5</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Sectors</div>
+                        <div class="metric-value">11</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Holdings</div>
+                        <div class="metric-value">42</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Countries</div>
+                        <div class="metric-value">18</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Current vs Target Allocation</h2>
+            </div>
+
+            <div class="allocation-comparison">
+                <div class="allocation-row">
+                    <div class="allocation-header">
+                        <span class="allocation-name">🏢 US Stocks</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="allocation-values">
+                                <span class="current-value">Current: 58.3%</span>
+                                <span class="target-value">Target: 50%</span>
+                            </div>
+                            <span class="drift-indicator drift-high">⬆ +8.3%</span>
+                        </div>
+                    </div>
+                    <div class="bars-container">
+                        <div class="bar">
+                            <span class="bar-label">Current</span>
+                            <div class="bar-fill" style="width: 58.3%; background: linear-gradient(90deg, #667eea, #764ba2);">
+                                58.3%
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <span class="bar-label">Target</span>
+                            <div class="bar-fill" style="width: 50%; background: #cbd5e0;">
+                                50%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="allocation-row">
+                    <div class="allocation-header">
+                        <span class="allocation-name">🌍 International Stocks</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="allocation-values">
+                                <span class="current-value">Current: 18.2%</span>
+                                <span class="target-value">Target: 25%</span>
+                            </div>
+                            <span class="drift-indicator drift-low">⬇ -6.8%</span>
+                        </div>
+                    </div>
+                    <div class="bars-container">
+                        <div class="bar">
+                            <span class="bar-label">Current</span>
+                            <div class="bar-fill" style="width: 18.2%; background: linear-gradient(90deg, #f093fb, #f5576c);">
+                                18.2%
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <span class="bar-label">Target</span>
+                            <div class="bar-fill" style="width: 25%; background: #cbd5e0;">
+                                25%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="allocation-row">
+                    <div class="allocation-header">
+                        <span class="allocation-name">🏛️ Bonds</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="allocation-values">
+                                <span class="current-value">Current: 12.5%</span>
+                                <span class="target-value">Target: 15%</span>
+                            </div>
+                            <span class="drift-indicator drift-low">⬇ -2.5%</span>
+                        </div>
+                    </div>
+                    <div class="bars-container">
+                        <div class="bar">
+                            <span class="bar-label">Current</span>
+                            <div class="bar-fill" style="width: 12.5%; background: linear-gradient(90deg, #4facfe, #00f2fe);">
+                                12.5%
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <span class="bar-label">Target</span>
+                            <div class="bar-fill" style="width: 15%; background: #cbd5e0;">
+                                15%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="allocation-row">
+                    <div class="allocation-header">
+                        <span class="allocation-name">🏠 Real Estate</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="allocation-values">
+                                <span class="current-value">Current: 6.0%</span>
+                                <span class="target-value">Target: 5%</span>
+                            </div>
+                            <span class="drift-indicator drift-ok">✓ +1.0%</span>
+                        </div>
+                    </div>
+                    <div class="bars-container">
+                        <div class="bar">
+                            <span class="bar-label">Current</span>
+                            <div class="bar-fill" style="width: 6%; background: linear-gradient(90deg, #43e97b, #38f9d7);">
+                                6%
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <span class="bar-label">Target</span>
+                            <div class="bar-fill" style="width: 5%; background: #cbd5e0;">
+                                5%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="allocation-row">
+                    <div class="allocation-header">
+                        <span class="allocation-name">💵 Cash</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="allocation-values">
+                                <span class="current-value">Current: 5.0%</span>
+                                <span class="target-value">Target: 5%</span>
+                            </div>
+                            <span class="drift-indicator drift-ok">✓ 0.0%</span>
+                        </div>
+                    </div>
+                    <div class="bars-container">
+                        <div class="bar">
+                            <span class="bar-label">Current</span>
+                            <div class="bar-fill" style="width: 5%; background: linear-gradient(90deg, #a8edea, #fed6e3);">
+                                5%
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <span class="bar-label">Target</span>
+                            <div class="bar-fill" style="width: 5%; background: #cbd5e0;">
+                                5%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Rebalancing Recommendations</h2>
+                <div class="card-subtitle">Suggested trades to reach target allocation</div>
+            </div>
+
+            <table class="rebalance-table">
+                <thead>
+                    <tr>
+                        <th>Asset Class</th>
+                        <th>Current Value</th>
+                        <th>Target Value</th>
+                        <th>Difference</th>
+                        <th>Action Required</th>
+                        <th>Suggested Trade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>US Stocks</strong></td>
+                        <td>$494,027.68</td>
+                        <td>$423,696.09</td>
+                        <td style="color: #f59e0b; font-weight: 700;">+$70,331.59</td>
+                        <td><span class="action-badge action-sell">Sell</span></td>
+                        <td>Reduce by $70,331.59</td>
+                    </tr>
+                    <tr>
+                        <td><strong>International Stocks</strong></td>
+                        <td>$154,224.98</td>
+                        <td>$211,848.05</td>
+                        <td style="color: #db2c3e; font-weight: 700;">-$57,623.07</td>
+                        <td><span class="action-badge action-buy">Buy</span></td>
+                        <td>Add $57,623.07</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bonds</strong></td>
+                        <td>$105,923.52</td>
+                        <td>$126,958.83</td>
+                        <td style="color: #db2c3e; font-weight: 700;">-$21,035.31</td>
+                        <td><span class="action-badge action-buy">Buy</span></td>
+                        <td>Add $21,035.31</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Real Estate</strong></td>
+                        <td>$50,843.52</td>
+                        <td>$42,369.61</td>
+                        <td style="color: #f59e0b; font-weight: 700;">+$8,473.91</td>
+                        <td><span class="action-badge action-sell">Sell</span></td>
+                        <td>Reduce by $8,473.91</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cash</strong></td>
+                        <td>$42,372.48</td>
+                        <td>$42,369.61</td>
+                        <td style="color: #0f9960; font-weight: 700;">+$2.87</td>
+                        <td><span class="action-badge action-hold">Hold</span></td>
+                        <td>No action needed</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 2px solid #667eea; border-radius: 12px; padding: 20px; margin-top: 24px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: #667eea; margin-bottom: 12px;">💡 Rebalancing Strategy</h3>
+                <p style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 12px;">
+                    To minimize taxes and fees, consider rebalancing with new contributions rather than selling existing positions.
+                    Direct future investments toward underweighted asset classes (International Stocks and Bonds) and pause
+                    contributions to overweighted classes (US Stocks).
+                </p>
+                <button class="btn btn-primary">Generate Rebalancing Plan</button>
+            </div>
+        </div>
+
+        <div class="three-col-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Sector Allocation</h2>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #667eea;"></div>
+                            <span class="legend-name">Technology</span>
+                        </div>
+                        <span class="legend-value">32.4%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #f093fb;"></div>
+                            <span class="legend-name">Healthcare</span>
+                        </div>
+                        <span class="legend-value">14.2%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #4facfe;"></div>
+                            <span class="legend-name">Financial</span>
+                        </div>
+                        <span class="legend-value">12.8%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #43e97b;"></div>
+                            <span class="legend-name">Consumer</span>
+                        </div>
+                        <span class="legend-value">11.6%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #a8edea;"></div>
+                            <span class="legend-name">Other</span>
+                        </div>
+                        <span class="legend-value">29.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Geographic Allocation</h2>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #667eea;"></div>
+                            <span class="legend-name">United States</span>
+                        </div>
+                        <span class="legend-value">58.3%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #f093fb;"></div>
+                            <span class="legend-name">Europe</span>
+                        </div>
+                        <span class="legend-value">11.2%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #4facfe;"></div>
+                            <span class="legend-name">Asia Pacific</span>
+                        </div>
+                        <span class="legend-value">7.8%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #43e97b;"></div>
+                            <span class="legend-name">Emerging Markets</span>
+                        </div>
+                        <span class="legend-value">4.2%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <div class="legend-color" style="background: #a8edea;"></div>
+                            <span class="legend-name">Global/Other</span>
+                        </div>
+                        <span class="legend-value">18.5%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Top Holdings</h2>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <span class="legend-name">AAPL</span>
+                        </div>
+                        <span class="legend-value">11.8%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <span class="legend-name">MSFT</span>
+                        </div>
+                        <span class="legend-value">10.4%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <span class="legend-name">GOOGL</span>
+                        </div>
+                        <span class="legend-value">8.0%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <span class="legend-name">NVDA</span>
+                        </div>
+                        <span class="legend-value">5.7%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-info">
+                            <span class="legend-name">Other (37)</span>
+                        </div>
+                        <span class="legend-value">64.1%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

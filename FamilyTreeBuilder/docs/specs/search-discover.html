@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search & Discover - Family Tree Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .back-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #374151;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .search-section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .search-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .search-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .search-box-container {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+        .search-box {
+            width: 100%;
+            padding: 18px 24px;
+            padding-left: 56px;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #9ca3af;
+        }
+        .search-filters {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+        }
+        .filter-chip:hover {
+            border-color: #667eea;
+        }
+        .filter-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+        .sidebar {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            cursor: pointer;
+        }
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+        }
+        .checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        .filter-label {
+            font-size: 14px;
+            color: #374151;
+        }
+        .filter-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #9ca3af;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .results-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .results-info {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .results-info strong {
+            color: #1f2937;
+            font-weight: 700;
+        }
+        .sort-select {
+            padding: 8px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        .results-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .result-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        }
+        .result-card:hover {
+            border-color: #667eea;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .result-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .result-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .result-info {
+            flex: 1;
+        }
+        .result-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+        }
+        .result-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .result-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .badge {
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #f3e7ff 0%, #e7f0ff 100%);
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-icon {
+            font-size: 18px;
+        }
+        .detail-text {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .match-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-radius: 8px;
+            border: 2px solid #10b981;
+        }
+        .match-percentage {
+            font-size: 18px;
+            font-weight: 700;
+            color: #059669;
+        }
+        .match-text {
+            font-size: 13px;
+            color: #065f46;
+        }
+        .suggestion-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .suggestion-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .suggestion-icon {
+            font-size: 24px;
+        }
+        .suggestion-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #92400e;
+        }
+        .suggestion-text {
+            font-size: 14px;
+            color: #78350f;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">← Back</button>
+                <h1>🔍 Search & Discover</h1>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-header">
+                <h1 class="search-title">Find Your Relatives</h1>
+                <p class="search-subtitle">Search through family members, stories, documents, and more</p>
+            </div>
+            <div class="search-box-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-box" placeholder="Search by name, location, date, or keyword..." value="Johnson Boston">
+            </div>
+            <div class="search-filters">
+                <button class="filter-chip active">All</button>
+                <button class="filter-chip">People</button>
+                <button class="filter-chip">Stories</button>
+                <button class="filter-chip">Photos</button>
+                <button class="filter-chip">Documents</button>
+                <button class="filter-chip">Events</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Filters</h3>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Living</span>
+                        <span class="filter-count">32</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Deceased</span>
+                        <span class="filter-count">15</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Gender</h3>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Male</span>
+                        <span class="filter-count">24</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Female</span>
+                        <span class="filter-count">23</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Generation</h3>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Great-Grandparents</span>
+                        <span class="filter-count">8</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Grandparents</span>
+                        <span class="filter-count">4</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Parents</span>
+                        <span class="filter-count">2</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Your Generation</span>
+                        <span class="filter-count">5</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Children</span>
+                        <span class="filter-count">12</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Location</h3>
+                    <div class="filter-option">
+                        <div class="checkbox checked"></div>
+                        <span class="filter-label">Boston, MA</span>
+                        <span class="filter-count">18</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Seattle, WA</span>
+                        <span class="filter-count">8</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">New York, NY</span>
+                        <span class="filter-count">6</span>
+                    </div>
+                    <div class="filter-option">
+                        <div class="checkbox"></div>
+                        <span class="filter-label">Other</span>
+                        <span class="filter-count">15</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-container">
+                <div class="suggestion-card">
+                    <div class="suggestion-header">
+                        <span class="suggestion-icon">💡</span>
+                        <h3 class="suggestion-title">DNA Match Suggestion</h3>
+                    </div>
+                    <p class="suggestion-text">
+                        We found 3 potential DNA matches in our database that might be related to your family.
+                        Connect your DNA test results to discover more relatives!
+                    </p>
+                </div>
+
+                <div class="results-header">
+                    <div class="results-info">
+                        Found <strong>12 results</strong> for "Johnson Boston"
+                    </div>
+                    <select class="sort-select">
+                        <option>Sort by: Relevance</option>
+                        <option>Sort by: Name A-Z</option>
+                        <option>Sort by: Birth Date</option>
+                        <option>Sort by: Recently Added</option>
+                    </select>
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-avatar">DJ</div>
+                            <div class="result-info">
+                                <h3 class="result-name">David Johnson</h3>
+                                <div class="result-meta">Born May 20, 1968 in Boston, MA • 55 years old</div>
+                                <div class="result-badges">
+                                    <span class="badge">Father</span>
+                                    <span class="badge">Living</span>
+                                    <span class="badge">Boston</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">💼</span>
+                                <span class="detail-text">Lawyer</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🏠</span>
+                                <span class="detail-text">Boston, MA</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">👥</span>
+                                <span class="detail-text">8 relatives</span>
+                            </div>
+                        </div>
+                        <div class="match-indicator">
+                            <span class="match-percentage">100%</span>
+                            <span class="match-text">Direct relative - Father</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-avatar">SJ</div>
+                            <div class="result-info">
+                                <h3 class="result-name">Sarah Johnson (née Williams)</h3>
+                                <div class="result-meta">Born August 12, 1970 in Boston, MA • 53 years old</div>
+                                <div class="result-badges">
+                                    <span class="badge">Mother</span>
+                                    <span class="badge">Living</span>
+                                    <span class="badge">Boston</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">💼</span>
+                                <span class="detail-text">Teacher</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🏠</span>
+                                <span class="detail-text">Boston, MA</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">👥</span>
+                                <span class="detail-text">10 relatives</span>
+                            </div>
+                        </div>
+                        <div class="match-indicator">
+                            <span class="match-percentage">100%</span>
+                            <span class="match-text">Direct relative - Mother</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-avatar">WB</div>
+                            <div class="result-info">
+                                <h3 class="result-name">William Brown</h3>
+                                <div class="result-meta">1942 - 2018 • Born in Boston, MA</div>
+                                <div class="result-badges">
+                                    <span class="badge">Grandfather</span>
+                                    <span class="badge">Deceased</span>
+                                    <span class="badge">Boston</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">💼</span>
+                                <span class="detail-text">Naval Officer</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span class="detail-text">Boston, MA</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">👥</span>
+                                <span class="detail-text">15 relatives</span>
+                            </div>
+                        </div>
+                        <div class="match-indicator">
+                            <span class="match-percentage">50%</span>
+                            <span class="match-text">Grandfather (paternal)</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-avatar">EJ</div>
+                            <div class="result-info">
+                                <h3 class="result-name">Emily Johnson</h3>
+                                <div class="result-meta">Born March 8, 1993 in Boston, MA • 31 years old</div>
+                                <div class="result-badges">
+                                    <span class="badge">Sister</span>
+                                    <span class="badge">Living</span>
+                                    <span class="badge">Boston</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">💼</span>
+                                <span class="detail-text">Doctor</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🏠</span>
+                                <span class="detail-text">Boston, MA</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">👥</span>
+                                <span class="detail-text">6 relatives</span>
+                            </div>
+                        </div>
+                        <div class="match-indicator">
+                            <span class="match-percentage">50%</span>
+                            <span class="match-text">Sibling - Sister</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-avatar">RJ</div>
+                            <div class="result-info">
+                                <h3 class="result-name">Robert Johnson</h3>
+                                <div class="result-meta">Born January 15, 1965 in Boston, MA • 59 years old</div>
+                                <div class="result-badges">
+                                    <span class="badge">Uncle</span>
+                                    <span class="badge">Living</span>
+                                    <span class="badge">Boston</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">💼</span>
+                                <span class="detail-text">Engineer</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🏠</span>
+                                <span class="detail-text">Boston, MA</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">👥</span>
+                                <span class="detail-text">12 relatives</span>
+                            </div>
+                        </div>
+                        <div class="match-indicator">
+                            <span class="match-percentage">25%</span>
+                            <span class="match-text">Uncle (paternal)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

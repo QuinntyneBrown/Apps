@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog Manager - Video Game Collection Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stats-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .backlog-goal {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .goal-title {
+            font-size: 18px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .goal-progress {
+            font-size: 14px;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            transition: width 0.3s ease;
+        }
+
+        .goal-description {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .filters-bar {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        select {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .priority-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .priority-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .priority-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .priority-tab.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .tab-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .tab-label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .backlog-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .backlog-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #00d4ff;
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .backlog-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .backlog-card.priority-high {
+            border-left-color: #ff4757;
+        }
+
+        .backlog-card.priority-medium {
+            border-left-color: #ffa502;
+        }
+
+        .backlog-card.priority-low {
+            border-left-color: #00d4ff;
+        }
+
+        .drag-handle {
+            cursor: move;
+            color: #666;
+            font-size: 20px;
+        }
+
+        .game-cover {
+            width: 80px;
+            height: 100px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            padding: 5px;
+            flex-shrink: 0;
+        }
+
+        .game-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .game-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .game-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .game-meta {
+            font-size: 13px;
+            color: #888;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .priority-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .priority-high-badge {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .priority-medium-badge {
+            background: rgba(255, 165, 2, 0.2);
+            color: #ffa502;
+            border: 1px solid rgba(255, 165, 2, 0.3);
+        }
+
+        .priority-low-badge {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .backlog-card {
+                flex-direction: column;
+            }
+
+            .game-info {
+                grid-template-columns: 1fr;
+            }
+
+            .game-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span>📋</span>
+            Backlog Manager
+        </h1>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value">64</div>
+                <div class="stat-label">Total Games</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">~320</div>
+                <div class="stat-label">Estimated Hours</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Completed This Month</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">85%</div>
+                <div class="stat-label">Backlog Diversity</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="backlog-goal">
+        <div class="goal-header">
+            <div class="goal-title">🎯 Monthly Goal: Complete 5 Backlog Games</div>
+            <div class="goal-progress">3 / 5 Games</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 60%;"></div>
+        </div>
+        <div class="goal-description">
+            Goal ends in 11 days • You're on track to meet your goal!
+        </div>
+    </div>
+
+    <div class="filters-bar">
+        <div class="filters-row">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search backlog...">
+            </div>
+
+            <select>
+                <option>All Platforms</option>
+                <option>PlayStation 5</option>
+                <option>Xbox Series X</option>
+                <option>Nintendo Switch</option>
+                <option>PC</option>
+            </select>
+
+            <select>
+                <option>Sort: Priority</option>
+                <option>Sort: Estimated Time</option>
+                <option>Sort: Date Added</option>
+                <option>Sort: Title A-Z</option>
+                <option>Sort: Release Date</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="priority-tabs">
+        <div class="priority-tab active">
+            <div class="tab-count">18</div>
+            <div class="tab-label">High Priority</div>
+        </div>
+        <div class="priority-tab">
+            <div class="tab-count">27</div>
+            <div class="tab-label">Medium Priority</div>
+        </div>
+        <div class="priority-tab">
+            <div class="tab-count">19</div>
+            <div class="tab-label">Low Priority</div>
+        </div>
+    </div>
+
+    <div class="backlog-list">
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);">
+                BALDUR'S GATE 3
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Baldur's Gate 3</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PC</span>
+                        <span class="meta-badge">⏱️ ~75 hours</span>
+                        <span class="meta-badge">📅 Added 2 weeks ago</span>
+                        <span class="meta-badge">⭐ 5.0 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #434343, #000000);">
+                FINAL FANTASY XVI
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Final Fantasy XVI</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PS5</span>
+                        <span class="meta-badge">⏱️ ~50 hours</span>
+                        <span class="meta-badge">📅 Added 3 weeks ago</span>
+                        <span class="meta-badge">⭐ 4.5 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #ff0000, #5c0000);">
+                SPIDER-MAN 2
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Marvel's Spider-Man 2</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PS5</span>
+                        <span class="meta-badge">⏱️ ~20 hours</span>
+                        <span class="meta-badge">📅 Added 1 month ago</span>
+                        <span class="meta-badge">⭐ 4.5 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #232526, #414345);">
+                STARFIELD
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Starfield</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 Xbox / PC</span>
+                        <span class="meta-badge">⏱️ ~60 hours</span>
+                        <span class="meta-badge">📅 Added 2 months ago</span>
+                        <span class="meta-badge">⭐ 4.0 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #000000, #434343);">
+                ALAN WAKE II
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Alan Wake II</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PC</span>
+                        <span class="meta-badge">⏱️ ~18 hours</span>
+                        <span class="meta-badge">📅 Added 2 days ago</span>
+                        <span class="meta-badge">⭐ Not rated</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #8e2de2, #4a00e0);">
+                PERSONA 5 ROYAL
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Persona 5 Royal</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PS5</span>
+                        <span class="meta-badge">⏱️ ~120 hours</span>
+                        <span class="meta-badge">📅 Added 6 months ago</span>
+                        <span class="meta-badge">⭐ 5.0 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #136a8a, #267871);">
+                SEA OF STARS
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Sea of Stars</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 Switch / PC</span>
+                        <span class="meta-badge">⏱️ ~25 hours</span>
+                        <span class="meta-badge">📅 Added 1 week ago</span>
+                        <span class="meta-badge">⭐ 4.5 user rating</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backlog-card priority-high">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="game-cover" style="background: linear-gradient(135deg, #834d9b, #d04ed6);">
+                HADES II
+            </div>
+            <div class="game-info">
+                <div class="game-details">
+                    <div class="game-title">Hades II (Early Access)</div>
+                    <div class="game-meta">
+                        <span class="meta-badge">🎮 PC</span>
+                        <span class="meta-badge">⏱️ ~30 hours</span>
+                        <span class="meta-badge">📅 Added 5 days ago</span>
+                        <span class="meta-badge">⭐ Not rated</span>
+                    </div>
+                </div>
+                <div class="game-actions">
+                    <span class="priority-badge priority-high-badge">High Priority</span>
+                    <button class="btn btn-primary">Start Playing</button>
+                    <button class="btn btn-ghost">⋯</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction - Crypto Portfolio Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f0f1e;
+            color: #ffffff;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        /* Modal Container */
+        .modal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            border: 1px solid #2a2a3e;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #2a2a3e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            color: #888;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Transaction Type Tabs */
+        .transaction-types {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        .type-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #888;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .type-tab:hover {
+            color: #fff;
+        }
+
+        .type-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .type-tab.buy.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .type-tab.sell.active {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: #f43f5e;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a2a3e;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #555;
+        }
+
+        /* Select with Icon */
+        .select-with-icon {
+            position: relative;
+        }
+
+        .select-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        .btc-icon { background: linear-gradient(135deg, #f7931a 0%, #f2a900 100%); }
+        .eth-icon { background: linear-gradient(135deg, #627eea 0%, #4e5de4 100%); }
+
+        .select-with-icon .form-input {
+            padding-left: 52px;
+        }
+
+        /* Grid Layout */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .info-row:not(:last-child) {
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .info-value.large {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        /* Radio Group */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .radio-input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-label {
+            display: block;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .radio-input:checked + .radio-label {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #2a2a3e;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .upload-text strong {
+            color: #667eea;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #2a2a3e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #888;
+            border: 1px solid #2a2a3e;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-buy:hover {
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Tags */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            color: #667eea;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #2a2a3e;
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">Add Transaction</h2>
+                <button class="close-btn">×</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body scrollbar">
+                <!-- Transaction Type Tabs -->
+                <div class="transaction-types">
+                    <button class="type-tab buy active">
+                        <span>↗</span> Buy
+                    </button>
+                    <button class="type-tab sell">
+                        <span>↘</span> Sell
+                    </button>
+                    <button class="type-tab">
+                        <span>🔄</span> Swap
+                    </button>
+                    <button class="type-tab">
+                        <span>↔</span> Transfer
+                    </button>
+                    <button class="type-tab">
+                        <span>💰</span> Income
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form>
+                    <!-- Asset Selection -->
+                    <div class="form-group">
+                        <label class="form-label">Asset <span class="required">*</span></label>
+                        <div class="select-with-icon">
+                            <div class="select-icon btc-icon">₿</div>
+                            <select class="form-input">
+                                <option>Bitcoin (BTC)</option>
+                                <option>Ethereum (ETH)</option>
+                                <option>Solana (SOL)</option>
+                                <option>Cardano (ADA)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Amount and Price -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Amount <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="0.0" value="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price per Unit <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="$0.00" value="$42,584.32">
+                        </div>
+                    </div>
+
+                    <!-- Total Cost Info Box -->
+                    <div class="info-box">
+                        <div class="info-row">
+                            <span class="info-label">Total Cost</span>
+                            <span class="info-value large">$21,292.16</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Current Market Price</span>
+                            <span class="info-value">$42,584.32</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Current Value</span>
+                            <span class="info-value">$21,292.16</span>
+                        </div>
+                    </div>
+
+                    <!-- Date and Time -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date <span class="required">*</span></label>
+                            <input type="date" class="form-input" value="2024-01-15">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-input" value="14:30">
+                        </div>
+                    </div>
+
+                    <!-- Wallet Selection -->
+                    <div class="form-group">
+                        <label class="form-label">Wallet <span class="required">*</span></label>
+                        <select class="form-input">
+                            <option>Cold Wallet (1A1z...P2Sh)</option>
+                            <option>MetaMask (0x742d...35Ad)</option>
+                            <option>Binance Exchange</option>
+                            <option>Coinbase Exchange</option>
+                        </select>
+                    </div>
+
+                    <!-- Fee -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Transaction Fee</label>
+                            <input type="text" class="form-input" placeholder="$0.00" value="$2.50">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fee Currency</label>
+                            <select class="form-input">
+                                <option>USD</option>
+                                <option>BTC</option>
+                                <option>ETH</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="bank" name="payment" class="radio-input" checked>
+                                <label for="bank" class="radio-label">Bank Transfer</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="card" name="payment" class="radio-input">
+                                <label for="card" class="radio-label">Credit Card</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="other" name="payment" class="radio-input">
+                                <label for="other" class="radio-label">Other</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Hash -->
+                    <div class="form-group">
+                        <label class="form-label">Transaction Hash (Optional)</label>
+                        <input type="text" class="form-input" placeholder="0x...">
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-input" rows="3" placeholder="Add any additional notes about this transaction..."></textarea>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label class="form-label">Tags</label>
+                        <div class="tags-container">
+                            <span class="tag">
+                                Long-term Hold
+                                <span class="tag-remove">×</span>
+                            </span>
+                            <span class="tag">
+                                DCA Strategy
+                                <span class="tag-remove">×</span>
+                            </span>
+                            <input type="text" class="form-input" placeholder="Add tag..." style="margin-top: 8px;">
+                        </div>
+                    </div>
+
+                    <!-- Document Upload -->
+                    <div class="form-group">
+                        <label class="form-label">Attach Receipt or Confirmation</label>
+                        <div class="file-upload">
+                            <div class="upload-icon">📎</div>
+                            <div class="upload-text">
+                                <strong>Click to upload</strong> or drag and drop<br>
+                                <small>PDF, PNG, JPG up to 10MB</small>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button class="btn btn-cancel">Cancel</button>
+                <button class="btn btn-primary btn-buy">Add Buy Transaction</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

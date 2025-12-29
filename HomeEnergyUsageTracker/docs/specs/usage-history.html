@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage History - Home Energy Usage Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            background: #f7fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .date-range {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1a202c;
+            cursor: pointer;
+        }
+
+        .export-btn {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .chart-area {
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .chart-group {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .chart-bar {
+            width: 20px;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: translateY(-4px);
+        }
+
+        .chart-bar.electric {
+            background: linear-gradient(180deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .chart-bar.gas {
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .chart-bar.water {
+            background: linear-gradient(180deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .chart-label {
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table h2 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f7fafc;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #1a202c;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .utility-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .utility-badge.electric {
+            background: rgba(240, 147, 251, 0.1);
+            color: #f5576c;
+        }
+
+        .utility-badge.gas {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .utility-badge.water {
+            background: rgba(67, 233, 123, 0.1);
+            color: #43e97b;
+        }
+
+        .change-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+
+        .change-indicator.up {
+            color: #f56565;
+        }
+
+        .change-indicator.down {
+            color: #48bb78;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .summary-subtitle {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .export-btn {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="breadcrumb">
+                    <a href="dashboard-main.html">Dashboard</a> / Usage History
+                </div>
+                <h1>
+                    <div class="header-icon">📊</div>
+                    Usage History
+                </h1>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <span class="control-label">Period:</span>
+                <div class="filter-buttons">
+                    <button class="filter-btn">Day</button>
+                    <button class="filter-btn">Week</button>
+                    <button class="filter-btn active">Month</button>
+                    <button class="filter-btn">Year</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Date Range:</span>
+                <select class="date-range">
+                    <option>Last 12 Months</option>
+                    <option>Last 6 Months</option>
+                    <option>Last 3 Months</option>
+                    <option>Custom Range</option>
+                </select>
+            </div>
+
+            <button class="export-btn">📥 Export Data</button>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total Usage (12 months)</div>
+                <div class="summary-value">10,245 kWh</div>
+                <div class="summary-subtitle">Average: 854 kWh/month</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Total Cost (12 months)</div>
+                <div class="summary-value">$3,987.45</div>
+                <div class="summary-subtitle">Average: $332.29/month</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Peak Month</div>
+                <div class="summary-value">August</div>
+                <div class="summary-subtitle">1,156 kWh - $412.18</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Lowest Month</div>
+                <div class="summary-value">March</div>
+                <div class="summary-subtitle">712 kWh - $267.43</div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <h2 class="chart-title">Monthly Usage by Utility</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                        <span>Electric</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                        <span>Gas</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                        <span>Water</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-area">
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 45%;"></div>
+                        <div class="chart-bar gas" style="height: 38%;"></div>
+                        <div class="chart-bar water" style="height: 28%;"></div>
+                        <div class="chart-label">Jan</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 52%;"></div>
+                        <div class="chart-bar gas" style="height: 42%;"></div>
+                        <div class="chart-bar water" style="height: 26%;"></div>
+                        <div class="chart-label">Feb</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 38%;"></div>
+                        <div class="chart-bar gas" style="height: 32%;"></div>
+                        <div class="chart-bar water" style="height: 30%;"></div>
+                        <div class="chart-label">Mar</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 42%;"></div>
+                        <div class="chart-bar gas" style="height: 28%;"></div>
+                        <div class="chart-bar water" style="height: 32%;"></div>
+                        <div class="chart-label">Apr</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 48%;"></div>
+                        <div class="chart-bar gas" style="height: 22%;"></div>
+                        <div class="chart-bar water" style="height: 36%;"></div>
+                        <div class="chart-label">May</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 65%;"></div>
+                        <div class="chart-bar gas" style="height: 18%;"></div>
+                        <div class="chart-bar water" style="height: 40%;"></div>
+                        <div class="chart-label">Jun</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 72%;"></div>
+                        <div class="chart-bar gas" style="height: 16%;"></div>
+                        <div class="chart-bar water" style="height: 42%;"></div>
+                        <div class="chart-label">Jul</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 78%;"></div>
+                        <div class="chart-bar gas" style="height: 15%;"></div>
+                        <div class="chart-bar water" style="height: 44%;"></div>
+                        <div class="chart-label">Aug</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 58%;"></div>
+                        <div class="chart-bar gas" style="height: 20%;"></div>
+                        <div class="chart-bar water" style="height: 38%;"></div>
+                        <div class="chart-label">Sep</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 44%;"></div>
+                        <div class="chart-bar gas" style="height: 26%;"></div>
+                        <div class="chart-bar water" style="height: 34%;"></div>
+                        <div class="chart-label">Oct</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 51%;"></div>
+                        <div class="chart-bar gas" style="height: 36%;"></div>
+                        <div class="chart-bar water" style="height: 31%;"></div>
+                        <div class="chart-label">Nov</div>
+                    </div>
+                    <div class="chart-group">
+                        <div class="chart-bar electric" style="height: 62%;"></div>
+                        <div class="chart-bar gas" style="height: 40%;"></div>
+                        <div class="chart-bar water" style="height: 29%;"></div>
+                        <div class="chart-label">Dec</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-table">
+            <h2>Detailed Usage Data</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Utility</th>
+                        <th>Usage</th>
+                        <th>Cost</th>
+                        <th>Change</th>
+                        <th>Weather</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dec 2025</strong></td>
+                        <td><span class="utility-badge electric">⚡ Electric</span></td>
+                        <td>845 kWh</td>
+                        <td>$187.43</td>
+                        <td><span class="change-indicator up">↑ 23%</span></td>
+                        <td>Avg: 38°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dec 2025</strong></td>
+                        <td><span class="utility-badge gas">🔥 Gas</span></td>
+                        <td>42 therms</td>
+                        <td>$92.15</td>
+                        <td><span class="change-indicator down">↓ 8%</span></td>
+                        <td>Avg: 38°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dec 2025</strong></td>
+                        <td><span class="utility-badge water">💧 Water</span></td>
+                        <td>5,200 gal</td>
+                        <td>$68.22</td>
+                        <td><span class="change-indicator down">↓ 5%</span></td>
+                        <td>Avg: 38°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nov 2025</strong></td>
+                        <td><span class="utility-badge electric">⚡ Electric</span></td>
+                        <td>687 kWh</td>
+                        <td>$152.48</td>
+                        <td><span class="change-indicator up">↑ 12%</span></td>
+                        <td>Avg: 48°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nov 2025</strong></td>
+                        <td><span class="utility-badge gas">🔥 Gas</span></td>
+                        <td>38 therms</td>
+                        <td>$83.45</td>
+                        <td><span class="change-indicator up">↑ 35%</span></td>
+                        <td>Avg: 48°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nov 2025</strong></td>
+                        <td><span class="utility-badge water">💧 Water</span></td>
+                        <td>5,500 gal</td>
+                        <td>$71.85</td>
+                        <td><span class="change-indicator up">↑ 2%</span></td>
+                        <td>Avg: 48°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Oct 2025</strong></td>
+                        <td><span class="utility-badge electric">⚡ Electric</span></td>
+                        <td>612 kWh</td>
+                        <td>$135.76</td>
+                        <td><span class="change-indicator down">↓ 18%</span></td>
+                        <td>Avg: 62°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Oct 2025</strong></td>
+                        <td><span class="utility-badge gas">🔥 Gas</span></td>
+                        <td>28 therms</td>
+                        <td>$61.43</td>
+                        <td><span class="change-indicator up">↑ 47%</span></td>
+                        <td>Avg: 62°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Oct 2025</strong></td>
+                        <td><span class="utility-badge water">💧 Water</span></td>
+                        <td>6,100 gal</td>
+                        <td>$79.58</td>
+                        <td><span class="change-indicator down">↓ 8%</span></td>
+                        <td>Avg: 62°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sep 2025</strong></td>
+                        <td><span class="utility-badge electric">⚡ Electric</span></td>
+                        <td>748 kWh</td>
+                        <td>$165.89</td>
+                        <td><span class="change-indicator down">↓ 25%</span></td>
+                        <td>Avg: 72°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sep 2025</strong></td>
+                        <td><span class="utility-badge gas">🔥 Gas</span></td>
+                        <td>19 therms</td>
+                        <td>$41.65</td>
+                        <td><span class="change-indicator down">↓ 21%</span></td>
+                        <td>Avg: 72°F</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sep 2025</strong></td>
+                        <td><span class="utility-badge water">💧 Water</span></td>
+                        <td>6,800 gal</td>
+                        <td>$88.74</td>
+                        <td><span class="change-indicator up">↑ 6%</span></td>
+                        <td>Avg: 72°F</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

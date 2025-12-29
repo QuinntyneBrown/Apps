@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Splitting - Friend Group Event Coordinator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f7f9fc;
+        }
+
+        .event-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .event-meta {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .summary-box {
+            padding: 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            margin-bottom: 20px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .summary-detail {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .expense-item {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+        }
+
+        .expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .expense-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .expense-payer {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .expense-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .expense-split {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .person-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+        }
+
+        .person-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .person-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .person-info {
+            flex: 1;
+        }
+
+        .person-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .person-details {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .person-amount {
+            text-align: right;
+        }
+
+        .amount-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .amount-value.owes {
+            color: #ef4444;
+        }
+
+        .amount-value.gets {
+            color: #10b981;
+        }
+
+        .amount-value.settled {
+            color: #6b7280;
+        }
+
+        .amount-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .settlement-item {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settlement-text {
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        .settlement-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .settlement-arrow {
+            font-size: 18px;
+            color: #6b7280;
+            margin: 0 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .full-width-card {
+            grid-column: 1 / -1;
+        }
+
+        .add-expense-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Friend Group Event Coordinator</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Event</button>
+                <button class="btn btn-primary">+ Add Expense</button>
+            </div>
+        </div>
+
+        <div class="event-header">
+            <div class="event-title">💰 Expense Splitting - Sarah's Birthday Dinner</div>
+            <div class="event-meta">Friday, Jan 5, 2025 at 7:00 PM • The Italian Kitchen</div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="summary-box">
+                    <div class="summary-label">TOTAL EXPENSES</div>
+                    <div class="summary-value">$624.50</div>
+                    <div class="summary-detail">12 attendees • $52.04 per person</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">Expenses</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Settled</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>💸 Your Balance</h2>
+                </div>
+
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">You are owed</div>
+                    <div style="font-size: 56px; font-weight: 700; color: #10b981; margin-bottom: 8px;">$156.12</div>
+                    <div style="font-size: 14px; color: #6b7280;">You paid $208.16 • Your share is $52.04</div>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-primary" style="width: 100%;">Send Payment Reminders</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🧾 Expenses</h2>
+                    <a href="#" style="color: #667eea; text-decoration: none; font-size: 14px; font-weight: 600;">View All →</a>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <div class="expense-title">Dinner & Drinks</div>
+                            <div class="expense-payer">Paid by Mike Johnson</div>
+                        </div>
+                        <div class="expense-amount">$485.00</div>
+                    </div>
+                    <div class="expense-split">Split equally among 12 people • $40.42 each</div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <div class="expense-title">Birthday Cake</div>
+                            <div class="expense-payer">Paid by Emily Wilson</div>
+                        </div>
+                        <div class="expense-amount">$65.00</div>
+                    </div>
+                    <div class="expense-split">Split equally among 12 people • $5.42 each</div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <div class="expense-title">Decorations</div>
+                            <div class="expense-payer">Paid by Anna Lee</div>
+                        </div>
+                        <div class="expense-amount">$42.50</div>
+                    </div>
+                    <div class="expense-split">Split equally among 12 people • $3.54 each</div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <div class="expense-title">Tip</div>
+                            <div class="expense-payer">Paid by Mike Johnson</div>
+                        </div>
+                        <div class="expense-amount">$97.00</div>
+                    </div>
+                    <div class="expense-split">Split equally among 12 people • $8.08 each</div>
+                </div>
+
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <div class="expense-title">Parking</div>
+                            <div class="expense-payer">Paid by John Davis</div>
+                        </div>
+                        <div class="expense-amount">$25.00</div>
+                    </div>
+                    <div class="expense-split">Split among 5 people • $5.00 each</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>👥 Balances</h2>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">MJ</div>
+                        <div class="person-info">
+                            <div class="person-name">Mike Johnson (You)</div>
+                            <div class="person-details">Paid $582.00 • Owes $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value gets">+$156.12</div>
+                        <div class="amount-label">Gets back</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">EW</div>
+                        <div class="person-info">
+                            <div class="person-name">Emily Wilson</div>
+                            <div class="person-details">Paid $65.00 • Owes $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value gets">+$12.96</div>
+                        <div class="amount-label">Gets back</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">JD</div>
+                        <div class="person-info">
+                            <div class="person-name">John Davis</div>
+                            <div class="person-details">Paid $25.00 • Owes $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value owes">-$27.04</div>
+                        <div class="amount-label">Owes</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">AL</div>
+                        <div class="person-info">
+                            <div class="person-name">Anna Lee</div>
+                            <div class="person-details">Paid $42.50 • Owes $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value owes">-$9.54</div>
+                        <div class="amount-label">Owes</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">TC</div>
+                        <div class="person-info">
+                            <div class="person-name">Tom Chen</div>
+                            <div class="person-details">Paid $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value owes">-$52.04</div>
+                        <div class="amount-label">Owes</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">LM</div>
+                        <div class="person-info">
+                            <div class="person-name">Lisa Martinez</div>
+                            <div class="person-details">Paid $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value owes">-$52.04</div>
+                        <div class="amount-label">Owes</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">RB</div>
+                        <div class="person-info">
+                            <div class="person-name">Ryan Brown</div>
+                            <div class="person-details">Paid $0.00</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value owes">-$52.04</div>
+                        <div class="amount-label">Owes</div>
+                    </div>
+                </div>
+
+                <div class="person-item">
+                    <div class="person-left">
+                        <div class="person-avatar">KW</div>
+                        <div class="person-info">
+                            <div class="person-name">Katie White</div>
+                            <div class="person-details">Paid $52.04</div>
+                        </div>
+                    </div>
+                    <div class="person-amount">
+                        <div class="amount-value settled">$0.00</div>
+                        <div class="amount-label">Settled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card full-width-card">
+                <div class="card-header">
+                    <h2>💱 Suggested Settlements</h2>
+                    <span style="font-size: 14px; color: #6b7280;">Minimize number of transactions</span>
+                </div>
+
+                <div class="settlement-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">TC</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Tom Chen</div>
+                        </div>
+                    </div>
+                    <span class="settlement-arrow">→</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">MJ</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Mike Johnson</div>
+                        </div>
+                    </div>
+                    <div class="settlement-amount">$52.04</div>
+                </div>
+
+                <div class="settlement-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">LM</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Lisa Martinez</div>
+                        </div>
+                    </div>
+                    <span class="settlement-arrow">→</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">MJ</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Mike Johnson</div>
+                        </div>
+                    </div>
+                    <div class="settlement-amount">$52.04</div>
+                </div>
+
+                <div class="settlement-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">RB</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Ryan Brown</div>
+                        </div>
+                    </div>
+                    <span class="settlement-arrow">→</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">MJ</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Mike Johnson</div>
+                        </div>
+                    </div>
+                    <div class="settlement-amount">$52.04</div>
+                </div>
+
+                <div class="settlement-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">JD</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">John Davis</div>
+                        </div>
+                    </div>
+                    <span class="settlement-arrow">→</span>
+                    <div style="display: flex; align-items: center;">
+                        <div class="person-avatar" style="width: 36px; height: 36px; font-size: 14px;">EW</div>
+                        <div style="margin-left: 12px;">
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Emily Wilson</div>
+                        </div>
+                    </div>
+                    <div class="settlement-amount">$12.96</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

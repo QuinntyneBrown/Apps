@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Add Asset - Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem 2.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f9fafb;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .asset-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .asset-type-card {
+            padding: 1.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .asset-type-card:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .asset-type-card.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .asset-type-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .asset-type-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .form-label .required {
+            color: #ef4444;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-with-prefix {
+            position: relative;
+        }
+        .input-prefix {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+        .input-with-prefix .form-input {
+            padding-left: 2rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .radio-option label {
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-top: 1rem;
+        }
+        .info-box-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .info-box-text {
+            font-size: 0.9rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+
+        .connect-account-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .connect-account-box h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.75rem;
+        }
+        .connect-account-box p {
+            font-size: 0.9rem;
+            color: #78350f;
+            margin-bottom: 1rem;
+        }
+        .btn-connect {
+            background: #92400e;
+            color: white;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2.5rem;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-cancel {
+            background: white;
+            color: #666;
+            border: 2px solid #e5e7eb;
+        }
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-primary:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">➕ Add New Asset</h2>
+            <button class="close-btn">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="connect-account-box">
+                <h3>🔗 Connect Your Account</h3>
+                <p>Link your bank or investment account for automatic updates</p>
+                <button class="btn-connect">Connect Account via Plaid</button>
+            </div>
+
+            <div style="text-align: center; margin: 2rem 0; color: #999; font-weight: 600;">
+                — OR ADD MANUALLY —
+            </div>
+
+            <form>
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>1️⃣</span>
+                        <span>Select Asset Type</span>
+                    </div>
+                    <div class="asset-type-grid">
+                        <div class="asset-type-card selected">
+                            <div class="asset-type-icon">🏦</div>
+                            <div class="asset-type-name">Bank Account</div>
+                        </div>
+                        <div class="asset-type-card">
+                            <div class="asset-type-icon">📊</div>
+                            <div class="asset-type-name">Investment</div>
+                        </div>
+                        <div class="asset-type-card">
+                            <div class="asset-type-icon">🏠</div>
+                            <div class="asset-type-name">Property</div>
+                        </div>
+                        <div class="asset-type-card">
+                            <div class="asset-type-icon">🚗</div>
+                            <div class="asset-type-name">Vehicle</div>
+                        </div>
+                        <div class="asset-type-card">
+                            <div class="asset-type-icon">💎</div>
+                            <div class="asset-type-name">Collectibles</div>
+                        </div>
+                        <div class="asset-type-card">
+                            <div class="asset-type-icon">📦</div>
+                            <div class="asset-type-name">Other</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>2️⃣</span>
+                        <span>Asset Details</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Asset Name <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" placeholder="e.g., Chase Savings Account" value="">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Institution / Provider
+                            </label>
+                            <input type="text" class="form-input" placeholder="e.g., Chase Bank">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Account Number (Last 4)
+                            </label>
+                            <input type="text" class="form-input" placeholder="e.g., 1234" maxlength="4">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Current Value <span class="required">*</span>
+                        </label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">$</span>
+                            <input type="number" class="form-input" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Currency
+                            </label>
+                            <select class="form-input">
+                                <option>USD ($)</option>
+                                <option>EUR (€)</option>
+                                <option>GBP (£)</option>
+                                <option>CAD ($)</option>
+                                <option>AUD ($)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Category
+                            </label>
+                            <select class="form-input">
+                                <option>Checking Account</option>
+                                <option>Savings Account</option>
+                                <option>Money Market</option>
+                                <option>Certificate of Deposit</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Notes (Optional)
+                        </label>
+                        <textarea class="form-input" placeholder="Add any additional notes about this asset..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>3️⃣</span>
+                        <span>Update Preferences</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">How will you update this asset?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="update-type" id="manual" checked>
+                                <label for="manual">Manual Updates</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="update-type" id="auto">
+                                <label for="auto">Auto-Sync (Connect Later)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-icon">💡</div>
+                        <div class="info-box-text">
+                            <strong>Tip:</strong> You can always connect this asset to automatic syncing later from the account settings page.
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-primary">Add Asset</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations - Neighborhood Social Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .filters {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .category-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #e8ebff;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .rec-title-section {
+            flex: 1;
+        }
+
+        .rec-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8ebff;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .rec-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .rec-subtitle {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .rec-rating {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .rating-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .rec-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .rec-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rec-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .rec-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .author-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .author-info {
+            font-size: 14px;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .author-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rec-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .helpful-count {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #28a745;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .top-rated-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .top-rated-item:hover {
+            background: #e8ebff;
+        }
+
+        .top-rated-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .top-rated-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .top-rated-category {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .top-rated-stars {
+            color: #ffc107;
+            font-size: 14px;
+        }
+
+        .recent-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .recent-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .recent-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .recent-content {
+            flex: 1;
+        }
+
+        .recent-text {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .recent-time {
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ Recommendations</h1>
+            <button class="btn btn-primary">+ Add Recommendation</button>
+        </div>
+
+        <div class="filters">
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search for services, businesses, contractors...">
+                <button class="btn btn-primary">Search</button>
+            </div>
+
+            <div class="category-filters">
+                <button class="filter-btn active">All</button>
+                <button class="filter-btn">🔧 Contractors</button>
+                <button class="filter-btn">🏡 Home Services</button>
+                <button class="filter-btn">🍽️ Restaurants</button>
+                <button class="filter-btn">🏥 Healthcare</button>
+                <button class="filter-btn">🧹 Cleaning</button>
+                <button class="filter-btn">🌱 Landscaping</button>
+                <button class="filter-btn">🚗 Auto Services</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="recommendations-list">
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <div class="rec-title-section">
+                            <div class="rec-category">🔧 Contractor</div>
+                            <div class="rec-title">Mike's Handyman Services</div>
+                            <div class="rec-subtitle">General Repairs & Renovations</div>
+                        </div>
+                        <div class="rec-rating">
+                            <div class="stars">★★★★★</div>
+                            <div class="rating-count">23 reviews</div>
+                        </div>
+                    </div>
+                    <div class="rec-content">
+                        Mike did an amazing job remodeling our kitchen! Professional, punctual, and his prices were very reasonable. He went above and beyond to ensure everything was perfect. Highly recommend for any home improvement projects!
+                    </div>
+                    <div class="rec-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">💰</div>
+                            <div class="detail-label">Price Range</div>
+                            <div class="detail-value">$$</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📞</div>
+                            <div class="detail-label">Contact</div>
+                            <div class="detail-value">(555) 123-4567</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">⏰</div>
+                            <div class="detail-label">Response Time</div>
+                            <div class="detail-value">Same Day</div>
+                        </div>
+                    </div>
+                    <div class="rec-footer">
+                        <div class="rec-author">
+                            <div class="author-avatar">SM</div>
+                            <div class="author-info">
+                                <div class="author-name">Sarah Martinez</div>
+                                <div class="author-time">2 weeks ago</div>
+                            </div>
+                        </div>
+                        <div class="rec-actions">
+                            <div class="helpful-count">
+                                <span>👍</span>
+                                <span>18 found helpful</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <div class="rec-title-section">
+                            <div class="rec-category">🍽️ Restaurant</div>
+                            <div class="rec-title">Bella Italia Pizzeria</div>
+                            <div class="rec-subtitle">Italian Restaurant & Pizza</div>
+                        </div>
+                        <div class="rec-rating">
+                            <div class="stars">★★★★★</div>
+                            <div class="rating-count">45 reviews</div>
+                        </div>
+                    </div>
+                    <div class="rec-content">
+                        Best pizza in the neighborhood! Family-owned and operated. The margherita pizza is absolutely delicious, and the pasta dishes are authentic. Great atmosphere for families. They also offer delivery within 3 miles.
+                    </div>
+                    <div class="rec-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">💰</div>
+                            <div class="detail-label">Price Range</div>
+                            <div class="detail-value">$$</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📍</div>
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value">2 blocks away</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">🕐</div>
+                            <div class="detail-label">Hours</div>
+                            <div class="detail-value">11AM - 10PM</div>
+                        </div>
+                    </div>
+                    <div class="rec-footer">
+                        <div class="rec-author">
+                            <div class="author-avatar">TC</div>
+                            <div class="author-info">
+                                <div class="author-name">Tom Chen</div>
+                                <div class="author-time">1 month ago</div>
+                            </div>
+                        </div>
+                        <div class="rec-actions">
+                            <div class="helpful-count">
+                                <span>👍</span>
+                                <span>32 found helpful</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <div class="rec-title-section">
+                            <div class="rec-category">🌱 Landscaping</div>
+                            <div class="rec-title">Green Thumb Landscaping</div>
+                            <div class="rec-subtitle">Lawn Care & Garden Design</div>
+                        </div>
+                        <div class="rec-rating">
+                            <div class="stars">★★★★☆</div>
+                            <div class="rating-count">15 reviews</div>
+                        </div>
+                    </div>
+                    <div class="rec-content">
+                        They transformed our backyard into a beautiful garden oasis! The team was professional and creative. They helped us choose plants that thrive in our climate and designed a low-maintenance layout perfect for our busy lifestyle.
+                    </div>
+                    <div class="rec-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">💰</div>
+                            <div class="detail-label">Price Range</div>
+                            <div class="detail-value">$$$</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📞</div>
+                            <div class="detail-label">Contact</div>
+                            <div class="detail-value">(555) 234-5678</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📅</div>
+                            <div class="detail-label">Availability</div>
+                            <div class="detail-value">Book Ahead</div>
+                        </div>
+                    </div>
+                    <div class="rec-footer">
+                        <div class="rec-author">
+                            <div class="author-avatar">LW</div>
+                            <div class="author-info">
+                                <div class="author-name">Lisa Wilson</div>
+                                <div class="author-time">3 weeks ago</div>
+                            </div>
+                        </div>
+                        <div class="rec-actions">
+                            <div class="helpful-count">
+                                <span>👍</span>
+                                <span>12 found helpful</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <div class="rec-title-section">
+                            <div class="rec-category">🏥 Healthcare</div>
+                            <div class="rec-title">Dr. Jennifer Park - Family Medicine</div>
+                            <div class="rec-subtitle">Primary Care Physician</div>
+                        </div>
+                        <div class="rec-rating">
+                            <div class="stars">★★★★★</div>
+                            <div class="rating-count">38 reviews</div>
+                        </div>
+                    </div>
+                    <div class="rec-content">
+                        Dr. Park is an excellent family doctor! She takes time to listen to your concerns and explains everything clearly. Her office staff is friendly and helpful. She's been our family doctor for 5 years now and we couldn't be happier.
+                    </div>
+                    <div class="rec-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">🏥</div>
+                            <div class="detail-label">Practice</div>
+                            <div class="detail-value">Oak Medical</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📍</div>
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value">1.5 miles</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">🩺</div>
+                            <div class="detail-label">Accepting</div>
+                            <div class="detail-value">New Patients</div>
+                        </div>
+                    </div>
+                    <div class="rec-footer">
+                        <div class="rec-author">
+                            <div class="author-avatar">RJ</div>
+                            <div class="author-info">
+                                <div class="author-name">Robert Johnson</div>
+                                <div class="author-time">2 months ago</div>
+                            </div>
+                        </div>
+                        <div class="rec-actions">
+                            <div class="helpful-count">
+                                <span>👍</span>
+                                <span>28 found helpful</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="rec-header">
+                        <div class="rec-title-section">
+                            <div class="rec-category">🧹 Cleaning</div>
+                            <div class="rec-title">Sparkle Clean Home Services</div>
+                            <div class="rec-subtitle">Residential Cleaning</div>
+                        </div>
+                        <div class="rec-rating">
+                            <div class="stars">★★★★★</div>
+                            <div class="rating-count">27 reviews</div>
+                        </div>
+                    </div>
+                    <div class="rec-content">
+                        Fantastic cleaning service! They're thorough, reliable, and use eco-friendly products. The team always arrives on time and does an amazing job. Our house has never looked better. They offer weekly, bi-weekly, or monthly service.
+                    </div>
+                    <div class="rec-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">💰</div>
+                            <div class="detail-label">Price Range</div>
+                            <div class="detail-value">$$</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📞</div>
+                            <div class="detail-label">Contact</div>
+                            <div class="detail-value">(555) 345-6789</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">🌿</div>
+                            <div class="detail-label">Products</div>
+                            <div class="detail-value">Eco-Friendly</div>
+                        </div>
+                    </div>
+                    <div class="rec-footer">
+                        <div class="rec-author">
+                            <div class="author-avatar">EG</div>
+                            <div class="author-info">
+                                <div class="author-name">Emily Garcia</div>
+                                <div class="author-time">1 month ago</div>
+                            </div>
+                        </div>
+                        <div class="rec-actions">
+                            <div class="helpful-count">
+                                <span>👍</span>
+                                <span>21 found helpful</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <div class="sidebar-title">🏆 Top Rated</div>
+                    <div class="top-rated-item">
+                        <div class="top-rated-name">Mike's Handyman Services</div>
+                        <div class="top-rated-category">Contractor</div>
+                        <div class="top-rated-stars">★★★★★ (23 reviews)</div>
+                    </div>
+                    <div class="top-rated-item">
+                        <div class="top-rated-name">Bella Italia Pizzeria</div>
+                        <div class="top-rated-category">Restaurant</div>
+                        <div class="top-rated-stars">★★★★★ (45 reviews)</div>
+                    </div>
+                    <div class="top-rated-item">
+                        <div class="top-rated-name">Dr. Jennifer Park</div>
+                        <div class="top-rated-category">Healthcare</div>
+                        <div class="top-rated-stars">★★★★★ (38 reviews)</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-title">🆕 Recent Activity</div>
+                    <div class="recent-item">
+                        <div class="recent-avatar">MP</div>
+                        <div class="recent-content">
+                            <div class="recent-text">Michael recommended <strong>Joe's Auto Repair</strong></div>
+                            <div class="recent-time">2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-avatar">AB</div>
+                        <div class="recent-content">
+                            <div class="recent-text">Amanda recommended <strong>Paws & Claws Pet Grooming</strong></div>
+                            <div class="recent-time">5 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-avatar">DK</div>
+                        <div class="recent-content">
+                            <div class="recent-text">David recommended <strong>Quick Fix Plumbing</strong></div>
+                            <div class="recent-time">Yesterday</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-title">📊 Categories</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #666;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🔧 Contractors</span>
+                            <span style="font-weight: 600;">42</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🍽️ Restaurants</span>
+                            <span style="font-weight: 600;">38</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🏡 Home Services</span>
+                            <span style="font-weight: 600;">35</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🏥 Healthcare</span>
+                            <span style="font-weight: 600;">28</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🧹 Cleaning</span>
+                            <span style="font-weight: 600;">22</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Add Recommendation</button>
+                    <button class="btn btn-primary" style="width: 100%; background: white; color: #667eea; border: 2px solid #667eea;">Request Recommendation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

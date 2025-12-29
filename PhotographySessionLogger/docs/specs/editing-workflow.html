@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editing Workflow - Photography Session Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .workflow-step {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+
+        .workflow-step:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .workflow-step.completed {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .workflow-step.in-progress {
+            background: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-icon.completed {
+            background: #28a745;
+        }
+
+        .step-icon.in-progress {
+            background: #ffc107;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .step-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-pending {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .deliverables {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .deliverable-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .deliverable-info {
+            flex: 1;
+        }
+
+        .deliverable-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .deliverable-meta {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+        }
+
+        .timeline-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .timeline-time {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>🎨 Editing Workflow</h1>
+                    <div class="session-info">Golden Hour Family Portraits • Johnson Family • Dec 26, 2025</div>
+                </div>
+                <button class="btn btn-primary">Mark as Complete</button>
+            </div>
+        </header>
+
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">156</div>
+                    <div class="stat-label">Total Photos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">45</div>
+                    <div class="stat-label">Selected</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Edited</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">75%</div>
+                    <div class="stat-label">Complete</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-grid">
+            <div class="card">
+                <div class="card-title">📋 Workflow Steps</div>
+
+                <div class="workflow-steps">
+                    <div class="workflow-step completed">
+                        <div class="step-icon completed">✓</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Import Photos</span>
+                                <span class="badge badge-completed">Completed</span>
+                            </div>
+                            <div class="step-meta">Imported 156 RAW files from SD card</div>
+                            <div class="progress-text">Completed on Dec 26, 2025 at 6:15 PM</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step completed">
+                        <div class="step-icon completed">✓</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Backup & Organization</span>
+                                <span class="badge badge-completed">Completed</span>
+                            </div>
+                            <div class="step-meta">Files backed up to cloud and external drive</div>
+                            <div class="progress-text">Completed on Dec 26, 2025 at 6:30 PM</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step completed">
+                        <div class="step-icon completed">✓</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Photo Culling</span>
+                                <span class="badge badge-completed">Completed</span>
+                            </div>
+                            <div class="step-meta">Selected 45 best photos for editing</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+                            <div class="progress-text">45 of 156 photos selected</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step in-progress">
+                        <div class="step-icon in-progress">⚡</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Color Correction & Editing</span>
+                                <span class="badge badge-in-progress">In Progress</span>
+                            </div>
+                            <div class="step-meta">Adjusting exposure, color, and composition</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 62%;"></div>
+                            </div>
+                            <div class="progress-text">28 of 45 photos edited (62%)</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-icon">5</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Retouching</span>
+                                <span class="badge badge-pending">Pending</span>
+                            </div>
+                            <div class="step-meta">Remove blemishes, enhance details</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-text">Not started</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-icon">6</div>
+                        <div class="step-content">
+                            <div class="step-title">
+                                <span>Export & Delivery</span>
+                                <span class="badge badge-pending">Pending</span>
+                            </div>
+                            <div class="step-meta">Export high-res and web versions</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-text">Not started</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 30px;">
+                    <div class="card-title">📦 Deliverables</div>
+
+                    <div class="deliverables">
+                        <div class="deliverable-item">
+                            <div class="deliverable-info">
+                                <div class="deliverable-name">High-Res Finals</div>
+                                <div class="deliverable-meta">28 edited photos • Full resolution</div>
+                            </div>
+                            <span class="badge badge-in-progress">In Progress</span>
+                        </div>
+
+                        <div class="deliverable-item">
+                            <div class="deliverable-info">
+                                <div class="deliverable-name">Web Gallery</div>
+                                <div class="deliverable-meta">Optimized for online viewing</div>
+                            </div>
+                            <span class="badge badge-pending">Pending</span>
+                        </div>
+
+                        <div class="deliverable-item">
+                            <div class="deliverable-info">
+                                <div class="deliverable-name">Print Files</div>
+                                <div class="deliverable-meta">300 DPI TIFF format</div>
+                            </div>
+                            <span class="badge badge-pending">Pending</span>
+                        </div>
+
+                        <div class="deliverable-item">
+                            <div class="deliverable-info">
+                                <div class="deliverable-name">Social Media Set</div>
+                                <div class="deliverable-meta">10 images • 1080x1080px</div>
+                            </div>
+                            <span class="badge badge-pending">Pending</span>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-small">Add Deliverable</button>
+                        <button class="btn-small">Update Status</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⏱️ Activity Timeline</div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Photos Imported</div>
+                                <div class="timeline-time">Dec 26, 2025 at 6:15 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Backup Completed</div>
+                                <div class="timeline-time">Dec 26, 2025 at 6:30 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Started Culling</div>
+                                <div class="timeline-time">Dec 27, 2025 at 9:00 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Culling Complete</div>
+                                <div class="timeline-time">Dec 27, 2025 at 11:00 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">⚡</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Editing In Progress</div>
+                                <div class="timeline-time">Started Dec 27, 2025 at 2:00 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">📅</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Due Date</div>
+                                <div class="timeline-time">Dec 30, 2025 at 5:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspiration & Ideas - Bucket List Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-chip:hover {
+            border-color: #667eea;
+        }
+        .filter-chip.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+        .ideas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .idea-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .idea-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        .idea-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+        }
+        .idea-category-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: white;
+            color: #333;
+        }
+        .idea-content {
+            padding: 20px;
+        }
+        .idea-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .idea-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .idea-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .idea-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        .featured-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .featured-section h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .featured-item {
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .featured-item:hover {
+            background: #f0f0f0;
+            transform: translateX(4px);
+        }
+        .featured-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        .featured-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .featured-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .difficulty-easy {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .difficulty-moderate {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .difficulty-challenging {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        @media (max-width: 768px) {
+            .ideas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💡 Inspiration & Ideas</h1>
+            <div class="header-subtitle">Discover new adventures and experiences to add to your bucket list</div>
+        </div>
+
+        <div class="featured-section">
+            <h2>🌟 Trending This Week</h2>
+            <div class="featured-grid">
+                <div class="featured-item">
+                    <div class="featured-icon">🎨</div>
+                    <div class="featured-title">Learn a Creative Skill</div>
+                    <div class="featured-desc">Popular this week: pottery, digital illustration, and photography</div>
+                </div>
+                <div class="featured-item">
+                    <div class="featured-icon">🌍</div>
+                    <div class="featured-title">Sustainable Travel</div>
+                    <div class="featured-desc">Eco-friendly destinations and responsible tourism experiences</div>
+                </div>
+                <div class="featured-item">
+                    <div class="featured-icon">🏃</div>
+                    <div class="featured-title">Fitness Challenges</div>
+                    <div class="featured-desc">From 5K runs to triathlons and yoga challenges</div>
+                </div>
+                <div class="featured-item">
+                    <div class="featured-icon">🍳</div>
+                    <div class="featured-title">Culinary Adventures</div>
+                    <div class="featured-desc">Cooking classes, food tours, and regional cuisines to explore</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div style="font-size: 14px; font-weight: 600; color: #666;">Filter by:</div>
+            <div class="filter-chip active">All Ideas</div>
+            <div class="filter-chip">✈️ Travel</div>
+            <div class="filter-chip">🏔️ Adventure</div>
+            <div class="filter-chip">🌱 Personal Growth</div>
+            <div class="filter-chip">💼 Career</div>
+            <div class="filter-chip">🎨 Creative</div>
+            <div class="filter-chip">❤️ Relationships</div>
+            <div class="filter-chip">💪 Health</div>
+        </div>
+
+        <div class="ideas-grid">
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #1976d2, #64b5f6);">
+                    🗾
+                    <div class="idea-category-badge">Travel</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Hike to Everest Base Camp</div>
+                    <div class="idea-description">
+                        Trek through the Himalayas to reach the base camp of the world's highest mountain. 12-day journey through stunning landscapes.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $3,000 - $5,000</span>
+                        <span>⏱️ 12-14 days</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #f57c00, #ffb74d);">
+                    🪂
+                    <div class="idea-category-badge">Adventure</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Paragliding Over the Alps</div>
+                    <div class="idea-description">
+                        Soar over stunning mountain peaks in Switzerland or France. Tandem flights available for beginners.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-moderate">Moderate</span>
+                        <span>💰 $200 - $400</span>
+                        <span>⏱️ Half day</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #7b1fa2, #ba68c8);">
+                    🧘
+                    <div class="idea-category-badge">Personal Growth</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Complete a Silent Meditation Retreat</div>
+                    <div class="idea-description">
+                        Disconnect from the world and reconnect with yourself through a 7-10 day silent Vipassana retreat.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $500 - $1,500</span>
+                        <span>⏱️ 7-10 days</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #c2185b, #f06292);">
+                    🎭
+                    <div class="idea-category-badge">Creative</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Perform at an Open Mic Night</div>
+                    <div class="idea-description">
+                        Overcome stage fright by performing stand-up comedy, music, or poetry at a local open mic venue.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-moderate">Moderate</span>
+                        <span>💰 $0 - $50</span>
+                        <span>⏱️ One evening</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #1976d2, #64b5f6);">
+                    🏛️
+                    <div class="idea-category-badge">Travel</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Explore Ancient Petra, Jordan</div>
+                    <div class="idea-description">
+                        Walk through the narrow Siq to discover the rose-red city carved into rock faces over 2,000 years ago.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-easy">Easy</span>
+                        <span>💰 $2,000 - $3,500</span>
+                        <span>⏱️ 5-7 days</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #0097a7, #4dd0e1);">
+                    🏋️
+                    <div class="idea-category-badge">Health</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Complete an Ironman Triathlon</div>
+                    <div class="idea-description">
+                        The ultimate endurance challenge: 2.4-mile swim, 112-mile bike ride, and a full marathon (26.2 miles).
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $500 - $2,000</span>
+                        <span>⏱️ 6-12 months training</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #388e3c, #81c784);">
+                    🎤
+                    <div class="idea-category-badge">Career</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Give a TEDx Talk</div>
+                    <div class="idea-description">
+                        Share your ideas worth spreading on the TEDx stage. Apply to local events and craft your message.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $0 - $500</span>
+                        <span>⏱️ 3-6 months prep</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #d32f2f, #ef5350);">
+                    👨‍🍳
+                    <div class="idea-category-badge">Creative</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Take a Culinary Class in Italy</div>
+                    <div class="idea-description">
+                        Learn authentic Italian cooking in Tuscany or Rome. Make pasta from scratch, visit local markets.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-easy">Easy</span>
+                        <span>💰 $2,500 - $4,000</span>
+                        <span>⏱️ 1 week</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #f57c00, #ffb74d);">
+                    🏄
+                    <div class="idea-category-badge">Adventure</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Surf the Seven Seas</div>
+                    <div class="idea-description">
+                        Visit and surf at seven iconic surf spots around the world. Hawaii, Bali, Australia, and more.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-moderate">Moderate</span>
+                        <span>💰 $10,000+</span>
+                        <span>⏱️ Multi-year goal</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #7b1fa2, #ba68c8);">
+                    📚
+                    <div class="idea-category-badge">Personal Growth</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Read 100 Classic Books</div>
+                    <div class="idea-description">
+                        Challenge yourself to read literature's greatest works. Create a reading list and track your progress.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-moderate">Moderate</span>
+                        <span>💰 $500 - $1,000</span>
+                        <span>⏱️ 2-3 years</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #e65100, #ff9800);">
+                    🤝
+                    <div class="idea-category-badge">Give Back</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Build a School in a Developing Country</div>
+                    <div class="idea-description">
+                        Partner with organizations to help fund and build educational facilities for underserved communities.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $5,000 - $20,000</span>
+                        <span>⏱️ 1-2 years</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="idea-card">
+                <div class="idea-image" style="background: linear-gradient(135deg, #1976d2, #64b5f6);">
+                    🚢
+                    <div class="idea-category-badge">Travel</div>
+                </div>
+                <div class="idea-content">
+                    <div class="idea-title">Sail Across the Atlantic Ocean</div>
+                    <div class="idea-description">
+                        Join a sailing crew or charter a boat for an epic ocean crossing adventure. No experience required.
+                    </div>
+                    <div class="idea-meta">
+                        <span class="difficulty-badge difficulty-challenging">Challenging</span>
+                        <span>💰 $3,000 - $8,000</span>
+                        <span>⏱️ 2-3 weeks</span>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="btn btn-primary">+ Add to My List</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Weekly Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 32px 32px 24px 32px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .week-selector {
+            margin-bottom: 32px;
+        }
+
+        .week-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .week-display {
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .week-display .week-info {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .week-display .week-dates {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .btn-change {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .template-selector {
+            margin-bottom: 32px;
+        }
+
+        .template-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .template-option {
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .template-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .template-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+
+        .template-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            margin-top: 2px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .template-option.selected .template-radio {
+            border-color: #667eea;
+        }
+
+        .template-option.selected .template-radio::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .template-content {
+            flex: 1;
+        }
+
+        .template-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .template-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .template-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .quick-settings {
+            margin-bottom: 32px;
+        }
+
+        .quick-settings label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 24px 32px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .info-box {
+            padding: 16px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+
+        .info-box .info-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .info-box .info-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Start Weekly Review</h2>
+                <p>Choose your review settings and get started</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-title">💡 Tip: Best time for reviews</div>
+                    <div class="info-text">
+                        Many people find Sunday evening or Monday morning ideal for weekly reviews. Choose a time that works consistently for you.
+                    </div>
+                </div>
+
+                <div class="week-selector">
+                    <label>Review Period</label>
+                    <div class="week-display">
+                        <div>
+                            <div class="week-info">Current Week</div>
+                            <div class="week-dates">December 23-29, 2025</div>
+                        </div>
+                        <button class="btn-change">Change</button>
+                    </div>
+                </div>
+
+                <div class="template-selector">
+                    <label>Choose a Template</label>
+                    <div class="template-grid">
+                        <div class="template-option selected">
+                            <div class="template-radio"></div>
+                            <div class="template-content">
+                                <div class="template-name">Balanced Weekly Review</div>
+                                <div class="template-desc">
+                                    Comprehensive review covering goals, achievements, challenges, and planning. Great for work-life balance.
+                                </div>
+                                <div class="template-meta">
+                                    <span>⏱️ 25-30 min</span>
+                                    <span>📊 8 sections</span>
+                                    <span>⭐ Most Popular</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-option">
+                            <div class="template-radio"></div>
+                            <div class="template-content">
+                                <div class="template-name">Quick Check-in</div>
+                                <div class="template-desc">
+                                    Streamlined review focusing on key wins, lessons, and next week's priorities.
+                                </div>
+                                <div class="template-meta">
+                                    <span>⏱️ 10-15 min</span>
+                                    <span>📊 4 sections</span>
+                                    <span>🚀 Fast</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-option">
+                            <div class="template-radio"></div>
+                            <div class="template-content">
+                                <div class="template-name">Professional Focus</div>
+                                <div class="template-desc">
+                                    Career-oriented review with emphasis on projects, skills development, and professional goals.
+                                </div>
+                                <div class="template-meta">
+                                    <span>⏱️ 20-25 min</span>
+                                    <span>📊 6 sections</span>
+                                    <span>💼 Career</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="template-option">
+                            <div class="template-radio"></div>
+                            <div class="template-content">
+                                <div class="template-name">Personal Growth</div>
+                                <div class="template-desc">
+                                    Focus on habits, health, relationships, and personal development goals.
+                                </div>
+                                <div class="template-meta">
+                                    <span>⏱️ 20-25 min</span>
+                                    <span>📊 7 sections</span>
+                                    <span>🌱 Wellness</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-settings">
+                    <label>Quick Settings</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <div class="checkbox checked"></div>
+                            <div class="checkbox-label">Include previous week's action items</div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="checkbox checked"></div>
+                            <div class="checkbox-label">Auto-save progress every 2 minutes</div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="checkbox"></div>
+                            <div class="checkbox-label">Set reminder for incomplete sections</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Begin Review</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

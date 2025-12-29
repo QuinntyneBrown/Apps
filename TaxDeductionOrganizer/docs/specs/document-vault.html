@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Vault - Tax Deduction Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #93c5fd;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .page-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .upload-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .filters-bar {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-btn {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .document-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .document-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .document-preview {
+            height: 180px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .document-icon {
+            font-size: 4rem;
+        }
+
+        .document-type-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .ocr-badge {
+            position: absolute;
+            bottom: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .ocr-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .ocr-badge.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .ocr-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .document-info {
+            padding: 1.25rem;
+        }
+
+        .document-name {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .document-meta {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.75rem;
+        }
+
+        .document-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .document-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .retention-warning {
+            background: #fffbeb;
+            border: 2px solid #fef3c7;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .warning-icon {
+            font-size: 2rem;
+        }
+
+        .warning-content h3 {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-content p {
+            color: #78350f;
+            font-size: 0.9375rem;
+        }
+
+        .storage-info {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .storage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .storage-title {
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .storage-usage {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .storage-bar {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                📊 Tax Deduction Organizer
+            </div>
+            <div class="breadcrumb">
+                <a href="#">Dashboard</a>
+                <span>/</span>
+                <span>Document Vault</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title-row">
+                <h1 class="page-title">Document Vault</h1>
+                <button class="upload-button">📤 Upload Documents</button>
+            </div>
+
+            <div class="filters-bar">
+                <input type="text" class="search-input" placeholder="🔍 Search documents...">
+                <select class="filter-select">
+                    <option>All Categories</option>
+                    <option>Business Expenses</option>
+                    <option>Medical & Dental</option>
+                    <option>Charitable</option>
+                    <option>Other</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Types</option>
+                    <option>PDF</option>
+                    <option>Image</option>
+                    <option>Spreadsheet</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Status</option>
+                    <option>OCR Complete</option>
+                    <option>Processing</option>
+                    <option>Failed</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active">📇</button>
+                    <button class="view-btn">📋</button>
+                </div>
+                <select class="filter-select">
+                    <option>Sort: Newest</option>
+                    <option>Sort: Oldest</option>
+                    <option>Sort: Name A-Z</option>
+                    <option>Sort: Size</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Documents</div>
+                <div class="stat-value">134</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #10b981;">
+                <div class="stat-label">Storage Used</div>
+                <div class="stat-value">2.4 GB</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #8b5cf6;">
+                <div class="stat-label">OCR Processed</div>
+                <div class="stat-value">127</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #f59e0b;">
+                <div class="stat-label">Processing</div>
+                <div class="stat-value">5</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #ef4444;">
+                <div class="stat-label">Failed OCR</div>
+                <div class="stat-value">2</div>
+            </div>
+        </div>
+
+        <div class="retention-warning">
+            <div class="warning-icon">📅</div>
+            <div class="warning-content">
+                <h3>7-Year Retention Compliance</h3>
+                <p>All documents are automatically retained for 7 years to comply with IRS audit requirements. You have 23 documents from 2017 that will be eligible for deletion on January 1, 2025.</p>
+            </div>
+        </div>
+
+        <div class="storage-info">
+            <div class="storage-header">
+                <span class="storage-title">Cloud Storage</span>
+                <span class="storage-usage">2.4 GB of 50 GB used (4.8%)</span>
+            </div>
+            <div class="storage-bar">
+                <div class="storage-fill" style="width: 4.8%;"></div>
+            </div>
+        </div>
+
+        <div class="documents-grid">
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Staples Receipt - Office Supplies</div>
+                    <div class="document-meta">Dec 15, 2024 • 2.4 MB</div>
+                    <div class="document-tags">
+                        <span class="tag">Business</span>
+                        <span class="tag">$127.45</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                    <div class="document-icon">🖼️</div>
+                    <div class="document-type-badge">JPG</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Dr. Johnson Dental Receipt</div>
+                    <div class="document-meta">Dec 12, 2024 • 1.8 MB</div>
+                    <div class="document-tags">
+                        <span class="tag">Medical</span>
+                        <span class="tag">$285.00</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge processing">⏳ Processing</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">United Airlines - Flight Receipt</div>
+                    <div class="document-meta">Dec 10, 2024 • 892 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Business Travel</span>
+                        <span class="tag">$542.00</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Red Cross Donation Receipt</div>
+                    <div class="document-meta">Dec 8, 2024 • 512 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Charitable</span>
+                        <span class="tag">$500.00</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Comcast Internet Bill</div>
+                    <div class="document-meta">Dec 5, 2024 • 324 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Home Office</span>
+                        <span class="tag">$89.99</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);">
+                    <div class="document-icon">🖼️</div>
+                    <div class="document-type-badge">PNG</div>
+                    <div class="ocr-badge failed">❌ OCR Failed</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Walgreens Medical Equipment</div>
+                    <div class="document-meta">Nov 28, 2024 • 3.2 MB</div>
+                    <div class="document-tags">
+                        <span class="tag">Medical</span>
+                        <span class="tag">$78.50</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">🔄 Re-scan</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">IKEA Office Furniture Invoice</div>
+                    <div class="document-meta">Nov 25, 2024 • 1.1 MB</div>
+                    <div class="document-tags">
+                        <span class="tag">Home Office</span>
+                        <span class="tag">$450.00</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                    <div class="document-icon">🖼️</div>
+                    <div class="document-type-badge">JPG</div>
+                    <div class="ocr-badge processing">⏳ Processing</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">CVS Prescription Receipt</div>
+                    <div class="document-meta">Nov 22, 2024 • 2.7 MB</div>
+                    <div class="document-tags">
+                        <span class="tag">Medical</span>
+                        <span class="tag">$156.32</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);">
+                    <div class="document-icon">📊</div>
+                    <div class="document-type-badge">XLSX</div>
+                    <div class="ocr-badge success">✓ Processed</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">2024 Mileage Log - Q4</div>
+                    <div class="document-meta">Nov 20, 2024 • 245 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Mileage</span>
+                        <span class="tag">1,247 miles</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Udemy Course Receipt</div>
+                    <div class="document-meta">Nov 18, 2024 • 678 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Professional Dev</span>
+                        <span class="tag">$199.99</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Adobe Creative Cloud Invoice</div>
+                    <div class="document-meta">Nov 15, 2024 • 445 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Business</span>
+                        <span class="tag">$54.99</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-preview" style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);">
+                    <div class="document-icon">📄</div>
+                    <div class="document-type-badge">PDF</div>
+                    <div class="ocr-badge success">✓ OCR Complete</div>
+                </div>
+                <div class="document-info">
+                    <div class="document-name">Form 1098 - Mortgage Interest</div>
+                    <div class="document-meta">Nov 10, 2024 • 534 KB</div>
+                    <div class="document-tags">
+                        <span class="tag">Mortgage</span>
+                        <span class="tag">$12,500</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="action-btn">👁️ View</button>
+                        <button class="action-btn">⬇️ Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

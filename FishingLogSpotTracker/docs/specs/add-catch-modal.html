@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log New Catch - Fishing Log & Spot Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #e53e3e;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .input-addon {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .photo-upload {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .photo-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .photo-text {
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 24px;
+            margin-top: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .location-group {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .location-input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+        }
+
+        .quick-select {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .quick-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .modal-footer {
+            padding: 24px 32px;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        .info-box {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-body {
+                padding: 24px 20px;
+            }
+
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🎣 Log New Catch</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Species <span class="required">*</span></label>
+                            <select class="form-select" required>
+                                <option value="">Select species...</option>
+                                <option value="largemouth-bass">Largemouth Bass</option>
+                                <option value="smallmouth-bass">Smallmouth Bass</option>
+                                <option value="rainbow-trout">Rainbow Trout</option>
+                                <option value="brown-trout">Brown Trout</option>
+                                <option value="channel-catfish">Channel Catfish</option>
+                                <option value="bluegill">Bluegill</option>
+                                <option value="crappie">Crappie</option>
+                                <option value="northern-pike">Northern Pike</option>
+                                <option value="walleye">Walleye</option>
+                                <option value="other">Other...</option>
+                            </select>
+                            <div class="quick-select">
+                                <button type="button" class="quick-btn">🐟 Bass</button>
+                                <button type="button" class="quick-btn">🐠 Trout</button>
+                                <button type="button" class="quick-btn">🐟 Catfish</button>
+                                <button type="button" class="quick-btn">🐠 Panfish</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Catch Date & Time <span class="required">*</span></label>
+                            <input type="datetime-local" class="form-input" required value="2025-12-29T07:45">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Weight</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" placeholder="0.0" step="0.1" min="0">
+                                <span class="input-addon">lb</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Length</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" placeholder="0.0" step="0.5" min="0">
+                                <span class="input-addon">in</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Location <span class="required">*</span></label>
+                            <div class="location-group">
+                                <div class="location-input">
+                                    <select class="form-select" required>
+                                        <option value="">Select a saved spot...</option>
+                                        <option value="lake-henderson">Lake Henderson - North Shore</option>
+                                        <option value="crystal-river">Crystal River - Upper Rapids</option>
+                                        <option value="willow-pond">Willow Pond - East Bank</option>
+                                        <option value="rocky-creek">Rocky Creek - Bridge Pool</option>
+                                        <option value="pine-lake">Pine Lake - Dock Area</option>
+                                        <option value="new">+ Add New Spot</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-icon" title="Use current GPS location">
+                                    📍
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Lure/Bait Used</label>
+                            <select class="form-select">
+                                <option value="">Select from inventory...</option>
+                                <option value="spinnerbait">Spinnerbait - Chartreuse</option>
+                                <option value="crankbait">Crankbait - Shad Pattern</option>
+                                <option value="jig">Jig & Trailer</option>
+                                <option value="worm">Plastic Worm</option>
+                                <option value="topwater">Topwater Lure</option>
+                                <option value="live-bait">Live Bait</option>
+                                <option value="other">Other...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Technique</label>
+                            <select class="form-select">
+                                <option value="">Select technique...</option>
+                                <option value="casting">Casting</option>
+                                <option value="trolling">Trolling</option>
+                                <option value="jigging">Jigging</option>
+                                <option value="fly-fishing">Fly Fishing</option>
+                                <option value="bottom-fishing">Bottom Fishing</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-textarea" placeholder="Add any details about the catch, conditions, or experience..."></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Photos</label>
+                            <div class="photo-upload">
+                                <div class="photo-icon">📸</div>
+                                <div class="photo-text">
+                                    <strong>Click to upload</strong> or drag and drop<br>
+                                    <span style="font-size: 12px; color: #a0aec0;">PNG, JPG up to 10MB each</span>
+                                </div>
+                            </div>
+                            <div class="photo-preview">
+                                <div class="preview-item">
+                                    🐟
+                                    <button class="preview-remove">✕</button>
+                                </div>
+                                <div class="preview-item">
+                                    🎣
+                                    <button class="preview-remove">✕</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Status</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="radio" name="status" value="released" class="checkbox" checked>
+                                    <span>🌊 Released</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="radio" name="status" value="kept" class="checkbox">
+                                    <span>🎯 Kept</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="checkbox">
+                                    <span>🏆 Mark as Personal Record</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="checkbox" checked>
+                                    <span>🌡️ Log Current Weather Conditions</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-title">💡 Quick Tip</div>
+                        <div class="info-text">
+                            Take a photo with a measuring tape or ruler visible to accurately document your catch.
+                            Photos with GPS data will automatically tag your location!
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary">Cancel</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary">Save as Draft</button>
+                    <button class="btn btn-primary">🎣 Log Catch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Pressure Monitor - Trend Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .time-selector {
+            display: flex;
+            gap: 10px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .time-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .trend-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .trend-card {
+            padding: 20px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 2px solid #e5e7eb;
+        }
+
+        .trend-card.positive {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%);
+        }
+
+        .trend-card.warning {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+        }
+
+        .trend-card.negative {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%);
+        }
+
+        .trend-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .trend-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .trend-change {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trend-change.positive {
+            color: #059669;
+        }
+
+        .trend-change.negative {
+            color: #dc2626;
+        }
+
+        .chart-container {
+            margin-bottom: 30px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .chart-placeholder {
+            height: 400px;
+            background: linear-gradient(to bottom, #f9fafb 0%, #ffffff 100%);
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            position: relative;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-card.success {
+            border-left-color: #10b981;
+        }
+
+        .insight-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .insight-card.danger {
+            border-left-color: #ef4444;
+        }
+
+        .insight-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .insight-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .insight-text {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .pattern-analysis {
+            margin-top: 20px;
+        }
+
+        .pattern-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .pattern-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .pattern-icon.morning {
+            background: #fef3c7;
+        }
+
+        .pattern-icon.evening {
+            background: #dbeafe;
+        }
+
+        .pattern-content {
+            flex: 1;
+        }
+
+        .pattern-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .pattern-value {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .pattern-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .volatility-indicator {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .volatility-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        .volatility-bar {
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .volatility-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+            width: 35%;
+            border-radius: 20px;
+        }
+
+        .volatility-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">❤️</div>
+                <span>BP Monitor</span>
+            </div>
+            <button class="btn btn-secondary">← Back to Dashboard</button>
+        </header>
+
+        <div class="content-card">
+            <div class="page-header">
+                <h1 class="page-title">Blood Pressure Trend Analysis</h1>
+                <div class="time-selector">
+                    <button class="time-btn">7 Days</button>
+                    <button class="time-btn active">30 Days</button>
+                    <button class="time-btn">90 Days</button>
+                    <button class="time-btn">1 Year</button>
+                </div>
+            </div>
+
+            <div class="trend-summary">
+                <div class="trend-card positive">
+                    <div class="trend-label">Systolic Trend</div>
+                    <div class="trend-value">124</div>
+                    <div class="trend-change positive">↓ 6 mmHg improvement from previous period</div>
+                </div>
+                <div class="trend-card positive">
+                    <div class="trend-label">Diastolic Trend</div>
+                    <div class="trend-value">81</div>
+                    <div class="trend-change positive">↓ 3 mmHg improvement from previous period</div>
+                </div>
+                <div class="trend-card">
+                    <div class="trend-label">Average Pulse</div>
+                    <div class="trend-value">72 bpm</div>
+                    <div class="trend-change" style="color: #6b7280;">→ Stable, within normal range</div>
+                </div>
+                <div class="trend-card positive">
+                    <div class="trend-label">Readings in Target</div>
+                    <div class="trend-value">87%</div>
+                    <div class="trend-change positive">↑ +12% improvement from last month</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="chart-header">
+                <h2 class="chart-title">30-Day Blood Pressure Progression</h2>
+                <div style="display: flex; gap: 20px; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 20px; height: 3px; background: #dc2626;"></div>
+                        <span>Systolic</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 20px; height: 3px; background: #667eea;"></div>
+                        <span>Diastolic</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 20px; height: 3px; background: #10b981; border: 2px dashed #10b981;"></div>
+                        <span>Goal Range</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-placeholder">
+                <svg viewBox="0 0 900 380" style="padding: 20px;">
+                    <!-- Grid lines -->
+                    <line x1="60" y1="20" x2="60" y2="340" stroke="#e5e7eb" stroke-width="2"/>
+                    <line x1="60" y1="340" x2="860" y2="340" stroke="#e5e7eb" stroke-width="2"/>
+
+                    <!-- Y-axis labels -->
+                    <text x="40" y="25" font-size="12" fill="#6b7280" text-anchor="end">180</text>
+                    <text x="40" y="85" font-size="12" fill="#6b7280" text-anchor="end">160</text>
+                    <text x="40" y="145" font-size="12" fill="#6b7280" text-anchor="end">140</text>
+                    <text x="40" y="205" font-size="12" fill="#6b7280" text-anchor="end">120</text>
+                    <text x="40" y="265" font-size="12" fill="#6b7280" text-anchor="end">100</text>
+                    <text x="40" y="325" font-size="12" fill="#6b7280" text-anchor="end">80</text>
+
+                    <!-- Goal zone -->
+                    <rect x="60" y="185" width="800" height="80" fill="#d1fae5" opacity="0.4"/>
+                    <line x1="60" y1="185" x2="860" y2="185" stroke="#10b981" stroke-width="2" stroke-dasharray="5,5"/>
+                    <line x1="60" y1="265" x2="860" y2="265" stroke="#10b981" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="870" y="230" font-size="12" fill="#059669" font-weight="600">Target</text>
+
+                    <!-- Systolic line with trend -->
+                    <polyline points="60,230 100,225 140,235 180,228 220,240 260,232 300,238 340,230 380,242 420,235 460,228 500,232 540,225 580,230 620,223 660,228 700,220 740,225 780,218 820,222 860,215"
+                              fill="none" stroke="#dc2626" stroke-width="3"/>
+
+                    <!-- Diastolic line with trend -->
+                    <polyline points="60,290 100,288 140,292 180,287 220,295 260,290 300,293 340,288 380,296 420,291 460,285 500,289 540,282 580,287 620,280 660,285 700,278 740,282 780,275 820,279 860,273"
+                              fill="none" stroke="#667eea" stroke-width="3"/>
+
+                    <!-- Data points -->
+                    <circle cx="60" cy="230" r="5" fill="#dc2626"/>
+                    <circle cx="140" cy="235" r="5" fill="#dc2626"/>
+                    <circle cx="220" cy="240" r="5" fill="#dc2626"/>
+                    <circle cx="300" cy="238" r="5" fill="#dc2626"/>
+                    <circle cx="380" cy="242" r="5" fill="#dc2626"/>
+                    <circle cx="460" cy="228" r="5" fill="#dc2626"/>
+                    <circle cx="540" cy="225" r="5" fill="#dc2626"/>
+                    <circle cx="620" cy="223" r="5" fill="#dc2626"/>
+                    <circle cx="700" cy="220" r="5" fill="#dc2626"/>
+                    <circle cx="780" cy="218" r="5" fill="#dc2626"/>
+                    <circle cx="860" cy="215" r="5" fill="#dc2626"/>
+
+                    <!-- X-axis labels -->
+                    <text x="60" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Nov 30</text>
+                    <text x="220" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Dec 7</text>
+                    <text x="380" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Dec 14</text>
+                    <text x="540" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Dec 21</text>
+                    <text x="700" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Dec 28</text>
+                    <text x="860" y="360" font-size="12" fill="#6b7280" text-anchor="middle">Today</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="chart-title" style="margin-bottom: 20px;">Key Insights & Patterns</h2>
+            <div class="insights-grid">
+                <div class="insight-card success">
+                    <div class="insight-icon">📉</div>
+                    <div class="insight-title">Downward Trend Detected</div>
+                    <div class="insight-text">
+                        Your blood pressure has decreased by an average of 6/3 mmHg over the past 30 days.
+                        This is excellent progress toward your health goals.
+                    </div>
+                </div>
+                <div class="insight-card success">
+                    <div class="insight-icon">🎯</div>
+                    <div class="insight-title">Goal Achievement</div>
+                    <div class="insight-text">
+                        87% of your readings fall within your target range of &lt;130/80 mmHg.
+                        You're exceeding your 80% goal!
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">⏰</div>
+                    <div class="insight-title">Consistent Monitoring</div>
+                    <div class="insight-text">
+                        You've taken 58 readings this month with an average of 2 readings per day.
+                        Excellent consistency for accurate trend analysis.
+                    </div>
+                </div>
+                <div class="insight-card warning">
+                    <div class="insight-icon">📊</div>
+                    <div class="insight-title">Mild Variability</div>
+                    <div class="insight-text">
+                        Your systolic readings vary by up to 17 mmHg. This is within normal range but
+                        consider tracking lifestyle factors to identify patterns.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="chart-title" style="margin-bottom: 20px;">Time-Based Pattern Analysis</h2>
+            <div class="pattern-analysis">
+                <div class="pattern-item">
+                    <div class="pattern-icon morning">🌅</div>
+                    <div class="pattern-content">
+                        <div class="pattern-title">Morning Readings (6 AM - 12 PM)</div>
+                        <div class="pattern-value">Average: 122/79 mmHg • 29 readings this month</div>
+                    </div>
+                    <span class="pattern-badge badge-success">Normal</span>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-icon evening">🌙</div>
+                    <div class="pattern-content">
+                        <div class="pattern-title">Evening Readings (6 PM - 12 AM)</div>
+                        <div class="pattern-value">Average: 126/83 mmHg • 29 readings this month</div>
+                    </div>
+                    <span class="pattern-badge badge-success">Normal</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 14px; font-weight: 600; color: #111827;">Morning vs Evening Difference</span>
+                    <span style="font-size: 14px; color: #6b7280;">4/4 mmHg (Normal Variation)</span>
+                </div>
+                <div style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                    Your evening readings tend to be slightly higher than morning readings. This is a common pattern
+                    and falls within the normal circadian rhythm of blood pressure.
+                </div>
+            </div>
+
+            <div class="volatility-indicator">
+                <div class="volatility-title">Blood Pressure Volatility Score</div>
+                <div class="volatility-bar">
+                    <div class="volatility-fill"></div>
+                </div>
+                <div class="volatility-labels">
+                    <span>Low (Stable)</span>
+                    <span>Moderate</span>
+                    <span>High (Variable)</span>
+                </div>
+                <div style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                    Your BP shows <strong style="color: #059669;">low volatility</strong> with consistent measurements.
+                    This indicates good BP control and accurate measurement technique.
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="chart-title" style="margin-bottom: 20px;">Projected Trend</h2>
+            <div style="padding: 25px; background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%); border-radius: 8px; border: 2px solid #10b981;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <div style="font-size: 48px;">📈</div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 5px;">
+                            Positive Trajectory
+                        </div>
+                        <div style="font-size: 14px; color: #6b7280;">
+                            Based on your current trend, projected average in 30 days: <strong style="color: #059669;">118/76 mmHg</strong>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 14px; color: #6b7280; line-height: 1.6;">
+                    If you maintain your current lifestyle habits (medication adherence, exercise, diet),
+                    your blood pressure is projected to reach optimal levels. Keep up the excellent work!
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

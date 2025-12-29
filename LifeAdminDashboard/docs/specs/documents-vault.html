@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents Vault - Life Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .folder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .folder-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .folder-item:hover {
+            background: #f3f4f6;
+        }
+
+        .folder-item.active {
+            background: #ede9fe;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .folder-icon {
+            font-size: 18px;
+        }
+
+        .folder-name {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .folder-count {
+            font-size: 12px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .content-title {
+            font-size: 24px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .document-card {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .document-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .document-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .document-name {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .document-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .document-meta-item {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .document-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .document-tag.important {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .document-tag.expiring {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .document-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .document-row:hover {
+            background: #f9fafb;
+            border-color: #667eea;
+        }
+
+        .doc-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .doc-icon-small {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .doc-info {
+            flex: 1;
+        }
+
+        .doc-title {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .doc-details {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-icon-btn {
+            padding: 6px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .action-icon-btn:hover {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Documents Vault</h1>
+                <p>Securely store and organize important documents</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">← Back to Dashboard</button>
+                <button class="btn btn-primary">+ Upload Document</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">143</div>
+                <div class="stat-label">Total Documents</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">12 GB</div>
+                <div class="stat-label">Storage Used</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Shared Documents</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Expiring Soon</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-title">Folders</div>
+                <div class="folder-list">
+                    <div class="folder-item active">
+                        <span class="folder-icon">📁</span>
+                        <span class="folder-name">All Documents</span>
+                        <span class="folder-count">143</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">🚗</span>
+                        <span class="folder-name">Insurance</span>
+                        <span class="folder-count">24</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">💰</span>
+                        <span class="folder-name">Financial</span>
+                        <span class="folder-count">38</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">🏥</span>
+                        <span class="folder-name">Medical</span>
+                        <span class="folder-count">16</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">🏠</span>
+                        <span class="folder-name">Property</span>
+                        <span class="folder-count">19</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">🎓</span>
+                        <span class="folder-name">Education</span>
+                        <span class="folder-count">12</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">✈️</span>
+                        <span class="folder-name">Travel</span>
+                        <span class="folder-count">22</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">⚖️</span>
+                        <span class="folder-name">Legal</span>
+                        <span class="folder-count">12</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-title" style="margin-top: 24px;">Quick Access</div>
+                <div class="folder-list">
+                    <div class="folder-item">
+                        <span class="folder-icon">⭐</span>
+                        <span class="folder-name">Favorites</span>
+                        <span class="folder-count">15</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">🕐</span>
+                        <span class="folder-name">Recent</span>
+                        <span class="folder-count">20</span>
+                    </div>
+                    <div class="folder-item">
+                        <span class="folder-icon">⚠️</span>
+                        <span class="folder-name">Expiring Soon</span>
+                        <span class="folder-count">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <h2 class="content-title">All Documents</h2>
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Search documents...">
+                    </div>
+                    <div class="view-options">
+                        <button class="view-btn">📊</button>
+                        <button class="view-btn active">📋</button>
+                    </div>
+                </div>
+
+                <div class="documents-list">
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Car_Insurance_Policy_2024.pdf</div>
+                            <div class="doc-details">Insurance • 2.4 MB • Modified 2 days ago</div>
+                        </div>
+                        <span class="document-tag expiring">Expires Mar 12</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Tax_Return_2023.pdf</div>
+                            <div class="doc-details">Financial • 5.8 MB • Modified 1 week ago</div>
+                        </div>
+                        <span class="document-tag important">Important</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Medical_Records_Annual_Checkup.pdf</div>
+                            <div class="doc-details">Medical • 1.2 MB • Modified 3 days ago</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Passport_Copy.pdf</div>
+                            <div class="doc-details">Travel • 856 KB • Modified 5 days ago</div>
+                        </div>
+                        <span class="document-tag expiring">Expires 2025</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Home_Insurance_Policy.pdf</div>
+                            <div class="doc-details">Insurance • 3.1 MB • Modified 1 week ago</div>
+                        </div>
+                        <span class="document-tag expiring">Expires Jun 1</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Mortgage_Documents.pdf</div>
+                            <div class="doc-details">Property • 8.2 MB • Modified 2 weeks ago</div>
+                        </div>
+                        <span class="document-tag important">Important</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Birth_Certificate.pdf</div>
+                            <div class="doc-details">Legal • 624 KB • Modified 1 month ago</div>
+                        </div>
+                        <span class="document-tag important">Important</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Investment_Portfolio_Q1_2024.pdf</div>
+                            <div class="doc-details">Financial • 4.5 MB • Modified 3 days ago</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Drivers_License.pdf</div>
+                            <div class="doc-details">Legal • 512 KB • Modified 2 weeks ago</div>
+                        </div>
+                        <span class="document-tag expiring">Expires Dec 2024</span>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="document-row">
+                        <div class="doc-checkbox"></div>
+                        <div class="doc-icon-small">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">Health_Insurance_Card.pdf</div>
+                            <div class="doc-details">Medical • 384 KB • Modified 4 days ago</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="action-icon-btn">👁️</button>
+                            <button class="action-icon-btn">⬇️</button>
+                            <button class="action-icon-btn">⋯</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

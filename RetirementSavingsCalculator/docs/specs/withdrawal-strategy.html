@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawal Strategy - Retirement Savings Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #1a202c;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .strategy-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .strategy-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .strategy-option:hover {
+            border-color: #cbd5e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .strategy-option.selected {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .strategy-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+        }
+
+        .strategy-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .strategy-description {
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .strategy-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .withdrawal-timeline {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .timeline-year {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            align-items: center;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            gap: 1rem;
+        }
+
+        .timeline-year:nth-child(odd) {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .year-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .year-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .account-source {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .year-amount {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 4px solid #f6ad55;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #f7fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        .comparison-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .comparison-table .highlight {
+            background: #e6fffa;
+            font-weight: 600;
+        }
+
+        .tax-savings {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .tax-savings-label {
+            font-size: 0.875rem;
+            color: #22543d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tax-savings-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #22543d;
+            margin-bottom: 0.5rem;
+        }
+
+        .tax-savings-description {
+            color: #276749;
+        }
+
+        .rmd-calculator {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .rmd-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rmd-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .rmd-label {
+            color: #4a5568;
+        }
+
+        .rmd-value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            height: 300px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bucket-strategy {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bucket {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .bucket-1 {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .bucket-2 {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .bucket-3 {
+            border-color: #f6ad55;
+            background: #fffaf0;
+        }
+
+        .bucket-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .bucket-timeframe {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 1rem;
+        }
+
+        .bucket-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .bucket-description {
+            font-size: 0.875rem;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                💰 Retirement Savings Calculator
+            </div>
+            <nav class="nav">
+                <a href="dashboard-main.html" class="nav-link">Dashboard</a>
+                <a href="scenario-builder.html" class="nav-link">Scenarios</a>
+                <a href="income-streams.html" class="nav-link">Income</a>
+                <a href="expense-projections.html" class="nav-link">Expenses</a>
+                <a href="savings-progress.html" class="nav-link">Progress</a>
+                <a href="settings-profile.html" class="nav-link">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Withdrawal Strategy Planner</h1>
+                <p style="color: #718096; margin-top: 0.5rem;">Optimize how you withdraw from retirement accounts</p>
+            </div>
+            <button class="btn btn-success">Apply Recommended Strategy</button>
+        </div>
+
+        <div class="alert alert-success">
+            <div>
+                <strong>Tax Optimization Opportunity:</strong> Our recommended withdrawal strategy could save you $32,400 in taxes over your retirement. See details below.
+            </div>
+        </div>
+
+        <div class="tax-savings">
+            <div class="tax-savings-label">Projected Tax Savings</div>
+            <div class="tax-savings-value">$32,400</div>
+            <div class="tax-savings-description">Over 25 years with optimized withdrawal strategy</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Choose Your Withdrawal Strategy</h2>
+            </div>
+            <div class="card-body">
+                <div class="strategy-selector">
+                    <div class="strategy-option selected">
+                        <div class="strategy-badge">Recommended</div>
+                        <div class="strategy-title">Tax-Optimized</div>
+                        <div class="strategy-description">
+                            Withdraw from taxable accounts first, then tax-deferred, then tax-free. Minimizes lifetime tax burden and RMD impact.
+                        </div>
+                        <div class="strategy-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Tax Efficiency</span>
+                                <span class="metric-value">95%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Total Taxes</span>
+                                <span class="metric-value">$142K</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Success Rate</span>
+                                <span class="metric-value">87%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Final Balance</span>
+                                <span class="metric-value">$1.12M</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strategy-option">
+                        <div class="strategy-title">4% Rule</div>
+                        <div class="strategy-description">
+                            Withdraw 4% of total portfolio annually, adjusted for inflation. Simple and historically proven sustainable withdrawal rate.
+                        </div>
+                        <div class="strategy-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Tax Efficiency</span>
+                                <span class="metric-value">78%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Total Taxes</span>
+                                <span class="metric-value">$168K</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Success Rate</span>
+                                <span class="metric-value">85%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Final Balance</span>
+                                <span class="metric-value">$985K</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strategy-option">
+                        <div class="strategy-title">Bucket Strategy</div>
+                        <div class="strategy-description">
+                            Divide portfolio into short-term (cash), medium-term (bonds), and long-term (stocks) buckets. Withdraw from each as needed.
+                        </div>
+                        <div class="strategy-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Tax Efficiency</span>
+                                <span class="metric-value">82%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Total Taxes</span>
+                                <span class="metric-value">$159K</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Success Rate</span>
+                                <span class="metric-value">89%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Final Balance</span>
+                                <span class="metric-value">$1.05M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Tax-Optimized Withdrawal Order</h2>
+                <button class="btn btn-secondary">Customize Order</button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <div>
+                        <strong>Strategy Overview:</strong> This approach withdraws from accounts in an order that minimizes your lifetime tax burden while managing Required Minimum Distributions (RMDs).
+                    </div>
+                </div>
+
+                <div class="withdrawal-timeline">
+                    <div class="timeline-year">
+                        <div class="year-label">Ages 65-72</div>
+                        <div class="year-details">
+                            <div style="font-weight: 600; color: #1a202c;">Traditional IRA (Tax-Deferred)</div>
+                            <div class="account-source">Reduce balance before RMDs start at 73</div>
+                        </div>
+                        <div class="year-amount">$48,000/yr</div>
+                    </div>
+
+                    <div class="timeline-year">
+                        <div class="year-label">Ages 65-90</div>
+                        <div class="year-details">
+                            <div style="font-weight: 600; color: #1a202c;">Brokerage Account (Taxable)</div>
+                            <div class="account-source">Qualified dividends & long-term capital gains</div>
+                        </div>
+                        <div class="year-amount">$7,200/yr</div>
+                    </div>
+
+                    <div class="timeline-year">
+                        <div class="year-label">Ages 73-90</div>
+                        <div class="year-details">
+                            <div style="font-weight: 600; color: #1a202c;">401(k) (Tax-Deferred)</div>
+                            <div class="account-source">After IRA depleted, before RMD forces withdrawals</div>
+                        </div>
+                        <div class="year-amount">$38,400/yr</div>
+                    </div>
+
+                    <div class="timeline-year">
+                        <div class="year-label">Ages 73+</div>
+                        <div class="year-details">
+                            <div style="font-weight: 600; color: #1a202c;">Required Minimum Distributions</div>
+                            <div class="account-source">Mandatory withdrawals from traditional accounts</div>
+                        </div>
+                        <div class="year-amount">Varies</div>
+                    </div>
+
+                    <div class="timeline-year">
+                        <div class="year-label">Ages 80-90</div>
+                        <div class="year-details">
+                            <div style="font-weight: 600; color: #1a202c;">Roth IRA (Tax-Free)</div>
+                            <div class="account-source">Last resort - let it grow tax-free as long as possible</div>
+                        </div>
+                        <div class="year-amount">As needed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Required Minimum Distributions (RMD)</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <div>
+                        <strong>RMD Alert:</strong> Starting at age 73, you must withdraw a minimum amount from tax-deferred accounts annually. Plan ahead to avoid unexpected tax bills.
+                    </div>
+                </div>
+
+                <div class="rmd-calculator">
+                    <div style="font-weight: 600; color: #1a202c; margin-bottom: 1rem; font-size: 1.1rem;">Estimated RMDs at Age 73</div>
+                    <div class="rmd-row">
+                        <span class="rmd-label">401(k) Balance at 73</span>
+                        <span class="rmd-value">$892,000</span>
+                    </div>
+                    <div class="rmd-row">
+                        <span class="rmd-label">Traditional IRA Balance at 73</span>
+                        <span class="rmd-value">$0</span>
+                    </div>
+                    <div class="rmd-row">
+                        <span class="rmd-label">Life Expectancy Factor</span>
+                        <span class="rmd-value">26.5 years</span>
+                    </div>
+                    <div class="rmd-row">
+                        <span class="rmd-label">Required Withdrawal</span>
+                        <span class="rmd-value" style="color: #667eea; font-size: 1.25rem;">$33,660/year</span>
+                    </div>
+                </div>
+
+                <div style="background: #f0fff4; border: 2px solid #48bb78; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <strong style="color: #22543d;">✓ Optimization Benefit:</strong>
+                    <p style="color: #276749; margin-top: 0.5rem;">
+                        By depleting your Traditional IRA before age 73, you avoid forced RMDs on that account, giving you more control over your tax situation. Your 401(k) RMD will be $33,660/year vs $47,200/year if you hadn't used this strategy.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Strategy Comparison</h2>
+            </div>
+            <div class="card-body">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Total Taxes</th>
+                            <th>Tax Savings</th>
+                            <th>Final Balance</th>
+                            <th>Success Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="highlight">
+                            <td><strong>Tax-Optimized (Recommended)</strong></td>
+                            <td>$142,000</td>
+                            <td>$32,400</td>
+                            <td>$1,120,000</td>
+                            <td>87%</td>
+                        </tr>
+                        <tr>
+                            <td>Proportional Withdrawals</td>
+                            <td>$168,000</td>
+                            <td>$6,400</td>
+                            <td>$1,045,000</td>
+                            <td>85%</td>
+                        </tr>
+                        <tr>
+                            <td>401(k) First</td>
+                            <td>$174,400</td>
+                            <td>-</td>
+                            <td>$985,000</td>
+                            <td>83%</td>
+                        </tr>
+                        <tr>
+                            <td>Random Order</td>
+                            <td>$171,000</td>
+                            <td>$3,400</td>
+                            <td>$1,008,000</td>
+                            <td>84%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Bucket Strategy Breakdown</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <div>
+                        <strong>Alternative Approach:</strong> The bucket strategy divides your portfolio by time horizon, providing psychological comfort and reducing sequence-of-returns risk.
+                    </div>
+                </div>
+
+                <div class="bucket-strategy">
+                    <div class="bucket bucket-1">
+                        <div class="bucket-title">Bucket 1: Cash</div>
+                        <div class="bucket-timeframe">Years 1-2</div>
+                        <div class="bucket-amount">$160,000</div>
+                        <div class="bucket-description">
+                            High-yield savings and money market funds. Covers 2 years of expenses. No market risk.
+                        </div>
+                    </div>
+
+                    <div class="bucket bucket-2">
+                        <div class="bucket-title">Bucket 2: Bonds</div>
+                        <div class="bucket-timeframe">Years 3-10</div>
+                        <div class="bucket-amount">$555,000</div>
+                        <div class="bucket-description">
+                            Investment-grade bonds and bond funds. Moderate returns with lower volatility. Refills Bucket 1.
+                        </div>
+                    </div>
+
+                    <div class="bucket bucket-3">
+                        <div class="bucket-title">Bucket 3: Stocks</div>
+                        <div class="bucket-timeframe">Years 10+</div>
+                        <div class="bucket-amount">$1,135,000</div>
+                        <div class="bucket-description">
+                            Stock index funds for long-term growth. Time to recover from market downturns. Refills Bucket 2.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Annual Withdrawal Projections</h2>
+                <button class="btn btn-secondary">Download Report</button>
+            </div>
+            <div class="card-body">
+                <div class="chart-placeholder">
+                    <div style="text-align: center; color: #718096;">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📉</div>
+                        <div>Portfolio balance and annual withdrawals over 25 retirement years</div>
+                        <div style="font-size: 0.875rem; margin-top: 0.5rem;">
+                            <strong>Age 65:</strong> $1.85M → <strong>Age 90:</strong> $1.12M (with $79.8K annual withdrawals)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button class="btn btn-success">Apply Tax-Optimized Strategy</button>
+            <button class="btn btn-primary">Compare All Strategies</button>
+            <button class="btn btn-secondary">Schedule Consultation</button>
+        </div>
+    </div>
+</body>
+</html>

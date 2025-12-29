@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Library - Photography Session Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(30, 30, 46, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #b0b0c0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .locations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .location-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .location-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .location-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+        }
+
+        .location-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-favorite {
+            background: rgba(250, 112, 154, 0.9);
+            color: white;
+        }
+
+        .location-content {
+            padding: 1.5rem;
+        }
+
+        .location-header {
+            margin-bottom: 1rem;
+        }
+
+        .location-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .location-address {
+            color: #b0b0c0;
+            font-size: 0.9rem;
+        }
+
+        .location-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .location-stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #b0b0c0;
+        }
+
+        .location-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-icon {
+            opacity: 0.7;
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .detail-label {
+            color: #b0b0c0;
+            font-size: 0.85rem;
+        }
+
+        .detail-value {
+            color: #e0e0e0;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .rating {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .star {
+            color: #fee140;
+        }
+
+        @media (max-width: 768px) {
+            .locations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            📸 Photography Session Logger
+        </div>
+        <nav class="nav">
+            <a href="#">Dashboard</a>
+            <a href="#">Sessions</a>
+            <a href="#">Equipment</a>
+            <a href="#" class="active">Locations</a>
+            <a href="#">Portfolio</a>
+        </nav>
+        <div class="user-avatar">MJ</div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">📍 Location Library</h1>
+            <button class="btn btn-primary">+ Add Location</button>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search locations...">
+            </div>
+            <select class="filter-select">
+                <option>All Types</option>
+                <option>Outdoor</option>
+                <option>Indoor</option>
+                <option>Studio</option>
+                <option>Urban</option>
+                <option>Nature</option>
+            </select>
+            <select class="filter-select">
+                <option>All Ratings</option>
+                <option>⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option>⭐⭐⭐⭐ 4+ Stars</option>
+                <option>⭐⭐⭐ 3+ Stars</option>
+            </select>
+            <select class="filter-select">
+                <option>Sort: Most Used</option>
+                <option>Sort: Recently Added</option>
+                <option>Sort: Name A-Z</option>
+                <option>Sort: Rating</option>
+            </select>
+        </div>
+
+        <div class="locations-grid">
+            <div class="location-card">
+                <div class="location-image">
+                    🌅
+                    <div class="location-badge badge-favorite">⭐ Favorite</div>
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Riverside Park</div>
+                        <div class="location-address">1234 River Road, Downtown</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">24</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">3.2K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Best Time</div>
+                                <div class="detail-value">Golden Hour (5:00 PM - 7:00 PM)</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">☀️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Lighting</div>
+                                <div class="detail-value">Natural, West-facing for sunset</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🅿️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Parking</div>
+                                <div class="detail-value">Free street parking available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">outdoor</span>
+                        <span class="tag">sunset</span>
+                        <span class="tag">portraits</span>
+                        <span class="tag">nature</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🏢
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Downtown Financial District</div>
+                        <div class="location-address">Main Street & 5th Avenue</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">18</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">2.1K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★☆</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Best Time</div>
+                                <div class="detail-value">Early morning or evening (less crowded)</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🏙️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Style</div>
+                                <div class="detail-value">Modern architecture, urban backdrop</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⚠️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Note</div>
+                                <div class="detail-value">Check building permits for commercial shoots</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">urban</span>
+                        <span class="tag">architecture</span>
+                        <span class="tag">corporate</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🏠
+                    <div class="location-badge badge-favorite">⭐ Favorite</div>
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Home Studio</div>
+                        <div class="location-address">Personal Studio Space</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">42</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">5.8K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">💡</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Lighting</div>
+                                <div class="detail-value">Professional studio lighting setup</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🎨</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Backdrops</div>
+                                <div class="detail-value">White, gray, black seamless available</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">✓</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Availability</div>
+                                <div class="detail-value">24/7 access, climate controlled</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">indoor</span>
+                        <span class="tag">studio</span>
+                        <span class="tag">controlled</span>
+                        <span class="tag">portraits</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🌲
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Mountain Vista Trail</div>
+                        <div class="location-address">Northern Regional Park</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">1.8K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Best Time</div>
+                                <div class="detail-value">Sunrise or late afternoon</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🥾</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Access</div>
+                                <div class="detail-value">15-minute hike from parking area</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📋</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Requirements</div>
+                                <div class="detail-value">Park permit required for commercial work</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">outdoor</span>
+                        <span class="tag">landscape</span>
+                        <span class="tag">nature</span>
+                        <span class="tag">hiking</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🏰
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Grand Hotel Ballroom</div>
+                        <div class="location-address">555 Luxury Avenue</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">2.4K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">💡</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Lighting</div>
+                                <div class="detail-value">Chandelier and ambient, bring flash</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🎭</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Style</div>
+                                <div class="detail-value">Elegant, classical architecture</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📞</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Contact</div>
+                                <div class="detail-value">Events coordinator: (555) 123-4567</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">indoor</span>
+                        <span class="tag">wedding</span>
+                        <span class="tag">elegant</span>
+                        <span class="tag">event</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🌊
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Sunset Beach Pier</div>
+                        <div class="location-address">Ocean Boulevard Beach Access</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">16</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">2.7K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★★</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Best Time</div>
+                                <div class="detail-value">Sunset (6:30 PM - 8:00 PM)</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🌤️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Weather</div>
+                                <div class="detail-value">Check forecast, windy conditions common</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">👥</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Crowds</div>
+                                <div class="detail-value">Busy on weekends, weekdays better</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">outdoor</span>
+                        <span class="tag">beach</span>
+                        <span class="tag">sunset</span>
+                        <span class="tag">romantic</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🎨
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">Arts District Murals</div>
+                        <div class="location-address">Creative Quarter, Various Locations</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">22</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">3.1K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★☆</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">🎨</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Features</div>
+                                <div class="detail-value">Colorful street art, urban vibe</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Best Time</div>
+                                <div class="detail-value">Morning for soft light, evening for ambiance</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🅿️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Parking</div>
+                                <div class="detail-value">Metered street parking</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">urban</span>
+                        <span class="tag">colorful</span>
+                        <span class="tag">street-art</span>
+                        <span class="tag">creative</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-image">
+                    🏛️
+                </div>
+                <div class="location-content">
+                    <div class="location-header">
+                        <div class="location-name">University Campus</div>
+                        <div class="location-address">1000 College Avenue</div>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="location-stat">
+                            <div class="stat-value">14</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="stat-value">1.9K</div>
+                            <div class="stat-label">Photos</div>
+                        </div>
+                        <div class="location-stat">
+                            <div class="rating">
+                                <span class="star">★★★★☆</span>
+                            </div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">🎓</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Ideal For</div>
+                                <div class="detail-value">Senior portraits, graduation photos</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🌳</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Features</div>
+                                <div class="detail-value">Classic architecture, tree-lined paths</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⚠️</span>
+                            <div class="detail-content">
+                                <div class="detail-label">Note</div>
+                                <div class="detail-value">Busy during academic year</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">outdoor</span>
+                        <span class="tag">academic</span>
+                        <span class="tag">graduation</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wearable Connections - Personal Health Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            color: #1a202c;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .connected-devices {
+            grid-column: span 8;
+        }
+
+        .device-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .device-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .device-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .device-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .device-info {
+            flex: 1;
+        }
+
+        .device-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .device-model {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .device-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-connected {
+            color: #15803d;
+        }
+
+        .status-connected .status-dot {
+            background: #22c55e;
+        }
+
+        .status-syncing {
+            color: #0369a1;
+        }
+
+        .status-syncing .status-dot {
+            background: #0ea5e9;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .device-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .device-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+            background: white;
+        }
+
+        .device-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .device-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .device-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .sync-history {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .sync-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .sync-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .sync-item:last-child {
+            border-bottom: none;
+        }
+
+        .sync-label {
+            color: #64748b;
+        }
+
+        .sync-value {
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .available-devices {
+            grid-column: span 4;
+        }
+
+        .available-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .available-card:hover {
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .available-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .available-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .available-info h3 {
+            font-size: 15px;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .available-info p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .connect-btn {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .connect-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .sync-settings {
+            grid-column: span 12;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .setting-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .setting-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .setting-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .setting-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .toggle {
+            width: 48px;
+            height: 28px;
+            background: #22c55e;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle.off {
+            background: #cbd5e1;
+        }
+
+        .toggle.off::after {
+            right: 23px;
+        }
+
+        .setting-description {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .data-types {
+            margin-top: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .data-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .data-type input {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="back-btn">←</div>
+                <div>
+                    <h1>Connected Devices</h1>
+                    <p>Manage your wearables and health devices</p>
+                </div>
+            </div>
+            <button class="btn btn-primary">+ Add New Device</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="card connected-devices">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Active Devices</div>
+                        <div class="card-subtitle">3 devices connected</div>
+                    </div>
+                </div>
+
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-icon" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">⌚</div>
+                        <div class="device-info">
+                            <div class="device-name">Apple Watch Series 8</div>
+                            <div class="device-model">Model: MNUK3LL/A • iOS 17.2</div>
+                            <div class="device-status status-connected">
+                                <span class="status-dot"></span>
+                                <span>Connected • Last sync 2 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="device-btn">Sync Now</button>
+                            <button class="device-btn">Settings</button>
+                            <button class="device-btn">Disconnect</button>
+                        </div>
+                    </div>
+                    <div class="device-stats">
+                        <div class="device-stat">
+                            <div class="stat-icon">🔋</div>
+                            <div class="stat-value">98%</div>
+                            <div class="stat-label">Battery</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">❤️</div>
+                            <div class="stat-value">72</div>
+                            <div class="stat-label">Heart Rate</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">🚶</div>
+                            <div class="stat-value">8.5K</div>
+                            <div class="stat-label">Steps</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-value">342</div>
+                            <div class="stat-label">Calories</div>
+                        </div>
+                    </div>
+                    <div class="sync-history">
+                        <div class="sync-title">Sync Details</div>
+                        <div class="sync-item">
+                            <span class="sync-label">Data Points Synced</span>
+                            <span class="sync-value">1,247 entries</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Last Full Sync</span>
+                            <span class="sync-value">Today at 10:45 AM</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Sync Frequency</span>
+                            <span class="sync-value">Every 15 minutes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">⚡</div>
+                        <div class="device-info">
+                            <div class="device-name">Fitbit Charge 5</div>
+                            <div class="device-model">Model: FB421BKBK • Firmware 1.190.50</div>
+                            <div class="device-status status-connected">
+                                <span class="status-dot"></span>
+                                <span>Connected • Last sync 15 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="device-btn">Sync Now</button>
+                            <button class="device-btn">Settings</button>
+                            <button class="device-btn">Disconnect</button>
+                        </div>
+                    </div>
+                    <div class="device-stats">
+                        <div class="device-stat">
+                            <div class="stat-icon">🔋</div>
+                            <div class="stat-value">72%</div>
+                            <div class="stat-label">Battery</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">💤</div>
+                            <div class="stat-value">7.2h</div>
+                            <div class="stat-label">Sleep</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-value">85</div>
+                            <div class="stat-label">Active Min</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">💧</div>
+                            <div class="stat-value">98%</div>
+                            <div class="stat-label">SpO2</div>
+                        </div>
+                    </div>
+                    <div class="sync-history">
+                        <div class="sync-title">Sync Details</div>
+                        <div class="sync-item">
+                            <span class="sync-label">Data Points Synced</span>
+                            <span class="sync-value">892 entries</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Last Full Sync</span>
+                            <span class="sync-value">Today at 10:30 AM</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Sync Frequency</span>
+                            <span class="sync-value">Every 30 minutes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-icon" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white;">🩺</div>
+                        <div class="device-info">
+                            <div class="device-name">Omron BP Monitor</div>
+                            <div class="device-model">Model: BP7900 • Bluetooth 5.0</div>
+                            <div class="device-status status-connected">
+                                <span class="status-dot"></span>
+                                <span>Connected • Last reading 45 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="device-btn">Take Reading</button>
+                            <button class="device-btn">Settings</button>
+                            <button class="device-btn">Disconnect</button>
+                        </div>
+                    </div>
+                    <div class="device-stats">
+                        <div class="device-stat">
+                            <div class="stat-icon">🔋</div>
+                            <div class="stat-value">Full</div>
+                            <div class="stat-label">Battery</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">🩺</div>
+                            <div class="stat-value">118/75</div>
+                            <div class="stat-label">Latest BP</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">❤️</div>
+                            <div class="stat-value">72</div>
+                            <div class="stat-label">Pulse</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-value">24</div>
+                            <div class="stat-label">Readings</div>
+                        </div>
+                    </div>
+                    <div class="sync-history">
+                        <div class="sync-title">Sync Details</div>
+                        <div class="sync-item">
+                            <span class="sync-label">Data Points Synced</span>
+                            <span class="sync-value">24 readings</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Last Reading</span>
+                            <span class="sync-value">Today at 10:00 AM</span>
+                        </div>
+                        <div class="sync-item">
+                            <span class="sync-label">Sync Mode</span>
+                            <span class="sync-value">Manual after reading</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card available-devices">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Add Device</div>
+                        <div class="card-subtitle">Popular devices</div>
+                    </div>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">📱</div>
+                        <div class="available-info">
+                            <h3>Samsung Health</h3>
+                            <p>Galaxy Watch & Health app</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">🏃</div>
+                        <div class="available-info">
+                            <h3>Garmin Connect</h3>
+                            <p>All Garmin devices</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">💜</div>
+                        <div class="available-info">
+                            <h3>Whoop</h3>
+                            <p>Whoop Strap 4.0</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white;">⭕</div>
+                        <div class="available-info">
+                            <h3>Oura Ring</h3>
+                            <p>Oura Ring Gen 3</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;">🌡️</div>
+                        <div class="available-info">
+                            <h3>Withings Scale</h3>
+                            <p>Body+ Smart Scale</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white;">🩸</div>
+                        <div class="available-info">
+                            <h3>Glucose Monitor</h3>
+                            <p>Dexcom G7 CGM</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+
+                <div class="available-card">
+                    <div class="available-header">
+                        <div class="available-icon" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white;">📊</div>
+                        <div class="available-info">
+                            <h3>Google Fit</h3>
+                            <p>Google health platform</p>
+                        </div>
+                    </div>
+                    <button class="connect-btn">Connect</button>
+                </div>
+            </div>
+
+            <div class="card sync-settings">
+                <div class="card-header">
+                    <div class="card-title">Sync Settings</div>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">🔄</div>
+                                <span>Auto Sync</span>
+                            </div>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="setting-description">
+                            Automatically sync data from connected devices every 15 minutes
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">🔔</div>
+                                <span>Sync Notifications</span>
+                            </div>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="setting-description">
+                            Get notified when devices sync successfully or encounter errors
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">🔋</div>
+                                <span>Battery Alerts</span>
+                            </div>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="setting-description">
+                            Receive alerts when device battery levels are low (below 20%)
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);">☁️</div>
+                                <span>Cloud Backup</span>
+                            </div>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="setting-description">
+                            Automatically backup all synced data to secure cloud storage
+                        </div>
+                        <div class="data-types">
+                            <div class="data-type">
+                                <input type="checkbox" checked> Heart Rate Data
+                            </div>
+                            <div class="data-type">
+                                <input type="checkbox" checked> Activity & Steps
+                            </div>
+                            <div class="data-type">
+                                <input type="checkbox" checked> Sleep Tracking
+                            </div>
+                            <div class="data-type">
+                                <input type="checkbox" checked> Vital Signs
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);">📶</div>
+                                <span>WiFi Only Sync</span>
+                            </div>
+                            <div class="toggle off"></div>
+                        </div>
+                        <div class="setting-description">
+                            Only sync data when connected to WiFi to save mobile data
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div class="setting-title">
+                                <div class="setting-icon" style="background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);">🔒</div>
+                                <span>Data Encryption</span>
+                            </div>
+                            <div class="toggle"></div>
+                        </div>
+                        <div class="setting-description">
+                            Encrypt all health data during sync and storage (HIPAA compliant)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Property - Real Estate Investment Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: #edf2f7;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.938rem;
+            font-weight: 500;
+            color: #718096;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #2b6cb0;
+            border-bottom-color: #2b6cb0;
+        }
+
+        .tab:hover {
+            color: #2b6cb0;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            font-size: 1.125rem;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-grid.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        label .required {
+            color: #e53e3e;
+        }
+
+        input, select, textarea {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.938rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2b6cb0;
+            box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            padding-left: 2rem;
+        }
+
+        .helper-text {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: auto;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h4 {
+            color: #2c5282;
+            font-size: 0.938rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            color: #2c5282;
+            font-size: 0.813rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f7fafc;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.938rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2b6cb0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .progress-indicator {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2b6cb0;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add New Property</h2>
+                <button class="close-btn">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-tabs">
+                    <button class="tab active">Basic Info</button>
+                    <button class="tab">Financial Details</button>
+                    <button class="tab">Income & Expenses</button>
+                    <button class="tab">Review</button>
+                </div>
+
+                <div class="info-box">
+                    <h4>Getting Started</h4>
+                    <p>Enter your property details to begin tracking its performance. You can update these details anytime.</p>
+                </div>
+
+                <form>
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3>Property Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Property Name <span class="required">*</span></label>
+                                <input type="text" placeholder="e.g., Maple Street Duplex" value="">
+                                <span class="helper-text">Give this property a memorable name</span>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Street Address <span class="required">*</span></label>
+                                <input type="text" placeholder="1247 Maple Street" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>City <span class="required">*</span></label>
+                                <input type="text" placeholder="Austin" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>State <span class="required">*</span></label>
+                                <select>
+                                    <option value="">Select State</option>
+                                    <option value="TX" selected>Texas</option>
+                                    <option value="CA">California</option>
+                                    <option value="FL">Florida</option>
+                                    <option value="NY">New York</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>ZIP Code <span class="required">*</span></label>
+                                <input type="text" placeholder="78704" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Property Type <span class="required">*</span></label>
+                                <select>
+                                    <option value="">Select Type</option>
+                                    <option value="single-family">Single Family</option>
+                                    <option value="multi-family" selected>Multi-Family</option>
+                                    <option value="condo">Condo</option>
+                                    <option value="townhouse">Townhouse</option>
+                                    <option value="commercial">Commercial</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Details Section -->
+                    <div class="form-section">
+                        <h3>Purchase Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Purchase Price <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="385,000" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Purchase Date <span class="required">*</span></label>
+                                <input type="date" value="2023-03-15">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Closing Costs</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="8,500" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Renovation Costs</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="15,000" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Current Market Value</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="425,000" value="">
+                                </div>
+                                <span class="helper-text">Current estimated market value</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Square Footage</label>
+                                <input type="text" placeholder="2,400" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Year Built</label>
+                                <input type="text" placeholder="1998" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Number of Units</label>
+                                <input type="number" placeholder="2" value="" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financing Section -->
+                    <div class="form-section">
+                        <h3>Financing</h3>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Financing Type</label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" name="financing" value="mortgage" id="mortgage" checked>
+                                        <label for="mortgage">Mortgage</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" name="financing" value="cash" id="cash">
+                                        <label for="cash">Cash Purchase</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" name="financing" value="other" id="other">
+                                        <label for="other">Other</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Down Payment</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="77,000" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Loan Amount</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="308,000" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Interest Rate</label>
+                                <div class="input-group">
+                                    <input type="text" placeholder="5.25" value="" style="padding-left: 0.75rem; padding-right: 2rem;">
+                                    <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #718096;">%</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Loan Term</label>
+                                <select>
+                                    <option value="">Select Term</option>
+                                    <option value="15">15 years</option>
+                                    <option value="20">20 years</option>
+                                    <option value="30" selected>30 years</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Monthly Mortgage Payment</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="1,698" value="" disabled style="background: #f7fafc;">
+                                </div>
+                                <span class="helper-text">Calculated automatically</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Income Details Section -->
+                    <div class="form-section">
+                        <h3>Rental Income</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Monthly Rental Income <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="3,200" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Vacancy Rate</label>
+                                <div class="input-group">
+                                    <input type="text" placeholder="5" value="" style="padding-left: 0.75rem; padding-right: 2rem;">
+                                    <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #718096;">%</span>
+                                </div>
+                                <span class="helper-text">Expected annual vacancy rate</span>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Current Status</label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" name="status" value="rented" id="rented" checked>
+                                        <label for="rented">Currently Rented</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" name="status" value="vacant" id="vacant">
+                                        <label for="vacant">Vacant</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Operating Expenses Section -->
+                    <div class="form-section">
+                        <h3>Operating Expenses</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Property Tax (Annual)</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="4,500" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Insurance (Annual)</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="1,200" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>HOA Fees (Monthly)</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="0" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Property Management</label>
+                                <div class="input-group">
+                                    <input type="text" placeholder="8" value="" style="padding-left: 0.75rem; padding-right: 2rem;">
+                                    <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #718096;">%</span>
+                                </div>
+                                <span class="helper-text">% of rental income</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Maintenance Reserve (Monthly)</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="200" value="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Utilities (if paid by owner)</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">$</span>
+                                    <input type="text" placeholder="0" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h3>Additional Information</h3>
+                        <div class="form-grid single">
+                            <div class="form-group">
+                                <label>Notes</label>
+                                <textarea placeholder="Add any additional notes about this property..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <div class="progress-indicator">
+                    <div>Step 1 of 4: Basic Information</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 25%;"></div>
+                    </div>
+                </div>
+                <div class="footer-actions">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Next: Financial Details →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

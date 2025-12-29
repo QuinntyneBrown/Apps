@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Meal Plan - MealPrepPlanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #10b981;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        .week-navigator {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .week-arrow {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-arrow:hover {
+            background: #f8fafc;
+            border-color: #10b981;
+        }
+
+        .week-info {
+            text-align: center;
+        }
+
+        .week-number {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .week-dates {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .week-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .meal-grid {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .grid-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1200px;
+        }
+
+        .grid-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+        }
+
+        .grid-table th:first-child {
+            border-radius: 8px 0 0 0;
+            width: 120px;
+        }
+
+        .grid-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .grid-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        .grid-table td:first-child {
+            font-weight: 600;
+            color: #1a202c;
+            background: #f8fafc;
+        }
+
+        .day-cell {
+            text-align: center;
+        }
+
+        .day-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .day-date {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .meal-slot {
+            min-height: 120px;
+            position: relative;
+        }
+
+        .meal-item {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+        }
+
+        .meal-item:hover {
+            border-color: #10b981;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .meal-item-name {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .meal-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meal-info-row {
+            font-size: 0.75rem;
+            color: #059669;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .empty-slot {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 0.875rem;
+            text-align: center;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        .empty-slot:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+            color: #10b981;
+        }
+
+        .meal-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .meal-item:hover .meal-actions {
+            opacity: 1;
+        }
+
+        .action-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .summary-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .summary-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .nutrition-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .nutrition-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nutrition-label {
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .nutrition-value {
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
+        }
+
+        .recipe-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .recipe-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .recipe-name {
+            font-weight: 500;
+            color: #1a202c;
+        }
+
+        .recipe-count {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            🍽️ MealPrepPlanner
+        </div>
+        <nav class="nav">
+            <a href="#">Dashboard</a>
+            <a href="#" class="active">Meal Plans</a>
+            <a href="#">Recipes</a>
+            <a href="#">Grocery Lists</a>
+            <a href="#">Nutrition</a>
+        </nav>
+        <div class="user-menu">
+            <div class="avatar">JD</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">Weekly Meal Plan</h1>
+                <p class="page-subtitle">Plan and organize your meals for optimal nutrition and efficiency</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">📋 Generate Shopping List</button>
+                <button class="btn btn-secondary">📊 View Nutrition</button>
+                <button class="btn btn-primary">💾 Save Plan</button>
+            </div>
+        </div>
+
+        <div class="week-navigator">
+            <div class="week-selector">
+                <div class="week-arrow">←</div>
+                <div class="week-info">
+                    <div class="week-number">Week of Dec 29 - Jan 4, 2025</div>
+                    <div class="week-dates">Active Meal Plan</div>
+                </div>
+                <div class="week-arrow">→</div>
+            </div>
+            <div class="week-stats">
+                <div class="stat">
+                    <div class="stat-value">21</div>
+                    <div class="stat-label">Meals Planned</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">15,050</div>
+                    <div class="stat-label">Total Calories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Unique Recipes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="meal-grid">
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        <th>Meal</th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Monday</div>
+                                <div class="day-date">Dec 29</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Tuesday</div>
+                                <div class="day-date">Dec 30</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Wednesday</div>
+                                <div class="day-date">Dec 31</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Thursday</div>
+                                <div class="day-date">Jan 1</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Friday</div>
+                                <div class="day-date">Jan 2</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Saturday</div>
+                                <div class="day-date">Jan 3</div>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="day-cell">
+                                <div class="day-name">Sunday</div>
+                                <div class="day-date">Jan 4</div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Breakfast</td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Greek Yogurt Bowl</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 385 cal</div>
+                                    <div class="meal-info-row">⏱️ 15 min</div>
+                                    <div class="meal-info-row">💪 25g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Overnight Oats</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 410 cal</div>
+                                    <div class="meal-info-row">⏱️ 5 min</div>
+                                    <div class="meal-info-row">💪 18g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Veggie Omelet</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 395 cal</div>
+                                    <div class="meal-info-row">⏱️ 12 min</div>
+                                    <div class="meal-info-row">💪 28g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Protein Pancakes</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 425 cal</div>
+                                    <div class="meal-info-row">⏱️ 18 min</div>
+                                    <div class="meal-info-row">💪 32g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Smoothie Bowl</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 365 cal</div>
+                                    <div class="meal-info-row">⏱️ 10 min</div>
+                                    <div class="meal-info-row">💪 22g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Avocado Toast</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 445 cal</div>
+                                    <div class="meal-info-row">⏱️ 8 min</div>
+                                    <div class="meal-info-row">💪 20g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Breakfast Burrito</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 520 cal</div>
+                                    <div class="meal-info-row">⏱️ 15 min</div>
+                                    <div class="meal-info-row">💪 30g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Lunch</td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Chicken Caesar Salad</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 520 cal</div>
+                                    <div class="meal-info-row">⏱️ 20 min</div>
+                                    <div class="meal-info-row">💪 45g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Turkey & Avocado Wrap</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 485 cal</div>
+                                    <div class="meal-info-row">⏱️ 15 min</div>
+                                    <div class="meal-info-row">💪 38g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Quinoa Buddha Bowl</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 545 cal</div>
+                                    <div class="meal-info-row">⏱️ 25 min</div>
+                                    <div class="meal-info-row">💪 28g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Grilled Chicken Bowl</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 565 cal</div>
+                                    <div class="meal-info-row">⏱️ 22 min</div>
+                                    <div class="meal-info-row">💪 52g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Tuna Nicoise Salad</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 475 cal</div>
+                                    <div class="meal-info-row">⏱️ 18 min</div>
+                                    <div class="meal-info-row">💪 42g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="empty-slot">
+                                + Add Meal
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Mediterranean Platter</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 590 cal</div>
+                                    <div class="meal-info-row">⏱️ 30 min</div>
+                                    <div class="meal-info-row">💪 35g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dinner</td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Salmon w/ Roasted Veggies</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 645 cal</div>
+                                    <div class="meal-info-row">⏱️ 35 min</div>
+                                    <div class="meal-info-row">💪 48g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Beef Stir-Fry w/ Rice</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 680 cal</div>
+                                    <div class="meal-info-row">⏱️ 30 min</div>
+                                    <div class="meal-info-row">💪 55g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Grilled Chicken Tacos</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 615 cal</div>
+                                    <div class="meal-info-row">⏱️ 28 min</div>
+                                    <div class="meal-info-row">💪 50g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Baked Cod w/ Quinoa</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 585 cal</div>
+                                    <div class="meal-info-row">⏱️ 32 min</div>
+                                    <div class="meal-info-row">💪 46g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Turkey Meatballs & Pasta</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 725 cal</div>
+                                    <div class="meal-info-row">⏱️ 40 min</div>
+                                    <div class="meal-info-row">💪 58g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Shrimp Pad Thai</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 695 cal</div>
+                                    <div class="meal-info-row">⏱️ 35 min</div>
+                                    <div class="meal-info-row">💪 42g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="meal-slot">
+                            <div class="meal-item">
+                                <div class="meal-actions">
+                                    <div class="action-icon">✏️</div>
+                                    <div class="action-icon">🗑️</div>
+                                </div>
+                                <div class="meal-item-name">Lamb Chops w/ Sweet Potato</div>
+                                <div class="meal-item-info">
+                                    <div class="meal-info-row">🔥 755 cal</div>
+                                    <div class="meal-info-row">⏱️ 45 min</div>
+                                    <div class="meal-info-row">💪 62g protein</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-card">
+                <h3 class="summary-title">Weekly Nutrition Summary</h3>
+                <div class="nutrition-summary">
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">Average Daily Calories</span>
+                            <span class="nutrition-value">2,145</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 97%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">Average Protein</span>
+                            <span class="nutrition-value">155g</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 103%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">Average Carbs</span>
+                            <span class="nutrition-value">235g</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 94%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">Average Fats</span>
+                            <span class="nutrition-value">72g</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 96%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h3 class="summary-title">Recipes Used This Week</h3>
+                <div class="recipe-list">
+                    <div class="recipe-item">
+                        <span class="recipe-name">Greek Yogurt Bowl</span>
+                        <span class="recipe-count">1x</span>
+                    </div>
+                    <div class="recipe-item">
+                        <span class="recipe-name">Chicken Caesar Salad</span>
+                        <span class="recipe-count">1x</span>
+                    </div>
+                    <div class="recipe-item">
+                        <span class="recipe-name">Salmon w/ Roasted Veggies</span>
+                        <span class="recipe-count">1x</span>
+                    </div>
+                    <div class="recipe-item">
+                        <span class="recipe-name">Overnight Oats</span>
+                        <span class="recipe-count">1x</span>
+                    </div>
+                    <div class="recipe-item">
+                        <span class="recipe-name">Turkey & Avocado Wrap</span>
+                        <span class="recipe-count">1x</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h3 class="summary-title">Dietary Compliance</h3>
+                <div class="nutrition-summary">
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">
+                                <span class="tag">High Protein</span>
+                            </span>
+                            <span class="nutrition-value">✓</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">
+                                <span class="tag">Low Carb</span>
+                            </span>
+                            <span class="nutrition-value">✓</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">
+                                <span class="tag">Gluten-Free Options</span>
+                            </span>
+                            <span class="nutrition-value">85%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nutrition-row">
+                            <span class="nutrition-label">
+                                <span class="tag">Dairy-Free Options</span>
+                            </span>
+                            <span class="nutrition-value">42%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

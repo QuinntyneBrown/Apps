@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Items - Meeting Notes & Action Item Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #434190;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .stat.overdue .stat-value {
+            color: #f56565;
+        }
+
+        .stat.pending .stat-value {
+            color: #ed8936;
+        }
+
+        .stat.in-progress .stat-value {
+            color: #4299e1;
+        }
+
+        .stat.completed .stat-value {
+            color: #48bb78;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #edf2f7;
+            border-radius: 6px;
+            padding: 0.25rem;
+        }
+
+        .view-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .view-btn.active {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kanban-column {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .column-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 3px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-header.not-started {
+            border-color: #cbd5e0;
+        }
+
+        .column-header.in-progress {
+            border-color: #4299e1;
+        }
+
+        .column-header.blocked {
+            border-color: #ed8936;
+        }
+
+        .column-header.completed {
+            border-color: #48bb78;
+        }
+
+        .column-title {
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .column-count {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .column-body {
+            padding: 1rem;
+        }
+
+        .task-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .task-assignee {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .assignee-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+
+        .task-meeting {
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .badge.medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .badge.low {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .task-card.overdue {
+            border-left: 4px solid #f56565;
+            background: #fff5f5;
+        }
+
+        .overdue-badge {
+            background: #fc8181;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.625rem;
+            font-weight: 600;
+        }
+
+        .bulk-actions {
+            background: #4c51bf;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .bulk-actions-text {
+            font-weight: 500;
+        }
+
+        .bulk-actions-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .bulk-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .bulk-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📝 MeetingTracker</div>
+        <div class="header-actions">
+            <button class="btn btn-secondary">🔍 Search</button>
+            <button class="btn btn-primary">+ New Action Item</button>
+            <div class="user-avatar">RL</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Action Items</h1>
+            <div class="view-toggle">
+                <button class="view-btn active">📋 Kanban</button>
+                <button class="view-btn">📊 List</button>
+                <button class="view-btn">👤 By Person</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat overdue">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+            <div class="stat pending">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Not Started</div>
+            </div>
+            <div class="stat in-progress">
+                <div class="stat-value">11</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Blocked</div>
+            </div>
+            <div class="stat completed">
+                <div class="stat-value">45</div>
+                <div class="stat-label">Completed This Month</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">84%</div>
+                <div class="stat-label">Completion Rate</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search action items...">
+            </div>
+
+            <div class="filter-group">
+                <select class="select">
+                    <option>All Assignees</option>
+                    <option>Marcus Chen</option>
+                    <option>Diana Edwards</option>
+                    <option>Sarah Kim</option>
+                    <option>John Davis</option>
+                    <option>My Items</option>
+                </select>
+
+                <select class="select">
+                    <option>All Priorities</option>
+                    <option>High</option>
+                    <option>Medium</option>
+                    <option>Low</option>
+                </select>
+
+                <select class="select">
+                    <option>All Due Dates</option>
+                    <option>Overdue</option>
+                    <option>Today</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                    <option>No Due Date</option>
+                </select>
+
+                <select class="select">
+                    <option>All Meetings</option>
+                    <option>Q4 Product Planning Review</option>
+                    <option>Engineering Team Standup</option>
+                    <option>Client Feedback Session</option>
+                    <option>Marketing Campaign Brainstorm</option>
+                </select>
+
+                <button class="btn btn-secondary">📥 Export</button>
+            </div>
+        </div>
+
+        <div class="kanban-board">
+            <div class="kanban-column">
+                <div class="column-header not-started">
+                    <div class="column-title">
+                        ⭕ Not Started
+                    </div>
+                    <div class="column-count">12</div>
+                </div>
+                <div class="column-body">
+                    <div class="task-card">
+                        <div class="task-title">Complete SOC 2 compliance gap analysis and create remediation plan</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div>Due: Jan 10</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card overdue">
+                        <div class="task-title">Prepare Q4 budget presentation for board meeting</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #667eea;">RL</div>
+                                <span>Rachel Lee</span>
+                            </div>
+                            <span class="overdue-badge">OVERDUE</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div style="color: #f56565; font-weight: 600;">Due: Dec 27</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Draft job descriptions for security engineer positions</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #ed8936;">DE</div>
+                                <span>Diana Edwards</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div>Due: Jan 5</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Research and recommend security audit vendors</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #9f7aea;">SK</div>
+                                <span>Sarah Kim</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div>Due: Jan 8</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Schedule customer feedback sessions for Q1</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #4299e1;">TS</div>
+                                <span>Tom Stevens</span>
+                            </div>
+                            <span class="badge low">Low</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Marketing Campaign</div>
+                            <div>Due: Jan 15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header in-progress">
+                    <div class="column-title">
+                        🔄 In Progress
+                    </div>
+                    <div class="column-count">11</div>
+                </div>
+                <div class="column-body">
+                    <div class="task-card">
+                        <div class="task-title">Prepare detailed Q1 technical roadmap presentation</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                        <div class="task-footer" style="margin-top: 0.75rem;">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div>Due: Jan 10</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Review and approve new marketing designs</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #667eea;">RL</div>
+                                <span>Rachel Lee</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%;"></div>
+                        </div>
+                        <div class="task-footer" style="margin-top: 0.75rem;">
+                            <div class="task-meeting">📅 Marketing Campaign</div>
+                            <div>Due: Dec 30</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Update product roadmap document with Q1 priorities</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #f56565;">JD</div>
+                                <span>John Davis</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%;"></div>
+                        </div>
+                        <div class="task-footer" style="margin-top: 0.75rem;">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div>Due: Jan 7</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Conduct user research for mobile app redesign</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #9f7aea;">SK</div>
+                                <span>Sarah Kim</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        <div class="task-footer" style="margin-top: 0.75rem;">
+                            <div class="task-meeting">📅 Design Review</div>
+                            <div>Due: Jan 12</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Set up CI/CD pipeline for new microservice</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 50%;"></div>
+                        </div>
+                        <div class="task-footer" style="margin-top: 0.75rem;">
+                            <div class="task-meeting">📅 Engineering Standup</div>
+                            <div>Due: Jan 5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header blocked">
+                    <div class="column-title">
+                        🚫 Blocked
+                    </div>
+                    <div class="column-count">3</div>
+                </div>
+                <div class="column-body">
+                    <div class="task-card">
+                        <div class="task-title">Finalize API integration with third-party analytics provider</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div style="background: #fef5e7; border-left: 3px solid #f59e0b; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px; font-size: 0.75rem;">
+                            <strong>Blocker:</strong> Waiting for vendor API credentials
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Engineering Standup</div>
+                            <div>Due: Jan 3</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Deploy new feature to production environment</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #f56565;">JD</div>
+                                <span>John Davis</span>
+                            </div>
+                            <span class="badge high">High</span>
+                        </div>
+                        <div style="background: #fef5e7; border-left: 3px solid #f59e0b; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px; font-size: 0.75rem;">
+                            <strong>Blocker:</strong> Pending security review approval
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Sprint Planning</div>
+                            <div>Due: Dec 31</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card">
+                        <div class="task-title">Complete database migration for legacy system</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div style="background: #fef5e7; border-left: 3px solid #f59e0b; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px; font-size: 0.75rem;">
+                            <strong>Blocker:</strong> Requires maintenance window approval
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Engineering Standup</div>
+                            <div>Due: Jan 8</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header completed">
+                    <div class="column-title">
+                        ✓ Completed
+                    </div>
+                    <div class="column-count">8 this week</div>
+                </div>
+                <div class="column-body">
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title">Send Q4 performance summary to all stakeholders</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #667eea;">RL</div>
+                                <span>Rachel Lee</span>
+                            </div>
+                            <span class="badge low">Low</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Q4 Product Planning</div>
+                            <div style="color: #48bb78; font-weight: 600;">✓ Dec 28</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title">Schedule follow-up with Acme Corp stakeholders</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #667eea;">RL</div>
+                                <span>Rachel Lee</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Client Feedback</div>
+                            <div style="color: #48bb78; font-weight: 600;">✓ Dec 27</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title">Update team documentation with new onboarding process</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #ed8936;">DE</div>
+                                <span>Diana Edwards</span>
+                            </div>
+                            <span class="badge low">Low</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Engineering Standup</div>
+                            <div style="color: #48bb78; font-weight: 600;">✓ Dec 27</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title">Review pull requests for feature-auth-improvements</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #48bb78;">MC</div>
+                                <span>Marcus Chen</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Engineering Standup</div>
+                            <div style="color: #48bb78; font-weight: 600;">✓ Dec 26</div>
+                        </div>
+                    </div>
+
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title">Prepare slides for marketing campaign presentation</div>
+                        <div class="task-meta">
+                            <div class="task-assignee">
+                                <div class="assignee-avatar" style="background: #4299e1;">TS</div>
+                                <span>Tom Stevens</span>
+                            </div>
+                            <span class="badge medium">Medium</span>
+                        </div>
+                        <div class="task-footer">
+                            <div class="task-meeting">📅 Marketing Campaign</div>
+                            <div style="color: #48bb78; font-weight: 600;">✓ Dec 24</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

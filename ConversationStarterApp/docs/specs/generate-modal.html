@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Conversation Starter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            padding: 30px 30px 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .modal-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+        .modal-body {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2d3748;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .checkbox-item:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"]:checked + label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .checkbox-item label {
+            font-size: 14px;
+            color: #4a5568;
+            cursor: pointer;
+        }
+        .slider-container {
+            padding: 10px 0;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .slider-value {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        .difficulty-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        .difficulty-label {
+            font-size: 12px;
+            color: #718096;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-btn:hover {
+            background: #f7fafc;
+        }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .modal-footer {
+            padding: 20px 30px 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-cancel {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-cancel:hover {
+            background: #edf2f7;
+        }
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 40px;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        .info-box {
+            background: #ebf8ff;
+            border: 2px solid #90cdf4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .info-box-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 5px;
+        }
+        .info-box-text {
+            font-size: 13px;
+            color: #2c5282;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🎯 Generate Conversation Starter</h2>
+                <p class="modal-subtitle">Customize your perfect conversation starter</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Primary Category</label>
+                    <select class="form-select">
+                        <option>Select a category...</option>
+                        <option selected>Deep Conversation</option>
+                        <option>Icebreakers</option>
+                        <option>Party Games</option>
+                        <option>Professional</option>
+                        <option>Dating & Romance</option>
+                        <option>Family Friendly</option>
+                        <option>Philosophical</option>
+                        <option>Creative & Fun</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Group Size</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn">One-on-One</button>
+                        <button class="toggle-btn active">Small Group</button>
+                        <button class="toggle-btn">Large Group</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Conversation Depth</label>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <span class="form-label" style="margin: 0;">How deep should the conversation go?</span>
+                            <span class="slider-value">Medium</span>
+                        </div>
+                        <input type="range" min="1" max="5" value="3" class="slider">
+                        <div class="difficulty-labels">
+                            <span class="difficulty-label">Light</span>
+                            <span class="difficulty-label">Surface</span>
+                            <span class="difficulty-label">Medium</span>
+                            <span class="difficulty-label">Deep</span>
+                            <span class="difficulty-label">Very Deep</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Topic Preferences (Optional)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="travel" checked>
+                            <label for="travel">Travel</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="career">
+                            <label for="career">Career</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hobbies" checked>
+                            <label for="hobbies">Hobbies</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="relationships">
+                            <label for="relationships">Relationships</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dreams">
+                            <label for="dreams">Dreams & Goals</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="experiences" checked>
+                            <label for="experiences">Experiences</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn">Serious</button>
+                        <button class="toggle-btn active">Balanced</button>
+                        <button class="toggle-btn">Playful</button>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">💡 Pro Tip</div>
+                    <div class="info-box-text">
+                        The best conversations happen when everyone feels comfortable. Start with lighter questions
+                        and naturally progress to deeper topics as trust builds.
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-cancel">Cancel</button>
+                <button class="btn btn-generate">🎲 Generate Starter</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

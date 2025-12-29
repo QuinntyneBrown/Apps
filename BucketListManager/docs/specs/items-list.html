@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Bucket List Items</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+        select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #999;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        .view-btn {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .view-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .items-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .items-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .items-count {
+            font-size: 14px;
+            color: #666;
+        }
+        .sort-options {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .bucket-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .bucket-item:hover {
+            background: #f0f0f0;
+            transform: translateX(4px);
+            border-left-color: #667eea;
+        }
+        .bucket-item-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            margin-right: 16px;
+            margin-top: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .bucket-item-content {
+            flex: 1;
+        }
+        .bucket-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .bucket-item-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .bucket-item-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .bucket-item-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #666;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .category-travel {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .category-adventure {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .category-personal {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .category-career {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .category-creative {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .priority-high {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .priority-medium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .priority-low {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .progress-bar-small {
+            width: 80px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill-small {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-todo {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .status-inprogress {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📋 All Bucket List Items</h1>
+                <div class="header-subtitle">47 items • 15 completed • 12 in progress</div>
+            </div>
+            <button class="btn btn-primary">+ Add New Item</button>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search your bucket list...">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Category:</span>
+                <select>
+                    <option>All Categories</option>
+                    <option>Travel</option>
+                    <option>Adventure</option>
+                    <option>Personal Growth</option>
+                    <option>Career</option>
+                    <option>Creative</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Status:</span>
+                <select>
+                    <option>All Status</option>
+                    <option>To Do</option>
+                    <option>In Progress</option>
+                    <option>Completed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Priority:</span>
+                <select>
+                    <option>All Priorities</option>
+                    <option>High</option>
+                    <option>Medium</option>
+                    <option>Low</option>
+                </select>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn active">📋</button>
+                <button class="view-btn">🔲</button>
+            </div>
+        </div>
+
+        <div class="items-container">
+            <div class="items-header">
+                <div class="items-count">Showing 20 of 47 items</div>
+                <div class="sort-options">
+                    <span class="filter-label">Sort by:</span>
+                    <select>
+                        <option>Priority</option>
+                        <option>Date Added</option>
+                        <option>Target Date</option>
+                        <option>Category</option>
+                        <option>Progress</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Visit Machu Picchu, Peru</div>
+                            <div class="bucket-item-description">Hike the Inca Trail and explore the ancient ruins. Book tour company and start fitness training.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-travel">Travel</span>
+                        <span class="priority-badge priority-high">High Priority</span>
+                        <span class="status-badge status-todo">To Do</span>
+                        <span class="meta-item">📅 Target: Jun 2026</span>
+                        <span class="meta-item">💰 $2,500 - $3,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Learn to play the guitar</div>
+                            <div class="bucket-item-description">Take weekly lessons and practice daily. Currently learning basic chords and simple songs.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-personal">Personal Growth</span>
+                        <span class="priority-badge priority-high">High Priority</span>
+                        <span class="status-badge status-inprogress">In Progress</span>
+                        <div class="progress-indicator">
+                            <span>Progress:</span>
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: 25%;"></div>
+                            </div>
+                            <span>25%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Write and publish a book</div>
+                            <div class="bucket-item-description">Complete my novel and find a publisher. Currently 120 pages into the first draft.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-career">Career</span>
+                        <span class="priority-badge priority-high">High Priority</span>
+                        <span class="status-badge status-inprogress">In Progress</span>
+                        <div class="progress-indicator">
+                            <span>Progress:</span>
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: 40%;"></div>
+                            </div>
+                            <span>40%</span>
+                        </div>
+                        <span class="meta-item">📅 Target: Dec 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Go skydiving</div>
+                            <div class="bucket-item-description">Tandem jump from 15,000 feet. Research certified skydiving centers and check weather requirements.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-adventure">Adventure</span>
+                        <span class="priority-badge priority-medium">Medium Priority</span>
+                        <span class="status-badge status-todo">To Do</span>
+                        <span class="meta-item">📅 Target: Summer 2026</span>
+                        <span class="meta-item">💰 $300 - $400</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">See the Northern Lights</div>
+                            <div class="bucket-item-description">Travel to Iceland or Norway during aurora season. Best viewing from September to March.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-travel">Travel</span>
+                        <span class="priority-badge priority-medium">Medium Priority</span>
+                        <span class="status-badge status-todo">To Do</span>
+                        <span class="meta-item">📅 Target: Winter 2026</span>
+                        <span class="meta-item">💰 $2,000 - $3,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Run a marathon</div>
+                            <div class="bucket-item-description">Complete a full 26.2 mile marathon. Currently running 15 miles per week, following training plan.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-personal">Personal Growth</span>
+                        <span class="priority-badge priority-medium">Medium Priority</span>
+                        <span class="status-badge status-inprogress">In Progress</span>
+                        <div class="progress-indicator">
+                            <span>Progress:</span>
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: 60%;"></div>
+                            </div>
+                            <span>60%</span>
+                        </div>
+                        <span class="meta-item">📅 Target: Apr 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Learn to paint with watercolors</div>
+                            <div class="bucket-item-description">Take a beginner's watercolor class and create 20 paintings. Focus on landscapes and still life.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-creative">Creative</span>
+                        <span class="priority-badge priority-low">Low Priority</span>
+                        <span class="status-badge status-todo">To Do</span>
+                        <span class="meta-item">💰 $200 - $500</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bucket-item">
+                <div class="bucket-item-checkbox"></div>
+                <div class="bucket-item-content">
+                    <div class="bucket-item-header">
+                        <div>
+                            <div class="bucket-item-title">Start a podcast</div>
+                            <div class="bucket-item-description">Launch a podcast about travel stories. Need to setup equipment, plan episodes, and find guests.</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn">Edit</button>
+                            <button class="action-btn">View</button>
+                        </div>
+                    </div>
+                    <div class="bucket-item-meta">
+                        <span class="category-badge category-career">Career</span>
+                        <span class="priority-badge priority-medium">Medium Priority</span>
+                        <span class="status-badge status-inprogress">In Progress</span>
+                        <div class="progress-indicator">
+                            <span>Progress:</span>
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: 15%;"></div>
+                            </div>
+                            <span>15%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

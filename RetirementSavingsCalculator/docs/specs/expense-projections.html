@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Projections - Retirement Savings Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #1a202c;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-subtext {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .expense-category {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            padding: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s;
+        }
+
+        .expense-category:hover {
+            background: #f7fafc;
+        }
+
+        .expense-category:last-child {
+            border-bottom: none;
+        }
+
+        .category-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .category-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 10px;
+        }
+
+        .category-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-name {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 1.05rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .category-description {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .category-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            text-align: right;
+            margin-right: 2rem;
+        }
+
+        .category-percentage {
+            width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .phase-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .phase-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4a5568;
+        }
+
+        .phase-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            height: 300px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .donut-chart {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #667eea 0% 25%,
+                #48bb78 25% 40%,
+                #4299e1 40% 55%,
+                #f6ad55 55% 68%,
+                #ed64a6 68% 78%,
+                #9f7aea 78% 88%,
+                #38b2ac 88% 100%
+            );
+            position: relative;
+        }
+
+        .donut-hole {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .total-label {
+            font-size: 0.75rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .total-amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 4px solid #f6ad55;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-item {
+            text-align: center;
+            padding: 1.25rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .comparison-item.highlight {
+            background: #e6fffa;
+            border-color: #4fd1c5;
+        }
+
+        .comparison-label {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .timeline-item {
+            padding: 1.25rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .timeline-phase {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 1.05rem;
+        }
+
+        .timeline-years {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .timeline-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-label {
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                💰 Retirement Savings Calculator
+            </div>
+            <nav class="nav">
+                <a href="dashboard-main.html" class="nav-link">Dashboard</a>
+                <a href="scenario-builder.html" class="nav-link">Scenarios</a>
+                <a href="income-streams.html" class="nav-link">Income</a>
+                <a href="expense-projections.html" class="nav-link active">Expenses</a>
+                <a href="savings-progress.html" class="nav-link">Progress</a>
+                <a href="settings-profile.html" class="nav-link">Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Retirement Expense Projections</h1>
+                <p style="color: #718096; margin-top: 0.5rem;">Plan and track your retirement spending needs</p>
+            </div>
+            <button class="btn btn-primary">+ Add Expense Category</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Monthly Expenses</div>
+                <div class="stat-value">$6,650</div>
+                <div class="stat-subtext">In retirement (age 65-90)</div>
+            </div>
+
+            <div class="stat-card" style="border-left-color: #48bb78;">
+                <div class="stat-label">Total Annual Expenses</div>
+                <div class="stat-value">$79,800</div>
+                <div class="stat-subtext">Adjusted for inflation</div>
+            </div>
+
+            <div class="stat-card" style="border-left-color: #4299e1;">
+                <div class="stat-label">Income vs Expenses</div>
+                <div class="stat-value">+18%</div>
+                <div class="stat-subtext">$1,200/mo surplus</div>
+            </div>
+
+            <div class="stat-card" style="border-left-color: #f6ad55;">
+                <div class="stat-label">Healthcare Costs</div>
+                <div class="stat-value">$950</div>
+                <div class="stat-subtext">21% of total budget</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <div>
+                <strong>Good Planning:</strong> Your projected expenses are 85% of your income, leaving a healthy buffer for unexpected costs and discretionary spending.
+            </div>
+        </div>
+
+        <div class="phase-tabs">
+            <button class="phase-tab active">Early Retirement (65-75)</button>
+            <button class="phase-tab">Mid Retirement (75-85)</button>
+            <button class="phase-tab">Late Retirement (85+)</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Expense Categories</h2>
+                    <button class="btn btn-secondary">Edit All</button>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">🏠</div>
+                            <div class="category-details">
+                                <div class="category-name">Housing</div>
+                                <div class="category-description">Mortgage, property tax, maintenance, HOA</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$1,650</div>
+                        <div class="category-percentage">25%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">🏥</div>
+                            <div class="category-details">
+                                <div class="category-name">Healthcare</div>
+                                <div class="category-description">Medicare, supplemental, prescriptions, dental</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$950</div>
+                        <div class="category-percentage">14%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">🍽️</div>
+                            <div class="category-details">
+                                <div class="category-name">Food & Dining</div>
+                                <div class="category-description">Groceries, restaurants, entertainment</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$800</div>
+                        <div class="category-percentage">12%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">🚗</div>
+                            <div class="category-details">
+                                <div class="category-name">Transportation</div>
+                                <div class="category-description">Car payment, insurance, gas, maintenance</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$650</div>
+                        <div class="category-percentage">10%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">✈️</div>
+                            <div class="category-details">
+                                <div class="category-name">Travel & Leisure</div>
+                                <div class="category-description">Vacations, hobbies, recreation</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$1,200</div>
+                        <div class="category-percentage">18%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">⚡</div>
+                            <div class="category-details">
+                                <div class="category-name">Utilities</div>
+                                <div class="category-description">Electric, gas, water, internet, phone</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$450</div>
+                        <div class="category-percentage">7%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">🛡️</div>
+                            <div class="category-details">
+                                <div class="category-name">Insurance</div>
+                                <div class="category-description">Home, auto, life, umbrella policies</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$400</div>
+                        <div class="category-percentage">6%</div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-info">
+                            <div class="category-icon">📦</div>
+                            <div class="category-details">
+                                <div class="category-name">Other</div>
+                                <div class="category-description">Personal care, gifts, miscellaneous</div>
+                            </div>
+                        </div>
+                        <div class="category-amount">$550</div>
+                        <div class="category-percentage">8%</div>
+                    </div>
+
+                    <div class="expense-category" style="background: #f7fafc; font-weight: 600;">
+                        <div class="category-info">
+                            <div class="category-icon" style="background: #667eea; color: white;">∑</div>
+                            <div class="category-details">
+                                <div class="category-name">Total Monthly Expenses</div>
+                            </div>
+                        </div>
+                        <div class="category-amount" style="color: #667eea;">$6,650</div>
+                        <div class="category-percentage">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Budget Breakdown</h2>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+                        <div class="donut-chart">
+                            <div class="donut-hole">
+                                <div class="total-label">Monthly</div>
+                                <div class="total-amount">$6,650</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #667eea;"></div>
+                            <div class="legend-label">Housing 25%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #48bb78;"></div>
+                            <div class="legend-label">Healthcare 14%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4299e1;"></div>
+                            <div class="legend-label">Food 12%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f6ad55;"></div>
+                            <div class="legend-label">Transport 10%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ed64a6;"></div>
+                            <div class="legend-label">Travel 18%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #9f7aea;"></div>
+                            <div class="legend-label">Utilities 7%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #38b2ac;"></div>
+                            <div class="legend-label">Insurance 6%</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #cbd5e0;"></div>
+                            <div class="legend-label">Other 8%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Expense Timeline by Phase</h2>
+            </div>
+            <div class="card-body">
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <div>
+                            <div class="timeline-phase">Early Retirement (Ages 65-75)</div>
+                            <div class="timeline-years">Most active phase - travel and hobbies</div>
+                        </div>
+                        <div class="timeline-amount">$6,950/mo</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item" style="border-left-color: #48bb78;">
+                    <div class="timeline-header">
+                        <div>
+                            <div class="timeline-phase">Mid Retirement (Ages 75-85)</div>
+                            <div class="timeline-years">Reduced travel, increased healthcare</div>
+                        </div>
+                        <div class="timeline-amount">$6,450/mo</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 93%; background: #48bb78;"></div>
+                    </div>
+                </div>
+
+                <div class="timeline-item" style="border-left-color: #4299e1;">
+                    <div class="timeline-header">
+                        <div>
+                            <div class="timeline-phase">Late Retirement (Ages 85-90)</div>
+                            <div class="timeline-years">Higher healthcare, potential long-term care</div>
+                        </div>
+                        <div class="timeline-amount">$7,250/mo</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 104%; background: #4299e1;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Healthcare Cost Projections</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <div>
+                        <strong>Healthcare Planning:</strong> Healthcare costs typically increase 5-6% annually, outpacing general inflation. Budget for $280,000 in total healthcare expenses over a 25-year retirement.
+                    </div>
+                </div>
+
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-label">Medicare Part B</div>
+                        <div class="comparison-value">$185/mo</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">Medigap Plan G</div>
+                        <div class="comparison-value">$275/mo</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">Part D (Drugs)</div>
+                        <div class="comparison-value">$45/mo</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">Dental & Vision</div>
+                        <div class="comparison-value">$125/mo</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">Out-of-Pocket</div>
+                        <div class="comparison-value">$220/mo</div>
+                    </div>
+                    <div class="comparison-item highlight">
+                        <div class="comparison-label">Total Healthcare</div>
+                        <div class="comparison-value">$950/mo</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-small">Long-Term Care Calculator</button>
+                <button class="btn btn-secondary btn-small">Medicare Optimizer</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Inflation-Adjusted Projections</h2>
+            </div>
+            <div class="card-body">
+                <div class="chart-placeholder">
+                    <div style="text-align: center; color: #718096;">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📈</div>
+                        <div>Expense growth over 25 retirement years</div>
+                        <div style="font-size: 0.875rem; margin-top: 0.5rem;">
+                            <strong>Year 1:</strong> $79,800/yr → <strong>Year 25:</strong> $155,400/yr (3% inflation)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

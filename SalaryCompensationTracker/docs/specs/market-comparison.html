@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Comparison - Salary & Compensation Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1a202c;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .nav {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: #1a202c;
+        }
+
+        .page-header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .comparison-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .your-comp {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .your-comp-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .your-comp-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .your-comp-detail {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .comparison-stat {
+            text-align: center;
+        }
+
+        .comparison-label {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .comparison-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .comparison-value.positive {
+            color: #48bb78;
+        }
+
+        .comparison-value.negative {
+            color: #f56565;
+        }
+
+        .comparison-detail {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .percentile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .percentile-card h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #1a202c;
+        }
+
+        .percentile-chart {
+            position: relative;
+            height: 120px;
+            background: linear-gradient(to right, #f56565 0%, #ed8936 25%, #ecc94b 50%, #48bb78 75%, #38b2ac 100%);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .percentile-marker {
+            position: absolute;
+            top: -10px;
+            transform: translateX(-50%);
+            width: 4px;
+            height: calc(100% + 20px);
+            background: #1a202c;
+        }
+
+        .percentile-marker::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid #1a202c;
+        }
+
+        .percentile-marker::after {
+            content: 'You';
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a202c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .percentile-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #4a5568;
+            margin-top: 8px;
+        }
+
+        .market-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .market-data-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .market-data-card h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1a202c;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .data-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-label {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .data-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .comparison-chart {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .comparison-chart h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #1a202c;
+        }
+
+        .chart-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .bar-label {
+            width: 120px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            text-align: right;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 40px;
+            background: #f7fafc;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            transition: width 0.5s;
+        }
+
+        .bar-fill.you {
+            background: linear-gradient(90deg, #48bb78 0%, #38b2ac 100%);
+        }
+
+        .bar-value {
+            min-width: 100px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .location-comparison {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .location-comparison h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #1a202c;
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .location-card {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .location-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .location-card.current {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-color: #667eea;
+        }
+
+        .location-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .location-salary {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .location-detail {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-current {
+            background: #667eea;
+            color: white;
+        }
+
+        .insights-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .insights-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1a202c;
+        }
+
+        .insight-box {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .insight-box:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .insight-text {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .data-source {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">💰 CompTracker</div>
+            <nav class="nav">
+                <a href="#">Dashboard</a>
+                <a href="#">Compensation</a>
+                <a href="#">Benefits</a>
+                <a href="#" class="active">Market Data</a>
+                <a href="#">Tools</a>
+                <a href="#">Reports</a>
+            </nav>
+        </header>
+
+        <div class="page-header">
+            <h1>Market Rate Comparison</h1>
+            <p>See how your compensation compares to market rates for your role</p>
+        </div>
+
+        <div class="comparison-summary">
+            <div class="your-comp">
+                <div class="your-comp-label">Your Total Compensation</div>
+                <div class="your-comp-value">$248,500</div>
+                <div class="your-comp-detail">Senior Software Engineer • San Francisco, CA</div>
+            </div>
+
+            <div class="comparison-stat">
+                <div class="comparison-label">vs. Market Median</div>
+                <div class="comparison-value positive">+18%</div>
+                <div class="comparison-detail">Above median</div>
+            </div>
+
+            <div class="comparison-stat">
+                <div class="comparison-label">Market Percentile</div>
+                <div class="comparison-value positive">78th</div>
+                <div class="comparison-detail">Top quartile</div>
+            </div>
+        </div>
+
+        <div class="percentile-card">
+            <h2>Your Position in the Market</h2>
+            <div class="percentile-chart">
+                <div class="percentile-marker" style="left: 78%;"></div>
+            </div>
+            <div class="percentile-labels">
+                <span>10th percentile<br>$145k</span>
+                <span>25th percentile<br>$175k</span>
+                <span>Median (50th)<br>$210k</span>
+                <span>75th percentile<br>$245k</span>
+                <span>90th percentile<br>$295k</span>
+            </div>
+            <div class="data-source">
+                Data from Levels.fyi, Glassdoor, and Blind • Updated Dec 2024 • Based on 2,847 reported salaries
+            </div>
+        </div>
+
+        <div class="comparison-chart">
+            <h2>Compensation Component Comparison</h2>
+            <div class="chart-bars">
+                <div class="chart-bar-row">
+                    <div class="bar-label">Your Total</div>
+                    <div class="bar-container">
+                        <div class="bar-fill you" style="width: 84%;">$248,500</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+
+                <div class="chart-bar-row">
+                    <div class="bar-label">Market Average</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 71%;">$210,000</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+
+                <div class="chart-bar-row">
+                    <div class="bar-label">Your Base</div>
+                    <div class="bar-container">
+                        <div class="bar-fill you" style="width: 58%;">$165,000</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+
+                <div class="chart-bar-row">
+                    <div class="bar-label">Market Base</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 53%;">$150,000</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+
+                <div class="chart-bar-row">
+                    <div class="bar-label">Your Equity</div>
+                    <div class="bar-container">
+                        <div class="bar-fill you" style="width: 15%;">$42,300</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+
+                <div class="chart-bar-row">
+                    <div class="bar-label">Market Equity</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 17%;">$47,000</div>
+                    </div>
+                    <div class="bar-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="market-data-grid">
+            <div class="market-data-card">
+                <h3>By Experience Level</h3>
+                <div class="data-row">
+                    <span class="data-label">Entry Level (0-2 yrs)</span>
+                    <span class="data-value">$125k - $155k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Mid Level (3-5 yrs)</span>
+                    <span class="data-value">$160k - $210k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Senior (6-10 yrs)</span>
+                    <span class="data-value" style="color: #667eea;">$210k - $280k ⭐</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Staff+ (10+ yrs)</span>
+                    <span class="data-value">$300k - $450k</span>
+                </div>
+            </div>
+
+            <div class="market-data-card">
+                <h3>By Company Size</h3>
+                <div class="data-row">
+                    <span class="data-label">Startup (<50 emp)</span>
+                    <span class="data-value">$140k - $190k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Small (50-500)</span>
+                    <span class="data-value">$165k - $220k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Mid (500-5000)</span>
+                    <span class="data-value" style="color: #667eea;">$200k - $265k ⭐</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Large (5000+)</span>
+                    <span class="data-value">$235k - $320k</span>
+                </div>
+            </div>
+
+            <div class="market-data-card">
+                <h3>By Industry</h3>
+                <div class="data-row">
+                    <span class="data-label">Finance/Banking</span>
+                    <span class="data-value">$195k - $275k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Tech/Software</span>
+                    <span class="data-value" style="color: #667eea;">$210k - $290k ⭐</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Healthcare</span>
+                    <span class="data-value">$175k - $235k</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">E-commerce</span>
+                    <span class="data-value">$200k - $270k</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="location-comparison">
+            <h2>Market Rates by Location</h2>
+            <div class="location-grid">
+                <div class="location-card current">
+                    <div class="location-name">San Francisco, CA <span class="badge badge-current">Current</span></div>
+                    <div class="location-salary">$248,500</div>
+                    <div class="location-detail">Your actual compensation</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Seattle, WA</div>
+                    <div class="location-salary">$235,000</div>
+                    <div class="location-detail">94% of SF • High demand</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">New York, NY</div>
+                    <div class="location-salary">$245,000</div>
+                    <div class="location-detail">99% of SF • Similar cost of living</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Austin, TX</div>
+                    <div class="location-salary">$198,000</div>
+                    <div class="location-detail">80% of SF • Lower COL</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Boston, MA</div>
+                    <div class="location-salary">$215,000</div>
+                    <div class="location-detail">87% of SF • Growing market</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Denver, CO</div>
+                    <div class="location-salary">$185,000</div>
+                    <div class="location-detail">74% of SF • Remote friendly</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Remote (US)</div>
+                    <div class="location-salary">$190,000</div>
+                    <div class="location-detail">76% of SF • Location independent</div>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-name">Portland, OR</div>
+                    <div class="location-salary">$175,000</div>
+                    <div class="location-detail">70% of SF • Emerging market</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-section">
+            <h2>Market Insights & Recommendations</h2>
+
+            <div class="insight-box">
+                <div class="insight-title">✅ Strong Position</div>
+                <div class="insight-text">
+                    You're currently earning 18% above the market median for your role, putting you in the 78th percentile. This is a strong position and indicates you've negotiated well or are with a competitive employer.
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">📈 Growth Opportunity</div>
+                <div class="insight-text">
+                    There's still 22% headroom to the 90th percentile ($295k). Consider targeting staff-level positions or larger companies (FAANG) where total compensation packages of $280k-$320k are common for senior engineers.
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Equity Gap</div>
+                <div class="insight-text">
+                    Your equity component ($42k/year) is slightly below market average ($47k/year). In your next negotiation or review, consider requesting additional equity grants to close this gap.
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">🌍 Location Advantage</div>
+                <div class="insight-text">
+                    San Francisco remains the highest-paying market for software engineers. If you're open to remote work, you could maintain similar salary levels while relocating to a lower cost-of-living area, significantly increasing your effective purchasing power.
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">🎯 Next Steps</div>
+                <div class="insight-text">
+                    Based on market data, you're well-positioned for your next raise. Industry trends show annual increases of 8-12% for high performers. If considering a job change, you could realistically target $270k-$290k total compensation at comparable companies.
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary">Update Market Data</button>
+                <button class="btn btn-primary">Set Compensation Goals</button>
+                <button class="btn btn-primary">Prepare for Negotiation</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

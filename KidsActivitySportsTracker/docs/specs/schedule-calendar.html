@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - Kids Activity & Sports Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .current-month {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a202c;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-chip {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .calendar-grid {
+            padding: 30px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            color: #718096;
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-cell {
+            min-height: 120px;
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 10px;
+            position: relative;
+            border: 2px solid #e2e8f0;
+        }
+
+        .day-cell.other-month {
+            opacity: 0.4;
+        }
+
+        .day-cell.today {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .day-cell.today .day-number {
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .event-dot {
+            width: 100%;
+            padding: 4px 6px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .event-dot:hover {
+            transform: scale(1.05);
+        }
+
+        .event-practice {
+            background: #4facfe;
+            color: white;
+        }
+
+        .event-game {
+            background: #f5576c;
+            color: white;
+        }
+
+        .event-carpool {
+            background: #feca57;
+            color: #1a202c;
+        }
+
+        .more-events {
+            font-size: 11px;
+            color: #667eea;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 20px;
+            top: 120px;
+            width: 320px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1a202c;
+        }
+
+        .event-list-item {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .event-details {
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                margin-top: 20px;
+            }
+
+            .container {
+                padding-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .days {
+                grid-template-columns: 1fr;
+            }
+
+            .weekdays {
+                display: none;
+            }
+
+            .day-cell {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📅 Activity Calendar</h1>
+                <div class="view-toggle">
+                    <button class="view-btn active">Month</button>
+                    <button class="view-btn">Week</button>
+                    <button class="view-btn">Day</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-controls">
+            <div class="month-nav">
+                <button class="nav-btn">←</button>
+                <div class="current-month">December 2025</div>
+                <button class="nav-btn">→</button>
+                <button class="nav-btn" style="width: auto; padding: 0 15px; font-size: 14px;">Today</button>
+            </div>
+            <div class="filters">
+                <div class="filter-chip active">All Events</div>
+                <div class="filter-chip">👧 Emma</div>
+                <div class="filter-chip">👦 Liam</div>
+                <div class="filter-chip">👧 Olivia</div>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="weekdays">
+                <div class="weekday">Sunday</div>
+                <div class="weekday">Monday</div>
+                <div class="weekday">Tuesday</div>
+                <div class="weekday">Wednesday</div>
+                <div class="weekday">Thursday</div>
+                <div class="weekday">Friday</div>
+                <div class="weekday">Saturday</div>
+            </div>
+
+            <div class="days">
+                <!-- Week 1 -->
+                <div class="day-cell other-month">
+                    <div class="day-number">30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">1</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">2</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">3</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">4</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">5</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">6</div>
+                    <div class="event-dot event-game">Basketball 10:00</div>
+                    <div class="event-dot event-practice">Gymnastics 2:00</div>
+                </div>
+
+                <!-- Week 2 -->
+                <div class="day-cell">
+                    <div class="day-number">7</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">8</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">9</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                    <div class="event-dot event-carpool">🚗 Your turn</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">10</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">11</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">12</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">13</div>
+                    <div class="event-dot event-game">Soccer Game 10:00</div>
+                    <div class="event-dot event-practice">Gymnastics 2:00</div>
+                </div>
+
+                <!-- Week 3 -->
+                <div class="day-cell">
+                    <div class="day-number">14</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">15</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">16</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">17</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">18</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">19</div>
+                    <div class="event-dot event-practice">Dance 3:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">20</div>
+                    <div class="event-dot event-game">Basketball 10:00</div>
+                    <div class="event-dot event-practice">Gymnastics 2:00</div>
+                    <div class="event-dot event-carpool">🚗 Your turn</div>
+                </div>
+
+                <!-- Week 4 -->
+                <div class="day-cell">
+                    <div class="day-number">21</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">22</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                    <div class="event-dot event-practice">Baseball 5:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">23</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">24</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">25</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">26</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">27</div>
+                    <div class="event-dot event-game">Holiday Tournament</div>
+                </div>
+
+                <!-- Week 5 -->
+                <div class="day-cell">
+                    <div class="day-number">28</div>
+                </div>
+                <div class="day-cell today">
+                    <div class="day-number">29</div>
+                    <div class="event-dot event-practice">Swimming 5:30</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">30</div>
+                    <div class="event-dot event-practice">Soccer 4:00</div>
+                    <div class="event-dot event-game">Year End Game</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">31</div>
+                </div>
+                <div class="day-cell other-month">
+                    <div class="day-number">1</div>
+                </div>
+                <div class="day-cell other-month">
+                    <div class="day-number">2</div>
+                </div>
+                <div class="day-cell other-month">
+                    <div class="day-number">3</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color event-practice"></div>
+                    <span>Practice</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color event-game"></div>
+                    <span>Game/Event</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color event-carpool"></div>
+                    <span>Carpool Duty</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

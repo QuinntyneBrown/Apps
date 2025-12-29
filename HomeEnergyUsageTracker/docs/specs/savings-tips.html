@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Tips - Home Energy Usage Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .savings-summary {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .savings-summary h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .savings-amount {
+            font-size: 56px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .savings-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .savings-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .savings-stat {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .savings-stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .savings-stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            background: #f7fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .tip-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-left: 4px solid;
+        }
+
+        .tip-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .tip-card.high-impact {
+            border-left-color: #48bb78;
+        }
+
+        .tip-card.medium-impact {
+            border-left-color: #ed8936;
+        }
+
+        .tip-card.low-impact {
+            border-left-color: #4299e1;
+        }
+
+        .tip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .tip-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(102, 126, 234, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .tip-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-impact {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-medium {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .badge-low {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-difficulty {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .tip-title {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .tip-description {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .tip-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .tip-stat {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .tip-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .tip-stat-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tip-action {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #1a202c;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .completed-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .completed-section h2 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .completed-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .completed-check {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .completed-info {
+            flex: 1;
+        }
+
+        .completed-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .completed-date {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .completed-savings {
+            text-align: right;
+        }
+
+        .completed-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        .completed-label {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .savings-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="breadcrumb">
+                    <a href="dashboard-main.html">Dashboard</a> / Savings Tips
+                </div>
+                <h1>
+                    <div class="header-icon">💡</div>
+                    Energy Savings Tips
+                </h1>
+            </div>
+        </div>
+
+        <div class="savings-summary">
+            <h2>Potential Annual Savings</h2>
+            <div class="savings-amount">$1,247</div>
+            <div class="savings-subtitle">By implementing all recommended tips</div>
+            <div class="savings-stats">
+                <div class="savings-stat">
+                    <div class="savings-stat-value">12</div>
+                    <div class="savings-stat-label">Available Tips</div>
+                </div>
+                <div class="savings-stat">
+                    <div class="savings-stat-value">5</div>
+                    <div class="savings-stat-label">Completed</div>
+                </div>
+                <div class="savings-stat">
+                    <div class="savings-stat-value">$485</div>
+                    <div class="savings-stat-label">Already Saving</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <span class="filter-label">Impact:</span>
+            <div class="filter-tabs">
+                <button class="filter-tab active">All</button>
+                <button class="filter-tab">High</button>
+                <button class="filter-tab">Medium</button>
+                <button class="filter-tab">Low</button>
+            </div>
+
+            <span class="filter-label" style="margin-left: 16px;">Difficulty:</span>
+            <div class="filter-tabs">
+                <button class="filter-tab active">All</button>
+                <button class="filter-tab">Easy</button>
+                <button class="filter-tab">Moderate</button>
+                <button class="filter-tab">Hard</button>
+            </div>
+        </div>
+
+        <div class="tips-grid">
+            <div class="tip-card high-impact">
+                <div class="tip-icon">🚿</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-impact">High Impact</span>
+                        <span class="badge badge-difficulty">Moderate</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Upgrade to Heat Pump Water Heater</h3>
+                <p class="tip-description">Replace your 8-year-old gas water heater with an efficient heat pump model. Heat pump water heaters use 50-60% less energy than conventional electric models.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$240</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$1,200</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">5 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card high-impact">
+                <div class="tip-icon">🌡️</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-impact">High Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Install Smart Thermostat</h3>
+                <p class="tip-description">A smart thermostat learns your schedule and preferences, automatically adjusting temperature to save energy when you're away or sleeping.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$180</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$250</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">1.4 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card high-impact">
+                <div class="tip-icon">❄️</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-impact">High Impact</span>
+                        <span class="badge badge-difficulty">Hard</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Upgrade HVAC System</h3>
+                <p class="tip-description">Your current 14 SEER AC is outdated. New systems reach 20+ SEER, using 30-40% less energy while providing better cooling.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$220</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$5,500</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">25 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card medium-impact">
+                <div class="tip-icon">💡</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-medium">Medium Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Switch to LED Bulbs</h3>
+                <p class="tip-description">Replace all remaining incandescent and CFL bulbs with LEDs. LEDs use 75% less energy and last 25 times longer than incandescent bulbs.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$120</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$150</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">1.3 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card medium-impact">
+                <div class="tip-icon">🪟</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-medium">Medium Impact</span>
+                        <span class="badge badge-difficulty">Moderate</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Improve Insulation</h3>
+                <p class="tip-description">Add insulation to attic and walls to reduce heating and cooling needs. Proper insulation can cut energy bills by 15-20%.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$165</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$1,800</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">10.9 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card medium-impact">
+                <div class="tip-icon">🔌</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-medium">Medium Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Use Smart Power Strips</h3>
+                <p class="tip-description">Eliminate phantom power draw from devices on standby. Smart power strips automatically cut power to devices not in use.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$85</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$120</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">1.4 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card low-impact">
+                <div class="tip-icon">🧺</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-low">Low Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Air Dry Clothes</h3>
+                <p class="tip-description">Reduce dryer usage by air drying clothes when possible. Your dryer is one of the highest energy consumers in your home.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$60</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$30</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">0.5 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card low-impact">
+                <div class="tip-icon">🚰</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-low">Low Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Install Low-Flow Fixtures</h3>
+                <p class="tip-description">Replace showerheads and faucets with low-flow models to reduce hot water usage and energy needed to heat water.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$55</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$80</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">1.5 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+
+            <div class="tip-card low-impact">
+                <div class="tip-icon">⏰</div>
+                <div class="tip-header">
+                    <div class="tip-badges">
+                        <span class="badge badge-low">Low Impact</span>
+                        <span class="badge badge-difficulty">Easy</span>
+                    </div>
+                </div>
+                <h3 class="tip-title">Shift Usage to Off-Peak Hours</h3>
+                <p class="tip-description">Run dishwasher, washing machine, and dryer during off-peak hours (typically 9pm-7am) to take advantage of lower electricity rates.</p>
+                <div class="tip-stats">
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$42</div>
+                        <div class="tip-stat-label">Annual Savings</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">$0</div>
+                        <div class="tip-stat-label">Installation</div>
+                    </div>
+                    <div class="tip-stat">
+                        <div class="tip-stat-value">0 yrs</div>
+                        <div class="tip-stat-label">Payback</div>
+                    </div>
+                </div>
+                <div class="tip-action">
+                    <button class="btn btn-primary">Mark as Done</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="completed-section">
+            <h2>Completed Improvements</h2>
+
+            <div class="completed-item">
+                <div class="completed-check">✓</div>
+                <div class="completed-info">
+                    <div class="completed-title">Installed Programmable Thermostat</div>
+                    <div class="completed-date">Completed on Nov 15, 2025</div>
+                </div>
+                <div class="completed-savings">
+                    <div class="completed-amount">$145/yr</div>
+                    <div class="completed-label">Saving</div>
+                </div>
+            </div>
+
+            <div class="completed-item">
+                <div class="completed-check">✓</div>
+                <div class="completed-info">
+                    <div class="completed-title">Upgraded to Energy Star Refrigerator</div>
+                    <div class="completed-date">Completed on Sep 8, 2025</div>
+                </div>
+                <div class="completed-savings">
+                    <div class="completed-amount">$120/yr</div>
+                    <div class="completed-label">Saving</div>
+                </div>
+            </div>
+
+            <div class="completed-item">
+                <div class="completed-check">✓</div>
+                <div class="completed-info">
+                    <div class="completed-title">Sealed Air Leaks Around Doors & Windows</div>
+                    <div class="completed-date">Completed on Aug 22, 2025</div>
+                </div>
+                <div class="completed-savings">
+                    <div class="completed-amount">$95/yr</div>
+                    <div class="completed-label">Saving</div>
+                </div>
+            </div>
+
+            <div class="completed-item">
+                <div class="completed-check">✓</div>
+                <div class="completed-info">
+                    <div class="completed-title">Replaced Kitchen Lighting with LEDs</div>
+                    <div class="completed-date">Completed on Jul 3, 2025</div>
+                </div>
+                <div class="completed-savings">
+                    <div class="completed-amount">$75/yr</div>
+                    <div class="completed-label">Saving</div>
+                </div>
+            </div>
+
+            <div class="completed-item">
+                <div class="completed-check">✓</div>
+                <div class="completed-info">
+                    <div class="completed-title">Cleaned HVAC Filters & Ducts</div>
+                    <div class="completed-date">Completed on Jun 12, 2025</div>
+                </div>
+                <div class="completed-savings">
+                    <div class="completed-amount">$50/yr</div>
+                    <div class="completed-label">Saving</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

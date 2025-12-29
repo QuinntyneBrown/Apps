@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Plans - Running Log & Race Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .current-plan {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 25px;
+        }
+
+        .plan-info h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .plan-subtitle {
+            font-size: 16px;
+            color: #999;
+        }
+
+        .plan-badge {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .progress-percentage {
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .week-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .day-card {
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .day-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .day-card.completed {
+            border-color: #43e97b;
+            background: #f0fdf4;
+        }
+
+        .day-card.today {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .day-card.rest {
+            background: #fafafa;
+        }
+
+        .day-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .day-workout {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .day-type {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .day-distance {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .day-check {
+            margin-top: 8px;
+            font-size: 20px;
+            color: #43e97b;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .available-plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .plan-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .plan-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .plan-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .plan-details {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .plan-detail {
+            font-size: 13px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .plan-level {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #f9fafb;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .select-plan-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .select-plan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .workout-list {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        .workout-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+
+        .workout-item:hover {
+            background: #f9fafb;
+        }
+
+        .workout-item:last-child {
+            border-bottom: none;
+        }
+
+        .workout-icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .workout-icon-box.tempo {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .workout-icon-box.long {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .workout-icon-box.intervals {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .workout-icon-box.recovery {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .workout-icon-box.rest {
+            background: linear-gradient(135deg, #d3d3d3 0%, #b8b8b8 100%);
+        }
+
+        .workout-info {
+            flex-grow: 1;
+        }
+
+        .workout-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .workout-desc {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .workout-stats {
+            display: flex;
+            gap: 20px;
+            margin-right: 20px;
+        }
+
+        .workout-stat {
+            text-align: center;
+        }
+
+        .workout-stat-value {
+            font-weight: 700;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .workout-stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .complete-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .complete-checkbox.checked {
+            background: #43e97b;
+            border-color: #43e97b;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 968px) {
+            .week-calendar {
+                grid-template-columns: 1fr;
+            }
+
+            .workout-item {
+                flex-direction: column;
+                align-items: start;
+                gap: 15px;
+            }
+
+            .workout-stats {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Training Plans</h1>
+            <button class="btn btn-primary">Browse All Plans</button>
+        </div>
+
+        <div class="current-plan">
+            <div class="plan-header">
+                <div class="plan-info">
+                    <h2>Marathon Training - 16 Weeks</h2>
+                    <p class="plan-subtitle">Advanced plan for sub-3:30 marathon</p>
+                </div>
+                <span class="plan-badge">ACTIVE</span>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Week 12 of 16</span>
+                    <span class="progress-percentage">75% Complete</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 75%;"></div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">28.4</div>
+                    <div class="stat-label">This Week Miles</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">94%</div>
+                    <div class="stat-label">Plan Adherence</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Workouts Done</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">113</div>
+                    <div class="stat-label">Days to Race</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">3:18:45</div>
+                    <div class="stat-label">Predicted Time</div>
+                </div>
+            </div>
+
+            <h3 class="section-title">📅 This Week's Workouts</h3>
+
+            <div class="week-calendar">
+                <div class="day-card completed">
+                    <div class="day-name">Monday</div>
+                    <div class="day-workout">🏃</div>
+                    <div class="day-type">Easy Run</div>
+                    <div class="day-distance">5 miles</div>
+                    <div class="day-check">✓</div>
+                </div>
+
+                <div class="day-card completed">
+                    <div class="day-name">Tuesday</div>
+                    <div class="day-workout">🔥</div>
+                    <div class="day-type">Tempo</div>
+                    <div class="day-distance">7 miles</div>
+                    <div class="day-check">✓</div>
+                </div>
+
+                <div class="day-card completed">
+                    <div class="day-name">Wednesday</div>
+                    <div class="day-workout">💚</div>
+                    <div class="day-type">Recovery</div>
+                    <div class="day-distance">4 miles</div>
+                    <div class="day-check">✓</div>
+                </div>
+
+                <div class="day-card today">
+                    <div class="day-name">Thursday</div>
+                    <div class="day-workout">⚡</div>
+                    <div class="day-type">Intervals</div>
+                    <div class="day-distance">8 miles</div>
+                </div>
+
+                <div class="day-card">
+                    <div class="day-name">Friday</div>
+                    <div class="day-workout">💚</div>
+                    <div class="day-type">Recovery</div>
+                    <div class="day-distance">4 miles</div>
+                </div>
+
+                <div class="day-card">
+                    <div class="day-name">Saturday</div>
+                    <div class="day-workout">💙</div>
+                    <div class="day-type">Long Run</div>
+                    <div class="day-distance">18 miles</div>
+                </div>
+
+                <div class="day-card rest">
+                    <div class="day-name">Sunday</div>
+                    <div class="day-workout">😴</div>
+                    <div class="day-type">Rest Day</div>
+                    <div class="day-distance">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workout-list">
+            <h3 class="section-title">📝 Upcoming Workouts</h3>
+
+            <div class="workout-item">
+                <div class="workout-icon-box intervals">⚡</div>
+                <div class="workout-info">
+                    <div class="workout-name">Speed Intervals - 5 x 1000m</div>
+                    <div class="workout-desc">Thursday, Dec 29 • Warm-up 2mi, 5x1000m @ 6:45 pace (400m recovery), Cool-down 2mi</div>
+                </div>
+                <div class="workout-stats">
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">8.0</div>
+                        <div class="workout-stat-label">Miles</div>
+                    </div>
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">6:45</div>
+                        <div class="workout-stat-label">Target Pace</div>
+                    </div>
+                </div>
+                <div class="complete-checkbox"></div>
+            </div>
+
+            <div class="workout-item">
+                <div class="workout-icon-box recovery">💚</div>
+                <div class="workout-info">
+                    <div class="workout-name">Easy Recovery Run</div>
+                    <div class="workout-desc">Friday, Dec 30 • Easy pace, focus on form and recovery</div>
+                </div>
+                <div class="workout-stats">
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">4.0</div>
+                        <div class="workout-stat-label">Miles</div>
+                    </div>
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">9:00</div>
+                        <div class="workout-stat-label">Target Pace</div>
+                    </div>
+                </div>
+                <div class="complete-checkbox"></div>
+            </div>
+
+            <div class="workout-item">
+                <div class="workout-icon-box long">💙</div>
+                <div class="workout-info">
+                    <div class="workout-name">Long Run - 18 Miles</div>
+                    <div class="workout-desc">Saturday, Dec 31 • Marathon pace simulation, last 6 miles @ 8:00 pace</div>
+                </div>
+                <div class="workout-stats">
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">18.0</div>
+                        <div class="workout-stat-label">Miles</div>
+                    </div>
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">8:15</div>
+                        <div class="workout-stat-label">Target Pace</div>
+                    </div>
+                </div>
+                <div class="complete-checkbox"></div>
+            </div>
+
+            <div class="workout-item">
+                <div class="workout-icon-box rest">😴</div>
+                <div class="workout-info">
+                    <div class="workout-name">Rest & Recovery Day</div>
+                    <div class="workout-desc">Sunday, Jan 1 • Complete rest, stretching, hydration</div>
+                </div>
+                <div class="workout-stats">
+                    <div class="workout-stat">
+                        <div class="workout-stat-value">-</div>
+                        <div class="workout-stat-label">Miles</div>
+                    </div>
+                </div>
+                <div class="complete-checkbox"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h3 class="section-title" style="color: white;">🆕 Browse Training Plans</h3>
+
+            <div class="available-plans">
+                <div class="plan-card">
+                    <div class="plan-icon">🏃</div>
+                    <h4 class="plan-name">Couch to 5K</h4>
+                    <p class="plan-description">Perfect for beginners. Build up from walking to running a full 5K in 8 weeks.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 8 weeks</span>
+                        <span class="plan-detail">🏃 3 days/week</span>
+                        <span class="plan-level">Beginner</span>
+                    </div>
+                    <button class="select-plan-btn">Select Plan</button>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-icon">⚡</div>
+                    <h4 class="plan-name">5K Speed Training</h4>
+                    <p class="plan-description">Improve your 5K time with targeted speed work and interval training.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 6 weeks</span>
+                        <span class="plan-detail">🏃 4 days/week</span>
+                        <span class="plan-level">Intermediate</span>
+                    </div>
+                    <button class="select-plan-btn">Select Plan</button>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-icon">🎯</div>
+                    <h4 class="plan-name">10K Base Building</h4>
+                    <p class="plan-description">Build endurance and prepare for your first 10K race with gradual progression.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 10 weeks</span>
+                        <span class="plan-detail">🏃 4 days/week</span>
+                        <span class="plan-level">Beginner</span>
+                    </div>
+                    <button class="select-plan-btn">Select Plan</button>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-icon">💪</div>
+                    <h4 class="plan-name">Half Marathon - Sub 2:00</h4>
+                    <p class="plan-description">Intermediate plan focused on breaking the 2-hour barrier in the half marathon.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 12 weeks</span>
+                        <span class="plan-detail">🏃 5 days/week</span>
+                        <span class="plan-level">Intermediate</span>
+                    </div>
+                    <button class="select-plan-btn">Select Plan</button>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-icon">🏆</div>
+                    <h4 class="plan-name">Marathon - Sub 3:30</h4>
+                    <p class="plan-description">Advanced marathon training for experienced runners targeting a 3:30 finish.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 16 weeks</span>
+                        <span class="plan-detail">🏃 6 days/week</span>
+                        <span class="plan-level">Advanced</span>
+                    </div>
+                    <button class="select-plan-btn">Select Plan</button>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-icon">⭐</div>
+                    <h4 class="plan-name">Custom Plan Builder</h4>
+                    <p class="plan-description">Create your own personalized training plan based on your goals and schedule.</p>
+                    <div class="plan-details">
+                        <span class="plan-detail">📅 Custom</span>
+                        <span class="plan-detail">🏃 Flexible</span>
+                        <span class="plan-level">All Levels</span>
+                    </div>
+                    <button class="select-plan-btn">Create Custom</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

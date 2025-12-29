@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Schedule - ChoreAssignmentTracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .breadcrumb {
+            color: #718096;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .week-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .nav-btn {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .calendar-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 120px repeat(7, 1fr);
+            gap: 2px;
+            min-width: 1200px;
+        }
+
+        .calendar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 12px;
+        }
+
+        .calendar-header.member {
+            background: #f7fafc;
+            color: #2d3748;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .day-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .day-name {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .day-date {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .calendar-cell {
+            background: #f7fafc;
+            padding: 15px 10px;
+            border-radius: 12px;
+            min-height: 120px;
+        }
+
+        .calendar-cell.today {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+        }
+
+        .member-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar-small {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .avatar-small.emma {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .avatar-small.lucas {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .avatar-small.olivia {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .chore-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .chore-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .chore-item.completed {
+            opacity: 0.6;
+            border-left-color: #38ef7d;
+        }
+
+        .chore-item.overdue {
+            border-left-color: #ee0979;
+        }
+
+        .chore-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .chore-time {
+            color: #718096;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .points-badge {
+            background: #fef3c7;
+            color: #78350f;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 11px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .summary-section {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .summary-label {
+            color: #718096;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.completed {
+            background: #38ef7d;
+        }
+
+        .legend-color.pending {
+            background: #667eea;
+        }
+
+        .legend-color.overdue {
+            background: #ee0979;
+        }
+
+        .legend-color.today {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border: 2px solid #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>📅 Weekly Schedule</h1>
+                    <div class="breadcrumb">
+                        <a href="#">Dashboard</a> / Weekly Schedule
+                    </div>
+                </div>
+                <div class="view-toggle">
+                    <button class="toggle-btn active">Week View</button>
+                    <button class="toggle-btn">Month View</button>
+                    <button class="toggle-btn">List View</button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="week-nav">
+                    <button class="nav-btn">←</button>
+                    <span class="week-title">December 23-29, 2025</span>
+                    <button class="nav-btn">→</button>
+                </div>
+
+                <div class="filters">
+                    <button class="filter-btn active">All Members</button>
+                    <button class="filter-btn">Emma</button>
+                    <button class="filter-btn">Lucas</button>
+                    <button class="filter-btn">Olivia</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-value">42</div>
+                    <div class="summary-label">Total Chores This Week</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">28</div>
+                    <div class="summary-label">Completed</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">12</div>
+                    <div class="summary-label">Pending</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">2</div>
+                    <div class="summary-label">Overdue</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">67%</div>
+                    <div class="summary-label">Completion Rate</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color completed"></div>
+                    <span>Completed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color pending"></div>
+                    <span>Pending</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color overdue"></div>
+                    <span>Overdue</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color today"></div>
+                    <span>Today</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-section">
+            <div class="calendar-grid">
+                <!-- Header Row -->
+                <div class="calendar-header member">Member</div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Monday</div>
+                        <div class="day-date">Dec 23</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Tuesday</div>
+                        <div class="day-date">Dec 24</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Wednesday</div>
+                        <div class="day-date">Dec 25</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Thursday</div>
+                        <div class="day-date">Dec 26</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Friday</div>
+                        <div class="day-date">Dec 27</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Saturday</div>
+                        <div class="day-date">Dec 28</div>
+                    </div>
+                </div>
+                <div class="calendar-header">
+                    <div class="day-header">
+                        <div class="day-name">Sunday</div>
+                        <div class="day-date">Dec 29</div>
+                    </div>
+                </div>
+
+                <!-- Emma's Row -->
+                <div class="calendar-header member">
+                    <div class="member-label">
+                        <div class="avatar-small emma">E</div>
+                        <span>Emma</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Vacuum Living Room</div>
+                        <div class="chore-time">⏰ 2:00 PM</div>
+                        <span class="points-badge">+75 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Do Laundry</div>
+                        <div class="chore-time">⏰ 10:00 AM</div>
+                        <span class="points-badge">+80 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Clean Bathrooms</div>
+                        <div class="chore-time">⏰ 11:00 AM</div>
+                        <span class="points-badge">+90 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell today">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Walk the Dog</div>
+                        <div class="chore-time">⏰ 7:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                    <div class="chore-item">
+                        <div class="chore-title">Vacuum Living Room</div>
+                        <div class="chore-time">⏰ 4:00 PM</div>
+                        <span class="points-badge">+75 pts</span>
+                    </div>
+                </div>
+
+                <!-- Lucas's Row -->
+                <div class="calendar-header member">
+                    <div class="member-label">
+                        <div class="avatar-small lucas">L</div>
+                        <span>Lucas</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Do the Dishes</div>
+                        <div class="chore-time">⏰ 6:00 PM</div>
+                        <span class="points-badge">+50 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Take Out Trash</div>
+                        <div class="chore-time">⏰ 7:00 PM</div>
+                        <span class="points-badge">+45 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Feed Pets</div>
+                        <div class="chore-time">⏰ 6:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item overdue">
+                        <div class="chore-title">Do the Dishes</div>
+                        <div class="chore-time">⏰ 6:00 PM (Overdue)</div>
+                        <span class="points-badge">+50 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Feed Pets</div>
+                        <div class="chore-time">⏰ 6:00 AM</div>
+                        <span class="points-badge">+30 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Do the Dishes</div>
+                        <div class="chore-time">⏰ 6:00 PM</div>
+                        <span class="points-badge">+50 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Mow the Lawn</div>
+                        <div class="chore-time">⏰ 10:00 AM</div>
+                        <span class="points-badge">+100 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell today">
+                    <div class="chore-item">
+                        <div class="chore-title">Do the Dishes</div>
+                        <div class="chore-time">⏰ 6:00 PM</div>
+                        <span class="points-badge">+50 pts</span>
+                    </div>
+                    <div class="chore-item">
+                        <div class="chore-title">Take Out Trash</div>
+                        <div class="chore-time">⏰ 7:00 PM</div>
+                        <span class="points-badge">+45 pts</span>
+                    </div>
+                </div>
+
+                <!-- Olivia's Row -->
+                <div class="calendar-header member">
+                    <div class="member-label">
+                        <div class="avatar-small olivia">O</div>
+                        <span>Olivia</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Set Dinner Table</div>
+                        <div class="chore-time">⏰ 5:30 PM</div>
+                        <span class="points-badge">+25 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Clean Bedroom</div>
+                        <div class="chore-time">⏰ 9:00 AM</div>
+                        <span class="points-badge">+40 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Make Your Bed</div>
+                        <div class="chore-time">⏰ 8:00 AM</div>
+                        <span class="points-badge">+20 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Water Plants</div>
+                        <div class="chore-time">⏰ 4:00 PM</div>
+                        <span class="points-badge">+35 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Set Dinner Table</div>
+                        <div class="chore-time">⏰ 5:30 PM</div>
+                        <span class="points-badge">+25 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Clean Bedroom</div>
+                        <div class="chore-time">⏰ 9:00 AM</div>
+                        <span class="points-badge">+40 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Set Dinner Table</div>
+                        <div class="chore-time">⏰ 5:30 PM</div>
+                        <span class="points-badge">+25 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Water Plants</div>
+                        <div class="chore-time">⏰ 4:00 PM</div>
+                        <span class="points-badge">+35 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Make Your Bed</div>
+                        <div class="chore-time">⏰ 8:00 AM</div>
+                        <span class="points-badge">+20 pts</span>
+                    </div>
+                </div>
+
+                <div class="calendar-cell today">
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Clean Bedroom</div>
+                        <div class="chore-time">⏰ 9:00 AM</div>
+                        <span class="points-badge">+40 pts</span>
+                    </div>
+                    <div class="chore-item completed">
+                        <div class="chore-title">✓ Set Dinner Table</div>
+                        <div class="chore-time">⏰ 5:30 PM</div>
+                        <span class="points-badge">+25 pts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Run - Running Log & Race Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+        }
+
+        .modal {
+            position: relative;
+            z-index: 1000;
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #f3f4f6;
+            color: #666;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-input.large {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group .form-input {
+            flex: 1;
+        }
+
+        .workout-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .workout-type-btn {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .workout-type-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .workout-type-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .workout-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .workout-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .effort-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #43e97b 0%, #fee140 50%, #f5576c 100%);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .effort-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .effort-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .effort-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .weather-btn {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .weather-btn:hover {
+            border-color: #667eea;
+        }
+
+        .weather-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .weather-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .weather-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-footer {
+            padding: 30px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .quick-stat {
+            text-align: center;
+        }
+
+        .quick-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .quick-stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .route-preview {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        @media (max-width: 768px) {
+            .modal {
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workout-types {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay"></div>
+
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">🏃 Log a Run</h2>
+            <button class="close-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">📊</div>
+                    Basic Information
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Run Name</label>
+                        <input type="text" class="form-input" placeholder="Morning run, Track workout, etc." value="Morning Tempo Run">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Date & Time</label>
+                        <input type="datetime-local" class="form-input" value="2025-12-29T06:30">
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Distance</label>
+                        <input type="text" class="form-input large" placeholder="0.00" value="6.20">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Duration</label>
+                        <div class="input-group">
+                            <input type="number" class="form-input" placeholder="HH" value="00" style="max-width: 60px;">
+                            <input type="number" class="form-input" placeholder="MM" value="49" style="max-width: 60px;">
+                            <input type="number" class="form-input" placeholder="SS" value="48" style="max-width: 60px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <div class="quick-stat-value">8:02</div>
+                        <div class="quick-stat-label">Avg Pace</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value">285</div>
+                        <div class="quick-stat-label">Calories</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value">165</div>
+                        <div class="quick-stat-label">Avg HR</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🔥</div>
+                    Workout Type
+                </div>
+
+                <div class="workout-types">
+                    <div class="workout-type-btn active">
+                        <div class="workout-icon">🔥</div>
+                        <div class="workout-name">Tempo</div>
+                    </div>
+                    <div class="workout-type-btn">
+                        <div class="workout-icon">💙</div>
+                        <div class="workout-name">Long Run</div>
+                    </div>
+                    <div class="workout-type-btn">
+                        <div class="workout-icon">⚡</div>
+                        <div class="workout-name">Intervals</div>
+                    </div>
+                    <div class="workout-type-btn">
+                        <div class="workout-icon">💚</div>
+                        <div class="workout-name">Recovery</div>
+                    </div>
+                    <div class="workout-type-btn">
+                        <div class="workout-icon">🌸</div>
+                        <div class="workout-name">Easy</div>
+                    </div>
+                    <div class="workout-type-btn">
+                        <div class="workout-icon">🏃</div>
+                        <div class="workout-name">Race</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">💪</div>
+                    Perceived Effort
+                </div>
+
+                <input type="range" class="effort-slider" min="1" max="10" value="7">
+                <div class="effort-labels">
+                    <span>1 - Easy</span>
+                    <span>5 - Moderate</span>
+                    <span>10 - Max</span>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🌤️</div>
+                    Weather Conditions
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Temperature</label>
+                        <input type="text" class="form-input" placeholder="°F" value="58">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Conditions</label>
+                        <div class="weather-grid">
+                            <div class="weather-btn active">
+                                <div class="weather-icon">☀️</div>
+                                <div class="weather-label">Sunny</div>
+                            </div>
+                            <div class="weather-btn">
+                                <div class="weather-icon">☁️</div>
+                                <div class="weather-label">Cloudy</div>
+                            </div>
+                            <div class="weather-btn">
+                                <div class="weather-icon">🌧️</div>
+                                <div class="weather-label">Rainy</div>
+                            </div>
+                            <div class="weather-btn">
+                                <div class="weather-icon">❄️</div>
+                                <div class="weather-label">Cold</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🗺️</div>
+                    Route
+                </div>
+
+                <div class="route-preview">🗺️</div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" style="flex: 1;">📍 Use GPS Route</button>
+                    <button class="btn btn-secondary" style="flex: 1;">📁 Select Saved Route</button>
+                </div>
+
+                <div class="form-grid" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label class="form-label">Elevation Gain</label>
+                        <input type="text" class="form-input" placeholder="feet" value="245">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Elevation Loss</label>
+                        <input type="text" class="form-input" placeholder="feet" value="248">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">📝</div>
+                    Notes
+                </div>
+
+                <textarea class="notes-textarea" placeholder="How did you feel? Any observations about the run?">Felt strong throughout. Maintained target pace well. Legs felt fresh and recovered from yesterday's easy run. Weather was perfect for tempo work.</textarea>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">⚙️</div>
+                    Additional Data
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Average Heart Rate (bpm)</label>
+                        <input type="number" class="form-input" placeholder="bpm" value="165">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Heart Rate (bpm)</label>
+                        <input type="number" class="form-input" placeholder="bpm" value="178">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cadence (spm)</label>
+                        <input type="number" class="form-input" placeholder="steps/min" value="172">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Calories Burned</label>
+                        <input type="number" class="form-input" placeholder="kcal" value="285">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary">Cancel</button>
+            <button class="btn btn-secondary">Save as Draft</button>
+            <button class="btn btn-primary">Save Run</button>
+        </div>
+    </div>
+</body>
+</html>

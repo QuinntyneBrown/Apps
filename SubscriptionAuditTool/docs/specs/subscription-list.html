@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Subscriptions - SubscriptionAuditTool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .subscriptions-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .subscriptions-table th {
+            text-align: left;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subscription-row {
+            background: #f9fafb;
+            transition: all 0.3s;
+        }
+
+        .subscription-row:hover {
+            background: #f3f4f6;
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .subscription-row td {
+            padding: 16px 12px;
+        }
+
+        .subscription-row td:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .subscription-row td:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .service-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 16px;
+        }
+
+        .service-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .service-plan {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-entertainment {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .category-software {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .category-music {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .category-storage {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .category-communication {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .category-productivity {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-trial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .price-cell {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 16px;
+        }
+
+        .renewal-cell {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-edit {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-edit:hover {
+            background: #bfdbfe;
+        }
+
+        .action-cancel {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-cancel:hover {
+            background: #fecaca;
+        }
+
+        @media (max-width: 768px) {
+            .subscriptions-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">💰 SubscriptionAuditTool</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Dashboard</button>
+                <button class="btn btn-primary">+ Add Subscription</button>
+            </div>
+        </header>
+
+        <div class="main-card">
+            <div class="page-header">
+                <h1 class="page-title">All Subscriptions</h1>
+            </div>
+
+            <div class="filters-bar">
+                <input type="text" class="search-box" placeholder="🔍 Search subscriptions...">
+                <select class="filter-select">
+                    <option>All Categories</option>
+                    <option>Entertainment</option>
+                    <option>Software</option>
+                    <option>Music</option>
+                    <option>Storage</option>
+                    <option>Communication</option>
+                    <option>Productivity</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Status</option>
+                    <option>Active</option>
+                    <option>Trial</option>
+                    <option>Cancelled</option>
+                </select>
+                <select class="filter-select">
+                    <option>Sort by: Name</option>
+                    <option>Sort by: Price</option>
+                    <option>Sort by: Renewal Date</option>
+                    <option>Sort by: Category</option>
+                </select>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-label">Total Subscriptions</div>
+                    <div class="stat-value">12</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Monthly Cost</div>
+                    <div class="stat-value">$147.94</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Annual Cost</div>
+                    <div class="stat-value">$1,775.28</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Active Trials</div>
+                    <div class="stat-value">2</div>
+                </div>
+            </div>
+
+            <table class="subscriptions-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Billing</th>
+                        <th>Next Renewal</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #E50914;">N</div>
+                                <div class="service-info">
+                                    <div class="service-name">Netflix</div>
+                                    <div class="service-plan">Premium Plan</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-entertainment">Entertainment</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$19.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 5, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #1DB954;">S</div>
+                                <div class="service-info">
+                                    <div class="service-name">Spotify</div>
+                                    <div class="service-plan">Premium Individual</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-music">Music</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$9.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 2, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #FF2BC2;">A</div>
+                                <div class="service-info">
+                                    <div class="service-name">Adobe Creative Cloud</div>
+                                    <div class="service-plan">All Apps</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-software">Software</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$52.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 3, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #FF0000;">▶</div>
+                                <div class="service-info">
+                                    <div class="service-name">YouTube Premium</div>
+                                    <div class="service-plan">Individual</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-entertainment">Entertainment</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$13.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 15, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #0066FF;">D</div>
+                                <div class="service-info">
+                                    <div class="service-name">Dropbox</div>
+                                    <div class="service-plan">Plus 2TB</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-storage">Storage</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$11.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 18, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #00A4EF;">M</div>
+                                <div class="service-info">
+                                    <div class="service-name">Microsoft 365</div>
+                                    <div class="service-plan">Personal</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-productivity">Productivity</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$6.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 25, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #FF9900;">A</div>
+                                <div class="service-info">
+                                    <div class="service-name">Amazon Prime</div>
+                                    <div class="service-plan">Monthly</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-entertainment">Entertainment</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$14.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 10, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #5865F2;">D</div>
+                                <div class="service-info">
+                                    <div class="service-name">Discord Nitro</div>
+                                    <div class="service-plan">Basic</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-communication">Communication</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$9.99</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 20, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #00C4CC;">C</div>
+                                <div class="service-info">
+                                    <div class="service-name">Canva Pro</div>
+                                    <div class="service-plan">Trial</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-software">Software</span></td>
+                        <td><span class="status-badge status-trial">Trial</span></td>
+                        <td class="price-cell">$0.00</td>
+                        <td>Trial</td>
+                        <td class="renewal-cell">Jan 8, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #FF6154;">G</div>
+                                <div class="service-info">
+                                    <div class="service-name">Grammarly</div>
+                                    <div class="service-plan">Premium</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-productivity">Productivity</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$12.00</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 12, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #1ED760;">S</div>
+                                <div class="service-info">
+                                    <div class="service-name">Slack</div>
+                                    <div class="service-plan">Pro</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-communication">Communication</span></td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="price-cell">$8.00</td>
+                        <td>Monthly</td>
+                        <td class="renewal-cell">Jan 7, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="subscription-row">
+                        <td>
+                            <div class="service-cell">
+                                <div class="service-icon" style="background: #F57C00;">N</div>
+                                <div class="service-info">
+                                    <div class="service-name">Notion</div>
+                                    <div class="service-plan">Plus Trial</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge category-productivity">Productivity</span></td>
+                        <td><span class="status-badge status-trial">Trial</span></td>
+                        <td class="price-cell">$0.00</td>
+                        <td>Trial</td>
+                        <td class="renewal-cell">Jan 14, 2026</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-edit">Edit</button>
+                                <button class="action-btn action-cancel">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

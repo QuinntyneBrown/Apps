@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screening History - Annual Health Screening Reminder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: #1a202c;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #718096;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .filters-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            color: #1a202c;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .timeline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-year {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 32px 0 20px;
+            position: relative;
+        }
+
+        .timeline-year:first-child {
+            margin-top: 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -28px;
+            top: 8px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            z-index: 1;
+        }
+
+        .timeline-dot.normal {
+            border-color: #38a169;
+        }
+
+        .timeline-dot.abnormal {
+            border-color: #e53e3e;
+        }
+
+        .timeline-dot.pending {
+            border-color: #d69e2e;
+        }
+
+        .history-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s;
+        }
+
+        .history-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .history-card.normal {
+            background: #f0fff4;
+            border-left: 4px solid #38a169;
+        }
+
+        .history-card.abnormal {
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .history-card.pending {
+            background: #fffbeb;
+            border-left: 4px solid #d69e2e;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .history-date {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .result-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-normal {
+            background: #38a169;
+            color: white;
+        }
+
+        .badge-abnormal {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .badge-pending {
+            background: #d69e2e;
+            color: white;
+        }
+
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .detail-icon {
+            font-size: 16px;
+        }
+
+        .history-summary {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .summary-text {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .result-range {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .alert-box {
+            padding: 12px 16px;
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            color: #e53e3e;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .alert-text {
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .attachments {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .attachment-item {
+            padding: 10px 16px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .attachment-item:hover {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-outline:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .timeline-dot {
+                left: -23px;
+            }
+
+            .history-details,
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <h1>Health Screening Tracker</h1>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <h1 class="page-title">Screening History</h1>
+            <p class="page-subtitle">Complete record of all your health screenings and results</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Total Screenings</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #38a169;">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Normal Results</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #d69e2e;">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Pending Results</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #e53e3e;">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Required Follow-up</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Search screenings...">
+            </div>
+            <select class="filter-select">
+                <option>All Types</option>
+                <option>Cancer Screening</option>
+                <option>Cardiovascular</option>
+                <option>Dental</option>
+                <option>Vision</option>
+                <option>General Health</option>
+            </select>
+            <select class="filter-select">
+                <option>All Results</option>
+                <option>Normal</option>
+                <option>Abnormal</option>
+                <option>Pending</option>
+            </select>
+            <select class="filter-select">
+                <option>All Years</option>
+                <option>2026</option>
+                <option>2025</option>
+                <option>2024</option>
+                <option>2023</option>
+            </select>
+        </div>
+
+        <div class="timeline-container">
+            <div class="timeline">
+                <div class="timeline-year">2026</div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot pending"></div>
+                    <div class="history-card pending">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">Blood Pressure & Cholesterol Panel</div>
+                                <div class="history-date">February 28, 2026</div>
+                            </div>
+                            <span class="result-badge badge-pending">Results Pending</span>
+                        </div>
+                        <div class="history-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">👨‍⚕️</span>
+                                <span>Dr. Sarah Thompson</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>Family Health Center</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <span>$0 copay</span>
+                            </div>
+                        </div>
+                        <div class="history-summary">
+                            <div class="summary-title">Status</div>
+                            <div class="summary-text">
+                                Blood work completed. Results expected within 3-5 business days. You will receive a notification when results are available.
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline">View Lab Order</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot normal"></div>
+                    <div class="history-card normal">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">Dental Cleaning & Examination</div>
+                                <div class="history-date">February 5, 2026</div>
+                            </div>
+                            <span class="result-badge badge-normal">Normal</span>
+                        </div>
+                        <div class="history-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">🦷</span>
+                                <span>Dr. James Chen, DDS</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>Bright Smile Dentistry</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <span>$0 copay</span>
+                            </div>
+                        </div>
+                        <div class="history-summary">
+                            <div class="summary-title">Summary</div>
+                            <div class="summary-text">
+                                Comprehensive oral examination and professional cleaning completed. No cavities detected. Gums healthy with no signs of periodontal disease. Continue regular brushing and flossing.
+                            </div>
+                        </div>
+                        <div class="history-summary" style="margin-top: 12px;">
+                            <div class="summary-title">Next Steps</div>
+                            <div class="summary-text">
+                                Next dental cleaning recommended in 6 months (August 2026).
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline">View Full Report</button>
+                            <button class="btn btn-outline">Schedule Next Visit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot normal"></div>
+                    <div class="history-card normal">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">Eye Examination</div>
+                                <div class="history-date">January 18, 2026</div>
+                            </div>
+                            <span class="result-badge badge-normal">Normal</span>
+                        </div>
+                        <div class="history-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">👁️</span>
+                                <span>Dr. Amanda Lee, OD</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>Vision Care Center</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <span>$25 copay</span>
+                            </div>
+                        </div>
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <div class="result-label">Visual Acuity (Right)</div>
+                                <div class="result-value">20/20</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Visual Acuity (Left)</div>
+                                <div class="result-value">20/20</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Intraocular Pressure</div>
+                                <div class="result-value">14 mmHg</div>
+                                <div class="result-range">Normal: 10-21</div>
+                            </div>
+                        </div>
+                        <div class="history-summary">
+                            <div class="summary-title">Summary</div>
+                            <div class="summary-text">
+                                Comprehensive eye exam including dilated fundus examination. No evidence of glaucoma, cataracts, or retinal disease. Vision remains excellent with current prescription.
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline">View Full Report</button>
+                            <button class="btn btn-outline">Download Prescription</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-year">2025</div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot abnormal"></div>
+                    <div class="history-card abnormal">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">Mammogram</div>
+                                <div class="history-date">November 12, 2025</div>
+                            </div>
+                            <span class="result-badge badge-abnormal">Follow-up Required</span>
+                        </div>
+                        <div class="history-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">🏥</span>
+                                <span>Radiology Associates</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>Women's Health Imaging Center</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <span>$0 copay</span>
+                            </div>
+                        </div>
+
+                        <div class="alert-box">
+                            <div class="alert-title">⚠️ Additional Imaging Recommended</div>
+                            <div class="alert-text">
+                                Area of density noted in right breast requiring additional evaluation with ultrasound.
+                            </div>
+                        </div>
+
+                        <div class="history-summary">
+                            <div class="summary-title">Findings</div>
+                            <div class="summary-text">
+                                Small area of increased density observed in upper outer quadrant of right breast. BI-RADS Category 0 - Incomplete assessment. Recommend diagnostic ultrasound for further evaluation.
+                            </div>
+                        </div>
+
+                        <div class="history-summary" style="margin-top: 12px; background: #e6fffa; border: 1px solid #319795;">
+                            <div class="summary-title" style="color: #319795;">✓ Follow-up Completed</div>
+                            <div class="summary-text">
+                                Follow-up ultrasound performed on December 3, 2025. Findings consistent with benign fibrocystic change. No evidence of malignancy. Return to routine annual screening.
+                            </div>
+                        </div>
+
+                        <div class="attachments">
+                            <div class="attachment-item">
+                                <span>📄</span>
+                                <span>Mammogram_Report.pdf</span>
+                            </div>
+                            <div class="attachment-item">
+                                <span>📄</span>
+                                <span>Ultrasound_Report.pdf</span>
+                            </div>
+                            <div class="attachment-item">
+                                <span>🖼️</span>
+                                <span>Images.zip</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-outline">View Full Report</button>
+                            <button class="btn btn-outline">View Follow-up Results</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot normal"></div>
+                    <div class="history-card normal">
+                        <div class="history-header">
+                            <div>
+                                <div class="history-title">Annual Physical Examination</div>
+                                <div class="history-date">September 15, 2025</div>
+                            </div>
+                            <span class="result-badge badge-normal">Normal</span>
+                        </div>
+                        <div class="history-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">👨‍⚕️</span>
+                                <span>Dr. Sarah Thompson</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>Family Health Center</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <span>$0 copay</span>
+                            </div>
+                        </div>
+
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <div class="result-label">Blood Pressure</div>
+                                <div class="result-value">128/82</div>
+                                <div class="result-range">Normal: <120/80</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Heart Rate</div>
+                                <div class="result-value">72 bpm</div>
+                                <div class="result-range">Normal: 60-100</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">BMI</div>
+                                <div class="result-value">24.3</div>
+                                <div class="result-range">Normal: 18.5-24.9</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Total Cholesterol</div>
+                                <div class="result-value">195 mg/dL</div>
+                                <div class="result-range">Desirable: <200</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">HDL Cholesterol</div>
+                                <div class="result-value">58 mg/dL</div>
+                                <div class="result-range">Good: >40</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">LDL Cholesterol</div>
+                                <div class="result-value">115 mg/dL</div>
+                                <div class="result-range">Optimal: <100</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Glucose (Fasting)</div>
+                                <div class="result-value">102 mg/dL</div>
+                                <div class="result-range">Normal: 70-100</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">HbA1c</div>
+                                <div class="result-value">5.9%</div>
+                                <div class="result-range">Normal: <5.7%</div>
+                            </div>
+                        </div>
+
+                        <div class="history-summary">
+                            <div class="summary-title">Assessment</div>
+                            <div class="summary-text">
+                                Overall health status good. Blood pressure well-controlled on current medication. Cholesterol levels improved from last year. Fasting glucose and HbA1c slightly elevated, consistent with prediabetes diagnosis. Continue current medications and lifestyle modifications.
+                            </div>
+                        </div>
+
+                        <div class="history-summary" style="margin-top: 12px;">
+                            <div class="summary-title">Recommendations</div>
+                            <div class="summary-text">
+                                • Continue daily Lisinopril for blood pressure<br>
+                                • Continue Atorvastatin for cholesterol<br>
+                                • Continue Metformin and dietary modifications for prediabetes<br>
+                                • Increase physical activity to 150 minutes per week<br>
+                                • Recheck labs in 6 months
+                            </div>
+                        </div>
+
+                        <div class="attachments">
+                            <div class="attachment-item">
+                                <span>📄</span>
+                                <span>Lab_Results_Complete.pdf</span>
+                            </div>
+                            <div class="attachment-item">
+                                <span>📄</span>
+                                <span>Visit_Summary.pdf</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary">Schedule Next Annual</button>
+                            <button class="btn btn-outline">View Full Report</button>
+                            <button class="btn btn-outline">Download Results</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

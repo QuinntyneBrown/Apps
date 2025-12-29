@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 1.8rem; color: #667eea; font-weight: 700; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+        .nav-tabs {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .net-worth-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
+            margin-bottom: 2rem;
+            color: white;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        .net-worth-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .net-worth-amount {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .net-worth-change {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1rem;
+        }
+        .change-positive {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.75rem;
+        }
+        .stat-value.assets { color: #10b981; }
+        .stat-value.liabilities { color: #ef4444; }
+        .stat-detail {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        .stat-change {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        .stat-change.positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .stat-change.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .card-action {
+            color: #667eea;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            color: #666;
+            border: 2px dashed #e5e7eb;
+            position: relative;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-line {
+            position: absolute;
+            bottom: 20%;
+            left: 10%;
+            right: 10%;
+            height: 60%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-top: 3px solid #667eea;
+            border-radius: 4px 4px 0 0;
+            clip-path: polygon(0 80%, 20% 60%, 40% 65%, 60% 40%, 80% 30%, 100% 20%, 100% 100%, 0 100%);
+        }
+
+        .asset-list, .liability-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .asset-item, .liability-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .asset-item:hover, .liability-item:hover {
+            background: #f3f4f6;
+        }
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .item-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .icon-bank { background: #dbeafe; color: #1e40af; }
+        .icon-investment { background: #fef3c7; color: #92400e; }
+        .icon-property { background: #d1fae5; color: #065f46; }
+        .icon-loan { background: #fee2e2; color: #991b1b; }
+        .icon-credit { background: #fce7f3; color: #831843; }
+        .item-details h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        .item-details p {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        .item-value {
+            text-align: right;
+        }
+        .item-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .item-amount.positive { color: #10b981; }
+        .item-amount.negative { color: #ef4444; }
+        .item-change {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .milestone-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .milestone {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .milestone-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .milestone-icon.achieved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .milestone-icon.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        .milestone-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        .milestone-info p {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #dbeafe;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #1e40af;
+            margin-top: 1rem;
+        }
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>💰 Personal Net Worth Dashboard</h1>
+        <div class="header-actions">
+            <button class="btn-secondary">⚙️ Settings</button>
+            <button class="btn-primary">+ Add Asset</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab active">Dashboard</div>
+            <div class="tab">Assets</div>
+            <div class="tab">Liabilities</div>
+            <div class="tab">Investments</div>
+            <div class="tab">Accounts</div>
+            <div class="tab">Reports</div>
+        </div>
+
+        <div class="net-worth-summary">
+            <div class="net-worth-label">Total Net Worth</div>
+            <div class="net-worth-amount">$847,350.42</div>
+            <div class="net-worth-change">
+                <div class="change-positive">
+                    <span>↑ $23,450.00</span>
+                    <span>(+2.8%)</span>
+                </div>
+                <span style="opacity: 0.8;">vs. last month</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Assets</div>
+                <div class="stat-value assets">$1,245,680.00</div>
+                <div class="stat-detail">12 active assets</div>
+                <div class="stat-change positive">↑ $28,340 this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Liabilities</div>
+                <div class="stat-value liabilities">$398,329.58</div>
+                <div class="stat-detail">4 active liabilities</div>
+                <div class="stat-change positive">↓ $4,890 this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Investment Returns</div>
+                <div class="stat-value" style="color: #8b5cf6;">+12.4%</div>
+                <div class="stat-detail">YTD performance</div>
+                <div class="stat-change positive">+$68,450 unrealized gains</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Net Worth Trend</h2>
+                    <a href="#" class="card-action">View History →</a>
+                </div>
+                <div class="chart-placeholder">
+                    <div class="chart-line"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">📈 Trending Up</div>
+                        <div style="font-size: 0.9rem;">Net worth increased by 18.5% over the past 6 months</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Milestones</h2>
+                    <a href="#" class="card-action">View All →</a>
+                </div>
+                <div class="milestone-list">
+                    <div class="milestone">
+                        <div class="milestone-icon achieved">✓</div>
+                        <div class="milestone-info">
+                            <h4>First $500K</h4>
+                            <p>Achieved Mar 2024</p>
+                        </div>
+                    </div>
+                    <div class="milestone">
+                        <div class="milestone-icon achieved">✓</div>
+                        <div class="milestone-info">
+                            <h4>Debt Under $400K</h4>
+                            <p>Achieved Dec 2024</p>
+                        </div>
+                    </div>
+                    <div class="milestone">
+                        <div class="milestone-icon pending">⏳</div>
+                        <div class="milestone-info">
+                            <h4>First $1M Net Worth</h4>
+                            <p>$152,650 to go (82% complete)</p>
+                        </div>
+                    </div>
+                    <div class="milestone">
+                        <div class="milestone-icon pending">⏳</div>
+                        <div class="milestone-info">
+                            <h4>Zero Consumer Debt</h4>
+                            <p>$24,500 to go</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Top Assets</h2>
+                    <a href="#" class="card-action">View All Assets →</a>
+                </div>
+                <div class="asset-list">
+                    <div class="asset-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-property">🏠</div>
+                            <div class="item-details">
+                                <h4>Primary Residence</h4>
+                                <p>Property • Last updated 2 days ago</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount positive">$485,000</div>
+                            <div class="item-change">+$12,000 (2.5%)</div>
+                        </div>
+                    </div>
+                    <div class="asset-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-investment">📊</div>
+                            <div class="item-details">
+                                <h4>Vanguard 401(k)</h4>
+                                <p>Investment • Synced today</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount positive">$342,680</div>
+                            <div class="item-change">+$8,340 (2.5%)</div>
+                        </div>
+                    </div>
+                    <div class="asset-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-investment">💼</div>
+                            <div class="item-details">
+                                <h4>Fidelity Brokerage</h4>
+                                <p>Investment • Synced today</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount positive">$156,230</div>
+                            <div class="item-change">+$5,120 (3.4%)</div>
+                        </div>
+                    </div>
+                    <div class="asset-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-bank">🏦</div>
+                            <div class="item-details">
+                                <h4>Chase Savings</h4>
+                                <p>Bank Account • Synced 1 hour ago</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount positive">$85,450</div>
+                            <div class="item-change">+$2,000 (2.4%)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sync-status">
+                    <div class="sync-indicator"></div>
+                    <span>All accounts synced successfully</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Liabilities</h2>
+                    <a href="#" class="card-action">View All →</a>
+                </div>
+                <div class="liability-list">
+                    <div class="liability-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-loan">🏡</div>
+                            <div class="item-details">
+                                <h4>Mortgage</h4>
+                                <p>3.25% APR • Wells Fargo</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount negative">$345,820</div>
+                            <div class="item-change">-$1,890/mo</div>
+                        </div>
+                    </div>
+                    <div class="liability-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-loan">🚗</div>
+                            <div class="item-details">
+                                <h4>Auto Loan</h4>
+                                <p>4.5% APR • Toyota Financial</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount negative">$28,009.58</div>
+                            <div class="item-change">-$485/mo</div>
+                        </div>
+                    </div>
+                    <div class="liability-item">
+                        <div class="item-info">
+                            <div class="item-icon icon-credit">💳</div>
+                            <div class="item-details">
+                                <h4>Credit Card</h4>
+                                <p>18.9% APR • Chase Sapphire</p>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            <div class="item-amount negative">$24,500</div>
+                            <div class="item-change">Pay off ASAP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

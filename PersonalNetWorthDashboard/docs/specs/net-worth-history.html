@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Net Worth History - Personal Net Worth Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 1.8rem; color: #667eea; font-weight: 700; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+
+        .nav-tabs {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .current-status {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 3rem;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+        }
+        .status-item h3 {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .status-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .status-change {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .time-range {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .time-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .time-btn {
+            padding: 0.625rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            color: #666;
+        }
+        .time-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .time-btn:hover {
+            border-color: #667eea;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            height: 400px;
+        }
+        .chart-placeholder {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            border-left: 2px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 2rem 0 0 2rem;
+        }
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            margin: 0 0.5rem;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+        .chart-tooltip {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chart-bar:hover .chart-tooltip {
+            opacity: 1;
+        }
+        .chart-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .milestones-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .milestone-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .milestone-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+        .milestone-card.achieved::before {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+        .milestone-card.in-progress::before {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .milestone-card.pending::before {
+            background: linear-gradient(90deg, #d1d5db 0%, #9ca3af 100%);
+        }
+        .milestone-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .milestone-card.achieved .milestone-icon {
+            background: #d1fae5;
+        }
+        .milestone-card.in-progress .milestone-icon {
+            background: #dbeafe;
+        }
+        .milestone-card.pending .milestone-icon {
+            background: #f3f4f6;
+        }
+        .milestone-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .milestone-target {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+        }
+        .milestone-progress {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-container {
+            margin-bottom: 0.75rem;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .milestone-card.achieved .progress-fill {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+        .milestone-card.in-progress .progress-fill {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .milestone-date {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .history-table thead {
+            background: #f9fafb;
+        }
+        .history-table th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #666;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+        }
+        .history-table tr:hover {
+            background: #f9fafb;
+        }
+        .date-cell {
+            font-weight: 600;
+            color: #333;
+        }
+        .amount-cell {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .change-cell {
+            font-weight: 600;
+        }
+        .positive {
+            color: #10b981;
+        }
+        .negative {
+            color: #ef4444;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .summary-stat {
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .summary-label {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>💰 Personal Net Worth Dashboard</h1>
+        <div class="header-actions">
+            <button class="btn-secondary">📊 Export Report</button>
+            <button class="btn-secondary">⚙️ Settings</button>
+            <button class="btn-primary">+ Add Snapshot</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab">Dashboard</div>
+            <div class="tab">Assets</div>
+            <div class="tab">Liabilities</div>
+            <div class="tab">Investments</div>
+            <div class="tab">Accounts</div>
+            <div class="tab active">Reports</div>
+        </div>
+
+        <div class="current-status">
+            <div class="status-grid">
+                <div class="status-item">
+                    <h3>Current Net Worth</h3>
+                    <div class="status-value">$847,350</div>
+                    <div class="status-change">As of December 29, 2024</div>
+                </div>
+                <div class="status-item">
+                    <h3>All-Time High</h3>
+                    <div class="status-value">$847,350</div>
+                    <div class="status-change">Achieved today!</div>
+                </div>
+                <div class="status-item">
+                    <h3>Total Growth</h3>
+                    <div class="status-value">+$297,350</div>
+                    <div class="status-change">+54.1% from start</div>
+                </div>
+                <div class="status-item">
+                    <h3>Avg Monthly Growth</h3>
+                    <div class="status-value">+$12,390</div>
+                    <div class="status-change">Over 24 months</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="time-range">
+            <div>
+                <h3 style="font-size: 1rem; color: #333; font-weight: 600;">Viewing Period</h3>
+            </div>
+            <div class="time-buttons">
+                <button class="time-btn">1M</button>
+                <button class="time-btn">3M</button>
+                <button class="time-btn active">6M</button>
+                <button class="time-btn">YTD</button>
+                <button class="time-btn">1Y</button>
+                <button class="time-btn">2Y</button>
+                <button class="time-btn">All</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Net Worth Trend (6 Months)</h2>
+                    <p class="card-subtitle">Monthly snapshots showing your financial progress</p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-placeholder">
+                    <div class="chart-bar" style="height: 75%;">
+                        <div class="chart-tooltip">Jul 2024: $723,890</div>
+                        <div class="chart-label">Jul</div>
+                    </div>
+                    <div class="chart-bar" style="height: 78%;">
+                        <div class="chart-tooltip">Aug 2024: $745,120</div>
+                        <div class="chart-label">Aug</div>
+                    </div>
+                    <div class="chart-bar" style="height: 80%;">
+                        <div class="chart-tooltip">Sep 2024: $768,340</div>
+                        <div class="chart-label">Sep</div>
+                    </div>
+                    <div class="chart-bar" style="height: 85%;">
+                        <div class="chart-tooltip">Oct 2024: $792,450</div>
+                        <div class="chart-label">Oct</div>
+                    </div>
+                    <div class="chart-bar" style="height: 88%;">
+                        <div class="chart-tooltip">Nov 2024: $823,900</div>
+                        <div class="chart-label">Nov</div>
+                    </div>
+                    <div class="chart-bar" style="height: 100%;">
+                        <div class="chart-tooltip">Dec 2024: $847,350</div>
+                        <div class="chart-label">Dec</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-summary">
+                <div class="summary-stat">
+                    <div class="summary-label">Period Change</div>
+                    <div class="summary-value" style="color: #10b981;">+$123,460</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-label">Period Growth</div>
+                    <div class="summary-value" style="color: #10b981;">+17.1%</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-label">Best Month</div>
+                    <div class="summary-value">+$31,450</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-label">Avg Monthly</div>
+                    <div class="summary-value">+$20,577</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Financial Milestones</h2>
+                    <p class="card-subtitle">Track your progress towards major financial goals</p>
+                </div>
+            </div>
+
+            <div class="milestones-section">
+                <div class="milestone-card achieved">
+                    <div class="milestone-icon">🎉</div>
+                    <div class="milestone-title">Positive Net Worth</div>
+                    <div class="milestone-target">$0</div>
+                    <div class="milestone-progress">Achieved and surpassed!</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">✓ Achieved January 2022</div>
+                </div>
+
+                <div class="milestone-card achieved">
+                    <div class="milestone-icon">🏆</div>
+                    <div class="milestone-title">First $100K</div>
+                    <div class="milestone-target">$100,000</div>
+                    <div class="milestone-progress">Achieved and surpassed!</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">✓ Achieved August 2022</div>
+                </div>
+
+                <div class="milestone-card achieved">
+                    <div class="milestone-icon">💎</div>
+                    <div class="milestone-title">First $500K</div>
+                    <div class="milestone-target">$500,000</div>
+                    <div class="milestone-progress">Achieved and surpassed!</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">✓ Achieved March 2024</div>
+                </div>
+
+                <div class="milestone-card achieved">
+                    <div class="milestone-icon">🎯</div>
+                    <div class="milestone-title">Debt Under $400K</div>
+                    <div class="milestone-target">$400,000</div>
+                    <div class="milestone-progress">Achieved this month!</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">✓ Achieved December 2024</div>
+                </div>
+
+                <div class="milestone-card in-progress">
+                    <div class="milestone-icon">🚀</div>
+                    <div class="milestone-title">First $1 Million</div>
+                    <div class="milestone-target">$1,000,000</div>
+                    <div class="milestone-progress">$152,650 to go</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 84.7%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">84.7% complete • Est. May 2025</div>
+                </div>
+
+                <div class="milestone-card pending">
+                    <div class="milestone-icon">⏳</div>
+                    <div class="milestone-title">Debt Free</div>
+                    <div class="milestone-target">$0</div>
+                    <div class="milestone-progress">$398,330 to pay off</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 11.4%;"></div>
+                        </div>
+                    </div>
+                    <div class="milestone-date">11.4% complete • Est. 2042</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Historical Snapshots</h2>
+                    <p class="card-subtitle">Detailed history of your net worth over time</p>
+                </div>
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th style="text-align: right;">Total Assets</th>
+                        <th style="text-align: right;">Total Liabilities</th>
+                        <th style="text-align: right;">Net Worth</th>
+                        <th style="text-align: right;">Monthly Change</th>
+                        <th style="text-align: right;">% Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="date-cell">Dec 29, 2024</td>
+                        <td style="text-align: right;">$1,245,680</td>
+                        <td style="text-align: right;">$398,330</td>
+                        <td style="text-align: right;" class="amount-cell">$847,350</td>
+                        <td style="text-align: right;" class="change-cell positive">+$23,450</td>
+                        <td style="text-align: right;" class="change-cell positive">+2.8%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Nov 30, 2024</td>
+                        <td style="text-align: right;">$1,226,120</td>
+                        <td style="text-align: right;">$402,220</td>
+                        <td style="text-align: right;" class="amount-cell">$823,900</td>
+                        <td style="text-align: right;" class="change-cell positive">+$31,450</td>
+                        <td style="text-align: right;" class="change-cell positive">+4.0%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Oct 31, 2024</td>
+                        <td style="text-align: right;">$1,198,560</td>
+                        <td style="text-align: right;">$406,110</td>
+                        <td style="text-align: right;" class="amount-cell">$792,450</td>
+                        <td style="text-align: right;" class="change-cell positive">+$24,110</td>
+                        <td style="text-align: right;" class="change-cell positive">+3.1%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Sep 30, 2024</td>
+                        <td style="text-align: right;">$1,178,450</td>
+                        <td style="text-align: right;">$410,110</td>
+                        <td style="text-align: right;" class="amount-cell">$768,340</td>
+                        <td style="text-align: right;" class="change-cell positive">+$23,220</td>
+                        <td style="text-align: right;" class="change-cell positive">+3.1%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Aug 31, 2024</td>
+                        <td style="text-align: right;">$1,159,340</td>
+                        <td style="text-align: right;">$414,220</td>
+                        <td style="text-align: right;" class="amount-cell">$745,120</td>
+                        <td style="text-align: right;" class="change-cell positive">+$21,230</td>
+                        <td style="text-align: right;" class="change-cell positive">+2.9%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Jul 31, 2024</td>
+                        <td style="text-align: right;">$1,142,220</td>
+                        <td style="text-align: right;">$418,330</td>
+                        <td style="text-align: right;" class="amount-cell">$723,890</td>
+                        <td style="text-align: right;" class="change-cell positive">+$18,450</td>
+                        <td style="text-align: right;" class="change-cell positive">+2.6%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Jun 30, 2024</td>
+                        <td style="text-align: right;">$1,126,880</td>
+                        <td style="text-align: right;">$421,440</td>
+                        <td style="text-align: right;" class="amount-cell">$705,440</td>
+                        <td style="text-align: right;" class="change-cell positive">+$15,890</td>
+                        <td style="text-align: right;" class="change-cell positive">+2.3%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">May 31, 2024</td>
+                        <td style="text-align: right;">$1,114,670</td>
+                        <td style="text-align: right;">$425,120</td>
+                        <td style="text-align: right;" class="amount-cell">$689,550</td>
+                        <td style="text-align: right;" class="change-cell negative">-$5,230</td>
+                        <td style="text-align: right;" class="change-cell negative">-0.8%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Apr 30, 2024</td>
+                        <td style="text-align: right;">$1,123,450</td>
+                        <td style="text-align: right;">$428,670</td>
+                        <td style="text-align: right;" class="amount-cell">$694,780</td>
+                        <td style="text-align: right;" class="change-cell positive">+$19,340</td>
+                        <td style="text-align: right;" class="change-cell positive">+2.9%</td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">Mar 31, 2024</td>
+                        <td style="text-align: right;">$1,107,890</td>
+                        <td style="text-align: right;">$432,450</td>
+                        <td style="text-align: right;" class="amount-cell">$675,440</td>
+                        <td style="text-align: right;" class="change-cell positive">+$22,120</td>
+                        <td style="text-align: right;" class="change-cell positive">+3.4%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
