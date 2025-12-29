@@ -1,0 +1,19 @@
+@startuml
+participant Scheduler
+participant ReminderService
+participant NotificationService
+participant User
+
+Scheduler -> ReminderService: CheckDueReminders()
+ReminderService -> ReminderService: GetPendingReminders()
+loop Each Reminder
+    ReminderService -> ReminderService: CheckQuietHours()
+    alt Not in quiet hours
+        ReminderService -> NotificationService: Send(reminder)
+        NotificationService -> User: Email/SMS/Push
+        ReminderService -> ReminderService: UpdateStatus(Sent)
+    end
+end
+User -> ReminderService: Acknowledge(reminderId)
+ReminderService -> ReminderService: UpdateStatus(Acknowledged)
+@enduml
