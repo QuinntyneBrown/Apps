@@ -1,0 +1,40 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+namespace AnniversaryBirthdayReminder.Core;
+
+/// <summary>
+/// Event raised when a reminder is scheduled.
+/// </summary>
+public record ReminderScheduledEvent
+{
+    /// <summary>
+    /// Gets the reminder ID.
+    /// </summary>
+    public Guid ReminderId { get; init; }
+
+    /// <summary>
+    /// Gets the important date ID.
+    /// </summary>
+    public Guid ImportantDateId { get; init; }
+
+    /// <summary>
+    /// Gets the scheduled delivery time.
+    /// </summary>
+    public DateTime ScheduledTime { get; init; }
+
+    /// <summary>
+    /// Gets the advance notice period in days.
+    /// </summary>
+    public int AdvanceNoticeDays { get; init; }
+
+    /// <summary>
+    /// Gets the delivery channel.
+    /// </summary>
+    public DeliveryChannel DeliveryChannel { get; init; }
+
+    /// <summary>
+    /// Gets the timestamp when the event occurred.
+    /// </summary>
+    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+}
