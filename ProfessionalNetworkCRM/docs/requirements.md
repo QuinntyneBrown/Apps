@@ -112,6 +112,9 @@ A comprehensive professional networking and relationship management application 
 
 **Functional Requirements**:
 - Log value provided to contacts (introductions, advice, resources, referrals)
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Record value received from contacts
 - Calculate reciprocity balance per relationship
 - Identify relationships that are one-sided

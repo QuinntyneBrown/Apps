@@ -128,6 +128,8 @@ Bucket List Manager helps users create, track, and achieve their life goals and 
 - Store motivational quotes linked to items
 - Manage "why" statements for goals
 - Track peer support requests and accountability
+  - **AC1**: Historical data is preserved and queryable
+  - **AC2**: Tracking data is accurately timestamped
 - Store values connections
 
 #### Frontend Requirements

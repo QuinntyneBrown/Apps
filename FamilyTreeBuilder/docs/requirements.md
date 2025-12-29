@@ -145,7 +145,13 @@ FamilyTreeBuilder is a comprehensive genealogy and family history platform that 
 ## User Roles
 - **Tree Owner**: Full control of primary tree
 - **Editor**: Can add and modify tree information
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **Contributor**: Can add stories and photos
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **Viewer**: Read-only access to tree
 - **Researcher**: Access to research features
 

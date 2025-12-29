@@ -100,6 +100,9 @@ HouseholdBudgetManager is a collaborative budgeting platform designed to help ho
 ### Alert Events
 - **LowBudgetWarning**: Category approaching limit
 - **SurplusDetected**: Significant unspent budget
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### Reconciliation Events
 - **AccountReconciled**: Expenses matched to statements

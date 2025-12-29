@@ -22,85 +22,279 @@ AnniversaryBirthdayReminder is a comprehensive celebration tracking system desig
 ## Core Features
 
 ### 1. Important Date Management
-- Add, edit, and delete important dates
-- Support for birthdays, anniversaries, and custom occasions
-- Recurring date patterns (annual, custom)
-- Person and relationship tracking
-- Date categorization and tagging
+- **FR-1.1**: Add, edit, and delete important dates
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+  - **AC4**: Existing data is pre-populated in the edit form
+- **FR-1.2**: Support for birthdays, anniversaries, and custom occasions
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.3**: Recurring date patterns (annual, custom)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.4**: Person and relationship tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.5**: Date categorization and tagging
+  - **AC1**: Categories/tags can be created, edited, and deleted
+  - **AC2**: Items can be assigned to multiple categories
+  - **AC3**: Category changes are reflected immediately
 
 ### 2. Smart Reminders
-- Configurable reminder schedules (weeks, days, hours before)
-- Multiple notification channels (email, SMS, push)
-- Snooze and dismiss functionality
-- Custom reminder messages
-- Quiet hours support
+- **FR-2.1**: Configurable reminder schedules (weeks, days, hours before)
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-2.2**: Multiple notification channels (email, SMS, push)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.3**: Snooze and dismiss functionality
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.4**: Custom reminder messages
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-2.5**: Quiet hours support
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 3. Gift Planning
-- Add and track gift ideas
-- Price estimation and budgeting
-- Purchase tracking
-- Shopping list integration
-- Gift delivery confirmation
+- **FR-3.1**: Add and track gift ideas
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+  - **AC4**: Historical data is preserved and accessible
+- **FR-3.2**: Price estimation and budgeting
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.3**: Purchase tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-3.4**: Shopping list integration
+  - **AC1**: Data is displayed in a clear, organized format
+  - **AC2**: View loads within acceptable performance limits
+  - **AC3**: Empty states are handled with appropriate messaging
+- **FR-3.5**: Gift delivery confirmation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 4. Celebration Tracking
-- Mark celebrations as completed
-- Add photos and notes
-- Record attendees and reactions
-- Celebration history timeline
-- Year-over-year comparison
+- **FR-4.1**: Mark celebrations as completed
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.2**: Add photos and notes
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-4.3**: Record attendees and reactions
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-4.4**: Celebration history timeline
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-4.5**: Year-over-year comparison
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 5. People Management
-- Maintain list of important people
-- Relationship categorization
-- Contact information storage
-- Multiple dates per person
-- Relationship insights
+- **FR-5.1**: Maintain list of important people
+  - **AC1**: Data is displayed in a clear, organized format
+  - **AC2**: View loads within acceptable performance limits
+  - **AC3**: Empty states are handled with appropriate messaging
+  - **AC4**: Import process validates data format
+- **FR-5.2**: Relationship categorization
+  - **AC1**: Categories/tags can be created, edited, and deleted
+  - **AC2**: Items can be assigned to multiple categories
+  - **AC3**: Category changes are reflected immediately
+- **FR-5.3**: Contact information storage
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.4**: Multiple dates per person
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.5**: Relationship insights
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ## Domain Events
 
 ### Important Date Events
-- **ImportantDateCreated**: Triggered when a new important date is added
-- **ImportantDateUpdated**: Triggered when date details are modified
-- **ImportantDateDeleted**: Triggered when a date is removed
+- **FR-6.1**: **ImportantDateCreated**: Triggered when a new important date is added
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+  - **AC4**: Import process validates data format
+- **FR-6.2**: **ImportantDateUpdated**: Triggered when date details are modified
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
+  - **AC4**: Import process validates data format
+- **FR-6.3**: **ImportantDateDeleted**: Triggered when a date is removed
+  - **AC1**: Confirmation is required before deletion
+  - **AC2**: Deleted items are removed from all views
+  - **AC3**: Related data is handled appropriately
+  - **AC4**: Import process validates data format
 
 ### Reminder Events
-- **ReminderScheduled**: Triggered when a reminder is scheduled
-- **ReminderSent**: Triggered when a reminder is delivered
-- **ReminderDismissed**: Triggered when user dismisses a reminder
-- **ReminderSnoozed**: Triggered when user snoozes a reminder
+- **FR-7.1**: **ReminderScheduled**: Triggered when a reminder is scheduled
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-7.2**: **ReminderSent**: Triggered when a reminder is delivered
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-7.3**: **ReminderDismissed**: Triggered when user dismisses a reminder
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-7.4**: **ReminderSnoozed**: Triggered when user snoozes a reminder
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
 
 ### Gift Events
-- **GiftIdeaAdded**: Triggered when a gift idea is added
-- **GiftPurchased**: Triggered when a gift is marked as purchased
-- **GiftDelivered**: Triggered when a gift is given
+- **FR-8.1**: **GiftIdeaAdded**: Triggered when a gift idea is added
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-8.2**: **GiftPurchased**: Triggered when a gift is marked as purchased
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.3**: **GiftDelivered**: Triggered when a gift is given
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Celebration Events
-- **CelebrationCompleted**: Triggered when an occasion is celebrated
-- **CelebrationSkipped**: Triggered when a date passes without celebration
+- **FR-9.1**: **CelebrationCompleted**: Triggered when an occasion is celebrated
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.2**: **CelebrationSkipped**: Triggered when a date passes without celebration
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ## Technical Architecture
 
 ### Backend
-- .NET 8.0 Web API
-- SQL Server database
-- Domain-driven design with domain events
-- CQRS pattern for command/query separation
-- Background jobs for reminder scheduling
-- Notification service integration
+- **FR-10.1**: .NET 8.0 Web API
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-10.2**: SQL Server database
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-10.3**: Domain-driven design with domain events
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-10.4**: CQRS pattern for command/query separation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-10.5**: Background jobs for reminder scheduling
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-10.6**: Notification service integration
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Frontend
-- Modern SPA (Single Page Application)
-- Responsive design for mobile and desktop
-- Real-time notifications
-- Calendar and timeline views
-- Interactive gift planning interface
+- **FR-11.1**: Modern SPA (Single Page Application)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.2**: Responsive design for mobile and desktop
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.3**: Real-time notifications
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.4**: Calendar and timeline views
+  - **AC1**: Data is displayed in a clear, organized format
+  - **AC2**: View loads within acceptable performance limits
+  - **AC3**: Empty states are handled with appropriate messaging
+- **FR-11.5**: Interactive gift planning interface
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Integration Points
-- Email notification services
-- SMS gateway (Twilio, etc.)
-- Push notification services
-- Calendar synchronization (Google Calendar, iCal)
-- Shopping platforms for gift links
+- **FR-12.1**: Email notification services
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.2**: SMS gateway (Twilio, etc.)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.3**: Push notification services
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.4**: Calendar synchronization (Google Calendar, iCal)
+  - **AC1**: Import process validates data format
+  - **AC2**: Conflicts are detected and reported
+  - **AC3**: Progress indicator is shown during import
+- **FR-12.5**: Shopping platforms for gift links
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ## User Roles
 - **Primary User**: Full access to all features

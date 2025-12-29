@@ -33,8 +33,20 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 
 **User Stories**:
 - As a golfer, I want to start a round on the course so I can track my score in real-time
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 - As a competitive player, I want to record all round details so I can analyze my performance later
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Input validation prevents invalid data from being submitted
 - As a casual player, I want to quickly log my scores so I can track improvement over time
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 
 ### 2. Scorecard & Hole Tracking
 **Description**: Hole-by-hole scoring with detailed statistics.
@@ -50,7 +62,14 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 **User Stories**:
 - As a golfer, I want to enter my score for each hole so I have an accurate round total
 - As a stats enthusiast, I want to track fairways and greens so I can identify strengths and weaknesses
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 - As a learner, I want to note what went wrong on bad holes so I can learn from mistakes
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### 3. Handicap Management
 **Description**: Calculate and track official USGA handicap index.
@@ -64,6 +83,9 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 
 **User Stories**:
 - As a club golfer, I want an accurate handicap so I can compete fairly
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As an improving player, I want to see my handicap trend so I know I'm getting better
 - As a goal-setter, I want to track progress toward single-digit handicap
 
@@ -97,6 +119,9 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 
 **User Stories**:
 - As a data-driven player, I want detailed statistics so I can focus practice effectively
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a competitive golfer, I want to track my scoring average so I know my true level
 - As a coach, I want to see where my game needs work
 
@@ -113,6 +138,9 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 **User Stories**:
 - As a motivated golfer, I want to set a goal to break 80 so I have something to work toward
 - As an achiever, I want to celebrate my first eagle so I can share the accomplishment
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a consistent player, I want to track my par streak
 
 ### 7. Performance Insights
@@ -128,6 +156,9 @@ The Golf Score Tracker is a comprehensive mobile and web application for golfers
 **User Stories**:
 - As a learner, I want insights on what to practice so I improve efficiently
 - As a competitive player, I want to know my weaknesses so I can address them
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a casual golfer, I want simple suggestions for improvement
 
 ### 8. Equipment Tracking

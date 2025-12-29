@@ -45,6 +45,9 @@ SideHustleIncomeTracker is a comprehensive side business and freelance income ma
 ### 3. Expense Management
 - Log business expenses by category
 - Attach receipts and supporting documentation
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Tag expenses as tax-deductible
 - Track expenses by income stream
 - Monitor category budgets and spending limits

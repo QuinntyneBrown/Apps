@@ -23,6 +23,10 @@ KidsActivitySportsTracker is a comprehensive management system designed to help 
 - Calendar integration (Google Calendar, iCal)
 - Schedule change notifications
 - Event cancellation alerts
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Notifications are delivered within the specified timeframe
 - Conflict detection
 
 ### 3. Attendance Tracking
@@ -70,6 +74,9 @@ KidsActivitySportsTracker is a comprehensive management system designed to help 
 
 ### Schedule
 - PracticeScheduled, GameScheduled, ScheduleChanged, EventCancelled
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### Attendance
 - AttendanceMarked, AttendanceStreakAchieved, ExcusedAbsenceLogged

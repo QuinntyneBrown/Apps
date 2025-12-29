@@ -24,89 +24,291 @@ InvestmentPortfolioTracker is a comprehensive portfolio management system design
 ## Core Features
 
 ### 1. Portfolio Management
-- Create and manage multiple portfolios
-- Define target asset allocation strategies
-- Track portfolio values in real-time
-- Rebalance portfolios to target allocations
-- Portfolio comparison and analysis
+- **FR-1.1**: Create and manage multiple portfolios
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-1.2**: Define target asset allocation strategies
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.3**: Track portfolio values in real-time
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.4**: Rebalance portfolios to target allocations
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.5**: Portfolio comparison and analysis
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 2. Position Tracking
-- Record buy/sell transactions
-- Track cost basis and tax lots
-- Monitor position gains/losses
-- Calculate realized and unrealized gains
-- Track dividends and distributions
+- **FR-2.1**: Record buy/sell transactions
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-2.2**: Track cost basis and tax lots
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-2.3**: Monitor position gains/losses
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.4**: Calculate realized and unrealized gains
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.5**: Track dividends and distributions
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
 
 ### 3. Account Integration
-- Link brokerage and retirement accounts
-- Automatic holdings synchronization
-- Manual position entry support
-- Transaction history import
-- Account balance reconciliation
+- **FR-3.1**: Link brokerage and retirement accounts
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.2**: Automatic holdings synchronization
+  - **AC1**: Import process validates data format
+  - **AC2**: Conflicts are detected and reported
+  - **AC3**: Progress indicator is shown during import
+- **FR-3.3**: Manual position entry support
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.4**: Transaction history import
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+  - **AC4**: Import process validates data format
+- **FR-3.5**: Account balance reconciliation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 4. Performance Analytics
-- Time-weighted and money-weighted returns
-- Benchmark comparison (S&P 500, etc.)
-- Performance attribution analysis
-- Sector and geographic exposure
-- Risk metrics (volatility, Sharpe ratio)
+- **FR-4.1**: Time-weighted and money-weighted returns
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.2**: Benchmark comparison (S&P 500, etc.)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.3**: Performance attribution analysis
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.4**: Sector and geographic exposure
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.5**: Risk metrics (volatility, Sharpe ratio)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 5. Alerts & Notifications
-- Price target alerts
-- Portfolio loss limit warnings
-- Allocation drift notifications
-- Concentration risk detection
-- Dividend payment reminders
+- **FR-5.1**: Price target alerts
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-5.2**: Portfolio loss limit warnings
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.3**: Allocation drift notifications
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.4**: Concentration risk detection
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.5**: Dividend payment reminders
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
 
 ## Domain Events
 
 ### Portfolio Events
-- **PortfolioCreated**: Triggered when new portfolio is created
-- **PortfolioRebalanced**: Triggered when portfolio is rebalanced
-- **PortfolioValueUpdated**: Triggered when portfolio value changes
+- **FR-6.1**: **PortfolioCreated**: Triggered when new portfolio is created
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-6.2**: **PortfolioRebalanced**: Triggered when portfolio is rebalanced
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.3**: **PortfolioValueUpdated**: Triggered when portfolio value changes
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
 
 ### Position Events
-- **PositionOpened**: Triggered when new position is established
-- **PositionIncreased**: Triggered when position is added to
-- **PositionReduced**: Triggered when position is partially sold
-- **PositionClosed**: Triggered when position is fully liquidated
+- **FR-7.1**: **PositionOpened**: Triggered when new position is established
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.2**: **PositionIncreased**: Triggered when position is added to
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-7.3**: **PositionReduced**: Triggered when position is partially sold
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.4**: **PositionClosed**: Triggered when position is fully liquidated
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Account Events
-- **InvestmentAccountLinked**: Triggered when account is connected
-- **AccountHoldingsImported**: Triggered when holdings are synced
-- **AccountSyncFailed**: Triggered when sync encounters error
+- **FR-8.1**: **InvestmentAccountLinked**: Triggered when account is connected
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.2**: **AccountHoldingsImported**: Triggered when holdings are synced
+  - **AC1**: Import process validates data format
+  - **AC2**: Conflicts are detected and reported
+  - **AC3**: Progress indicator is shown during import
+- **FR-8.3**: **AccountSyncFailed**: Triggered when sync encounters error
+  - **AC1**: Import process validates data format
+  - **AC2**: Conflicts are detected and reported
+  - **AC3**: Progress indicator is shown during import
 
 ### Performance Events
-- **PerformanceCalculated**: Triggered when metrics are computed
-- **BenchmarkOutperformed**: Triggered when portfolio beats benchmark
-- **AllocationDriftDetected**: Triggered when allocation exceeds tolerance
+- **FR-9.1**: **PerformanceCalculated**: Triggered when metrics are computed
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.2**: **BenchmarkOutperformed**: Triggered when portfolio beats benchmark
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.3**: **AllocationDriftDetected**: Triggered when allocation exceeds tolerance
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Dividend Events
-- **DividendReceived**: Triggered when dividend is paid
-- **DividendReinvested**: Triggered when dividend purchases shares
+- **FR-10.1**: **DividendReceived**: Triggered when dividend is paid
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-10.2**: **DividendReinvested**: Triggered when dividend purchases shares
+  - **AC1**: Export includes all relevant data fields
+  - **AC2**: Export format is compatible with common tools
+  - **AC3**: Large exports are handled without timeout
 
 ## Technical Architecture
 
 ### Backend
-- .NET 8.0 Web API
-- SQL Server database
-- Domain-driven design with domain events
-- CQRS pattern for command/query separation
-- Event sourcing for transaction history
-- Background jobs for market data updates
+- **FR-11.1**: .NET 8.0 Web API
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.2**: SQL Server database
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.3**: Domain-driven design with domain events
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.4**: CQRS pattern for command/query separation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-11.5**: Event sourcing for transaction history
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-11.6**: Background jobs for market data updates
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
 
 ### Frontend
-- Modern SPA (Single Page Application)
-- Responsive design for mobile and desktop
-- Real-time price updates via WebSocket
-- Interactive charts and visualizations
-- Dashboard with key metrics
+- **FR-12.1**: Modern SPA (Single Page Application)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.2**: Responsive design for mobile and desktop
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.3**: Real-time price updates via WebSocket
+  - **AC1**: Existing data is pre-populated in the edit form
+  - **AC2**: Changes are validated before saving
+  - **AC3**: Updated data is reflected immediately after save
+- **FR-12.4**: Interactive charts and visualizations
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-12.5**: Dashboard with key metrics
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### Integration Points
-- Market data APIs (prices, quotes)
-- Brokerage APIs (Plaid, etc.)
-- Email/SMS notification services
-- Tax reporting integrations
+- **FR-13.1**: Market data APIs (prices, quotes)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-13.2**: Brokerage APIs (Plaid, etc.)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-13.3**: Email/SMS notification services
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-13.4**: Tax reporting integrations
+  - **AC1**: Export includes all relevant data fields
+  - **AC2**: Export format is compatible with common tools
+  - **AC3**: Large exports are handled without timeout
 
 ## User Roles
 - **Investor**: Full access to all features

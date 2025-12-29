@@ -13,6 +13,9 @@ TaxDeductionOrganizer is a comprehensive tax deduction tracking and organization
 ## System Purpose
 - Track all tax-deductible expenses throughout the year
 - Upload and OCR process receipts and supporting documents
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Categorize deductions by IRS tax forms (Schedule A, C, etc.)
 - Monitor category limits and audit triggers
 - Calculate home office, mileage, and charitable deductions
@@ -23,6 +26,9 @@ TaxDeductionOrganizer is a comprehensive tax deduction tracking and organization
 ### 1. Deduction Recording
 - Log deductible expenses with amount, category, date
 - Attach receipts and supporting documentation
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Tag expenses with IRS categories
 - Flag questionable deductions for review
 - Track cash and non-cash donations
@@ -32,6 +38,10 @@ TaxDeductionOrganizer is a comprehensive tax deduction tracking and organization
 - OCR processing to extract data
 - Auto-match receipts to deductions
 - Quality checking and re-scan alerts
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Notifications are delivered within the specified timeframe
 - 7-year retention compliance
 
 ### 3. Category Organization

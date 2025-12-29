@@ -33,8 +33,19 @@ The Fuel Economy Tracker is a comprehensive web application designed to help veh
 
 **User Stories**:
 - As a driver, I want to log each fuel purchase so I can track my fuel consumption
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 - As a cost-conscious user, I want to rate fuel stations so I can find the best value
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a budget planner, I want to track fuel price trends so I can time my fill-ups strategically
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 
 ### 2. Fuel Economy Calculation
 **Description**: Automatically calculate and track miles per gallon (MPG) based on fill-up data.
@@ -51,7 +62,14 @@ The Fuel Economy Tracker is a comprehensive web application designed to help veh
 **User Stories**:
 - As a driver, I want automatic MPG calculations so I don't have to do math manually
 - As an efficiency enthusiast, I want to see my personal best MPG so I can try to beat it
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a vehicle owner, I want alerts when MPG declines so I can investigate issues
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Notifications are delivered within the specified timeframe
 
 ### 3. Trip Tracking
 **Description**: Log individual trips with detailed information about driving conditions and purposes.
@@ -67,6 +85,10 @@ The Fuel Economy Tracker is a comprehensive web application designed to help veh
 
 **User Stories**:
 - As a commuter, I want to track my daily trips so I can optimize my route
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 - As a business traveler, I want trip logs for expense reimbursement
 - As a data enthusiast, I want to see how different conditions affect my MPG
 
@@ -84,6 +106,9 @@ The Fuel Economy Tracker is a comprehensive web application designed to help veh
 
 **User Stories**:
 - As a budget-conscious driver, I want to set a monthly fuel budget so I can control spending
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a tax payer, I want annual fuel cost reports for deductions
 - As a financial planner, I want to project annual fuel costs for budgeting
 
@@ -101,6 +126,9 @@ The Fuel Economy Tracker is a comprehensive web application designed to help veh
 
 **User Stories**:
 - As an eco-driver, I want driving tips so I can improve my MPG
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - As a goal-oriented user, I want to set MPG targets and track progress
 - As a route planner, I want to find the most fuel-efficient routes
 

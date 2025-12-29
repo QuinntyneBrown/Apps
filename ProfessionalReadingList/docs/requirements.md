@@ -31,6 +31,8 @@ A comprehensive reading management application designed for professionals to dis
 - Mark reading as started with timestamp
 - Update progress manually (percentage, pages, chapters)
 - Auto-track progress for supported digital formats
+  - **AC1**: Historical data is preserved and queryable
+  - **AC2**: Tracking data is accurately timestamped
 - Mark materials as completed with completion date
 - Abandon readings with reason tracking
 - Track total time spent reading

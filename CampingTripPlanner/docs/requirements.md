@@ -18,6 +18,9 @@ Comprehensive camping trip planning and management application for organizing ou
 - Make campsite reservations
 - Create detailed itineraries
 - Handle trip cancellations
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Group trip coordination
 
 ### 2. Campsite Discovery & Rating

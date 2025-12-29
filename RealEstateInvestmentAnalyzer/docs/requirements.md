@@ -25,8 +25,15 @@ RealEstateInvestmentAnalyzer is a comprehensive property investment analysis sys
 
 ### 3. Income Tracking
 - Project rental income with vacancy rates
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Record actual rental payments
 - Track vacancies and leasing
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
+  - **AC4**: Historical data is preserved and queryable
 - Monitor rental rate growth
 
 ### 4. Expense Management
@@ -51,6 +58,9 @@ RealEstateInvestmentAnalyzer is a comprehensive property investment analysis sys
 - PropertyAdded, PropertyPurchased, PropertySold, PropertyValueUpdated
 - InvestmentAnalysisPerformed, CashFlowProjected, ROICalculated
 - RentalIncomeProjected, RentalIncomeReceived, VacancyOccurred, PropertyRented
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - OperatingExpenseRecorded, CapitalExpenditureLogged, PropertyTaxAssessed
 - MortgageObtained, MortgagePaymentMade, RefinanceCompleted
 - CapRateCalculated, DebtServiceCoverageCalculated, MarketConditionsUpdated

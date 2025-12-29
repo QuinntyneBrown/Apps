@@ -29,6 +29,9 @@ Enable users to create, modify, archive, and reactivate habits with flexible sch
 - Create habits with name, description, category, frequency
 - Daily, weekly, or custom frequency patterns
 - Start date configuration (can backdate up to 30 days)
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Reminder settings integration
 - Archive inactive habits (data retained)
 - Reactivate archived habits
@@ -46,10 +49,19 @@ Enable users to create, modify, archive, and reactivate habits with flexible sch
 
 ### Business Rules
 - Habit names must be unique per user
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Users can have unlimited habits
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Archived habits hidden but data retained
 - Reactivating resets streak
 - StartDate can be backdated up to 30 days
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Habits only deletable if no completion history
 
 ---
@@ -166,6 +178,9 @@ Enable users to add accountability partners for progress monitoring, encourageme
 ### Business Rules
 - Max 5 active accountability partners
 - Partners must accept invitation
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Visibility based on permission level
 - Auto-alert after 3+ consecutive misses
 - Weekly check-in reminders
@@ -181,6 +196,9 @@ Track achievements, detect motivation dips, celebrate personal bests, and provid
 
 ### Domain Events
 - **MilestoneAchieved**: When significant achievement reached
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **MotivationDipDetected**: When declining engagement detected
 - **PersonalBestSet**: When new personal record set
 
@@ -213,6 +231,9 @@ Track achievements, detect motivation dips, celebrate personal bests, and provid
 - Interventions include easier habits, partner notification
 - Points redeemable for features
 - Achievements cannot be lost once earned
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ---
 
@@ -347,6 +368,9 @@ Provide insights into habit patterns, success factors, and trends to help users 
 - Forms: React Hook Form + Zod validation
 - API client: Axios or React Query
 - PWA support for offline functionality
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 
 ### Infrastructure
 - Docker containers
@@ -394,6 +418,9 @@ Provide insights into habit patterns, success factors, and trends to help users 
 - 99.9% uptime SLA
 - Graceful degradation
 - Offline support for core features
+  - **AC1**: Feature is accessible to authorized users
+  - **AC2**: Feature performs the specified function correctly
+  - **AC3**: Feature handles error conditions gracefully
 - Automatic failover
 
 ### Scalability
@@ -437,6 +464,9 @@ Provide insights into habit patterns, success factors, and trends to help users 
 - Unit test execution
 - Integration test execution
 - Security scanning
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - Code quality checks
 - Automated deployment
 

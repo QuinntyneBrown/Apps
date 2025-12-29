@@ -6,77 +6,288 @@ A comprehensive compensation tracking application enabling professionals to docu
 ## Core Features
 
 ### 1. Compensation History
-- Record base salary with effective dates
-- Track salary increases and raises
-- Document bonuses (performance, signing, retention)
-- Log stock/equity grants (RSU, ISO, NSO)
-- Track negotiation outcomes
-- Support multiple jobs/employers
-- Multi-currency support
+- **FR-1.1**: Record base salary with effective dates
+  - **AC1**: Given the user is authenticated, the add/create form is accessible
+  - **AC2**: When valid data is submitted, the item is created successfully
+  - **AC3**: Then the user receives confirmation and the new item appears in the list
+- **FR-1.2**: Track salary increases and raises
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.3**: Document bonuses (performance, signing, retention)
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.4**: Log stock/equity grants (RSU, ISO, NSO)
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.5**: Track negotiation outcomes
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-1.6**: Support multiple jobs/employers
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-1.7**: Multi-currency support
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 2. Total Compensation Calculation
-- Base salary tracking
-- Bonus annualization
-- Equity vesting schedules
-- Benefits monetary value
-- Employer retirement contributions
-- Perks and allowances
-- Comprehensive total comp dashboard
+- **FR-2.1**: Base salary tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-2.2**: Bonus annualization
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.3**: Equity vesting schedules
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.4**: Benefits monetary value
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.5**: Employer retirement contributions
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.6**: Perks and allowances
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-2.7**: Comprehensive total comp dashboard
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 3. Market Rate Comparison
-- Compare salary to market rates
-- Industry benchmarking
-- Location-based adjustments
-- Experience level comparisons
-- Job title standardization
-- Market trend analysis
-- Negotiation leverage insights
+- **FR-3.1**: Compare salary to market rates
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.2**: Industry benchmarking
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.3**: Location-based adjustments
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.4**: Experience level comparisons
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.5**: Job title standardization
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.6**: Market trend analysis
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-3.7**: Negotiation leverage insights
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 4. Benefits Tracking
-- Health insurance details and costs
-- Retirement plan (401k, pension) tracking
-- Employer match calculations
-- PTO/vacation days
-- Remote work allowance
-- Professional development budget
-- Other perks valuation
+- **FR-4.1**: Health insurance details and costs
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.2**: Retirement plan (401k, pension) tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-4.3**: Employer match calculations
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.4**: PTO/vacation days
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.5**: Remote work allowance
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.6**: Professional development budget
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-4.7**: Other perks valuation
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 5. Equity Management
-- Stock grant tracking
-- Vesting schedule reminders
-- Equity value calculator
-- Tax implications estimator
-- Exercise strategy planning
-- Secondary market value tracking
+- **FR-5.1**: Stock grant tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
+- **FR-5.2**: Vesting schedule reminders
+  - **AC1**: Notifications are delivered at the scheduled time
+  - **AC2**: Users can configure notification preferences
+  - **AC3**: Notification content is clear and actionable
+- **FR-5.3**: Equity value calculator
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.4**: Tax implications estimator
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.5**: Exercise strategy planning
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-5.6**: Secondary market value tracking
+  - **AC1**: Historical data is preserved and accessible
+  - **AC2**: Timestamps are accurate and consistently formatted
+  - **AC3**: Data can be filtered by date range
 
 ### 6. Tax Planning
-- Tax bracket calculator
-- Estimated tax liability
-- Pre-tax vs post-tax benefits
-- Equity tax scenarios
-- Deduction opportunities
-- W2/1099 support
+- **FR-6.1**: Tax bracket calculator
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.2**: Estimated tax liability
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.3**: Pre-tax vs post-tax benefits
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.4**: Equity tax scenarios
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.5**: Deduction opportunities
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-6.6**: W2/1099 support
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 7. Financial Projections
-- Future compensation projections
-- Retirement savings forecast
-- Equity vesting timeline
-- Career earnings trajectory
-- Goal-based planning
+- **FR-7.1**: Future compensation projections
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.2**: Retirement savings forecast
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.3**: Equity vesting timeline
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.4**: Career earnings trajectory
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-7.5**: Goal-based planning
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 8. Negotiation Tools
-- Offer comparison framework
-- Negotiation scripts and tips
-- Counter-offer calculator
-- Total comp comparison charts
-- Historical negotiation results
+- **FR-8.1**: Offer comparison framework
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.2**: Negotiation scripts and tips
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.3**: Counter-offer calculator
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.4**: Total comp comparison charts
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-8.5**: Historical negotiation results
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ### 9. Career Analytics
-- Compensation growth rate
-- Time between raises
-- Job change ROI analysis
-- Industry mobility trends
-- Career progression insights
+- **FR-9.1**: Compensation growth rate
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.2**: Time between raises
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.3**: Job change ROI analysis
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.4**: Industry mobility trends
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
+- **FR-9.5**: Career progression insights
+  - **AC1**: Given an authenticated user, the feature is accessible
+  - **AC2**: When the feature is used correctly, it performs as expected
+  - **AC3**: Then appropriate feedback is provided to the user
+  - **AC4**: The feature handles edge cases gracefully
 
 ## Technical Requirements
 - Secure encryption for sensitive financial data

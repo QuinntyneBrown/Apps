@@ -49,6 +49,9 @@ BillPaymentScheduler is a comprehensive bill tracking and payment scheduling sys
 - Safety limits and approval workflows
 - Autopay status monitoring
 - Rollback and cancellation options
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 
 ### 5. Cash Flow Analysis
 - Monthly cash flow projections
@@ -69,6 +72,9 @@ BillPaymentScheduler is a comprehensive bill tracking and payment scheduling sys
 - **PaymentScheduled**: Triggered when a payment is scheduled
 - **PaymentExecuted**: Triggered when a payment is successfully processed
 - **PaymentCancelled**: Triggered when a scheduled payment is cancelled
+  - **AC1**: Given a valid user session, the feature is accessible from the appropriate UI location
+  - **AC2**: When the user performs the action, the system responds within acceptable performance limits
+  - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - **PaymentFailed**: Triggered when a payment processing fails
 
 ### Reminder Events
