@@ -41,6 +41,20 @@ The following architectural constraints are fundamental to the FriendGroupEventC
 ### 2.1 Namespace Architecture
 **REQ-SYS-001**: The system SHALL use flattened namespaces throughout all projects.
 
+**REQ-SYS-001-A**: **CRITICAL** - All backend code namespaces SHALL exactly match the file's physical location within the project structure. The namespace declaration in each file SHALL correspond to the folder path where the file resides.
+
+**Example (Compliant):**
+```
+// File: {AppName}.Core/Model/{Aggregate}Aggregate/Events/{Event}.cs
+namespace {AppName}.Core.Model.{Aggregate}Aggregate.Events;
+```
+
+**Example (Non-Compliant):**
+```
+// File: {AppName}.Core/Model/{Aggregate}Aggregate/Events/{Event}.cs
+namespace {AppName}.Core;  // Does not match file location
+```
+
 ### 2.8 Frontend Theme and Colours
 **REQ-SYS-011**: The frontend SHALL use the default Angular Material colours and theme. No new colours are to be introduced.
 
