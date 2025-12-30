@@ -1,0 +1,99 @@
+<div class="dashboard">
+  @if (viewModel$ | async; as vm) {
+    <div class="dashboard__content">
+      <aside class="dashboard__sidebar">
+        <mat-card class="dashboard__members-card">
+          <mat-card-header>
+            <mat-card-title>Family Members</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="dashboard__members-list">
+              @for (member of vm.members; track member.memberId) {
+                <div class="dashboard__member-item" [routerLink]="['/family-members']">
+                  <div class="dashboard__member-avatar" [style.background-color]="member.color">
+                    {{ getMemberInitials(member) }}
+                  </div>
+                  <div class="dashboard__member-info">
+                    <span class="dashboard__member-name">{{ member.name }}</span>
+                    <span class="dashboard__member-events">{{ member.role }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <app-mini-calendar
+            [selectedDate]="selectedDate"
+            [eventDates]="vm.eventDates"
+            (dateSelect)="onDateSelect($event)">
+          </app-mini-calendar>
+        </mat-card>
+      </aside>
+
+      <main class="dashboard__main">
+        <div class="dashboard__header">
+          <div class="dashboard__date-nav">
+            <h1 class="dashboard__current-date">
+              {{ selectedDate | date:'EEEE, MMMM d, yyyy' }}
+            </h1>
+          </div>
+          <button mat-raised-button color="primary" (click)="openAddEventDialog(vm.members)">
+            <mat-icon>add</mat-icon>
+            Add Event
+          </button>
+        </div>
+
+        <div class="dashboard__stats">
+          <mat-card class="dashboard__stat-card">
+            <div class="dashboard__stat-number">{{ vm.stats.eventsThisWeek }}</div>
+            <div class="dashboard__stat-label">Events This Week</div>
+          </mat-card>
+          <mat-card class="dashboard__stat-card">
+            <div class="dashboard__stat-number">{{ vm.stats.conflictsDetected }}</div>
+            <div class="dashboard__stat-label">Conflicts Detected</div>
+          </mat-card>
+          <mat-card class="dashboard__stat-card">
+            <div class="dashboard__stat-number">{{ vm.stats.pendingRsvps }}</div>
+            <div class="dashboard__stat-label">Pending RSVPs</div>
+          </mat-card>
+        </div>
+
+        <mat-card class="dashboard__events-card">
+          <mat-card-header>
+            <mat-card-title>Today's Events</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (vm.todayEvents.length === 0) {
+              <div class="dashboard__empty-state">
+                <mat-icon>event_available</mat-icon>
+                <p>No events scheduled for today</p>
+                <button mat-stroked-button color="primary" (click)="openAddEventDialog(vm.members)">
+                  Add an Event
+                </button>
+              </div>
+            } @else {
+              <div class="dashboard__events-list">
+                @for (event of vm.todayEvents; track event.eventId) {
+                  <app-event-card
+                    [event]="event"
+                    [members]="vm.members"
+                    [attendees]="getAttendeesForEvent(event.eventId)"
+                    [hasConflict]="hasConflict(event, vm.conflicts)"
+                    (eventClick)="onEventClick($event)">
+                  </app-event-card>
+                }
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </main>
+    </div>
+  } @else {
+    <div class="dashboard__loading">
+      <mat-icon>hourglass_empty</mat-icon>
+      <p>Loading...</p>
+    </div>
+  }
+</div>
