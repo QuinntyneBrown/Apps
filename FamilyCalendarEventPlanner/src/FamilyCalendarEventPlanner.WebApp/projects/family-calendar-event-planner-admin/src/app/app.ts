@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { NgIf, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -21,7 +21,6 @@ import { map } from 'rxjs/operators';
     MatIconModule,
     MatButtonModule,
     MatListModule,
-    NgIf,
     AsyncPipe
   ],
   templateUrl: './app.html',
