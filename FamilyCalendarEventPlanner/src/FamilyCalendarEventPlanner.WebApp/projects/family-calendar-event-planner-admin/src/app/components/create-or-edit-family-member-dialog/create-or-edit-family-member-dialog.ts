@@ -84,7 +84,7 @@ export class CreateOrEditFamilyMemberDialog {
       role: [data.member?.role ?? 1, Validators.required],
       isImmediate: [data.member?.isImmediate ?? true],
       relationType: [data.member?.relationType || 'Self', Validators.required]
-        });
+    });
   }
 
   get isEditMode(): boolean {

@@ -6,6 +6,7 @@ public class FamilyMember
 {
     public Guid MemberId { get; private set; }
     public Guid FamilyId { get; private set; }
+    public Guid? HouseholdId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Email { get; private set; }
     public string Color { get; private set; } = string.Empty;
@@ -24,7 +25,8 @@ public class FamilyMember
         string color,
         MemberRole role = MemberRole.Member,
         bool isImmediate = true,
-        RelationType relationType = RelationType.Self)
+        RelationType relationType = RelationType.Self,
+        Guid? householdId = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -38,6 +40,7 @@ public class FamilyMember
 
         MemberId = Guid.NewGuid();
         FamilyId = familyId;
+        HouseholdId = householdId;
         Name = name;
         Email = string.IsNullOrWhiteSpace(email) ? null : email;
         Color = color;
@@ -51,7 +54,9 @@ public class FamilyMember
         string? email = null,
         string? color = null,
         bool? isImmediate = null,
-        RelationType? relationType = null)
+        RelationType? relationType = null,
+        Guid? householdId = null,
+        bool clearHousehold = false)
     {
         if (name != null)
         {
@@ -86,6 +91,15 @@ public class FamilyMember
         if (relationType.HasValue)
         {
             RelationType = relationType.Value;
+        }
+
+        if (clearHousehold)
+        {
+            HouseholdId = null;
+        }
+        else if (householdId.HasValue)
+        {
+            HouseholdId = householdId.Value;
         }
     }
 

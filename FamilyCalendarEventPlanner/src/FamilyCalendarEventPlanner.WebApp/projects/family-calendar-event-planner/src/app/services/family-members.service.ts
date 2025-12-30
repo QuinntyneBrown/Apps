@@ -11,6 +11,7 @@ import {
 
 export interface GetFamilyMembersParams {
   familyId?: string;
+  householdId?: string;
   isImmediate?: boolean;
 }
 
@@ -25,6 +26,9 @@ export class FamilyMembersService {
     let httpParams = new HttpParams();
     if (params?.familyId) {
       httpParams = httpParams.set('familyId', params.familyId);
+    }
+    if (params?.householdId) {
+      httpParams = httpParams.set('householdId', params.householdId);
     }
     if (params?.isImmediate !== undefined) {
       httpParams = httpParams.set('isImmediate', params.isImmediate.toString());

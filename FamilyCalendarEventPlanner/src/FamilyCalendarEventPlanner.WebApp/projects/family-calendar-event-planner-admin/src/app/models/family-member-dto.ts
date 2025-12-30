@@ -15,6 +15,7 @@ export type RelationType =
 export interface FamilyMemberDto {
   memberId: string;
   familyId: string;
+  householdId: string | null;
   name: string;
   email: string | null;
   color: string;

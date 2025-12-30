@@ -14,6 +14,8 @@ public record UpdateFamilyMemberCommand : IRequest<FamilyMemberDto?>
     public string? Color { get; init; }
     public bool? IsImmediate { get; init; }
     public RelationType? RelationType { get; init; }
+    public Guid? HouseholdId { get; init; }
+    public bool ClearHousehold { get; init; }
 }
 
 public class UpdateFamilyMemberCommandHandler : IRequestHandler<UpdateFamilyMemberCommand, FamilyMemberDto?>
@@ -47,7 +49,9 @@ public class UpdateFamilyMemberCommandHandler : IRequestHandler<UpdateFamilyMemb
             request.Email,
             request.Color,
             request.IsImmediate,
-            request.RelationType);
+            request.RelationType,
+            request.HouseholdId,
+            request.ClearHousehold);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Updated family member {MemberId}", request.MemberId);

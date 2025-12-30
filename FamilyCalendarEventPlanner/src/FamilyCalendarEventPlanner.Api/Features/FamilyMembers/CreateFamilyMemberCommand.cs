@@ -9,6 +9,7 @@ namespace FamilyCalendarEventPlanner.Api.Features.FamilyMembers;
 public record CreateFamilyMemberCommand : IRequest<FamilyMemberDto>
 {
     public Guid FamilyId { get; init; } = Guid.NewGuid();
+    public Guid? HouseholdId { get; init; }
     public string Name { get; init; } = string.Empty;
     public string? Email { get; init; }
     public string Color { get; init; } = string.Empty;
@@ -44,7 +45,8 @@ public class CreateFamilyMemberCommandHandler : IRequestHandler<CreateFamilyMemb
             request.Color,
             request.Role,
             request.IsImmediate,
-            request.RelationType);
+            request.RelationType,
+            request.HouseholdId);
 
         _context.FamilyMembers.Add(member);
         await _context.SaveChangesAsync(cancellationToken);

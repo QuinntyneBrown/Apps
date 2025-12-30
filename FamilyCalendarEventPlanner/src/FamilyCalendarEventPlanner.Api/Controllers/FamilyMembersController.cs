@@ -21,16 +21,19 @@ public class FamilyMembersController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<FamilyMemberDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<FamilyMemberDto>>> GetFamilyMembers(
         [FromQuery] Guid? familyId,
+        [FromQuery] Guid? householdId,
         [FromQuery] bool? isImmediate)
     {
         _logger.LogInformation(
-            "Getting family members for family {FamilyId}, isImmediate: {IsImmediate}",
+            "Getting family members for family {FamilyId}, householdId: {HouseholdId}, isImmediate: {IsImmediate}",
             familyId,
+            householdId,
             isImmediate);
 
         var result = await _mediator.Send(new GetFamilyMembersQuery
         {
             FamilyId = familyId,
+            HouseholdId = householdId,
             IsImmediate = isImmediate
         });
 

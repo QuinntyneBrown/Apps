@@ -7,6 +7,7 @@ public record FamilyMemberDto
 {
     public Guid MemberId { get; init; }
     public Guid FamilyId { get; init; }
+    public Guid? HouseholdId { get; init; }
     public string Name { get; init; } = string.Empty;
     public string? Email { get; init; }
     public string Color { get; init; } = string.Empty;
@@ -23,6 +24,7 @@ public static class FamilyMemberExtensions
         {
             MemberId = member.MemberId,
             FamilyId = member.FamilyId,
+            HouseholdId = member.HouseholdId,
             Name = member.Name,
             Email = member.Email,
             Color = member.Color,
