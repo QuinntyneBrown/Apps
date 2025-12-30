@@ -30,13 +30,9 @@ public static class ConfigureServices
 
         services.AddDbContext<FuelEconomyTrackerContext>(options =>
         {
-            options.UseSqlServer(connectionString, sqlOptions =>
+            options.UseSqlite(connectionString, sqliteOptions =>
             {
-                sqlOptions.MigrationsAssembly(typeof(FuelEconomyTrackerContext).Assembly.FullName);
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
+                sqliteOptions.MigrationsAssembly(typeof(FuelEconomyTrackerContext).Assembly.FullName);
             });
         });
 
