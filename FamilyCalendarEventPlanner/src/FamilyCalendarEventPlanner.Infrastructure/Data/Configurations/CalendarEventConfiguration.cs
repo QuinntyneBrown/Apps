@@ -1,5 +1,6 @@
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FamilyCalendarEventPlanner.Infrastructure.Data.Configurations;
@@ -33,7 +34,11 @@ public class CalendarEventConfiguration : IEntityTypeConfiguration<CalendarEvent
                     v => string.Join(',', v.Select(d => (int)d)),
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => (DayOfWeek)int.Parse(s))
-                        .ToList());
+                        .ToList())
+                .Metadata.SetValueComparer(new ValueComparer<List<DayOfWeek>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
         });
 
         builder.HasIndex(e => e.FamilyId);
