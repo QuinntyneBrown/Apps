@@ -1,0 +1,96 @@
+<div class="calendar">
+  @if (viewModel$ | async; as vm) {
+    <div class="calendar__controls">
+      <div class="calendar__nav">
+        <button mat-icon-button (click)="previousMonth()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <h2 class="calendar__month-title">{{ vm.monthTitle }}</h2>
+        <button mat-icon-button (click)="nextMonth()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button mat-stroked-button (click)="goToToday()">Today</button>
+      </div>
+
+      <div class="calendar__actions">
+        <mat-button-toggle-group [value]="vm.viewMode" (change)="setViewMode($event.value)">
+          <mat-button-toggle value="day">Day</mat-button-toggle>
+          <mat-button-toggle value="week">Week</mat-button-toggle>
+          <mat-button-toggle value="month">Month</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <button mat-raised-button color="primary" (click)="openAddEventDialog(vm.members)">
+          <mat-icon>add</mat-icon>
+          Add Event
+        </button>
+      </div>
+    </div>
+
+    <div class="calendar__filters">
+      <span class="calendar__filter-label">Filter by:</span>
+      @for (member of vm.members; track member.memberId) {
+        <mat-chip
+          [class.calendar__filter-chip--active]="isMemberSelected(member.memberId)"
+          [style.--chip-color]="member.color"
+          (click)="toggleMemberFilter(member.memberId)">
+          @if (isMemberSelected(member.memberId)) {
+            <mat-icon>check</mat-icon>
+          }
+          {{ member.name }}
+        </mat-chip>
+      }
+    </div>
+
+    <mat-card class="calendar__grid-card">
+      <div class="calendar__grid">
+        @for (day of weekDays; track day) {
+          <div class="calendar__day-header">{{ day }}</div>
+        }
+
+        @for (day of vm.calendarDays; track day.date.toISOString()) {
+          <div
+            class="calendar__day-cell"
+            [class.calendar__day-cell--other-month]="!day.isCurrentMonth"
+            [class.calendar__day-cell--today]="day.isToday"
+            (click)="onDayClick(day)">
+            <div class="calendar__day-number" [class.calendar__day-number--today]="day.isToday">
+              {{ day.dayNumber }}
+            </div>
+
+            @if (day.hasConflict) {
+              <div class="calendar__conflict-indicator">
+                <mat-icon>warning</mat-icon>
+              </div>
+            }
+
+            <div class="calendar__day-events">
+              @for (event of day.events; track event.eventId) {
+                <div
+                  class="calendar__event-item"
+                  [style.background-color]="getMemberColor(vm.members, event.creatorId)">
+                  {{ event.title }}
+                </div>
+              }
+
+              @if (getMoreEventsCount(day, vm.events) > 0) {
+                <div class="calendar__more-events">
+                  +{{ getMoreEventsCount(day, vm.events) }} more
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <div class="calendar__legend">
+      <span class="calendar__legend-title">Legend:</span>
+      @for (member of vm.members; track member.memberId) {
+        <div class="calendar__legend-item">
+          <div class="calendar__legend-color" [style.background-color]="member.color"></div>
+          <span>{{ member.name }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

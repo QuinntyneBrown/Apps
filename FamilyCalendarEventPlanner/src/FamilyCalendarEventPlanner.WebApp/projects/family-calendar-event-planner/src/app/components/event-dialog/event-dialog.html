@@ -1,0 +1,139 @@
+<div class="event-dialog">
+  <h2 mat-dialog-title class="event-dialog__title">
+    <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+    {{ isEditMode ? 'Edit Event' : 'Create New Event' }}
+  </h2>
+
+  <mat-dialog-content class="event-dialog__content">
+    <form [formGroup]="form" class="event-dialog__form">
+      <mat-form-field appearance="outline" class="event-dialog__field--full">
+        <mat-label>Event Title</mat-label>
+        <input matInput formControlName="title" placeholder="Enter event title">
+        @if (form.get('title')?.hasError('required') && form.get('title')?.touched) {
+          <mat-error>Title is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="event-dialog__field--full">
+        <mat-label>Event Type</mat-label>
+        <mat-select formControlName="eventType">
+          @for (type of eventTypes; track type) {
+            <mat-option [value]="type">
+              <mat-icon>{{ getEventTypeIcon(type) }}</mat-icon>
+              {{ type }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="event-dialog__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Start Time</mat-label>
+          <input matInput type="time" formControlName="startTime">
+        </mat-form-field>
+      </div>
+
+      <div class="event-dialog__row">
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Time</mat-label>
+          <input matInput type="time" formControlName="endTime">
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="event-dialog__field--full">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" placeholder="Add location">
+        <mat-icon matPrefix>location_on</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="event-dialog__field--full">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3" placeholder="Add description"></textarea>
+      </mat-form-field>
+
+      <div class="event-dialog__section">
+        <h3 class="event-dialog__section-title">Attendees</h3>
+        <div class="event-dialog__attendees">
+          @for (member of data.members; track member.memberId) {
+            <div
+              class="event-dialog__attendee"
+              [class.event-dialog__attendee--selected]="isAttendeeSelected(member.memberId)"
+              (click)="toggleAttendee(member.memberId)">
+              <div class="event-dialog__attendee-avatar" [style.background-color]="member.color">
+                {{ getMemberInitials(member) }}
+              </div>
+              <div class="event-dialog__attendee-info">
+                <span class="event-dialog__attendee-name">{{ member.name }}</span>
+                <span class="event-dialog__attendee-role">{{ member.role }}</span>
+              </div>
+              <mat-icon class="event-dialog__attendee-check">
+                {{ isAttendeeSelected(member.memberId) ? 'check_circle' : 'radio_button_unchecked' }}
+              </mat-icon>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="event-dialog__section">
+        <mat-checkbox [(ngModel)]="isRecurring" [ngModelOptions]="{standalone: true}">
+          Recurring Event
+        </mat-checkbox>
+
+        @if (isRecurring) {
+          <div class="event-dialog__recurring">
+            <div class="event-dialog__row">
+              <mat-form-field appearance="outline">
+                <mat-label>Repeat</mat-label>
+                <mat-select formControlName="recurrenceFrequency">
+                  @for (freq of recurrenceFrequencies; track freq) {
+                    <mat-option [value]="freq">{{ freq }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Every</mat-label>
+                <input matInput type="number" formControlName="recurrenceInterval" min="1">
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="event-dialog__field--full">
+              <mat-label>End Date</mat-label>
+              <input matInput [matDatepicker]="recurrenceEndPicker" formControlName="recurrenceEndDate">
+              <mat-datepicker-toggle matIconSuffix [for]="recurrenceEndPicker"></mat-datepicker-toggle>
+              <mat-datepicker #recurrenceEndPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        }
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="event-dialog__actions">
+    @if (isEditMode) {
+      <button mat-button color="warn" (click)="onDelete()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    }
+    <span class="event-dialog__spacer"></span>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!form.valid">
+      {{ isEditMode ? 'Save Changes' : 'Create Event' }}
+    </button>
+  </mat-dialog-actions>
+</div>
