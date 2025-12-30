@@ -8,7 +8,7 @@ namespace FamilyCalendarEventPlanner.Api.Features.FamilyMembers;
 
 public record CreateFamilyMemberCommand : IRequest<FamilyMemberDto>
 {
-    public Guid FamilyId { get; init; }
+    public Guid FamilyId { get; init; } = Guid.NewGuid();
     public string Name { get; init; } = string.Empty;
     public string? Email { get; init; }
     public string Color { get; init; } = string.Empty;

@@ -9,7 +9,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { FamilyMembersService } from '../../services/family-members.service';
-import { FamilyMemberDto } from '../../models/family-member-dto';
+import { FamilyMemberDto, MemberRole, getRoleLabel } from '../../models/family-member-dto';
 import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '../../components/create-or-edit-family-member-dialog';
 
 type ImmediateFilter = 'all' | 'immediate' | 'extended';
@@ -70,13 +70,19 @@ export class FamilyMembers {
 
   onFilterChange(filter: ImmediateFilter): void {
     this.immediateFilter$.next(filter);
+  getRoleLabel(role: number): string {
+    return getRoleLabel(role);
+  }
+
+  isAdminRole(role: number): boolean {
+    return role === MemberRole.Admin;
   }
 
   onCreateMember(): void {
     const dialogRef = this.dialog.open(CreateOrEditFamilyMemberDialog, {
       width: '500px',
       data: {
-        familyId: 'default-family-id'
+        familyId: crypto.randomUUID()
       }
     });
 

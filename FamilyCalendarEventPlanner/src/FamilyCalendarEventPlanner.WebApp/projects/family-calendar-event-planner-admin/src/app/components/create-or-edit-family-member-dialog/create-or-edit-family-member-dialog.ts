@@ -53,9 +53,9 @@ export class CreateOrEditFamilyMemberDialog {
   ];
 
   availableRoles = [
-    { value: 'Admin', label: 'Admin' },
-    { value: 'Member', label: 'Member' },
-    { value: 'ViewOnly', label: 'View Only' }
+    { value: 0, label: 'Admin' },
+    { value: 1, label: 'Member' },
+    { value: 2, label: 'View Only' }
   ];
 
   availableRelationTypes: { value: RelationType; label: string }[] = [
@@ -81,9 +81,13 @@ export class CreateOrEditFamilyMemberDialog {
       name: [data.member?.name || '', Validators.required],
       email: [data.member?.email || '', [Validators.email]],
       color: [data.member?.color || '#3b82f6', Validators.required],
+<<<<<<< Updated upstream
       role: [data.member?.role || 'Member', Validators.required],
       isImmediate: [data.member?.isImmediate ?? true],
       relationType: [data.member?.relationType || 'Self', Validators.required]
+=======
+      role: [data.member?.role || 1, Validators.required]
+>>>>>>> Stashed changes
     });
   }
 
