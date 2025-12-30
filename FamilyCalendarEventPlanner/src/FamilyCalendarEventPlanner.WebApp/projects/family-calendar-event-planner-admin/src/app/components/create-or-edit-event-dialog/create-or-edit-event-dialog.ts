@@ -76,10 +76,23 @@ export class CreateOrEditEventDialog {
   }
 
   private combineDateAndTime(date: Date, time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(":").map(Number);
+    // Create a new Date in local time
     const combined = new Date(date);
     combined.setHours(hours, minutes, 0, 0);
-    return combined.toISOString();
+    // Convert to UTC explicitly
+    const utcDate = new Date(
+      Date.UTC(
+        combined.getFullYear(),
+        combined.getMonth(),
+        combined.getDate(),
+        combined.getHours(),
+        combined.getMinutes(),
+        0,
+        0
+      )
+    );
+    return utcDate.toISOString();
   }
 
   onSubmit(): void {

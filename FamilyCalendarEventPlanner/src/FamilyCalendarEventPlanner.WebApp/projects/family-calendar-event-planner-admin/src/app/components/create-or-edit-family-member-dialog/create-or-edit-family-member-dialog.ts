@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { FamilyMemberDto, RelationType } from '../../models/family-member-dto';
+import { FamilyMemberDto, RelationType, MemberRole } from '../../models/family-member-dto';
 import { CreateFamilyMemberCommand } from '../../models/create-family-member-command';
 import { HouseholdsService } from '../../services/households.service';
 import { HouseholdDto } from '../../models/household-dto';
@@ -58,9 +58,9 @@ export class CreateOrEditFamilyMemberDialog implements OnInit {
   ];
 
   availableRoles = [
-    { value: 0, label: 'Admin' },
-    { value: 1, label: 'Member' },
-    { value: 2, label: 'View Only' }
+    { value: 'Admin', label: 'Admin' },
+    { value: 'Member', label: 'Member' },
+    { value: 'ViewOnly', label: 'View Only' }
   ];
 
   availableRelationTypes: { value: RelationType; label: string }[] = [
@@ -87,7 +87,7 @@ export class CreateOrEditFamilyMemberDialog implements OnInit {
       email: [data.member?.email || '', [Validators.email]],
       householdId: [data.member?.householdId || null],
       color: [data.member?.color || '#3b82f6', Validators.required],
-      role: [data.member?.role ?? 1, Validators.required],
+      role: [data.member?.role !== undefined ? MemberRole[data.member.role] : 'Member', Validators.required],
       isImmediate: [data.member?.isImmediate ?? true],
       relationType: [data.member?.relationType || 'Self', Validators.required]
     });
@@ -133,7 +133,7 @@ export class CreateOrEditFamilyMemberDialog implements OnInit {
           email: formValue.email || null,
           householdId: formValue.householdId || null,
           color: formValue.color,
-          role: formValue.role, // already number
+          role: formValue.role, // now a string: 'Admin', 'Member', 'ViewOnly'
           isImmediate: formValue.isImmediate,
           relationType: mappedRelationType,
           ...(this.isEditMode && { memberId: this.data.member!.memberId })
