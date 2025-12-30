@@ -7,10 +7,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { FamilyMembersService } from '../../services/family-members.service';
-import { FamilyMemberDto } from '../../models/family-member-dto';
-import { MemberRole, getRoleLabel } from '../../models/family-member-dto';
+import { HouseholdsService } from '../../services/households.service';
+import { FamilyMemberDto, MemberRole, getRoleLabel } from '../../models/family-member-dto';
+import { HouseholdDto } from '../../models/household-dto';
 import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '../../components/create-or-edit-family-member-dialog';
 
 type ImmediateFilter = 'all' | 'immediate' | 'extended';
@@ -25,24 +28,33 @@ type ImmediateFilter = 'all' | 'immediate' | 'extended';
     MatIconModule,
     MatTooltipModule,
     MatButtonToggleModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSelectModule,
+    MatFormFieldModule
   ],
   templateUrl: './family-members.html',
   styleUrls: ['./family-members.scss']
 })
 export class FamilyMembers {
   private membersService = inject(FamilyMembersService);
+  private householdsService = inject(HouseholdsService);
   private dialog = inject(MatDialog);
 
   private refresh$ = new BehaviorSubject<void>(undefined);
   immediateFilter$ = new BehaviorSubject<ImmediateFilter>('all');
+  householdFilter$ = new BehaviorSubject<string | null>(null);
+
+  households$ = this.householdsService.getHouseholds();
 
   displayedColumns: string[] = ['avatar', 'name', 'email', 'relationType', 'role', 'isImmediate', 'color', 'actions'];
 
-  members$ = combineLatest([this.refresh$, this.immediateFilter$]).pipe(
-    switchMap(([_, filter]) => {
-      const isImmediate = filter === 'all' ? undefined : filter === 'immediate';
-      return this.membersService.getFamilyMembers({ isImmediate });
+  members$ = combineLatest([this.refresh$, this.immediateFilter$, this.householdFilter$]).pipe(
+    switchMap(([_, immediateFilter, householdId]) => {
+      const isImmediate = immediateFilter === 'all' ? undefined : immediateFilter === 'immediate';
+      return this.membersService.getFamilyMembers({
+        isImmediate,
+        householdId: householdId || undefined
+      });
     })
   );
 
@@ -71,6 +83,10 @@ export class FamilyMembers {
 
   onFilterChange(filter: ImmediateFilter): void {
     this.immediateFilter$.next(filter);
+  }
+
+  onHouseholdFilterChange(householdId: string | null): void {
+    this.householdFilter$.next(householdId);
   }
 
   getRoleLabel(role: number): string {

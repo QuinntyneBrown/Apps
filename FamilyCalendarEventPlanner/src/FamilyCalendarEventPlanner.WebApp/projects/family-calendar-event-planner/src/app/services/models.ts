@@ -116,6 +116,7 @@ export interface UpdateEventRequest {
 export interface FamilyMember {
   memberId: string;
   familyId: string;
+  householdId: string | null;
   name: string;
   email: string | null;
   color: string;
@@ -220,4 +221,31 @@ export interface CreateReminderRequest {
 export interface RescheduleReminderRequest {
   reminderId: string;
   reminderTime: string;
+}
+
+export enum CanadianProvince {
+  Alberta = 'Alberta',
+  BritishColumbia = 'BritishColumbia',
+  Manitoba = 'Manitoba',
+  NewBrunswick = 'NewBrunswick',
+  NewfoundlandAndLabrador = 'NewfoundlandAndLabrador',
+  NorthwestTerritories = 'NorthwestTerritories',
+  NovaScotia = 'NovaScotia',
+  Nunavut = 'Nunavut',
+  Ontario = 'Ontario',
+  PrinceEdwardIsland = 'PrinceEdwardIsland',
+  Quebec = 'Quebec',
+  Saskatchewan = 'Saskatchewan',
+  Yukon = 'Yukon'
+}
+
+export interface Household {
+  householdId: string;
+  name: string;
+  street: string;
+  city: string;
+  province: CanadianProvince;
+  postalCode: string;
+  formattedPostalCode: string;
+  fullAddress: string;
 }

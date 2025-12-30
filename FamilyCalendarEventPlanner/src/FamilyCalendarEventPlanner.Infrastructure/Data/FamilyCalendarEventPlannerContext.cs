@@ -3,6 +3,7 @@ using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
 using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
+using FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate;
 using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,8 @@ public class FamilyCalendarEventPlannerContext : DbContext, IFamilyCalendarEvent
     public DbSet<ScheduleConflict> ScheduleConflicts { get; set; } = null!;
 
     public DbSet<EventReminder> EventReminders { get; set; } = null!;
+
+    public DbSet<Household> Households { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

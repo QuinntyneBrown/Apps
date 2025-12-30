@@ -1,8 +1,8 @@
 # Interface Control Document (ICD)
 ## FamilyCalendarEventPlanner HTTP API
 
-**Version:** 1.0
-**Date:** 2025-12-29
+**Version:** 1.2
+**Date:** 2025-12-30
 **Base URL:** `http://localhost:3200`
 
 ---
@@ -206,6 +206,7 @@ Get all family members, optionally filtered by family ID and/or immediate family
 |-----------|------|----------|-------------|
 | familyId | Guid | No | Filter members by family ID |
 | isImmediate | bool | No | Filter by immediate family status (true = immediate family only, false = extended family only) |
+| householdId | Guid | No | Filter members by household ID |
 
 **Response:** `200 OK`
 ```json
@@ -213,6 +214,7 @@ Get all family members, optionally filtered by family ID and/or immediate family
   {
     "memberId": "guid",
     "familyId": "guid",
+    "householdId": "guid|null",
     "name": "string",
     "email": "string|null",
     "color": "string",
@@ -237,6 +239,7 @@ Get a specific family member by ID.
 {
   "memberId": "guid",
   "familyId": "guid",
+  "householdId": "guid|null",
   "name": "string",
   "email": "string|null",
   "color": "string",
@@ -254,6 +257,7 @@ Create a new family member.
 ```json
 {
   "familyId": "guid",
+  "householdId": "guid|null",
   "name": "string",
   "email": "string|null",
   "color": "string",
@@ -280,6 +284,8 @@ Update an existing family member's profile.
   "name": "string|null",
   "email": "string|null",
   "color": "string|null",
+  "householdId": "guid|null",
+  "clearHousehold": "boolean",
   "isImmediate": "boolean|null",
   "relationType": "Self|Spouse|Child|Parent|Sibling|Grandparent|Grandchild|AuntUncle|NieceNephew|Cousin|InLaw|Other|null"
 }
@@ -561,9 +567,107 @@ Delete a reminder.
 
 ---
 
-## 8. Enumerations
+## 8. Households API
 
-### 8.1 EventType
+### 8.1 GET /api/households
+
+Get all households.
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "householdId": "guid",
+    "name": "string",
+    "street": "string",
+    "city": "string",
+    "province": "Alberta|BritishColumbia|Manitoba|NewBrunswick|NewfoundlandAndLabrador|NorthwestTerritories|NovaScotia|Nunavut|Ontario|PrinceEdwardIsland|Quebec|Saskatchewan|Yukon",
+    "postalCode": "string",
+    "formattedPostalCode": "string",
+    "fullAddress": "string"
+  }
+]
+```
+
+### 8.2 GET /api/households/{householdId}
+
+Get a specific household by ID.
+
+**Path Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| householdId | Guid | Yes | The household ID |
+
+**Response:** `200 OK`
+```json
+{
+  "householdId": "guid",
+  "name": "string",
+  "street": "string",
+  "city": "string",
+  "province": "Alberta|BritishColumbia|Manitoba|NewBrunswick|NewfoundlandAndLabrador|NorthwestTerritories|NovaScotia|Nunavut|Ontario|PrinceEdwardIsland|Quebec|Saskatchewan|Yukon",
+  "postalCode": "string",
+  "formattedPostalCode": "string",
+  "fullAddress": "string"
+}
+```
+
+### 8.3 POST /api/households
+
+Create a new household.
+
+**Request Body:**
+```json
+{
+  "name": "string",
+  "street": "string",
+  "city": "string",
+  "province": "Alberta|BritishColumbia|Manitoba|NewBrunswick|NewfoundlandAndLabrador|NorthwestTerritories|NovaScotia|Nunavut|Ontario|PrinceEdwardIsland|Quebec|Saskatchewan|Yukon",
+  "postalCode": "string"
+}
+```
+
+**Response:** `201 Created` - Returns the created HouseholdDto
+
+### 8.4 PUT /api/households/{householdId}
+
+Update an existing household.
+
+**Path Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| householdId | Guid | Yes | The household ID |
+
+**Request Body:**
+```json
+{
+  "householdId": "guid",
+  "name": "string|null",
+  "street": "string|null",
+  "city": "string|null",
+  "province": "Alberta|BritishColumbia|Manitoba|NewBrunswick|NewfoundlandAndLabrador|NorthwestTerritories|NovaScotia|Nunavut|Ontario|PrinceEdwardIsland|Quebec|Saskatchewan|Yukon|null",
+  "postalCode": "string|null"
+}
+```
+
+**Response:** `200 OK` - Returns the updated HouseholdDto
+
+### 8.5 DELETE /api/households/{householdId}
+
+Delete a household.
+
+**Path Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| householdId | Guid | Yes | The household ID |
+
+**Response:** `204 No Content`
+
+---
+
+## 9. Enumerations
+
+### 9.1 EventType
 - Appointment
 - FamilyDinner
 - Sports
@@ -572,24 +676,24 @@ Delete a reminder.
 - Birthday
 - Other
 
-### 8.2 EventStatus
+### 9.2 EventStatus
 - Scheduled
 - Completed
 - Cancelled
 
-### 8.3 RecurrenceFrequency
+### 9.3 RecurrenceFrequency
 - None
 - Daily
 - Weekly
 - Monthly
 - Yearly
 
-### 8.4 MemberRole
+### 9.4 MemberRole
 - Admin
 - Member
 - ViewOnly
 
-### 8.5 RelationType
+### 9.5 RelationType
 - Self
 - Spouse
 - Child
@@ -603,33 +707,48 @@ Delete a reminder.
 - InLaw
 - Other
 
-### 8.6 RSVPStatus
+### 9.6 RSVPStatus
 - Pending
 - Accepted
 - Declined
 - Tentative
 
-### 8.7 BlockType
+### 9.7 BlockType
 - Busy
 - OutOfOffice
 - Personal
 
-### 8.8 ConflictSeverity
+### 9.8 ConflictSeverity
 - Low
 - Medium
 - High
 - Critical
 
-### 8.9 NotificationChannel
+### 9.9 NotificationChannel
 - Email
 - Push
 - SMS
 
+### 9.10 CanadianProvince
+- Alberta
+- BritishColumbia
+- Manitoba
+- NewBrunswick
+- NewfoundlandAndLabrador
+- NorthwestTerritories
+- NovaScotia
+- Nunavut
+- Ontario
+- PrinceEdwardIsland
+- Quebec
+- Saskatchewan
+- Yukon
+
 ---
 
-## 9. Frontend Service Configuration
+## 10. Frontend Service Configuration
 
-### 9.1 Base URL Configuration
+### 10.1 Base URL Configuration
 ```typescript
 // environment.ts
 export const environment = {
@@ -638,7 +757,7 @@ export const environment = {
 };
 ```
 
-### 9.2 Service URL Pattern
+### 10.2 Service URL Pattern
 All services SHALL append `/api/{resource}` to the baseUrl:
 ```typescript
 private readonly baseUrl = environment.apiBaseUrl;
@@ -656,6 +775,7 @@ getEvents(): Observable<CalendarEvent[]> {
 |---------|------|-------------|
 | 1.0 | 2025-12-29 | Initial ICD document |
 | 1.1 | 2025-12-30 | Added IsImmediate, RelationType to FamilyMember; made email optional; added isImmediate query filter |
+| 1.2 | 2025-12-30 | Added Households API (Section 8); added householdId to FamilyMember; added CanadianProvince enum |
 
 ---
 

@@ -5,12 +5,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
-import { map, combineLatest, BehaviorSubject } from 'rxjs';
+import { map, combineLatest, BehaviorSubject, switchMap, of } from 'rxjs';
 
-import { EventsService, FamilyMembersService, ConflictsService } from '../../services';
+import { EventsService, FamilyMembersService, ConflictsService, HouseholdsService } from '../../services';
 import { EventDialog, EventDialogData, EventDialogResult } from '../../components';
-import { CalendarEvent, FamilyMember, ScheduleConflict } from '../../services/models';
+import { CalendarEvent, FamilyMember, ScheduleConflict, Household } from '../../services/models';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -32,7 +34,9 @@ interface CalendarDay {
     MatButtonModule,
     MatButtonToggleModule,
     MatIconModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSelectModule,
+    MatFormFieldModule
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss'
@@ -41,26 +45,49 @@ export class Calendar {
   private eventsService = inject(EventsService);
   private membersService = inject(FamilyMembersService);
   private conflictsService = inject(ConflictsService);
+  private householdsService = inject(HouseholdsService);
   private dialog = inject(MatDialog);
 
   currentDate$ = new BehaviorSubject<Date>(new Date());
   viewMode$ = new BehaviorSubject<ViewMode>('month');
   selectedMembers$ = new BehaviorSubject<string[]>([]);
+  selectedHousehold$ = new BehaviorSubject<string | null>(null);
 
   weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+  households$ = this.householdsService.getHouseholds();
+
+  members$ = this.selectedHousehold$.pipe(
+    switchMap(householdId => {
+      if (householdId) {
+        return this.membersService.getFamilyMembers({ householdId });
+      }
+      return this.membersService.getFamilyMembers();
+    })
+  );
+
   viewModel$ = combineLatest([
     this.eventsService.getEvents(),
-    this.membersService.getFamilyMembers(),
+    this.members$,
     this.conflictsService.getConflicts(),
     this.currentDate$,
     this.viewMode$,
-    this.selectedMembers$
+    this.selectedMembers$,
+    this.selectedHousehold$
   ]).pipe(
-    map(([events, members, conflicts, currentDate, viewMode, selectedMembers]) => {
-      const filteredEvents = selectedMembers.length > 0
-        ? events.filter(e => selectedMembers.includes(e.creatorId))
-        : events;
+    map(([events, members, conflicts, currentDate, viewMode, selectedMembers, selectedHousehold]) => {
+      let filteredEvents = events;
+
+      // Filter events by household members if a household is selected
+      if (selectedHousehold) {
+        const householdMemberIds = members.map(m => m.memberId);
+        filteredEvents = events.filter(e => householdMemberIds.includes(e.creatorId));
+      }
+
+      // Further filter by selected members
+      if (selectedMembers.length > 0) {
+        filteredEvents = filteredEvents.filter(e => selectedMembers.includes(e.creatorId));
+      }
 
       return {
         events: filteredEvents,
@@ -69,6 +96,7 @@ export class Calendar {
         currentDate,
         viewMode,
         selectedMembers,
+        selectedHousehold,
         calendarDays: this.generateCalendarDays(currentDate, filteredEvents, conflicts),
         monthTitle: this.formatMonthTitle(currentDate)
       };
@@ -163,6 +191,12 @@ export class Calendar {
 
   setViewMode(mode: ViewMode): void {
     this.viewMode$.next(mode);
+  }
+
+  onHouseholdFilterChange(householdId: string | null): void {
+    this.selectedHousehold$.next(householdId);
+    // Reset member selection when household changes
+    this.selectedMembers$.next([]);
   }
 
   toggleMemberFilter(memberId: string): void {

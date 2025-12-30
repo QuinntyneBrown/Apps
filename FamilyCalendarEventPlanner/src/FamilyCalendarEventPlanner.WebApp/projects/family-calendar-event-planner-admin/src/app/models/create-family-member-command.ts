@@ -1,6 +1,6 @@
-
 export interface CreateFamilyMemberCommand {
   familyId: string;
+  householdId?: string | null;
   name: string;
   email?: string | null;
   color: string;
