@@ -3,3 +3,4 @@
 
 export * from './family-members';
 export * from './households';
+export * from './events';
