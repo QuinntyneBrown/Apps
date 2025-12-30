@@ -1,5 +1,10 @@
+using System.Text;
 using FamilyCalendarEventPlanner.Infrastructure;
 using FamilyCalendarEventPlanner.Infrastructure.Data;
+using FamilyCalendarEventPlanner.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text.Json.Serialization;
 
@@ -27,11 +32,37 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "FamilyCalendarEventPlanner API",
         Version = "v1",
         Description = "API for managing family calendars and events",
+    });
+
+    // Add JWT authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\""
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
@@ -43,6 +74,33 @@ builder.Services.AddMediatR(cfg =>
 
 // Add Infrastructure services
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "FamilyCalendarEventPlannerDefaultKeyAtLeast32Chars";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "FamilyCalendarEventPlanner";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "FamilyCalendarEventPlanner.Api";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Configure CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
@@ -73,6 +131,7 @@ app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -83,7 +142,8 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<FamilyCalendarEventPlannerContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await SeedData.SeedAsync(context, logger);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 
 app.Run();

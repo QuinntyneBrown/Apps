@@ -1,5 +1,6 @@
 using FamilyCalendarEventPlanner.Core;
 using FamilyCalendarEventPlanner.Infrastructure.Data;
+using FamilyCalendarEventPlanner.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,10 @@ public static class ConfigureServices
 
         services.AddScoped<IFamilyCalendarEventPlannerContext>(provider =>
             provider.GetRequiredService<FamilyCalendarEventPlannerContext>());
+
+        // Register services
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         return services;
     }
