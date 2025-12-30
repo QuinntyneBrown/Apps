@@ -8,6 +8,7 @@ namespace FamilyCalendarEventPlanner.Api.Features.FamilyMembers;
 public record GetFamilyMembersQuery : IRequest<IEnumerable<FamilyMemberDto>>
 {
     public Guid? FamilyId { get; init; }
+    public bool? IsImmediate { get; init; }
 }
 
 public class GetFamilyMembersQueryHandler : IRequestHandler<GetFamilyMembersQuery, IEnumerable<FamilyMemberDto>>
@@ -25,13 +26,21 @@ public class GetFamilyMembersQueryHandler : IRequestHandler<GetFamilyMembersQuer
 
     public async Task<IEnumerable<FamilyMemberDto>> Handle(GetFamilyMembersQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting family members for family {FamilyId}", request.FamilyId);
+        _logger.LogInformation(
+            "Getting family members for family {FamilyId}, isImmediate: {IsImmediate}",
+            request.FamilyId,
+            request.IsImmediate);
 
         var query = _context.FamilyMembers.AsNoTracking();
 
         if (request.FamilyId.HasValue)
         {
             query = query.Where(m => m.FamilyId == request.FamilyId.Value);
+        }
+
+        if (request.IsImmediate.HasValue)
+        {
+            query = query.Where(m => m.IsImmediate == request.IsImmediate.Value);
         }
 
         var members = await query

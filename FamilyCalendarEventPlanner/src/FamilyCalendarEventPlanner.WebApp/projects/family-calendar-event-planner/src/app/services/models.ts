@@ -28,6 +28,21 @@ export enum MemberRole {
   ViewOnly = 'ViewOnly'
 }
 
+export enum RelationType {
+  Self = 'Self',
+  Spouse = 'Spouse',
+  Child = 'Child',
+  Parent = 'Parent',
+  Sibling = 'Sibling',
+  Grandparent = 'Grandparent',
+  Grandchild = 'Grandchild',
+  AuntUncle = 'AuntUncle',
+  NieceNephew = 'NieceNephew',
+  Cousin = 'Cousin',
+  InLaw = 'InLaw',
+  Other = 'Other'
+}
+
 export enum RSVPStatus {
   Pending = 'Pending',
   Accepted = 'Accepted',
@@ -102,24 +117,30 @@ export interface FamilyMember {
   memberId: string;
   familyId: string;
   name: string;
-  email: string;
+  email: string | null;
   color: string;
   role: MemberRole;
+  isImmediate: boolean;
+  relationType: RelationType;
 }
 
 export interface CreateFamilyMemberRequest {
   familyId: string;
   name: string;
-  email: string;
+  email?: string | null;
   color: string;
   role: MemberRole;
+  isImmediate: boolean;
+  relationType: RelationType;
 }
 
 export interface UpdateFamilyMemberRequest {
   memberId: string;
   name?: string;
-  email?: string;
+  email?: string | null;
   color?: string;
+  isImmediate?: boolean;
+  relationType?: RelationType;
 }
 
 export interface ChangeMemberRoleRequest {

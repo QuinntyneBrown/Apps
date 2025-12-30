@@ -5,10 +5,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BehaviorSubject, switchMap } from 'rxjs';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { FamilyMembersService } from '../../services/family-members.service';
 import { FamilyMemberDto } from '../../models/family-member-dto';
 import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '../../components/create-or-edit-family-member-dialog';
+
+type ImmediateFilter = 'all' | 'immediate' | 'extended';
 
 @Component({
   selector: 'app-family-members',
@@ -18,7 +22,9 @@ import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } 
     MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatButtonToggleModule,
+    MatChipsModule
   ],
   templateUrl: './family-members.html',
   styleUrls: ['./family-members.scss']
@@ -28,16 +34,42 @@ export class FamilyMembers {
   private dialog = inject(MatDialog);
 
   private refresh$ = new BehaviorSubject<void>(undefined);
+  immediateFilter$ = new BehaviorSubject<ImmediateFilter>('all');
 
-  displayedColumns: string[] = ['avatar', 'name', 'email', 'role', 'color', 'actions'];
+  displayedColumns: string[] = ['avatar', 'name', 'email', 'relationType', 'role', 'isImmediate', 'color', 'actions'];
 
-  members$ = this.refresh$.pipe(
-    switchMap(() => this.membersService.getFamilyMembers())
+  members$ = combineLatest([this.refresh$, this.immediateFilter$]).pipe(
+    switchMap(([_, filter]) => {
+      const isImmediate = filter === 'all' ? undefined : filter === 'immediate';
+      return this.membersService.getFamilyMembers({ isImmediate });
+    })
   );
 
   getInitials(name: string): string {
     const names = name.split(' ');
     return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  getRelationTypeLabel(relationType: string): string {
+    const labels: Record<string, string> = {
+      Self: 'Self',
+      Spouse: 'Spouse',
+      Child: 'Child',
+      Parent: 'Parent',
+      Sibling: 'Sibling',
+      Grandparent: 'Grandparent',
+      Grandchild: 'Grandchild',
+      AuntUncle: 'Aunt/Uncle',
+      NieceNephew: 'Niece/Nephew',
+      Cousin: 'Cousin',
+      InLaw: 'In-Law',
+      Other: 'Other'
+    };
+    return labels[relationType] || relationType;
+  }
+
+  onFilterChange(filter: ImmediateFilter): void {
+    this.immediateFilter$.next(filter);
   }
 
   onCreateMember(): void {
@@ -73,7 +105,7 @@ export class FamilyMembers {
 
     dialogRef.afterClosed().subscribe((result: CreateOrEditFamilyMemberDialogResult) => {
       if (result?.action === 'update' && result.data) {
-        this.membersService.updateFamilyMember(member.memberId, result.data).subscribe({
+        this.membersService.updateFamilyMember(member.memberId, { ...result.data, memberId: member.memberId }).subscribe({
           next: () => {
             this.refresh$.next();
           },

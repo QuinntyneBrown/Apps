@@ -199,12 +199,13 @@ Mark a calendar event as completed.
 
 ### 3.1 GET /api/familymembers
 
-Get all family members, optionally filtered by family ID.
+Get all family members, optionally filtered by family ID and/or immediate family status.
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | familyId | Guid | No | Filter members by family ID |
+| isImmediate | bool | No | Filter by immediate family status (true = immediate family only, false = extended family only) |
 
 **Response:** `200 OK`
 ```json
@@ -213,9 +214,11 @@ Get all family members, optionally filtered by family ID.
     "memberId": "guid",
     "familyId": "guid",
     "name": "string",
-    "email": "string",
+    "email": "string|null",
     "color": "string",
-    "role": "Admin|Member|ViewOnly"
+    "role": "Admin|Member|ViewOnly",
+    "isImmediate": "boolean",
+    "relationType": "Self|Spouse|Child|Parent|Sibling|Grandparent|Grandchild|AuntUncle|NieceNephew|Cousin|InLaw|Other"
   }
 ]
 ```
@@ -235,9 +238,11 @@ Get a specific family member by ID.
   "memberId": "guid",
   "familyId": "guid",
   "name": "string",
-  "email": "string",
+  "email": "string|null",
   "color": "string",
-  "role": "Admin|Member|ViewOnly"
+  "role": "Admin|Member|ViewOnly",
+  "isImmediate": "boolean",
+  "relationType": "Self|Spouse|Child|Parent|Sibling|Grandparent|Grandchild|AuntUncle|NieceNephew|Cousin|InLaw|Other"
 }
 ```
 
@@ -250,9 +255,11 @@ Create a new family member.
 {
   "familyId": "guid",
   "name": "string",
-  "email": "string",
+  "email": "string|null",
   "color": "string",
-  "role": "Admin|Member|ViewOnly"
+  "role": "Admin|Member|ViewOnly",
+  "isImmediate": "boolean",
+  "relationType": "Self|Spouse|Child|Parent|Sibling|Grandparent|Grandchild|AuntUncle|NieceNephew|Cousin|InLaw|Other"
 }
 ```
 
@@ -272,7 +279,9 @@ Update an existing family member's profile.
 {
   "name": "string|null",
   "email": "string|null",
-  "color": "string|null"
+  "color": "string|null",
+  "isImmediate": "boolean|null",
+  "relationType": "Self|Spouse|Child|Parent|Sibling|Grandparent|Grandchild|AuntUncle|NieceNephew|Cousin|InLaw|Other|null"
 }
 ```
 
@@ -580,24 +589,38 @@ Delete a reminder.
 - Member
 - ViewOnly
 
-### 8.5 RSVPStatus
+### 8.5 RelationType
+- Self
+- Spouse
+- Child
+- Parent
+- Sibling
+- Grandparent
+- Grandchild
+- AuntUncle
+- NieceNephew
+- Cousin
+- InLaw
+- Other
+
+### 8.6 RSVPStatus
 - Pending
 - Accepted
 - Declined
 - Tentative
 
-### 8.6 BlockType
+### 8.7 BlockType
 - Busy
 - OutOfOffice
 - Personal
 
-### 8.7 ConflictSeverity
+### 8.8 ConflictSeverity
 - Low
 - Medium
 - High
 - Critical
 
-### 8.8 NotificationChannel
+### 8.9 NotificationChannel
 - Email
 - Push
 - SMS
@@ -632,6 +655,7 @@ getEvents(): Observable<CalendarEvent[]> {
 | Version | Date | Description |
 |---------|------|-------------|
 | 1.0 | 2025-12-29 | Initial ICD document |
+| 1.1 | 2025-12-30 | Added IsImmediate, RelationType to FamilyMember; made email optional; added isImmediate query filter |
 
 ---
 

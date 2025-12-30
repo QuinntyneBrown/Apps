@@ -9,6 +9,11 @@ import {
   ChangeMemberRoleRequest
 } from './models';
 
+export interface GetFamilyMembersParams {
+  familyId?: string;
+  isImmediate?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -16,12 +21,15 @@ export class FamilyMembersService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiBaseUrl;
 
-  getFamilyMembers(familyId?: string): Observable<FamilyMember[]> {
-    let params = new HttpParams();
-    if (familyId) {
-      params = params.set('familyId', familyId);
+  getFamilyMembers(params?: GetFamilyMembersParams): Observable<FamilyMember[]> {
+    let httpParams = new HttpParams();
+    if (params?.familyId) {
+      httpParams = httpParams.set('familyId', params.familyId);
     }
-    return this.http.get<FamilyMember[]>(`${this.baseUrl}/api/familymembers`, { params });
+    if (params?.isImmediate !== undefined) {
+      httpParams = httpParams.set('isImmediate', params.isImmediate.toString());
+    }
+    return this.http.get<FamilyMember[]>(`${this.baseUrl}/api/familymembers`, { params: httpParams });
   }
 
   getFamilyMemberById(memberId: string): Observable<FamilyMember> {

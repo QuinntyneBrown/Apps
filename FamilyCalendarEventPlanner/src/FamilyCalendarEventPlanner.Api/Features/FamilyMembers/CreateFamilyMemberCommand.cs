@@ -10,9 +10,11 @@ public record CreateFamilyMemberCommand : IRequest<FamilyMemberDto>
 {
     public Guid FamilyId { get; init; }
     public string Name { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
+    public string? Email { get; init; }
     public string Color { get; init; } = string.Empty;
     public MemberRole Role { get; init; }
+    public bool IsImmediate { get; init; } = true;
+    public RelationType RelationType { get; init; } = RelationType.Self;
 }
 
 public class CreateFamilyMemberCommandHandler : IRequestHandler<CreateFamilyMemberCommand, FamilyMemberDto>
@@ -40,7 +42,9 @@ public class CreateFamilyMemberCommandHandler : IRequestHandler<CreateFamilyMemb
             request.Name,
             request.Email,
             request.Color,
-            request.Role);
+            request.Role,
+            request.IsImmediate,
+            request.RelationType);
 
         _context.FamilyMembers.Add(member);
         await _context.SaveChangesAsync(cancellationToken);

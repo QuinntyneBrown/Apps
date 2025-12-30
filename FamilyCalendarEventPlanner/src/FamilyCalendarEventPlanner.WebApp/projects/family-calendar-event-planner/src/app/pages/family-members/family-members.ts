@@ -4,11 +4,14 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { map, combineLatest } from 'rxjs';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { map, combineLatest, switchMap, BehaviorSubject } from 'rxjs';
 
 import { FamilyMembersService, EventsService } from '../../services';
 import { MemberCard } from '../../components';
 import { FamilyMember, MemberRole } from '../../services/models';
+
+type ImmediateFilter = 'all' | 'immediate' | 'extended';
 
 @Component({
   selector: 'app-family-members',
@@ -18,6 +21,7 @@ import { FamilyMember, MemberRole } from '../../services/models';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    MatButtonToggleModule,
     MemberCard
   ],
   templateUrl: './family-members.html',
@@ -28,8 +32,15 @@ export class FamilyMembers {
   private eventsService = inject(EventsService);
   private dialog = inject(MatDialog);
 
+  immediateFilter$ = new BehaviorSubject<ImmediateFilter>('all');
+
   viewModel$ = combineLatest([
-    this.membersService.getFamilyMembers(),
+    this.immediateFilter$.pipe(
+      switchMap(filter => {
+        const isImmediate = filter === 'all' ? undefined : filter === 'immediate';
+        return this.membersService.getFamilyMembers({ isImmediate });
+      })
+    ),
     this.eventsService.getEvents()
   ]).pipe(
     map(([members, events]) => {
@@ -40,6 +51,7 @@ export class FamilyMembers {
       });
 
       const adminCount = members.filter(m => m.role === MemberRole.Admin).length;
+      const immediateCount = members.filter(m => m.isImmediate).length;
 
       return {
         members,
@@ -47,11 +59,15 @@ export class FamilyMembers {
         stats: {
           activeMembers: members.length,
           admins: adminCount,
-          pendingInvitations: 0
+          immediateFamily: immediateCount
         }
       };
     })
   );
+
+  onFilterChange(filter: ImmediateFilter): void {
+    this.immediateFilter$.next(filter);
+  }
 
   getEventCount(memberEventCounts: Map<string, number>, memberId: string): number {
     return memberEventCounts.get(memberId) || 0;

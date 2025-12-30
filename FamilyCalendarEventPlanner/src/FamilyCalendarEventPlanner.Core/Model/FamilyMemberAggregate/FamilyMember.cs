@@ -7,24 +7,28 @@ public class FamilyMember
     public Guid MemberId { get; private set; }
     public Guid FamilyId { get; private set; }
     public string Name { get; private set; } = string.Empty;
-    public string Email { get; private set; } = string.Empty;
+    public string? Email { get; private set; }
     public string Color { get; private set; } = string.Empty;
     public MemberRole Role { get; private set; }
+    public bool IsImmediate { get; private set; }
+    public RelationType RelationType { get; private set; }
 
     private FamilyMember()
     {
     }
 
-    public FamilyMember(Guid familyId, string name, string email, string color, MemberRole role = MemberRole.Member)
+    public FamilyMember(
+        Guid familyId,
+        string name,
+        string? email,
+        string color,
+        MemberRole role = MemberRole.Member,
+        bool isImmediate = true,
+        RelationType relationType = RelationType.Self)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Name cannot be empty.", nameof(name));
-        }
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new ArgumentException("Email cannot be empty.", nameof(email));
         }
 
         if (string.IsNullOrWhiteSpace(color))
@@ -35,12 +39,19 @@ public class FamilyMember
         MemberId = Guid.NewGuid();
         FamilyId = familyId;
         Name = name;
-        Email = email;
+        Email = string.IsNullOrWhiteSpace(email) ? null : email;
         Color = color;
         Role = role;
+        IsImmediate = isImmediate;
+        RelationType = relationType;
     }
 
-    public void UpdateProfile(string? name = null, string? email = null, string? color = null)
+    public void UpdateProfile(
+        string? name = null,
+        string? email = null,
+        string? color = null,
+        bool? isImmediate = null,
+        RelationType? relationType = null)
     {
         if (name != null)
         {
@@ -54,12 +65,7 @@ public class FamilyMember
 
         if (email != null)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                throw new ArgumentException("Email cannot be empty.", nameof(email));
-            }
-
-            Email = email;
+            Email = string.IsNullOrWhiteSpace(email) ? null : email;
         }
 
         if (color != null)
@@ -70,6 +76,16 @@ public class FamilyMember
             }
 
             Color = color;
+        }
+
+        if (isImmediate.HasValue)
+        {
+            IsImmediate = isImmediate.Value;
+        }
+
+        if (relationType.HasValue)
+        {
+            RelationType = relationType.Value;
         }
     }
 
