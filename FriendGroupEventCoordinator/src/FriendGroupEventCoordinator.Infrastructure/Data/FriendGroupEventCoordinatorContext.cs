@@ -11,13 +11,16 @@ namespace FriendGroupEventCoordinator.Infrastructure;
 /// </summary>
 public class FriendGroupEventCoordinatorContext : DbContext, IFriendGroupEventCoordinatorContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FriendGroupEventCoordinatorContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FriendGroupEventCoordinatorContext(DbContextOptions<FriendGroupEventCoordinatorContext> options)
+    public FriendGroupEventCoordinatorContext(DbContextOptions<FriendGroupEventCoordinatorContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class FriendGroupEventCoordinatorContext : DbContext, IFriendGroupEventCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Event>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<RSVP>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Group>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Member>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FriendGroupEventCoordinatorContext).Assembly);
     }

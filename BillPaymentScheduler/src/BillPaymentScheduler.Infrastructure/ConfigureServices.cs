@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IBillPaymentSchedulerContext>(provider =>
             provider.GetRequiredService<BillPaymentSchedulerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

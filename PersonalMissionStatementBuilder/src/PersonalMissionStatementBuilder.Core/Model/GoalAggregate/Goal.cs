@@ -24,6 +24,11 @@ public class Goal
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the title of the goal.
     /// </summary>
     public string Title { get; set; } = string.Empty;

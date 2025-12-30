@@ -11,13 +11,16 @@ namespace NutritionLabelScanner.Infrastructure;
 /// </summary>
 public class NutritionLabelScannerContext : DbContext, INutritionLabelScannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="NutritionLabelScannerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public NutritionLabelScannerContext(DbContextOptions<NutritionLabelScannerContext> options)
+    public NutritionLabelScannerContext(DbContextOptions<NutritionLabelScannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class NutritionLabelScannerContext : DbContext, INutritionLabelScannerCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<NutritionInfo>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Comparison>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NutritionLabelScannerContext).Assembly);
     }

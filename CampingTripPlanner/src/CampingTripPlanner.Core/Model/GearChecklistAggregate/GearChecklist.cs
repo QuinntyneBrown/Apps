@@ -7,6 +7,11 @@ public class GearChecklist
 {
     public Guid GearChecklistId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid TripId { get; set; }
     public Trip? Trip { get; set; }
     public string ItemName { get; set; } = string.Empty;

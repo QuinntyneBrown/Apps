@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPersonalMissionStatementBuilderContext>(provider =>
             provider.GetRequiredService<PersonalMissionStatementBuilderContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

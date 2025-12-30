@@ -11,13 +11,16 @@ namespace SkillDevelopmentTracker.Infrastructure;
 /// </summary>
 public class SkillDevelopmentTrackerContext : DbContext, ISkillDevelopmentTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SkillDevelopmentTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public SkillDevelopmentTrackerContext(DbContextOptions<SkillDevelopmentTrackerContext> options)
+    public SkillDevelopmentTrackerContext(DbContextOptions<SkillDevelopmentTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class SkillDevelopmentTrackerContext : DbContext, ISkillDevelopmentTracke
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Skill>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Course>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Certification>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<LearningPath>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SkillDevelopmentTrackerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace CryptoPortfolioManager.Infrastructure;
 /// </summary>
 public class CryptoPortfolioManagerContext : DbContext, ICryptoPortfolioManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CryptoPortfolioManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public CryptoPortfolioManagerContext(DbContextOptions<CryptoPortfolioManagerContext> options)
+    public CryptoPortfolioManagerContext(DbContextOptions<CryptoPortfolioManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class CryptoPortfolioManagerContext : DbContext, ICryptoPortfolioManagerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Wallet>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<CryptoHolding>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Transaction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TaxLot>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CryptoPortfolioManagerContext).Assembly);
     }

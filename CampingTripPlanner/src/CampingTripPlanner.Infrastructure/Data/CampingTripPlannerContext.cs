@@ -11,13 +11,16 @@ namespace CampingTripPlanner.Infrastructure;
 /// </summary>
 public class CampingTripPlannerContext : DbContext, ICampingTripPlannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CampingTripPlannerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public CampingTripPlannerContext(DbContextOptions<CampingTripPlannerContext> options)
+    public CampingTripPlannerContext(DbContextOptions<CampingTripPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class CampingTripPlannerContext : DbContext, ICampingTripPlannerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Trip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Campsite>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<GearChecklist>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Review>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CampingTripPlannerContext).Assembly);
     }

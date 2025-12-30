@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHomeMaintenanceScheduleContext>(provider =>
             provider.GetRequiredService<HomeMaintenanceScheduleContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

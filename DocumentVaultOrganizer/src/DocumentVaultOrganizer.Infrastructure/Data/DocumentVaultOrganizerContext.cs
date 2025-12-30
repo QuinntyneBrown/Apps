@@ -11,13 +11,16 @@ namespace DocumentVaultOrganizer.Infrastructure;
 /// </summary>
 public class DocumentVaultOrganizerContext : DbContext, IDocumentVaultOrganizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DocumentVaultOrganizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public DocumentVaultOrganizerContext(DbContextOptions<DocumentVaultOrganizerContext> options)
+    public DocumentVaultOrganizerContext(DbContextOptions<DocumentVaultOrganizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class DocumentVaultOrganizerContext : DbContext, IDocumentVaultOrganizerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Document>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<DocumentCategory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ExpirationAlert>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DocumentVaultOrganizerContext).Assembly);
     }

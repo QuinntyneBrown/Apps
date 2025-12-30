@@ -11,13 +11,16 @@ namespace LifeAdminDashboard.Infrastructure;
 /// </summary>
 public class LifeAdminDashboardContext : DbContext, ILifeAdminDashboardContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LifeAdminDashboardContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public LifeAdminDashboardContext(DbContextOptions<LifeAdminDashboardContext> options)
+    public LifeAdminDashboardContext(DbContextOptions<LifeAdminDashboardContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class LifeAdminDashboardContext : DbContext, ILifeAdminDashboardContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<AdminTask>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Renewal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Deadline>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LifeAdminDashboardContext).Assembly);
     }

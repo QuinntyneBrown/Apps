@@ -11,13 +11,16 @@ namespace HomeEnergyUsageTracker.Infrastructure;
 /// </summary>
 public class HomeEnergyUsageTrackerContext : DbContext, IHomeEnergyUsageTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeEnergyUsageTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HomeEnergyUsageTrackerContext(DbContextOptions<HomeEnergyUsageTrackerContext> options)
+    public HomeEnergyUsageTrackerContext(DbContextOptions<HomeEnergyUsageTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class HomeEnergyUsageTrackerContext : DbContext, IHomeEnergyUsageTrackerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<UtilityBill>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Usage>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<SavingsTip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HomeEnergyUsageTrackerContext).Assembly);
     }

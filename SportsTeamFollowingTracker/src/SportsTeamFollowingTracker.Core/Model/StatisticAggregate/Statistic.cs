@@ -7,6 +7,11 @@ public class Statistic
 {
     public Guid StatisticId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid TeamId { get; set; }
     public string StatName { get; set; } = string.Empty;
     public decimal Value { get; set; }

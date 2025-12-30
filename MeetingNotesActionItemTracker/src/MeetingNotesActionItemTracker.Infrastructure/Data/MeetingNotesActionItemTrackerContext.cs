@@ -11,13 +11,16 @@ namespace MeetingNotesActionItemTracker.Infrastructure;
 /// </summary>
 public class MeetingNotesActionItemTrackerContext : DbContext, IMeetingNotesActionItemTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MeetingNotesActionItemTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public MeetingNotesActionItemTrackerContext(DbContextOptions<MeetingNotesActionItemTrackerContext> options)
+    public MeetingNotesActionItemTrackerContext(DbContextOptions<MeetingNotesActionItemTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class MeetingNotesActionItemTrackerContext : DbContext, IMeetingNotesActi
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Meeting>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Note>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ActionItem>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeetingNotesActionItemTrackerContext).Assembly);
     }

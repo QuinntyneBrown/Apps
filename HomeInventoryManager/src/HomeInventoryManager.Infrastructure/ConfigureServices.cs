@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHomeInventoryManagerContext>(provider =>
             provider.GetRequiredService<HomeInventoryManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

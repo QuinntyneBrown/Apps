@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IBookReadingTrackerLibraryContext>(provider =>
             provider.GetRequiredService<BookReadingTrackerLibraryContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

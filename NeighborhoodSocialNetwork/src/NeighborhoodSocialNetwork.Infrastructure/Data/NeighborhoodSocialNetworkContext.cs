@@ -11,13 +11,16 @@ namespace NeighborhoodSocialNetwork.Infrastructure;
 /// </summary>
 public class NeighborhoodSocialNetworkContext : DbContext, INeighborhoodSocialNetworkContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="NeighborhoodSocialNetworkContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public NeighborhoodSocialNetworkContext(DbContextOptions<NeighborhoodSocialNetworkContext> options)
+    public NeighborhoodSocialNetworkContext(DbContextOptions<NeighborhoodSocialNetworkContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class NeighborhoodSocialNetworkContext : DbContext, INeighborhoodSocialNe
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Neighbor>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Event>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Recommendation>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Message>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NeighborhoodSocialNetworkContext).Assembly);
     }

@@ -19,6 +19,11 @@ public class Goal
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the activity category for this goal.
     /// </summary>
     public ActivityCategory Category { get; set; }

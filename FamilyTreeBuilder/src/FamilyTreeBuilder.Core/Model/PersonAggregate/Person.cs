@@ -7,6 +7,11 @@ public class Person
 {
     public Guid PersonId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string? LastName { get; set; }
     public Gender? Gender { get; set; }

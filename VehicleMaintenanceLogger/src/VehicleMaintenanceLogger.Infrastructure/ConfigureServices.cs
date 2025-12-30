@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IVehicleMaintenanceLoggerContext>(provider =>
             provider.GetRequiredService<VehicleMaintenanceLoggerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

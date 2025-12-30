@@ -11,13 +11,16 @@ namespace PersonalLibraryLessonsLearned.Infrastructure;
 /// </summary>
 public class PersonalLibraryLessonsLearnedContext : DbContext, IPersonalLibraryLessonsLearnedContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalLibraryLessonsLearnedContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalLibraryLessonsLearnedContext(DbContextOptions<PersonalLibraryLessonsLearnedContext> options)
+    public PersonalLibraryLessonsLearnedContext(DbContextOptions<PersonalLibraryLessonsLearnedContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class PersonalLibraryLessonsLearnedContext : DbContext, IPersonalLibraryL
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Lesson>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Source>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<LessonReminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalLibraryLessonsLearnedContext).Assembly);
     }

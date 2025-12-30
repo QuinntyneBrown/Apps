@@ -7,6 +7,11 @@ public class Session
 {
     public Guid SessionId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public SessionType SessionType { get; set; }
     public DateTime SessionDate { get; set; } = DateTime.UtcNow;

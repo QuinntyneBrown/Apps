@@ -11,13 +11,16 @@ namespace GiftIdeaTracker.Infrastructure;
 /// </summary>
 public class GiftIdeaTrackerContext : DbContext, IGiftIdeaTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GiftIdeaTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public GiftIdeaTrackerContext(DbContextOptions<GiftIdeaTrackerContext> options)
+    public GiftIdeaTrackerContext(DbContextOptions<GiftIdeaTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class GiftIdeaTrackerContext : DbContext, IGiftIdeaTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<GiftIdea>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Recipient>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Purchase>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GiftIdeaTrackerContext).Assembly);
     }

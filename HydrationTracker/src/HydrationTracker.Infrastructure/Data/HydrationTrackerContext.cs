@@ -11,13 +11,16 @@ namespace HydrationTracker.Infrastructure;
 /// </summary>
 public class HydrationTrackerContext : DbContext, IHydrationTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HydrationTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HydrationTrackerContext(DbContextOptions<HydrationTrackerContext> options)
+    public HydrationTrackerContext(DbContextOptions<HydrationTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class HydrationTrackerContext : DbContext, IHydrationTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Intake>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Goal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HydrationTrackerContext).Assembly);
     }

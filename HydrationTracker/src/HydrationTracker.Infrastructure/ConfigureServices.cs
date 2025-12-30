@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHydrationTrackerContext>(provider =>
             provider.GetRequiredService<HydrationTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

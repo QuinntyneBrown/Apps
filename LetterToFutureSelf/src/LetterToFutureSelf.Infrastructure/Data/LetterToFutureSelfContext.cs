@@ -11,13 +11,16 @@ namespace LetterToFutureSelf.Infrastructure;
 /// </summary>
 public class LetterToFutureSelfContext : DbContext, ILetterToFutureSelfContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LetterToFutureSelfContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public LetterToFutureSelfContext(DbContextOptions<LetterToFutureSelfContext> options)
+    public LetterToFutureSelfContext(DbContextOptions<LetterToFutureSelfContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -30,6 +33,14 @@ public class LetterToFutureSelfContext : DbContext, ILetterToFutureSelfContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Letter>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<DeliverySchedule>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LetterToFutureSelfContext).Assembly);
     }

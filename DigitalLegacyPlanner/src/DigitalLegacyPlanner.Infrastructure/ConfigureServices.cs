@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IDigitalLegacyPlannerContext>(provider =>
             provider.GetRequiredService<DigitalLegacyPlannerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

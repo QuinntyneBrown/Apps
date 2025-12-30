@@ -11,13 +11,16 @@ namespace SleepQualityTracker.Infrastructure;
 /// </summary>
 public class SleepQualityTrackerContext : DbContext, ISleepQualityTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SleepQualityTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public SleepQualityTrackerContext(DbContextOptions<SleepQualityTrackerContext> options)
+    public SleepQualityTrackerContext(DbContextOptions<SleepQualityTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class SleepQualityTrackerContext : DbContext, ISleepQualityTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<SleepSession>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Habit>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Pattern>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SleepQualityTrackerContext).Assembly);
     }

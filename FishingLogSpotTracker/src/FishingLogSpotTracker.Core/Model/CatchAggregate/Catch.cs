@@ -19,6 +19,11 @@ public class Catch
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the trip ID associated with this catch.
     /// </summary>
     public Guid TripId { get; set; }

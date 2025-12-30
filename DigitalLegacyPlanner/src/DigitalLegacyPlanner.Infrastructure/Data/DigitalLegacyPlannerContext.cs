@@ -11,13 +11,16 @@ namespace DigitalLegacyPlanner.Infrastructure;
 /// </summary>
 public class DigitalLegacyPlannerContext : DbContext, IDigitalLegacyPlannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DigitalLegacyPlannerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public DigitalLegacyPlannerContext(DbContextOptions<DigitalLegacyPlannerContext> options)
+    public DigitalLegacyPlannerContext(DbContextOptions<DigitalLegacyPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class DigitalLegacyPlannerContext : DbContext, IDigitalLegacyPlannerConte
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<DigitalAccount>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<LegacyInstruction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TrustedContact>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<LegacyDocument>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DigitalLegacyPlannerContext).Assembly);
     }

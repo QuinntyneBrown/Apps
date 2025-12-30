@@ -19,6 +19,11 @@ public class LegacyDocument
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the document title or name.
     /// </summary>
     public string Title { get; set; } = string.Empty;

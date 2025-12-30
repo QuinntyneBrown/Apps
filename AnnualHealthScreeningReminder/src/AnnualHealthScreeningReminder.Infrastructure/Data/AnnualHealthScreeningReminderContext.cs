@@ -11,13 +11,16 @@ namespace AnnualHealthScreeningReminder.Infrastructure;
 /// </summary>
 public class AnnualHealthScreeningReminderContext : DbContext, IAnnualHealthScreeningReminderContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AnnualHealthScreeningReminderContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public AnnualHealthScreeningReminderContext(DbContextOptions<AnnualHealthScreeningReminderContext> options)
+    public AnnualHealthScreeningReminderContext(DbContextOptions<AnnualHealthScreeningReminderContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class AnnualHealthScreeningReminderContext : DbContext, IAnnualHealthScre
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Screening>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Appointment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AnnualHealthScreeningReminderContext).Assembly);
     }

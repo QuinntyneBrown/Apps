@@ -7,6 +7,11 @@ public class Handicap
 {
     public Guid HandicapId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public decimal HandicapIndex { get; set; }
     public DateTime CalculatedDate { get; set; } = DateTime.UtcNow;
     public int RoundsUsed { get; set; }

@@ -19,6 +19,11 @@ public class Application
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the company ID.
     /// </summary>
     public Guid CompanyId { get; set; }

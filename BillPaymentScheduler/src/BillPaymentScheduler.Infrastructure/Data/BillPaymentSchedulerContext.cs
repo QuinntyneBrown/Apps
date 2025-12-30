@@ -11,13 +11,16 @@ namespace BillPaymentScheduler.Infrastructure;
 /// </summary>
 public class BillPaymentSchedulerContext : DbContext, IBillPaymentSchedulerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BillPaymentSchedulerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public BillPaymentSchedulerContext(DbContextOptions<BillPaymentSchedulerContext> options)
+    public BillPaymentSchedulerContext(DbContextOptions<BillPaymentSchedulerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class BillPaymentSchedulerContext : DbContext, IBillPaymentSchedulerConte
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Bill>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Payee>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BillPaymentSchedulerContext).Assembly);
     }

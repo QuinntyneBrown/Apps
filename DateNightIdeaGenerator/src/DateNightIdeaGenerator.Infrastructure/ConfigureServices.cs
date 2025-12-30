@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IDateNightIdeaGeneratorContext>(provider =>
             provider.GetRequiredService<DateNightIdeaGeneratorContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

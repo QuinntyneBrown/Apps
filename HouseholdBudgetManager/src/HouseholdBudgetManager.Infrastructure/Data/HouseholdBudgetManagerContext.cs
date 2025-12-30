@@ -11,13 +11,16 @@ namespace HouseholdBudgetManager.Infrastructure;
 /// </summary>
 public class HouseholdBudgetManagerContext : DbContext, IHouseholdBudgetManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HouseholdBudgetManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HouseholdBudgetManagerContext(DbContextOptions<HouseholdBudgetManagerContext> options)
+    public HouseholdBudgetManagerContext(DbContextOptions<HouseholdBudgetManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class HouseholdBudgetManagerContext : DbContext, IHouseholdBudgetManagerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Budget>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Expense>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Income>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HouseholdBudgetManagerContext).Assembly);
     }

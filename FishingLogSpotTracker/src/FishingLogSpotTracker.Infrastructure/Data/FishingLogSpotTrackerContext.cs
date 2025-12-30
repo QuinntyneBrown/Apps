@@ -11,13 +11,16 @@ namespace FishingLogSpotTracker.Infrastructure;
 /// </summary>
 public class FishingLogSpotTrackerContext : DbContext, IFishingLogSpotTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FishingLogSpotTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FishingLogSpotTrackerContext(DbContextOptions<FishingLogSpotTrackerContext> options)
+    public FishingLogSpotTrackerContext(DbContextOptions<FishingLogSpotTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class FishingLogSpotTrackerContext : DbContext, IFishingLogSpotTrackerCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Trip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Catch>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Spot>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FishingLogSpotTrackerContext).Assembly);
     }

@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ITravelDestinationWishlistContext>(provider =>
             provider.GetRequiredService<TravelDestinationWishlistContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

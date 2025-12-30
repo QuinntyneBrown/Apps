@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IMensGroupDiscussionTrackerContext>(provider =>
             provider.GetRequiredService<MensGroupDiscussionTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -19,6 +19,11 @@ public class Letter
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the subject of the letter.
     /// </summary>
     public string Subject { get; set; } = string.Empty;

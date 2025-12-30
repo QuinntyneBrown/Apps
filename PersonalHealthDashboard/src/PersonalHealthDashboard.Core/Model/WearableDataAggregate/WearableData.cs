@@ -19,6 +19,11 @@ public class WearableData
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the wearable device (e.g., Fitbit, Apple Watch).
     /// </summary>
     public string DeviceName { get; set; } = string.Empty;

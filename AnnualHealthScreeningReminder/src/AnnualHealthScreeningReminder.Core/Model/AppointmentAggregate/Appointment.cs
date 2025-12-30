@@ -7,6 +7,11 @@ public class Appointment
 {
     public Guid AppointmentId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid ScreeningId { get; set; }
     public DateTime AppointmentDate { get; set; }
     public string Location { get; set; } = string.Empty;

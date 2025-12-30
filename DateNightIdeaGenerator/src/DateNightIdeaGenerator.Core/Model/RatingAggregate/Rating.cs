@@ -29,6 +29,11 @@ public class Rating
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the rating score (1-5).
     /// </summary>
     public int Score { get; set; }

@@ -11,13 +11,16 @@ namespace BucketListManager.Infrastructure;
 /// </summary>
 public class BucketListManagerContext : DbContext, IBucketListManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BucketListManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public BucketListManagerContext(DbContextOptions<BucketListManagerContext> options)
+    public BucketListManagerContext(DbContextOptions<BucketListManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class BucketListManagerContext : DbContext, IBucketListManagerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<BucketListItem>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Milestone>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Memory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BucketListManagerContext).Assembly);
     }

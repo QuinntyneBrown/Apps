@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IResumeCareerAchievementTrackerContext>(provider =>
             provider.GetRequiredService<ResumeCareerAchievementTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

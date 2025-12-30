@@ -11,13 +11,16 @@ namespace TravelDestinationWishlist.Infrastructure;
 /// </summary>
 public class TravelDestinationWishlistContext : DbContext, ITravelDestinationWishlistContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TravelDestinationWishlistContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public TravelDestinationWishlistContext(DbContextOptions<TravelDestinationWishlistContext> options)
+    public TravelDestinationWishlistContext(DbContextOptions<TravelDestinationWishlistContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class TravelDestinationWishlistContext : DbContext, ITravelDestinationWis
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Destination>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Trip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Memory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TravelDestinationWishlistContext).Assembly);
     }

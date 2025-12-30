@@ -19,6 +19,11 @@ public class FocusSession
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the session type.
     /// </summary>
     public SessionType SessionType { get; set; }

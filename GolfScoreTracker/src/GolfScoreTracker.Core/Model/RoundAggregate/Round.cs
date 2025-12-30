@@ -7,6 +7,11 @@ public class Round
 {
     public Guid RoundId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid CourseId { get; set; }
     public DateTime PlayedDate { get; set; } = DateTime.UtcNow;
     public int TotalScore { get; set; }

@@ -7,6 +7,11 @@ public class Memory
 {
     public Guid MemoryId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid BucketListItemId { get; set; }
     public BucketListItem? BucketListItem { get; set; }
     public string Title { get; set; } = string.Empty;

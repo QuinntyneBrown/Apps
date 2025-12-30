@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IProfessionalNetworkCRMContext>(provider =>
             provider.GetRequiredService<ProfessionalNetworkCRMContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

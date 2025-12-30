@@ -11,13 +11,16 @@ namespace TaxDeductionOrganizer.Infrastructure;
 /// </summary>
 public class TaxDeductionOrganizerContext : DbContext, ITaxDeductionOrganizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TaxDeductionOrganizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public TaxDeductionOrganizerContext(DbContextOptions<TaxDeductionOrganizerContext> options)
+    public TaxDeductionOrganizerContext(DbContextOptions<TaxDeductionOrganizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class TaxDeductionOrganizerContext : DbContext, ITaxDeductionOrganizerCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Deduction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Receipt>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TaxYear>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaxDeductionOrganizerContext).Assembly);
     }

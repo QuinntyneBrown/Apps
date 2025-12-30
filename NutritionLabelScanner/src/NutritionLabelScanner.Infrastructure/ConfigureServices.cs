@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<INutritionLabelScannerContext>(provider =>
             provider.GetRequiredService<NutritionLabelScannerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

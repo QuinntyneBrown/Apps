@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IMovieTVShowWatchlistContext>(provider =>
             provider.GetRequiredService<MovieTVShowWatchlistContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

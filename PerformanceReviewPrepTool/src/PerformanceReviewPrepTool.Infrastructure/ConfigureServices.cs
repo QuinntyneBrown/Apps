@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPerformanceReviewPrepToolContext>(provider =>
             provider.GetRequiredService<PerformanceReviewPrepToolContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

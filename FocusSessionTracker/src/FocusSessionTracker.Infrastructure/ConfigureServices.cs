@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IFocusSessionTrackerContext>(provider =>
             provider.GetRequiredService<FocusSessionTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

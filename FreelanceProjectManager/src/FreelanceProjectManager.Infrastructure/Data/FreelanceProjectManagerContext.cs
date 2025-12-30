@@ -11,13 +11,16 @@ namespace FreelanceProjectManager.Infrastructure;
 /// </summary>
 public class FreelanceProjectManagerContext : DbContext, IFreelanceProjectManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FreelanceProjectManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FreelanceProjectManagerContext(DbContextOptions<FreelanceProjectManagerContext> options)
+    public FreelanceProjectManagerContext(DbContextOptions<FreelanceProjectManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class FreelanceProjectManagerContext : DbContext, IFreelanceProjectManage
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Client>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TimeEntry>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Invoice>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FreelanceProjectManagerContext).Assembly);
     }

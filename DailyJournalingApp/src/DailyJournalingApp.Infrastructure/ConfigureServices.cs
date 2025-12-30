@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IDailyJournalingAppContext>(provider =>
             provider.GetRequiredService<DailyJournalingAppContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

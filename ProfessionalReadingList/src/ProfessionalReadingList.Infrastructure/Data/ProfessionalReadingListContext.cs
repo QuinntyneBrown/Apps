@@ -11,13 +11,16 @@ namespace ProfessionalReadingList.Infrastructure;
 /// </summary>
 public class ProfessionalReadingListContext : DbContext, IProfessionalReadingListContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfessionalReadingListContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public ProfessionalReadingListContext(DbContextOptions<ProfessionalReadingListContext> options)
+    public ProfessionalReadingListContext(DbContextOptions<ProfessionalReadingListContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class ProfessionalReadingListContext : DbContext, IProfessionalReadingLis
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Resource>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ReadingProgress>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Note>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProfessionalReadingListContext).Assembly);
     }

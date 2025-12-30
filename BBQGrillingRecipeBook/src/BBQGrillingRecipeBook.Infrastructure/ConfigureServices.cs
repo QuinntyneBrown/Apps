@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IBBQGrillingRecipeBookContext>(provider =>
             provider.GetRequiredService<BBQGrillingRecipeBookContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

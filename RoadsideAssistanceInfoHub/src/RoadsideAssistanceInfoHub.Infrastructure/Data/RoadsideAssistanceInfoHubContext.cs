@@ -11,13 +11,16 @@ namespace RoadsideAssistanceInfoHub.Infrastructure;
 /// </summary>
 public class RoadsideAssistanceInfoHubContext : DbContext, IRoadsideAssistanceInfoHubContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RoadsideAssistanceInfoHubContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public RoadsideAssistanceInfoHubContext(DbContextOptions<RoadsideAssistanceInfoHubContext> options)
+    public RoadsideAssistanceInfoHubContext(DbContextOptions<RoadsideAssistanceInfoHubContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class RoadsideAssistanceInfoHubContext : DbContext, IRoadsideAssistanceIn
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<InsuranceInfo>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<EmergencyContact>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Policy>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RoadsideAssistanceInfoHubContext).Assembly);
     }

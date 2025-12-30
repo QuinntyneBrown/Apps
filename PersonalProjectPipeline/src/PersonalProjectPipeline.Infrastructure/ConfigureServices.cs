@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPersonalProjectPipelineContext>(provider =>
             provider.GetRequiredService<PersonalProjectPipelineContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

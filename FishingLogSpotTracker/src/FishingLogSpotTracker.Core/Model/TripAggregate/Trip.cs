@@ -19,6 +19,11 @@ public class Trip
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the spot ID where the trip took place.
     /// </summary>
     public Guid? SpotId { get; set; }

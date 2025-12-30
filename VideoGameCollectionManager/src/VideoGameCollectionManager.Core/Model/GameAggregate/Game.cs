@@ -7,6 +7,11 @@ public class Game
 {
     public Guid GameId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public Platform Platform { get; set; }
     public Genre Genre { get; set; }

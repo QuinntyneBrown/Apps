@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IWeeklyReviewSystemContext>(provider =>
             provider.GetRequiredService<WeeklyReviewSystemContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

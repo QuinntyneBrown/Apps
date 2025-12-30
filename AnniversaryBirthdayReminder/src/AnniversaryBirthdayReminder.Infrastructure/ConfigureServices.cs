@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IAnniversaryBirthdayReminderContext>(provider =>
             provider.GetRequiredService<AnniversaryBirthdayReminderContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -7,6 +7,11 @@ public class Artist
 {
     public Guid ArtistId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Biography { get; set; }
     public string? Country { get; set; }

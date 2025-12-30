@@ -11,13 +11,16 @@ namespace FocusSessionTracker.Infrastructure;
 /// </summary>
 public class FocusSessionTrackerContext : DbContext, IFocusSessionTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FocusSessionTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FocusSessionTrackerContext(DbContextOptions<FocusSessionTrackerContext> options)
+    public FocusSessionTrackerContext(DbContextOptions<FocusSessionTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class FocusSessionTrackerContext : DbContext, IFocusSessionTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<FocusSession>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Distraction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<SessionAnalytics>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FocusSessionTrackerContext).Assembly);
     }

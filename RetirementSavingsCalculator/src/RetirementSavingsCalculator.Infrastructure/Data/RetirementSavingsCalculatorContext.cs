@@ -11,13 +11,16 @@ namespace RetirementSavingsCalculator.Infrastructure;
 /// </summary>
 public class RetirementSavingsCalculatorContext : DbContext, IRetirementSavingsCalculatorContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RetirementSavingsCalculatorContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public RetirementSavingsCalculatorContext(DbContextOptions<RetirementSavingsCalculatorContext> options)
+    public RetirementSavingsCalculatorContext(DbContextOptions<RetirementSavingsCalculatorContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class RetirementSavingsCalculatorContext : DbContext, IRetirementSavingsC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<RetirementScenario>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Contribution>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WithdrawalStrategy>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RetirementSavingsCalculatorContext).Assembly);
     }

@@ -7,6 +7,11 @@ public class Trigger
 {
     public Guid TriggerId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string TriggerType { get; set; } = string.Empty;

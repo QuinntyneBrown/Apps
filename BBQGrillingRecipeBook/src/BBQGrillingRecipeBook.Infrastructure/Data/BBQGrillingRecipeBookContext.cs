@@ -11,13 +11,16 @@ namespace BBQGrillingRecipeBook.Infrastructure;
 /// </summary>
 public class BBQGrillingRecipeBookContext : DbContext, IBBQGrillingRecipeBookContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BBQGrillingRecipeBookContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public BBQGrillingRecipeBookContext(DbContextOptions<BBQGrillingRecipeBookContext> options)
+    public BBQGrillingRecipeBookContext(DbContextOptions<BBQGrillingRecipeBookContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class BBQGrillingRecipeBookContext : DbContext, IBBQGrillingRecipeBookCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Recipe>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<CookSession>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Technique>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BBQGrillingRecipeBookContext).Assembly);
     }

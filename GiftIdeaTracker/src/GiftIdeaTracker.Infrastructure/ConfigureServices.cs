@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IGiftIdeaTrackerContext>(provider =>
             provider.GetRequiredService<GiftIdeaTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

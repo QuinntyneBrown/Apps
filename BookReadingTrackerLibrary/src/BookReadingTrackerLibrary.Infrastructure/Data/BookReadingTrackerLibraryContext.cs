@@ -11,13 +11,16 @@ namespace BookReadingTrackerLibrary.Infrastructure;
 /// </summary>
 public class BookReadingTrackerLibraryContext : DbContext, IBookReadingTrackerLibraryContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BookReadingTrackerLibraryContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public BookReadingTrackerLibraryContext(DbContextOptions<BookReadingTrackerLibraryContext> options)
+    public BookReadingTrackerLibraryContext(DbContextOptions<BookReadingTrackerLibraryContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class BookReadingTrackerLibraryContext : DbContext, IBookReadingTrackerLi
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Book>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ReadingLog>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Wishlist>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Review>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BookReadingTrackerLibraryContext).Assembly);
     }

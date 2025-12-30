@@ -19,6 +19,11 @@ public class SearchQuery
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the query text.
     /// </summary>
     public string QueryText { get; set; } = string.Empty;

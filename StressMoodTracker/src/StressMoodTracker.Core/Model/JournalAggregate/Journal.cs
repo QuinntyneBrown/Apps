@@ -7,6 +7,11 @@ public class Journal
 {
     public Guid JournalId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime EntryDate { get; set; } = DateTime.UtcNow;

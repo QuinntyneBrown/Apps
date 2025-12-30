@@ -11,13 +11,16 @@ namespace PersonalNetWorthDashboard.Infrastructure;
 /// </summary>
 public class PersonalNetWorthDashboardContext : DbContext, IPersonalNetWorthDashboardContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalNetWorthDashboardContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalNetWorthDashboardContext(DbContextOptions<PersonalNetWorthDashboardContext> options)
+    public PersonalNetWorthDashboardContext(DbContextOptions<PersonalNetWorthDashboardContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class PersonalNetWorthDashboardContext : DbContext, IPersonalNetWorthDash
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Asset>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Liability>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<NetWorthSnapshot>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalNetWorthDashboardContext).Assembly);
     }

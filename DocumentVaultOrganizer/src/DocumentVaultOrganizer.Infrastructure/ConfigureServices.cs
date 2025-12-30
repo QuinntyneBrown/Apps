@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IDocumentVaultOrganizerContext>(provider =>
             provider.GetRequiredService<DocumentVaultOrganizerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -19,6 +19,11 @@ public class Injury
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the injury type.
     /// </summary>
     public InjuryType InjuryType { get; set; }

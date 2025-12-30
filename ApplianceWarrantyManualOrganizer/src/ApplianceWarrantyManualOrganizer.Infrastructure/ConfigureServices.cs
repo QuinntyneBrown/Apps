@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IApplianceWarrantyManualOrganizerContext>(provider =>
             provider.GetRequiredService<ApplianceWarrantyManualOrganizerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

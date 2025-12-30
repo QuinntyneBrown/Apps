@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IVideoGameCollectionManagerContext>(provider =>
             provider.GetRequiredService<VideoGameCollectionManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

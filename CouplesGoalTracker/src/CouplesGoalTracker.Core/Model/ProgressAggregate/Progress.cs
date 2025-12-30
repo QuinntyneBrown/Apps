@@ -24,6 +24,11 @@ public class Progress
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the date of the progress update.
     /// </summary>
     public DateTime ProgressDate { get; set; } = DateTime.UtcNow;

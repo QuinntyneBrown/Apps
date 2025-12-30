@@ -11,13 +11,16 @@ namespace TimeAuditTracker.Infrastructure;
 /// </summary>
 public class TimeAuditTrackerContext : DbContext, ITimeAuditTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeAuditTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public TimeAuditTrackerContext(DbContextOptions<TimeAuditTrackerContext> options)
+    public TimeAuditTrackerContext(DbContextOptions<TimeAuditTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class TimeAuditTrackerContext : DbContext, ITimeAuditTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<TimeBlock>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<AuditReport>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Goal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TimeAuditTrackerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace SubscriptionAuditTool.Infrastructure;
 /// </summary>
 public class SubscriptionAuditToolContext : DbContext, ISubscriptionAuditToolContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SubscriptionAuditToolContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public SubscriptionAuditToolContext(DbContextOptions<SubscriptionAuditToolContext> options)
+    public SubscriptionAuditToolContext(DbContextOptions<SubscriptionAuditToolContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -30,6 +33,14 @@ public class SubscriptionAuditToolContext : DbContext, ISubscriptionAuditToolCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Subscription>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Category>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubscriptionAuditToolContext).Assembly);
     }

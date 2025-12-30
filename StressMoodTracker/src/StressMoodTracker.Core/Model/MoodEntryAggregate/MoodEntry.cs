@@ -7,6 +7,11 @@ public class MoodEntry
 {
     public Guid MoodEntryId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public MoodLevel MoodLevel { get; set; }
     public StressLevel StressLevel { get; set; }
     public DateTime EntryTime { get; set; } = DateTime.UtcNow;

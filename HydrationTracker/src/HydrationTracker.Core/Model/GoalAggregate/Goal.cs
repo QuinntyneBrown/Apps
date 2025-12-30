@@ -7,6 +7,11 @@ public class Goal
 {
     public Guid GoalId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public decimal DailyGoalMl { get; set; }
     public DateTime StartDate { get; set; }
     public bool IsActive { get; set; } = true;

@@ -7,6 +7,11 @@ public class Photo
 {
     public Guid PhotoId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid SessionId { get; set; }
     public Session? Session { get; set; }
     public string FileName { get; set; } = string.Empty;

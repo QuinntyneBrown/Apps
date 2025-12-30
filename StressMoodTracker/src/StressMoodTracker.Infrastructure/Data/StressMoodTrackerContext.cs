@@ -11,13 +11,16 @@ namespace StressMoodTracker.Infrastructure;
 /// </summary>
 public class StressMoodTrackerContext : DbContext, IStressMoodTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="StressMoodTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public StressMoodTrackerContext(DbContextOptions<StressMoodTrackerContext> options)
+    public StressMoodTrackerContext(DbContextOptions<StressMoodTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class StressMoodTrackerContext : DbContext, IStressMoodTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<MoodEntry>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Trigger>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Journal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StressMoodTrackerContext).Assembly);
     }
