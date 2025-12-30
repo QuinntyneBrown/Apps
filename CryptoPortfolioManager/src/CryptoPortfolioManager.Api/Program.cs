@@ -1,9 +1,42 @@
+using CryptoPortfolioManager.Infrastructure;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "CryptoPortfolioManager API", Version = "v1" });
+});
+
+// Add MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+// Add Infrastructure services (DbContext, etc.)
+builder.Services.AddInfrastructure(builder.Configuration);
+
+// Configure CORS
+var corsOrigins = builder.Configuration["CorsOrigins"]?.Split(',') ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 
 var app = builder.Build();
 
@@ -11,11 +44,29 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CryptoPortfolioManager API v1"));
 }
 
+app.UseSerilogRequestLogging();
+
 app.UseHttpsRedirection();
+
+app.UseCors("AllowSpecificOrigins");
+
 app.UseAuthorization();
+
 app.MapControllers();
 
-app.Run();
+try
+{
+    Log.Information("Starting CryptoPortfolioManager API");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
