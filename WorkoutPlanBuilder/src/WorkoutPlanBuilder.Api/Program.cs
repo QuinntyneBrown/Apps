@@ -1,5 +1,6 @@
 using Serilog;
 using Serilog.Events;
+using System.Text.Json.Serialization;
 using WorkoutPlanBuilder.Infrastructure;
 
 Log.Logger = new LoggerConfiguration()
@@ -22,7 +23,11 @@ try
     builder.Host.UseSerilog();
 
     // Add services to the container.
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
