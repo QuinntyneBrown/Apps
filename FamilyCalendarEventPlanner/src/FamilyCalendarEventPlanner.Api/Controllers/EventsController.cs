@@ -112,4 +112,21 @@ public class EventsController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpDelete("{eventId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteEvent(Guid eventId)
+    {
+        _logger.LogInformation("Deleting calendar event {EventId}", eventId);
+
+        var result = await _mediator.Send(new DeleteEventCommand { EventId = eventId });
+
+        if (!result)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
