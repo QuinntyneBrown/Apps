@@ -18,12 +18,9 @@ export interface FamilyMemberDto {
   name: string;
   email: string | null;
   color: string;
-<<<<<<< Updated upstream
-  role: string;
+  role: number;
   isImmediate: boolean;
   relationType: RelationType;
-=======
-  role: number;
 }
 
 export enum MemberRole {
@@ -43,5 +40,4 @@ export function getRoleLabel(role: number): string {
     default:
       return 'Unknown';
   }
->>>>>>> Stashed changes
 }

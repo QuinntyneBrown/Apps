@@ -9,7 +9,8 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { FamilyMembersService } from '../../services/family-members.service';
-import { FamilyMemberDto, MemberRole, getRoleLabel } from '../../models/family-member-dto';
+import { FamilyMemberDto } from '../../models/family-member-dto';
+import { MemberRole, getRoleLabel } from '../../models/family-member-dto';
 import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '../../components/create-or-edit-family-member-dialog';
 
 type ImmediateFilter = 'all' | 'immediate' | 'extended';
@@ -70,6 +71,8 @@ export class FamilyMembers {
 
   onFilterChange(filter: ImmediateFilter): void {
     this.immediateFilter$.next(filter);
+  }
+
   getRoleLabel(role: number): string {
     return getRoleLabel(role);
   }
@@ -88,6 +91,7 @@ export class FamilyMembers {
 
     dialogRef.afterClosed().subscribe((result: CreateOrEditFamilyMemberDialogResult) => {
       if (result?.action === 'create' && result.data) {
+        console.log('CreateFamilyMemberCommand payload:', result.data);
         this.membersService.createFamilyMember(result.data).subscribe({
           next: () => {
             this.refresh$.next();

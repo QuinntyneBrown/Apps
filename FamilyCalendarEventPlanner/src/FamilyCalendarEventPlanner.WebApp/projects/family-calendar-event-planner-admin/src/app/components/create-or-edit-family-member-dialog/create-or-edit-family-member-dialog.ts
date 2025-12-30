@@ -77,18 +77,14 @@ export class CreateOrEditFamilyMemberDialog {
     public dialogRef: MatDialogRef<CreateOrEditFamilyMemberDialog>,
     @Inject(MAT_DIALOG_DATA) public data: CreateOrEditFamilyMemberDialogData
   ) {
-    this.form = this.fb.group({
+        this.form = this.fb.group({
       name: [data.member?.name || '', Validators.required],
       email: [data.member?.email || '', [Validators.email]],
       color: [data.member?.color || '#3b82f6', Validators.required],
-<<<<<<< Updated upstream
-      role: [data.member?.role || 'Member', Validators.required],
+      role: [data.member?.role ?? 1, Validators.required],
       isImmediate: [data.member?.isImmediate ?? true],
       relationType: [data.member?.relationType || 'Self', Validators.required]
-=======
-      role: [data.member?.role || 1, Validators.required]
->>>>>>> Stashed changes
-    });
+        });
   }
 
   get isEditMode(): boolean {
@@ -102,6 +98,22 @@ export class CreateOrEditFamilyMemberDialog {
   onSubmit(): void {
     if (this.form.valid) {
       const formValue = this.form.value;
+      // Map relationType string to enum number
+      const relationTypeMap: Record<string, number> = {
+        Self: 0,
+        Spouse: 1,
+        Child: 2,
+        Parent: 3,
+        Sibling: 4,
+        Grandparent: 5,
+        Grandchild: 6,
+        AuntUncle: 7,
+        NieceNephew: 8,
+        Cousin: 9,
+        InLaw: 10,
+        Other: 11
+      };
+      const mappedRelationType = relationTypeMap[(formValue.relationType as string)] ?? 0;
 
       const result: CreateOrEditFamilyMemberDialogResult = {
         action: this.isEditMode ? 'update' : 'create',
@@ -110,9 +122,9 @@ export class CreateOrEditFamilyMemberDialog {
           name: formValue.name,
           email: formValue.email || null,
           color: formValue.color,
-          role: formValue.role,
+          role: formValue.role, // already number
           isImmediate: formValue.isImmediate,
-          relationType: formValue.relationType,
+          relationType: mappedRelationType,
           ...(this.isEditMode && { memberId: this.data.member!.memberId })
         }
       };
