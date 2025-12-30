@@ -6,10 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { HouseholdsService } from '../../services/households.service';
 import { HouseholdDto, CanadianProvince, getProvinceLabel } from '../../models/household-dto';
 import { CreateOrEditHouseholdDialog, CreateOrEditHouseholdDialogResult } from '../../components/create-or-edit-household-dialog';
+import { ConfirmDialog, ConfirmDialogResult } from '../../components/confirm-dialog';
 
 @Component({
   selector: 'app-households',
@@ -20,7 +22,8 @@ import { CreateOrEditHouseholdDialog, CreateOrEditHouseholdDialogResult } from '
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSnackBarModule
   ],
   templateUrl: './households.html',
   styleUrls: ['./households.scss']
@@ -28,6 +31,7 @@ import { CreateOrEditHouseholdDialog, CreateOrEditHouseholdDialogResult } from '
 export class Households {
   private householdsService = inject(HouseholdsService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   private refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -52,9 +56,11 @@ export class Households {
         this.householdsService.createHousehold(result.data).subscribe({
           next: () => {
             this.refresh$.next();
+            this.snackBar.open('Household created successfully', 'Close', { duration: 3000 });
           },
           error: (error) => {
             console.error('Error creating household:', error);
+            this.snackBar.open('Error creating household', 'Close', { duration: 3000 });
           }
         });
       }
@@ -72,9 +78,11 @@ export class Households {
         this.householdsService.updateHousehold(household.householdId, { ...result.data, householdId: household.householdId }).subscribe({
           next: () => {
             this.refresh$.next();
+            this.snackBar.open('Household updated successfully', 'Close', { duration: 3000 });
           },
           error: (error) => {
             console.error('Error updating household:', error);
+            this.snackBar.open('Error updating household', 'Close', { duration: 3000 });
           }
         });
       }
@@ -82,15 +90,27 @@ export class Households {
   }
 
   onDeleteHousehold(household: HouseholdDto): void {
-    if (confirm(`Are you sure you want to delete ${household.name}?`)) {
-      this.householdsService.deleteHousehold(household.householdId).subscribe({
-        next: () => {
-          this.refresh$.next();
-        },
-        error: (error) => {
-          console.error('Error deleting household:', error);
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '400px',
+      data: {
+        title: 'Delete Household',
+        message: `Are you sure you want to delete ${household.name}?`
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: ConfirmDialogResult) => {
+      if (result?.confirmed) {
+        this.householdsService.deleteHousehold(household.householdId).subscribe({
+          next: () => {
+            this.refresh$.next();
+            this.snackBar.open('Household deleted successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error deleting household:', error);
+            this.snackBar.open('Error deleting household', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 }

@@ -9,12 +9,14 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { FamilyMembersService } from '../../services/family-members.service';
 import { HouseholdsService } from '../../services/households.service';
 import { FamilyMemberDto, MemberRole, getRoleLabel } from '../../models/family-member-dto';
 import { HouseholdDto } from '../../models/household-dto';
 import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '../../components/create-or-edit-family-member-dialog';
+import { ConfirmDialog, ConfirmDialogResult } from '../../components/confirm-dialog';
 
 type ImmediateFilter = 'all' | 'immediate' | 'extended';
 
@@ -30,7 +32,8 @@ type ImmediateFilter = 'all' | 'immediate' | 'extended';
     MatButtonToggleModule,
     MatChipsModule,
     MatSelectModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatSnackBarModule
   ],
   templateUrl: './family-members.html',
   styleUrls: ['./family-members.scss']
@@ -39,6 +42,7 @@ export class FamilyMembers {
   private membersService = inject(FamilyMembersService);
   private householdsService = inject(HouseholdsService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   private refresh$ = new BehaviorSubject<void>(undefined);
   immediateFilter$ = new BehaviorSubject<ImmediateFilter>('all');
@@ -111,9 +115,11 @@ export class FamilyMembers {
         this.membersService.createFamilyMember(result.data).subscribe({
           next: () => {
             this.refresh$.next();
+            this.snackBar.open('Family member created successfully', 'Close', { duration: 3000 });
           },
           error: (error) => {
             console.error('Error creating member:', error);
+            this.snackBar.open('Error creating family member', 'Close', { duration: 3000 });
           }
         });
       }
@@ -134,9 +140,11 @@ export class FamilyMembers {
         this.membersService.updateFamilyMember(member.memberId, { ...result.data, memberId: member.memberId }).subscribe({
           next: () => {
             this.refresh$.next();
+            this.snackBar.open('Family member updated successfully', 'Close', { duration: 3000 });
           },
           error: (error) => {
             console.error('Error updating member:', error);
+            this.snackBar.open('Error updating family member', 'Close', { duration: 3000 });
           }
         });
       }
@@ -144,15 +152,27 @@ export class FamilyMembers {
   }
 
   onDeleteMember(member: FamilyMemberDto): void {
-    if (confirm(`Are you sure you want to delete ${member.name}?`)) {
-      this.membersService.deleteFamilyMember(member.memberId).subscribe({
-        next: () => {
-          this.refresh$.next();
-        },
-        error: (error) => {
-          console.error('Error deleting member:', error);
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '400px',
+      data: {
+        title: 'Delete Family Member',
+        message: `Are you sure you want to delete ${member.name}?`
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: ConfirmDialogResult) => {
+      if (result?.confirmed) {
+        this.membersService.deleteFamilyMember(member.memberId).subscribe({
+          next: () => {
+            this.refresh$.next();
+            this.snackBar.open('Family member deleted successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error deleting member:', error);
+            this.snackBar.open('Error deleting family member', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 }
