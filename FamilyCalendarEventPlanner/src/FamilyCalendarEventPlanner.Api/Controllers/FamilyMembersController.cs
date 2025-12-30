@@ -100,4 +100,21 @@ public class FamilyMembersController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpDelete("{memberId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteFamilyMember(Guid memberId)
+    {
+        _logger.LogInformation("Deleting family member {MemberId}", memberId);
+
+        var result = await _mediator.Send(new DeleteFamilyMemberCommand { MemberId = memberId });
+
+        if (!result)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
