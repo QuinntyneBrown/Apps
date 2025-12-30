@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { combineLatest, map, startWith, switchMap, BehaviorSubject } from 'rxjs';
 import { RecipientsService, GiftIdeasService, PurchasesService } from '../../services';
 import { GiftIdeaCard, GiftIdeaDialog, GiftIdeaDialogResult } from '../../components';
-import { GiftIdea, Occasion } from '../../models';
+import { GiftIdea, CreateGiftIdeaRequest, UpdateGiftIdeaRequest } from '../../models';
 
 @Component({
   selector: 'app-dashboard',
@@ -85,7 +85,7 @@ export class Dashboard {
 
       dialogRef.afterClosed().subscribe((result: GiftIdeaDialogResult | undefined) => {
         if (result?.action === 'create') {
-          this.giftIdeasService.createGiftIdea(result.data).subscribe(() => {
+          this.giftIdeasService.createGiftIdea(result.data as CreateGiftIdeaRequest).subscribe(() => {
             this.refresh$.next();
           });
         }
@@ -108,7 +108,7 @@ export class Dashboard {
 
       dialogRef.afterClosed().subscribe((result: GiftIdeaDialogResult | undefined) => {
         if (result?.action === 'update') {
-          this.giftIdeasService.updateGiftIdea(result.data).subscribe(() => {
+          this.giftIdeasService.updateGiftIdea(result.data as UpdateGiftIdeaRequest).subscribe(() => {
             this.refresh$.next();
           });
         }
