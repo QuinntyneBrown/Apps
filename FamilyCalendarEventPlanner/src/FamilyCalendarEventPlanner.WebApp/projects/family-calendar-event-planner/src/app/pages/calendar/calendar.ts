@@ -190,18 +190,31 @@ export class Calendar {
   }
 
   openAddEventDialog(members: FamilyMember[]): void {
+    if (!members || members.length === 0) {
+      console.error('Cannot create event: No family members available');
+      return;
+    }
+
     const dialogRef = this.dialog.open(EventDialog, {
       width: '600px',
       data: {
         members,
-        familyId: members[0]?.familyId || '',
-        creatorId: members[0]?.memberId || ''
+        familyId: members[0].familyId,
+        creatorId: members[0].memberId
       } as EventDialogData
     });
 
     dialogRef.afterClosed().subscribe((result: EventDialogResult) => {
       if (result?.action === 'create' && result.data) {
-        this.eventsService.createEvent(result.data).subscribe();
+        this.eventsService.createEvent(result.data).subscribe({
+          next: (event) => {
+            console.log('Event created successfully:', event);
+            window.location.reload();
+          },
+          error: (error) => {
+            console.error('Error creating event:', error);
+          }
+        });
       }
     });
   }

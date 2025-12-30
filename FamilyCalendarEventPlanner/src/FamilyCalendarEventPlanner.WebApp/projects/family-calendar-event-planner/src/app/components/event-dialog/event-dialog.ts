@@ -123,16 +123,18 @@ export class EventDialog {
       const startDateTime = this.combineDateTime(formValue.startDate, formValue.startTime);
       const endDateTime = this.combineDateTime(formValue.endDate, formValue.endTime);
 
+      const hasRecurrence = formValue.recurrenceFrequency && formValue.recurrenceFrequency !== RecurrenceFrequency.None;
+
       const request: CreateEventRequest = {
         familyId: this.data.familyId,
         creatorId: this.data.creatorId,
         title: formValue.title,
-        description: formValue.description,
+        description: formValue.description || undefined,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        location: formValue.location,
+        location: formValue.location || undefined,
         eventType: formValue.eventType,
-        recurrencePattern: this.isRecurring ? {
+        recurrencePattern: hasRecurrence ? {
           frequency: formValue.recurrenceFrequency,
           interval: formValue.recurrenceInterval,
           endDate: formValue.recurrenceEndDate?.toISOString() || null,
