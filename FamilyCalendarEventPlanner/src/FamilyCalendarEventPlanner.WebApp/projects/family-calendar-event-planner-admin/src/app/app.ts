@@ -1,52 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { AsyncPipe } from '@angular/common';
-import { map } from 'rxjs/operators';
-import { AuthService } from './services/auth.service';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatButtonModule,
-    MatListModule,
-    MatMenuModule,
-    MatDividerModule,
-    AsyncPipe
-  ],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App {
-  title = 'Family Calendar Event Planner Admin';
-  private breakpointObserver = inject(BreakpointObserver);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-
-  isLargeScreen$ = this.breakpointObserver.observe([
-    Breakpoints.Medium,
-    Breakpoints.Large,
-    Breakpoints.XLarge
-  ]).pipe(
-    map(result => result.matches)
-  );
-
-  onLogout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }
