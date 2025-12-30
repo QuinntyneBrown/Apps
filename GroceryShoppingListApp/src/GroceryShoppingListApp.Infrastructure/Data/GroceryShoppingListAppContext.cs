@@ -1,0 +1,42 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using GroceryShoppingListApp.Core;
+using Microsoft.EntityFrameworkCore;
+
+namespace GroceryShoppingListApp.Infrastructure;
+
+/// <summary>
+/// The Entity Framework Core DbContext for the GroceryShoppingListApp system.
+/// </summary>
+public class GroceryShoppingListAppContext : DbContext, IGroceryShoppingListAppContext
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GroceryShoppingListAppContext"/> class.
+    /// </summary>
+    /// <param name="options">The DbContext options.</param>
+    public GroceryShoppingListAppContext(DbContextOptions<GroceryShoppingListAppContext> options)
+        : base(options)
+    {
+    }
+
+    /// <inheritdoc/>
+    public DbSet<GroceryList> GroceryLists { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<GroceryItem> GroceryItems { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<Store> Stores { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<PriceHistory> PriceHistories { get; set; } = null!;
+
+    /// <inheritdoc/>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GroceryShoppingListAppContext).Assembly);
+    }
+}
