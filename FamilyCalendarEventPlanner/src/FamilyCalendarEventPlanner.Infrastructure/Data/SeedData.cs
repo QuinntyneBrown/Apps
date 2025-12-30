@@ -2,24 +2,31 @@ using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 
 namespace FamilyCalendarEventPlanner.Infrastructure.Data;
 
 public static class SeedData
 {
-    public static async Task SeedAsync(FamilyCalendarEventPlannerContext context, ILogger logger)
+    public static async Task SeedAsync(FamilyCalendarEventPlannerContext context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {
             await context.Database.EnsureCreatedAsync();
 
+            // Seed roles and admin user (always check for these)
+            await SeedRolesAndAdminUserAsync(context, logger, passwordHasher);
+
             if (context.FamilyMembers.Any())
             {
-                logger.LogInformation("Database already contains data. Skipping seed.");
+                logger.LogInformation("Database already contains family data. Skipping family seed.");
                 return;
             }
 
@@ -89,6 +96,53 @@ public static class SeedData
         {
             logger.LogError(ex, "An error occurred while seeding the database.");
             throw;
+        }
+    }
+
+    private static async Task SeedRolesAndAdminUserAsync(
+        FamilyCalendarEventPlannerContext context,
+        ILogger logger,
+        IPasswordHasher passwordHasher)
+    {
+        // Seed roles if they don't exist
+        var adminRoleName = "Admin";
+        var userRoleName = "User";
+
+        var adminRole = context.Roles.FirstOrDefault(r => r.Name == adminRoleName);
+        if (adminRole == null)
+        {
+            adminRole = new Role(adminRoleName);
+            context.Roles.Add(adminRole);
+            logger.LogInformation("Created Admin role.");
+        }
+
+        var userRole = context.Roles.FirstOrDefault(r => r.Name == userRoleName);
+        if (userRole == null)
+        {
+            userRole = new Role(userRoleName);
+            context.Roles.Add(userRole);
+            logger.LogInformation("Created User role.");
+        }
+
+        await context.SaveChangesAsync();
+
+        // Seed admin user if it doesn't exist
+        var adminUserName = "admin";
+        var adminUser = context.Users.FirstOrDefault(u => u.UserName == adminUserName);
+        if (adminUser == null)
+        {
+            var (hashedPassword, salt) = passwordHasher.HashPassword("Admin123!");
+            adminUser = new User(
+                userName: adminUserName,
+                email: "admin@familycalendar.local",
+                hashedPassword: hashedPassword,
+                salt: salt);
+
+            adminUser.AddRole(adminRole);
+            context.Users.Add(adminUser);
+            await context.SaveChangesAsync();
+
+            logger.LogInformation("Created admin user with Admin role.");
         }
     }
 }

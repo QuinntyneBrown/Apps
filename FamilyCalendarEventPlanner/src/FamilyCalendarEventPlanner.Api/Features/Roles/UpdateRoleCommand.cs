@@ -1,0 +1,57 @@
+using FamilyCalendarEventPlanner.Core;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace FamilyCalendarEventPlanner.Api.Features.Roles;
+
+public record UpdateRoleCommand : IRequest<RoleDto?>
+{
+    public Guid RoleId { get; init; }
+    public string Name { get; init; } = string.Empty;
+}
+
+public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleDto?>
+{
+    private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ILogger<UpdateRoleCommandHandler> _logger;
+
+    public UpdateRoleCommandHandler(
+        IFamilyCalendarEventPlannerContext context,
+        ILogger<UpdateRoleCommandHandler> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task<RoleDto?> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Updating role {RoleId}", request.RoleId);
+
+        var role = await _context.Roles
+            .FirstOrDefaultAsync(r => r.RoleId == request.RoleId, cancellationToken);
+
+        if (role == null)
+        {
+            return null;
+        }
+
+        // Check for duplicate name if updating
+        if (request.Name != role.Name)
+        {
+            var existingRole = await _context.Roles
+                .AnyAsync(r => r.Name == request.Name && r.RoleId != request.RoleId, cancellationToken);
+            if (existingRole)
+            {
+                throw new InvalidOperationException($"Role with name '{request.Name}' already exists.");
+            }
+        }
+
+        role.UpdateName(request.Name);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Updated role {RoleId}", request.RoleId);
+
+        return role.ToDto();
+    }
+}

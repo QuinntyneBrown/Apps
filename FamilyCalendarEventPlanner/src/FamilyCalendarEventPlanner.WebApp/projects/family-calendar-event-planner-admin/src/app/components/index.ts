@@ -4,3 +4,5 @@
 export * from './create-or-edit-family-member-dialog';
 export * from './create-or-edit-household-dialog';
 export * from './create-or-edit-event-dialog';
+export * from './create-or-edit-user-dialog';
+export * from './create-or-edit-role-dialog';
