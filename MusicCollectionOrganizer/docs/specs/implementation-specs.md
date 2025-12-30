@@ -192,6 +192,21 @@ Id
 ### 5.5 CORS Configuration
 **REQ-API-006**: The API SHALL have a CORS policy defined. The origins allowed in the CORS policy SHALL be retrieved from configuration and SHALL include the URLs where the frontend(s) are hosted.
 
+### 5.6 JSON Serialization
+**REQ-API-007**: The API project Program.cs SHALL include the following using statement:
+```csharp
+using System.Text.Json.Serialization;
+```
+
+**REQ-API-008**: The API SHALL configure JSON serialization to handle enums as text strings. The `AddControllers()` call SHALL be configured with `JsonStringEnumConverter`:
+```csharp
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+```
+
 ---
 
 ## 6. Frontend Requirements
@@ -470,6 +485,7 @@ All changes to this specification SHALL be tracked and versioned appropriately.
 | 1.1     | 2025-12-22 | System | Added structured logging requirements (REQ-SYS-013 through REQ-SYS-022) |
 | 1.2     | 2025-12-22 | System | Added code linting and static analysis requirements (REQ-LINT-001 through REQ-LINT-010) |
 | 1.3     | 2025-12-25 | System | Merged reactive data loading pattern requirements from data-loading-specs.md (REQ-FE-027 through REQ-FE-036) |
+| 1.4     | 2025-12-30 | System | Added JSON enum serialization requirements (REQ-API-007 through REQ-API-008) |
 
 ---
 
