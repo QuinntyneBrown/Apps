@@ -11,13 +11,16 @@ namespace AnniversaryBirthdayReminder.Infrastructure;
 /// </summary>
 public class AnniversaryBirthdayReminderContext : DbContext, IAnniversaryBirthdayReminderContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AnniversaryBirthdayReminderContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public AnniversaryBirthdayReminderContext(DbContextOptions<AnniversaryBirthdayReminderContext> options)
+    public AnniversaryBirthdayReminderContext(DbContextOptions<AnniversaryBirthdayReminderContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class AnniversaryBirthdayReminderContext : DbContext, IAnniversaryBirthda
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<ImportantDate>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Gift>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Celebration>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AnniversaryBirthdayReminderContext).Assembly);
     }

@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IFreelanceProjectManagerContext>(provider =>
             provider.GetRequiredService<FreelanceProjectManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

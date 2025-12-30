@@ -11,13 +11,16 @@ namespace SalaryCompensationTracker.Infrastructure;
 /// </summary>
 public class SalaryCompensationTrackerContext : DbContext, ISalaryCompensationTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SalaryCompensationTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public SalaryCompensationTrackerContext(DbContextOptions<SalaryCompensationTrackerContext> options)
+    public SalaryCompensationTrackerContext(DbContextOptions<SalaryCompensationTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class SalaryCompensationTrackerContext : DbContext, ISalaryCompensationTr
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Compensation>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Benefit>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<MarketComparison>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SalaryCompensationTrackerContext).Assembly);
     }

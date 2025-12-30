@@ -19,6 +19,11 @@ public class WeeklyReview
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the week start date.
     /// </summary>
     public DateTime WeekStartDate { get; set; }

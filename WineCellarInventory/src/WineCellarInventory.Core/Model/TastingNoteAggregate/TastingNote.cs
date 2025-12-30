@@ -7,6 +7,11 @@ public class TastingNote
 {
     public Guid TastingNoteId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid WineId { get; set; }
     public Wine? Wine { get; set; }
     public DateTime TastingDate { get; set; } = DateTime.UtcNow;

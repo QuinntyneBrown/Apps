@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IRecipeManagerMealPlannerContext>(provider =>
             provider.GetRequiredService<RecipeManagerMealPlannerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -24,6 +24,11 @@ public class Favorite
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets optional notes about why this prompt is favorited.
     /// </summary>
     public string? Notes { get; set; }

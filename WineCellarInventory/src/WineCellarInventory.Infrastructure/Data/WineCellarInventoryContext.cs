@@ -11,13 +11,16 @@ namespace WineCellarInventory.Infrastructure;
 /// </summary>
 public class WineCellarInventoryContext : DbContext, IWineCellarInventoryContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="WineCellarInventoryContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public WineCellarInventoryContext(DbContextOptions<WineCellarInventoryContext> options)
+    public WineCellarInventoryContext(DbContextOptions<WineCellarInventoryContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class WineCellarInventoryContext : DbContext, IWineCellarInventoryContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Wine>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TastingNote>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<DrinkingWindow>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WineCellarInventoryContext).Assembly);
     }

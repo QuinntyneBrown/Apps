@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IRoadsideAssistanceInfoHubContext>(provider =>
             provider.GetRequiredService<RoadsideAssistanceInfoHubContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

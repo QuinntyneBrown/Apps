@@ -11,13 +11,16 @@ namespace PersonalHealthDashboard.Infrastructure;
 /// </summary>
 public class PersonalHealthDashboardContext : DbContext, IPersonalHealthDashboardContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalHealthDashboardContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalHealthDashboardContext(DbContextOptions<PersonalHealthDashboardContext> options)
+    public PersonalHealthDashboardContext(DbContextOptions<PersonalHealthDashboardContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class PersonalHealthDashboardContext : DbContext, IPersonalHealthDashboar
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Vital>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WearableData>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<HealthTrend>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalHealthDashboardContext).Assembly);
     }

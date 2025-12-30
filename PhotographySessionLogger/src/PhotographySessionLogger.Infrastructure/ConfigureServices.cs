@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPhotographySessionLoggerContext>(provider =>
             provider.GetRequiredService<PhotographySessionLoggerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

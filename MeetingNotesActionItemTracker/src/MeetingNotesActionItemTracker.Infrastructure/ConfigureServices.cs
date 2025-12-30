@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IMeetingNotesActionItemTrackerContext>(provider =>
             provider.GetRequiredService<MeetingNotesActionItemTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

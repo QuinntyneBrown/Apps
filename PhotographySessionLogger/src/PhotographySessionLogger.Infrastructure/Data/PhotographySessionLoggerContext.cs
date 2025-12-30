@@ -11,13 +11,16 @@ namespace PhotographySessionLogger.Infrastructure;
 /// </summary>
 public class PhotographySessionLoggerContext : DbContext, IPhotographySessionLoggerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PhotographySessionLoggerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PhotographySessionLoggerContext(DbContextOptions<PhotographySessionLoggerContext> options)
+    public PhotographySessionLoggerContext(DbContextOptions<PhotographySessionLoggerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class PhotographySessionLoggerContext : DbContext, IPhotographySessionLog
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Session>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Photo>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Gear>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PhotographySessionLoggerContext).Assembly);
     }

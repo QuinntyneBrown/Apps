@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ICryptoPortfolioManagerContext>(provider =>
             provider.GetRequiredService<CryptoPortfolioManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

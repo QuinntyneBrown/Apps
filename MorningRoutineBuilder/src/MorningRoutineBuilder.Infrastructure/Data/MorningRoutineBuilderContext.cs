@@ -11,13 +11,16 @@ namespace MorningRoutineBuilder.Infrastructure;
 /// </summary>
 public class MorningRoutineBuilderContext : DbContext, IMorningRoutineBuilderContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MorningRoutineBuilderContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public MorningRoutineBuilderContext(DbContextOptions<MorningRoutineBuilderContext> options)
+    public MorningRoutineBuilderContext(DbContextOptions<MorningRoutineBuilderContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class MorningRoutineBuilderContext : DbContext, IMorningRoutineBuilderCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Routine>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<RoutineTask>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<CompletionLog>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Streak>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MorningRoutineBuilderContext).Assembly);
     }

@@ -19,6 +19,11 @@ public class Tag
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the tag name.
     /// </summary>
     public string Name { get; set; } = string.Empty;

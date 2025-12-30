@@ -4,6 +4,11 @@ public class ViewingRecord
 {
     public Guid ViewingRecordId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid ContentId { get; set; }
     public ContentType ContentType { get; set; }
     public DateTime WatchDate { get; set; }

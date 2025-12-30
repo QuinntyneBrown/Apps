@@ -7,6 +7,11 @@ public class PlaySession
 {
     public Guid PlaySessionId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid GameId { get; set; }
     public Game? Game { get; set; }
     public DateTime StartTime { get; set; } = DateTime.UtcNow;

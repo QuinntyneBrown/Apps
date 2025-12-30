@@ -11,13 +11,16 @@ namespace HomeGymEquipmentManager.Infrastructure;
 /// </summary>
 public class HomeGymEquipmentManagerContext : DbContext, IHomeGymEquipmentManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeGymEquipmentManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HomeGymEquipmentManagerContext(DbContextOptions<HomeGymEquipmentManagerContext> options)
+    public HomeGymEquipmentManagerContext(DbContextOptions<HomeGymEquipmentManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class HomeGymEquipmentManagerContext : DbContext, IHomeGymEquipmentManage
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Equipment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Maintenance>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WorkoutMapping>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HomeGymEquipmentManagerContext).Assembly);
     }

@@ -4,6 +4,11 @@ public class YearInReview
 {
     public Guid YearInReviewId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public int Year { get; set; }
     public int TotalMoviesWatched { get; set; }
     public int TotalShowsWatched { get; set; }

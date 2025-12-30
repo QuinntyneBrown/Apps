@@ -11,13 +11,16 @@ namespace PersonalWiki.Infrastructure;
 /// </summary>
 public class PersonalWikiContext : DbContext, IPersonalWikiContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalWikiContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalWikiContext(DbContextOptions<PersonalWikiContext> options)
+    public PersonalWikiContext(DbContextOptions<PersonalWikiContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class PersonalWikiContext : DbContext, IPersonalWikiContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<WikiPage>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PageRevision>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WikiCategory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PageLink>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalWikiContext).Assembly);
     }

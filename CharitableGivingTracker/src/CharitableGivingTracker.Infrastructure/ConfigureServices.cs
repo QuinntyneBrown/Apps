@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ICharitableGivingTrackerContext>(provider =>
             provider.GetRequiredService<CharitableGivingTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

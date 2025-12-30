@@ -11,13 +11,16 @@ namespace ProfessionalNetworkCRM.Infrastructure;
 /// </summary>
 public class ProfessionalNetworkCRMContext : DbContext, IProfessionalNetworkCRMContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfessionalNetworkCRMContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public ProfessionalNetworkCRMContext(DbContextOptions<ProfessionalNetworkCRMContext> options)
+    public ProfessionalNetworkCRMContext(DbContextOptions<ProfessionalNetworkCRMContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class ProfessionalNetworkCRMContext : DbContext, IProfessionalNetworkCRMC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Contact>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Interaction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<FollowUp>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProfessionalNetworkCRMContext).Assembly);
     }

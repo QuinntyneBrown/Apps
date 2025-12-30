@@ -11,13 +11,16 @@ namespace FamilyTreeBuilder.Infrastructure;
 /// </summary>
 public class FamilyTreeBuilderContext : DbContext, IFamilyTreeBuilderContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FamilyTreeBuilderContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FamilyTreeBuilderContext(DbContextOptions<FamilyTreeBuilderContext> options)
+    public FamilyTreeBuilderContext(DbContextOptions<FamilyTreeBuilderContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class FamilyTreeBuilderContext : DbContext, IFamilyTreeBuilderContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Person>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Relationship>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Story>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<FamilyPhoto>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FamilyTreeBuilderContext).Assembly);
     }

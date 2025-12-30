@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IRunningLogRaceTrackerContext>(provider =>
             provider.GetRequiredService<RunningLogRaceTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -11,13 +11,16 @@ namespace ConversationStarterApp.Infrastructure.Data;
 /// </summary>
 public class ConversationStarterAppContext : DbContext, IConversationStarterAppContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ConversationStarterAppContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    public ConversationStarterAppContext(DbContextOptions<ConversationStarterAppContext> options)
+    public ConversationStarterAppContext(DbContextOptions<ConversationStarterAppContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <summary>
@@ -42,6 +45,15 @@ public class ConversationStarterAppContext : DbContext, IConversationStarterAppC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Prompt>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Favorite>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Session>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ConversationStarterAppContext).Assembly);
     }
 }

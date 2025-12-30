@@ -11,13 +11,16 @@ namespace HomeInventoryManager.Infrastructure;
 /// </summary>
 public class HomeInventoryManagerContext : DbContext, IHomeInventoryManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeInventoryManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HomeInventoryManagerContext(DbContextOptions<HomeInventoryManagerContext> options)
+    public HomeInventoryManagerContext(DbContextOptions<HomeInventoryManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -30,6 +33,14 @@ public class HomeInventoryManagerContext : DbContext, IHomeInventoryManagerConte
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Item>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ValueEstimate>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HomeInventoryManagerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace WeeklyReviewSystem.Infrastructure;
 /// </summary>
 public class WeeklyReviewSystemContext : DbContext, IWeeklyReviewSystemContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="WeeklyReviewSystemContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public WeeklyReviewSystemContext(DbContextOptions<WeeklyReviewSystemContext> options)
+    public WeeklyReviewSystemContext(DbContextOptions<WeeklyReviewSystemContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class WeeklyReviewSystemContext : DbContext, IWeeklyReviewSystemContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<WeeklyReview>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Accomplishment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Challenge>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WeeklyPriority>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WeeklyReviewSystemContext).Assembly);
     }

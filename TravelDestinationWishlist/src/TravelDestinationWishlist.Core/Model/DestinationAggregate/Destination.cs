@@ -7,6 +7,11 @@ public class Destination
 {
     public Guid DestinationId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Country { get; set; } = string.Empty;
     public DestinationType DestinationType { get; set; }

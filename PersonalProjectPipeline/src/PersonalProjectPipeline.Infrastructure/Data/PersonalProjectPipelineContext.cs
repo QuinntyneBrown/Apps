@@ -11,13 +11,16 @@ namespace PersonalProjectPipeline.Infrastructure;
 /// </summary>
 public class PersonalProjectPipelineContext : DbContext, IPersonalProjectPipelineContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalProjectPipelineContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalProjectPipelineContext(DbContextOptions<PersonalProjectPipelineContext> options)
+    public PersonalProjectPipelineContext(DbContextOptions<PersonalProjectPipelineContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class PersonalProjectPipelineContext : DbContext, IPersonalProjectPipelin
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ProjectTask>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Milestone>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalProjectPipelineContext).Assembly);
     }

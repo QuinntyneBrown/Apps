@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IGroceryShoppingListAppContext>(provider =>
             provider.GetRequiredService<GroceryShoppingListAppContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

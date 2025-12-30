@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ITaxDeductionOrganizerContext>(provider =>
             provider.GetRequiredService<TaxDeductionOrganizerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

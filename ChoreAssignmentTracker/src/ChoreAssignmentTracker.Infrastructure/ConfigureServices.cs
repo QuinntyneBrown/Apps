@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IChoreAssignmentTrackerContext>(provider =>
             provider.GetRequiredService<ChoreAssignmentTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

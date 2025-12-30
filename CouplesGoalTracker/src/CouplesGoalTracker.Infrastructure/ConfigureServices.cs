@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ICouplesGoalTrackerContext>(provider =>
             provider.GetRequiredService<CouplesGoalTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -7,6 +7,11 @@ public class Project
 {
     public Guid ProjectId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string CarMake { get; set; } = string.Empty;
     public string CarModel { get; set; } = string.Empty;
     public int? Year { get; set; }

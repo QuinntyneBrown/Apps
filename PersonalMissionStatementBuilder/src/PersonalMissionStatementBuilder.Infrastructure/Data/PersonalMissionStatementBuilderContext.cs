@@ -11,13 +11,16 @@ namespace PersonalMissionStatementBuilder.Infrastructure;
 /// </summary>
 public class PersonalMissionStatementBuilderContext : DbContext, IPersonalMissionStatementBuilderContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalMissionStatementBuilderContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalMissionStatementBuilderContext(DbContextOptions<PersonalMissionStatementBuilderContext> options)
+    public PersonalMissionStatementBuilderContext(DbContextOptions<PersonalMissionStatementBuilderContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class PersonalMissionStatementBuilderContext : DbContext, IPersonalMissio
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<MissionStatement>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Value>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Goal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Progress>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalMissionStatementBuilderContext).Assembly);
     }

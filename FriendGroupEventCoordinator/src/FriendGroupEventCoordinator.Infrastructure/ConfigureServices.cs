@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IFriendGroupEventCoordinatorContext>(provider =>
             provider.GetRequiredService<FriendGroupEventCoordinatorContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

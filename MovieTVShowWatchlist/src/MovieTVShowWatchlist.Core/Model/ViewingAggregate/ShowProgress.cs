@@ -4,6 +4,11 @@ public class ShowProgress
 {
     public Guid ShowProgressId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid TVShowId { get; set; }
     public int? LastWatchedSeason { get; set; }
     public int? LastWatchedEpisode { get; set; }

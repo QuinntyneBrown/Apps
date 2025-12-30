@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IFamilyPhotoAlbumOrganizerContext>(provider =>
             provider.GetRequiredService<FamilyPhotoAlbumOrganizerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

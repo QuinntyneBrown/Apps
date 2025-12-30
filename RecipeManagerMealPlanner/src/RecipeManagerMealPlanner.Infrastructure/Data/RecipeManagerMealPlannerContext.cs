@@ -11,13 +11,16 @@ namespace RecipeManagerMealPlanner.Infrastructure;
 /// </summary>
 public class RecipeManagerMealPlannerContext : DbContext, IRecipeManagerMealPlannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RecipeManagerMealPlannerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public RecipeManagerMealPlannerContext(DbContextOptions<RecipeManagerMealPlannerContext> options)
+    public RecipeManagerMealPlannerContext(DbContextOptions<RecipeManagerMealPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class RecipeManagerMealPlannerContext : DbContext, IRecipeManagerMealPlan
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Recipe>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<MealPlan>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Ingredient>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ShoppingList>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecipeManagerMealPlannerContext).Assembly);
     }

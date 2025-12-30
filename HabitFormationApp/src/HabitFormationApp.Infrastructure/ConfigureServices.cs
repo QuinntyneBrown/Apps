@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHabitFormationAppContext>(provider =>
             provider.GetRequiredService<HabitFormationAppContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

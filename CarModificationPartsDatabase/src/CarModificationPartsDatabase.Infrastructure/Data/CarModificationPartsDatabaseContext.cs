@@ -11,13 +11,16 @@ namespace CarModificationPartsDatabase.Infrastructure;
 /// </summary>
 public class CarModificationPartsDatabaseContext : DbContext, ICarModificationPartsDatabaseContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CarModificationPartsDatabaseContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public CarModificationPartsDatabaseContext(DbContextOptions<CarModificationPartsDatabaseContext> options)
+    public CarModificationPartsDatabaseContext(DbContextOptions<CarModificationPartsDatabaseContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class CarModificationPartsDatabaseContext : DbContext, ICarModificationPa
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Modification>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Part>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Installation>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CarModificationPartsDatabaseContext).Assembly);
     }

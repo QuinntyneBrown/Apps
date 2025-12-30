@@ -11,13 +11,16 @@ namespace KnowledgeBaseSecondBrain.Infrastructure;
 /// </summary>
 public class KnowledgeBaseSecondBrainContext : DbContext, IKnowledgeBaseSecondBrainContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="KnowledgeBaseSecondBrainContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public KnowledgeBaseSecondBrainContext(DbContextOptions<KnowledgeBaseSecondBrainContext> options)
+    public KnowledgeBaseSecondBrainContext(DbContextOptions<KnowledgeBaseSecondBrainContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class KnowledgeBaseSecondBrainContext : DbContext, IKnowledgeBaseSecondBr
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Note>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Tag>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<NoteLink>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<SearchQuery>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KnowledgeBaseSecondBrainContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace VehicleMaintenanceLogger.Infrastructure;
 /// </summary>
 public class VehicleMaintenanceLoggerContext : DbContext, IVehicleMaintenanceLoggerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="VehicleMaintenanceLoggerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public VehicleMaintenanceLoggerContext(DbContextOptions<VehicleMaintenanceLoggerContext> options)
+    public VehicleMaintenanceLoggerContext(DbContextOptions<VehicleMaintenanceLoggerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class VehicleMaintenanceLoggerContext : DbContext, IVehicleMaintenanceLog
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ServiceRecord>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<MaintenanceSchedule>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VehicleMaintenanceLoggerContext).Assembly);
     }

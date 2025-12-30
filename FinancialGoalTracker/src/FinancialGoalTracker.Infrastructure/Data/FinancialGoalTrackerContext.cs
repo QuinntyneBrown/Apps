@@ -11,13 +11,16 @@ namespace FinancialGoalTracker.Infrastructure;
 /// </summary>
 public class FinancialGoalTrackerContext : DbContext, IFinancialGoalTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FinancialGoalTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FinancialGoalTrackerContext(DbContextOptions<FinancialGoalTrackerContext> options)
+    public FinancialGoalTrackerContext(DbContextOptions<FinancialGoalTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class FinancialGoalTrackerContext : DbContext, IFinancialGoalTrackerConte
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Goal>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Milestone>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Contribution>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinancialGoalTrackerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace CharitableGivingTracker.Infrastructure;
 /// </summary>
 public class CharitableGivingTrackerContext : DbContext, ICharitableGivingTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CharitableGivingTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public CharitableGivingTrackerContext(DbContextOptions<CharitableGivingTrackerContext> options)
+    public CharitableGivingTrackerContext(DbContextOptions<CharitableGivingTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class CharitableGivingTrackerContext : DbContext, ICharitableGivingTracke
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Donation>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Organization>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TaxReport>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CharitableGivingTrackerContext).Assembly);
     }

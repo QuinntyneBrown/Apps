@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ICarModificationPartsDatabaseContext>(provider =>
             provider.GetRequiredService<CarModificationPartsDatabaseContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

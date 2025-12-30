@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IGolfScoreTrackerContext>(provider =>
             provider.GetRequiredService<GolfScoreTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

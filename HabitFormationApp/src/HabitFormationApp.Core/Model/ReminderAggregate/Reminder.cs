@@ -7,6 +7,11 @@ public class Reminder
 {
     public Guid ReminderId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid HabitId { get; set; }
     public TimeSpan ReminderTime { get; set; }
     public string? Message { get; set; }

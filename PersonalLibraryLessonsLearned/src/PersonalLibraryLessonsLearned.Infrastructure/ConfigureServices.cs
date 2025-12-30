@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPersonalLibraryLessonsLearnedContext>(provider =>
             provider.GetRequiredService<PersonalLibraryLessonsLearnedContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IAnnualHealthScreeningReminderContext>(provider =>
             provider.GetRequiredService<AnnualHealthScreeningReminderContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

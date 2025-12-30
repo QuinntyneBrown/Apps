@@ -4,6 +4,11 @@ public class BingeSession
 {
     public Guid BingeSessionId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid TVShowId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }

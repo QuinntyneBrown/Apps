@@ -11,13 +11,16 @@ namespace FuelEconomyTracker.Infrastructure;
 /// </summary>
 public class FuelEconomyTrackerContext : DbContext, IFuelEconomyTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FuelEconomyTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FuelEconomyTrackerContext(DbContextOptions<FuelEconomyTrackerContext> options)
+    public FuelEconomyTrackerContext(DbContextOptions<FuelEconomyTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class FuelEconomyTrackerContext : DbContext, IFuelEconomyTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<FillUp>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Trip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<EfficiencyReport>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FuelEconomyTrackerContext).Assembly);
     }

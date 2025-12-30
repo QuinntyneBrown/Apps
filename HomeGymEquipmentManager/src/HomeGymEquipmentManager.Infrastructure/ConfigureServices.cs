@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHomeGymEquipmentManagerContext>(provider =>
             provider.GetRequiredService<HomeGymEquipmentManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

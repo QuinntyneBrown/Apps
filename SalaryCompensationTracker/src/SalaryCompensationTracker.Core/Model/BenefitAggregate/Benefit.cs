@@ -19,6 +19,11 @@ public class Benefit
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the compensation ID this benefit is associated with.
     /// </summary>
     public Guid? CompensationId { get; set; }

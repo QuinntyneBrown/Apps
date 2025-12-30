@@ -33,6 +33,10 @@ public static class ConfigureServices
         services.AddScoped<IFamilyCalendarEventPlannerContext>(provider =>
             provider.GetRequiredService<FamilyCalendarEventPlannerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         // Register services
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();

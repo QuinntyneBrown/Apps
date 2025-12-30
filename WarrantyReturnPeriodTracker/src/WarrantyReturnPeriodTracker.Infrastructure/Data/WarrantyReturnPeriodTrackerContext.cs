@@ -11,13 +11,16 @@ namespace WarrantyReturnPeriodTracker.Infrastructure;
 /// </summary>
 public class WarrantyReturnPeriodTrackerContext : DbContext, IWarrantyReturnPeriodTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="WarrantyReturnPeriodTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public WarrantyReturnPeriodTrackerContext(DbContextOptions<WarrantyReturnPeriodTrackerContext> options)
+    public WarrantyReturnPeriodTrackerContext(DbContextOptions<WarrantyReturnPeriodTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class WarrantyReturnPeriodTrackerContext : DbContext, IWarrantyReturnPeri
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Purchase>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ReturnWindow>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Receipt>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WarrantyReturnPeriodTrackerContext).Assembly);
     }

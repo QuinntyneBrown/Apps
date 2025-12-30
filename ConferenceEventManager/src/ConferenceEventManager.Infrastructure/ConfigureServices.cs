@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IConferenceEventManagerContext>(provider =>
             provider.GetRequiredService<ConferenceEventManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

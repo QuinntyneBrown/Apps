@@ -11,13 +11,16 @@ namespace DateNightIdeaGenerator.Infrastructure;
 /// </summary>
 public class DateNightIdeaGeneratorContext : DbContext, IDateNightIdeaGeneratorContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DateNightIdeaGeneratorContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public DateNightIdeaGeneratorContext(DbContextOptions<DateNightIdeaGeneratorContext> options)
+    public DateNightIdeaGeneratorContext(DbContextOptions<DateNightIdeaGeneratorContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class DateNightIdeaGeneratorContext : DbContext, IDateNightIdeaGeneratorC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<DateIdea>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Experience>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Rating>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DateNightIdeaGeneratorContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace InvestmentPortfolioTracker.Infrastructure;
 /// </summary>
 public class InvestmentPortfolioTrackerContext : DbContext, IInvestmentPortfolioTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="InvestmentPortfolioTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public InvestmentPortfolioTrackerContext(DbContextOptions<InvestmentPortfolioTrackerContext> options)
+    public InvestmentPortfolioTrackerContext(DbContextOptions<InvestmentPortfolioTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class InvestmentPortfolioTrackerContext : DbContext, IInvestmentPortfolio
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Account>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Holding>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Transaction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Dividend>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InvestmentPortfolioTrackerContext).Assembly);
     }

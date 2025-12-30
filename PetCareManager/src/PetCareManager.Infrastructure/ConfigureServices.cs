@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IPetCareManagerContext>(provider =>
             provider.GetRequiredService<PetCareManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IConversationStarterAppContext>(provider =>
             provider.GetRequiredService<ConversationStarterAppContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

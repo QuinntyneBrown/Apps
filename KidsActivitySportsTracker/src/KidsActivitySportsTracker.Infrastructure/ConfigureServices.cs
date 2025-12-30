@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IKidsActivitySportsTrackerContext>(provider =>
             provider.GetRequiredService<KidsActivitySportsTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

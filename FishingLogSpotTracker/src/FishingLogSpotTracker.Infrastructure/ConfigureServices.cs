@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IFishingLogSpotTrackerContext>(provider =>
             provider.GetRequiredService<FishingLogSpotTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

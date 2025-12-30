@@ -7,6 +7,11 @@ public class Review
 {
     public Guid ReviewId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid CampsiteId { get; set; }
     public Campsite? Campsite { get; set; }
     public int Rating { get; set; }

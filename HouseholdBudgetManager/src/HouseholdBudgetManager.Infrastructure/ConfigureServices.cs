@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHouseholdBudgetManagerContext>(provider =>
             provider.GetRequiredService<HouseholdBudgetManagerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

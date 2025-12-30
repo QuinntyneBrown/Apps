@@ -11,13 +11,16 @@ namespace WoodworkingProjectManager.Infrastructure;
 /// </summary>
 public class WoodworkingProjectManagerContext : DbContext, IWoodworkingProjectManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="WoodworkingProjectManagerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public WoodworkingProjectManagerContext(DbContextOptions<WoodworkingProjectManagerContext> options)
+    public WoodworkingProjectManagerContext(DbContextOptions<WoodworkingProjectManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class WoodworkingProjectManagerContext : DbContext, IWoodworkingProjectMa
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Material>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Tool>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WoodworkingProjectManagerContext).Assembly);
     }

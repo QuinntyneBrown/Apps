@@ -19,6 +19,11 @@ public class ReadingLog
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the book ID associated with this log.
     /// </summary>
     public Guid BookId { get; set; }

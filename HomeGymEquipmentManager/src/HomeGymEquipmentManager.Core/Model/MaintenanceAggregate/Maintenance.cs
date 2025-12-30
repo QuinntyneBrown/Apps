@@ -7,6 +7,11 @@ public class Maintenance
 {
     public Guid MaintenanceId { get; set; }
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid EquipmentId { get; set; }
     public DateTime MaintenanceDate { get; set; } = DateTime.UtcNow;
     public string Description { get; set; } = string.Empty;

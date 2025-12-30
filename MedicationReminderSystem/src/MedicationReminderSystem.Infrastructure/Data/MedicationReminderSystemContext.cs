@@ -11,13 +11,16 @@ namespace MedicationReminderSystem.Infrastructure;
 /// </summary>
 public class MedicationReminderSystemContext : DbContext, IMedicationReminderSystemContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MedicationReminderSystemContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public MedicationReminderSystemContext(DbContextOptions<MedicationReminderSystemContext> options)
+    public MedicationReminderSystemContext(DbContextOptions<MedicationReminderSystemContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class MedicationReminderSystemContext : DbContext, IMedicationReminderSys
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Medication>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<DoseSchedule>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Refill>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedicationReminderSystemContext).Assembly);
     }

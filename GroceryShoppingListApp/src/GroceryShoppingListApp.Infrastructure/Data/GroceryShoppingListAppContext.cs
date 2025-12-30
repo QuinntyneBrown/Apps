@@ -11,13 +11,16 @@ namespace GroceryShoppingListApp.Infrastructure;
 /// </summary>
 public class GroceryShoppingListAppContext : DbContext, IGroceryShoppingListAppContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GroceryShoppingListAppContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public GroceryShoppingListAppContext(DbContextOptions<GroceryShoppingListAppContext> options)
+    public GroceryShoppingListAppContext(DbContextOptions<GroceryShoppingListAppContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class GroceryShoppingListAppContext : DbContext, IGroceryShoppingListAppC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<GroceryList>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<GroceryItem>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Store>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PriceHistory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GroceryShoppingListAppContext).Assembly);
     }

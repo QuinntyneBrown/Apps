@@ -11,13 +11,16 @@ namespace MortgagePayoffOptimizer.Infrastructure;
 /// </summary>
 public class MortgagePayoffOptimizerContext : DbContext, IMortgagePayoffOptimizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MortgagePayoffOptimizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public MortgagePayoffOptimizerContext(DbContextOptions<MortgagePayoffOptimizerContext> options)
+    public MortgagePayoffOptimizerContext(DbContextOptions<MortgagePayoffOptimizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class MortgagePayoffOptimizerContext : DbContext, IMortgagePayoffOptimize
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Mortgage>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<RefinanceScenario>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MortgagePayoffOptimizerContext).Assembly);
     }

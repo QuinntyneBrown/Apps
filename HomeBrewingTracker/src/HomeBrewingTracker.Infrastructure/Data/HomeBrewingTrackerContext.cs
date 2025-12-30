@@ -11,13 +11,16 @@ namespace HomeBrewingTracker.Infrastructure;
 /// </summary>
 public class HomeBrewingTrackerContext : DbContext, IHomeBrewingTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeBrewingTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public HomeBrewingTrackerContext(DbContextOptions<HomeBrewingTrackerContext> options)
+    public HomeBrewingTrackerContext(DbContextOptions<HomeBrewingTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class HomeBrewingTrackerContext : DbContext, IHomeBrewingTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Recipe>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Batch>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<TastingNote>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HomeBrewingTrackerContext).Assembly);
     }

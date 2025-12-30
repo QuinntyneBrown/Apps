@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IWarrantyReturnPeriodTrackerContext>(provider =>
             provider.GetRequiredService<WarrantyReturnPeriodTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

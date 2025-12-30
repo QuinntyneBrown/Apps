@@ -11,13 +11,16 @@ namespace InjuryPreventionRecoveryTracker.Infrastructure;
 /// </summary>
 public class InjuryPreventionRecoveryTrackerContext : DbContext, IInjuryPreventionRecoveryTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="InjuryPreventionRecoveryTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public InjuryPreventionRecoveryTrackerContext(DbContextOptions<InjuryPreventionRecoveryTrackerContext> options)
+    public InjuryPreventionRecoveryTrackerContext(DbContextOptions<InjuryPreventionRecoveryTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class InjuryPreventionRecoveryTrackerContext : DbContext, IInjuryPreventi
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Injury>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<RecoveryExercise>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Milestone>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InjuryPreventionRecoveryTrackerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace ChoreAssignmentTracker.Infrastructure.Data;
 /// </summary>
 public class ChoreAssignmentTrackerContext : DbContext, IChoreAssignmentTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ChoreAssignmentTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    public ChoreAssignmentTrackerContext(DbContextOptions<ChoreAssignmentTrackerContext> options)
+    public ChoreAssignmentTrackerContext(DbContextOptions<ChoreAssignmentTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <summary>
@@ -47,6 +50,16 @@ public class ChoreAssignmentTrackerContext : DbContext, IChoreAssignmentTrackerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Chore>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Assignment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Reward>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<FamilyMember>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ChoreAssignmentTrackerContext).Assembly);
     }
 }

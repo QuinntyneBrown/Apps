@@ -11,13 +11,16 @@ namespace VehicleValueTracker.Infrastructure;
 /// </summary>
 public class VehicleValueTrackerContext : DbContext, IVehicleValueTrackerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="VehicleValueTrackerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public VehicleValueTrackerContext(DbContextOptions<VehicleValueTrackerContext> options)
+    public VehicleValueTrackerContext(DbContextOptions<VehicleValueTrackerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class VehicleValueTrackerContext : DbContext, IVehicleValueTrackerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ValueAssessment>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<MarketComparison>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VehicleValueTrackerContext).Assembly);
     }

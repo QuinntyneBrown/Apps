@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ICampingTripPlannerContext>(provider =>
             provider.GetRequiredService<CampingTripPlannerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

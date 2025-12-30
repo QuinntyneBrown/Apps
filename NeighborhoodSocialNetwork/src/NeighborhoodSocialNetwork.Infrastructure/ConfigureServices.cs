@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<INeighborhoodSocialNetworkContext>(provider =>
             provider.GetRequiredService<NeighborhoodSocialNetworkContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

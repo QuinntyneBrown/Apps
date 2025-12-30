@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IRealEstateInvestmentAnalyzerContext>(provider =>
             provider.GetRequiredService<RealEstateInvestmentAnalyzerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

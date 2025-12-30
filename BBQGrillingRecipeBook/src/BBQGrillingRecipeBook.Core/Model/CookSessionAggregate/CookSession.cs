@@ -19,6 +19,11 @@ public class CookSession
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the recipe ID used in this session.
     /// </summary>
     public Guid RecipeId { get; set; }

@@ -11,13 +11,16 @@ namespace JobSearchOrganizer.Infrastructure;
 /// </summary>
 public class JobSearchOrganizerContext : DbContext, IJobSearchOrganizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="JobSearchOrganizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public JobSearchOrganizerContext(DbContextOptions<JobSearchOrganizerContext> options)
+    public JobSearchOrganizerContext(DbContextOptions<JobSearchOrganizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class JobSearchOrganizerContext : DbContext, IJobSearchOrganizerContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Application>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Company>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Interview>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Offer>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(JobSearchOrganizerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace FamilyPhotoAlbumOrganizer.Infrastructure;
 /// </summary>
 public class FamilyPhotoAlbumOrganizerContext : DbContext, IFamilyPhotoAlbumOrganizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FamilyPhotoAlbumOrganizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FamilyPhotoAlbumOrganizerContext(DbContextOptions<FamilyPhotoAlbumOrganizerContext> options)
+    public FamilyPhotoAlbumOrganizerContext(DbContextOptions<FamilyPhotoAlbumOrganizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class FamilyPhotoAlbumOrganizerContext : DbContext, IFamilyPhotoAlbumOrga
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Photo>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Album>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Tag>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PersonTag>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FamilyPhotoAlbumOrganizerContext).Assembly);
     }

@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<ILifeAdminDashboardContext>(provider =>
             provider.GetRequiredService<LifeAdminDashboardContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

@@ -11,13 +11,16 @@ namespace PersonalLoanComparisonTool.Infrastructure;
 /// </summary>
 public class PersonalLoanComparisonToolContext : DbContext, IPersonalLoanComparisonToolContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalLoanComparisonToolContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public PersonalLoanComparisonToolContext(DbContextOptions<PersonalLoanComparisonToolContext> options)
+    public PersonalLoanComparisonToolContext(DbContextOptions<PersonalLoanComparisonToolContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -33,6 +36,15 @@ public class PersonalLoanComparisonToolContext : DbContext, IPersonalLoanCompari
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Loan>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Offer>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PaymentSchedule>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonalLoanComparisonToolContext).Assembly);
     }

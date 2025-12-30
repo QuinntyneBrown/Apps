@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IBloodPressureMonitorContext>(provider =>
             provider.GetRequiredService<BloodPressureMonitorContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

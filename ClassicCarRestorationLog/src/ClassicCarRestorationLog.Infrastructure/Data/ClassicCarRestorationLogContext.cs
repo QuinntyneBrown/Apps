@@ -11,13 +11,16 @@ namespace ClassicCarRestorationLog.Infrastructure.Data;
 /// </summary>
 public class ClassicCarRestorationLogContext : DbContext, IClassicCarRestorationLogContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassicCarRestorationLogContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    public ClassicCarRestorationLogContext(DbContextOptions<ClassicCarRestorationLogContext> options)
+    public ClassicCarRestorationLogContext(DbContextOptions<ClassicCarRestorationLogContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <summary>
@@ -47,6 +50,16 @@ public class ClassicCarRestorationLogContext : DbContext, IClassicCarRestoration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Part>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<WorkLog>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PhotoLog>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClassicCarRestorationLogContext).Assembly);
     }
 }

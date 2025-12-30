@@ -19,6 +19,11 @@ public class TimeEntry
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the project ID.
     /// </summary>
     public Guid ProjectId { get; set; }

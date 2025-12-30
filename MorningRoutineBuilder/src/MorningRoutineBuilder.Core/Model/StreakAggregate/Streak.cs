@@ -24,6 +24,11 @@ public class Streak
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the current streak count in days.
     /// </summary>
     public int CurrentStreak { get; set; }

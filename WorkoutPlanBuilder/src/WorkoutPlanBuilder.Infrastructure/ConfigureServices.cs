@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IWorkoutPlanBuilderContext>(provider =>
             provider.GetRequiredService<WorkoutPlanBuilderContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }

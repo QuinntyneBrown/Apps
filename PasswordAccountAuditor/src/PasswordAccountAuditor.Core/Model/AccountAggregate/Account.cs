@@ -19,6 +19,11 @@ public class Account
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the account name or service name.
     /// </summary>
     public string AccountName { get; set; } = string.Empty;

@@ -13,9 +13,12 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Data;
 
 public class FamilyCalendarEventPlannerContext : DbContext, IFamilyCalendarEventPlannerContext
 {
-    public FamilyCalendarEventPlannerContext(DbContextOptions<FamilyCalendarEventPlannerContext> options)
+    private readonly ITenantContext? _tenantContext;
+
+    public FamilyCalendarEventPlannerContext(DbContextOptions<FamilyCalendarEventPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     public DbSet<CalendarEvent> CalendarEvents { get; set; } = null!;
@@ -41,6 +44,22 @@ public class FamilyCalendarEventPlannerContext : DbContext, IFamilyCalendarEvent
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<CalendarEvent>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<EventAttendee>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<FamilyMember>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<AvailabilityBlock>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ScheduleConflict>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<EventReminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Household>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<UserRole>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FamilyCalendarEventPlannerContext).Assembly);
     }

@@ -11,13 +11,16 @@ namespace CollegeSavingsPlanner.Infrastructure.Data;
 /// </summary>
 public class CollegeSavingsPlannerContext : DbContext, ICollegeSavingsPlannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CollegeSavingsPlannerContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    public CollegeSavingsPlannerContext(DbContextOptions<CollegeSavingsPlannerContext> options)
+    public CollegeSavingsPlannerContext(DbContextOptions<CollegeSavingsPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <summary>
@@ -47,6 +50,16 @@ public class CollegeSavingsPlannerContext : DbContext, ICollegeSavingsPlannerCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Plan>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Contribution>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Beneficiary>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Projection>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CollegeSavingsPlannerContext).Assembly);
     }
 }

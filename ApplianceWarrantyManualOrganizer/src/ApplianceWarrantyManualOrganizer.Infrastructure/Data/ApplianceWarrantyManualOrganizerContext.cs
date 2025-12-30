@@ -11,13 +11,16 @@ namespace ApplianceWarrantyManualOrganizer.Infrastructure;
 /// </summary>
 public class ApplianceWarrantyManualOrganizerContext : DbContext, IApplianceWarrantyManualOrganizerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplianceWarrantyManualOrganizerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public ApplianceWarrantyManualOrganizerContext(DbContextOptions<ApplianceWarrantyManualOrganizerContext> options)
+    public ApplianceWarrantyManualOrganizerContext(DbContextOptions<ApplianceWarrantyManualOrganizerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -36,6 +39,16 @@ public class ApplianceWarrantyManualOrganizerContext : DbContext, IApplianceWarr
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Appliance>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Manual>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<ServiceRecord>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplianceWarrantyManualOrganizerContext).Assembly);
     }

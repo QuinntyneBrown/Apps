@@ -11,13 +11,16 @@ namespace ConferenceEventManager.Infrastructure.Data;
 /// </summary>
 public class ConferenceEventManagerContext : DbContext, IConferenceEventManagerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ConferenceEventManagerContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    public ConferenceEventManagerContext(DbContextOptions<ConferenceEventManagerContext> options)
+    public ConferenceEventManagerContext(DbContextOptions<ConferenceEventManagerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <summary>
@@ -47,6 +50,16 @@ public class ConferenceEventManagerContext : DbContext, IConferenceEventManagerC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Event>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Session>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Contact>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Note>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ConferenceEventManagerContext).Assembly);
     }
 }

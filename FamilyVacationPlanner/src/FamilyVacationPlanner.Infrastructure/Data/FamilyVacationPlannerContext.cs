@@ -11,13 +11,16 @@ namespace FamilyVacationPlanner.Infrastructure;
 /// </summary>
 public class FamilyVacationPlannerContext : DbContext, IFamilyVacationPlannerContext
 {
+    private readonly ITenantContext? _tenantContext;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="FamilyVacationPlannerContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
-    public FamilyVacationPlannerContext(DbContextOptions<FamilyVacationPlannerContext> options)
+    public FamilyVacationPlannerContext(DbContextOptions<FamilyVacationPlannerContext> options, ITenantContext? tenantContext = null)
         : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -39,6 +42,17 @@ public class FamilyVacationPlannerContext : DbContext, IFamilyVacationPlannerCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply tenant isolation filters
+        if (_tenantContext != null)
+        {
+            modelBuilder.Entity<Trip>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Itinerary>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Booking>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<VacationBudget>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<PackingList>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+        }
+
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FamilyVacationPlannerContext).Assembly);
     }

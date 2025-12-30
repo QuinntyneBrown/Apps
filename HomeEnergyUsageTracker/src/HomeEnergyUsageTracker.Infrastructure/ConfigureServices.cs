@@ -43,6 +43,10 @@ public static class ConfigureServices
         services.AddScoped<IHomeEnergyUsageTrackerContext>(provider =>
             provider.GetRequiredService<HomeEnergyUsageTrackerContext>());
 
+        // Register multi-tenant services
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         return services;
     }
 }
