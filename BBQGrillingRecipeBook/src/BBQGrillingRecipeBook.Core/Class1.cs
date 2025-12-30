@@ -1,6 +1,0 @@
-namespace BBQGrillingRecipeBook.Core;
-
-public class Class1
-{
-    // TODO: Implement
-}

@@ -1,0 +1,39 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using Microsoft.EntityFrameworkCore;
+
+namespace FuelEconomyTracker.Core;
+
+/// <summary>
+/// Represents the persistence surface for the FuelEconomyTracker system.
+/// </summary>
+public interface IFuelEconomyTrackerContext
+{
+    /// <summary>
+    /// Gets or sets the DbSet of fill-ups.
+    /// </summary>
+    DbSet<FillUp> FillUps { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of trips.
+    /// </summary>
+    DbSet<Trip> Trips { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of vehicles.
+    /// </summary>
+    DbSet<Vehicle> Vehicles { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of efficiency reports.
+    /// </summary>
+    DbSet<EfficiencyReport> EfficiencyReports { get; set; }
+
+    /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

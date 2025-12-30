@@ -1,0 +1,19 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+namespace HydrationTracker.Core;
+
+public class Reminder
+{
+    public Guid ReminderId { get; set; }
+    public Guid UserId { get; set; }
+    public TimeSpan ReminderTime { get; set; }
+    public string? Message { get; set; }
+    public bool IsEnabled { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    public void Toggle()
+    {
+        IsEnabled = !IsEnabled;
+    }
+}
