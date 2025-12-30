@@ -1,4 +1,5 @@
 using FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ public record UpdateFamilyMemberCommand : IRequest<FamilyMemberDto?>
     public string? Name { get; init; }
     public string? Email { get; init; }
     public string? Color { get; init; }
+    public bool? IsImmediate { get; init; }
+    public RelationType? RelationType { get; init; }
 }
 
 public class UpdateFamilyMemberCommandHandler : IRequestHandler<UpdateFamilyMemberCommand, FamilyMemberDto?>
@@ -39,7 +42,12 @@ public class UpdateFamilyMemberCommandHandler : IRequestHandler<UpdateFamilyMemb
             return null;
         }
 
-        member.UpdateProfile(request.Name, request.Email, request.Color);
+        member.UpdateProfile(
+            request.Name,
+            request.Email,
+            request.Color,
+            request.IsImmediate,
+            request.RelationType);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Updated family member {MemberId}", request.MemberId);

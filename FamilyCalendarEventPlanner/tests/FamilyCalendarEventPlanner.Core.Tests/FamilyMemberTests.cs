@@ -20,6 +20,8 @@ public class FamilyMemberTests
             Assert.That(member.Email, Is.EqualTo("john@example.com"));
             Assert.That(member.Color, Is.EqualTo("#FF5733"));
             Assert.That(member.Role, Is.EqualTo(MemberRole.Member));
+            Assert.That(member.IsImmediate, Is.True);
+            Assert.That(member.RelationType, Is.EqualTo(RelationType.Self));
         });
     }
 
@@ -29,6 +31,49 @@ public class FamilyMemberTests
         var member = new FamilyMember(_familyId, "Jane Doe", "jane@example.com", "#0000FF", MemberRole.Admin);
 
         Assert.That(member.Role, Is.EqualTo(MemberRole.Admin));
+    }
+
+    [Test]
+    public void Constructor_WithIsImmediateAndRelationType_SetsProperties()
+    {
+        var member = new FamilyMember(
+            _familyId,
+            "Uncle Bob",
+            "bob@example.com",
+            "#00FF00",
+            MemberRole.Member,
+            isImmediate: false,
+            relationType: RelationType.AuntUncle);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(member.IsImmediate, Is.False);
+            Assert.That(member.RelationType, Is.EqualTo(RelationType.AuntUncle));
+        });
+    }
+
+    [Test]
+    public void Constructor_WithNullEmail_SetsEmailToNull()
+    {
+        var member = new FamilyMember(_familyId, "John Doe", null, "#FF5733");
+
+        Assert.That(member.Email, Is.Null);
+    }
+
+    [Test]
+    public void Constructor_WithEmptyEmail_SetsEmailToNull()
+    {
+        var member = new FamilyMember(_familyId, "John Doe", "", "#FF5733");
+
+        Assert.That(member.Email, Is.Null);
+    }
+
+    [Test]
+    public void Constructor_WithWhitespaceEmail_SetsEmailToNull()
+    {
+        var member = new FamilyMember(_familyId, "John Doe", "   ", "#FF5733");
+
+        Assert.That(member.Email, Is.Null);
     }
 
     [Test]
@@ -43,13 +88,6 @@ public class FamilyMemberTests
     {
         Assert.Throws<ArgumentException>(() =>
             new FamilyMember(_familyId, "   ", "test@example.com", "#000000"));
-    }
-
-    [Test]
-    public void Constructor_EmptyEmail_ThrowsArgumentException()
-    {
-        Assert.Throws<ArgumentException>(() =>
-            new FamilyMember(_familyId, "Test", "", "#000000"));
     }
 
     [Test]
@@ -88,11 +126,13 @@ public class FamilyMemberTests
     }
 
     [Test]
-    public void UpdateProfile_EmptyEmail_ThrowsArgumentException()
+    public void UpdateProfile_EmptyEmail_SetsEmailToNull()
     {
         var member = CreateDefaultMember();
 
-        Assert.Throws<ArgumentException>(() => member.UpdateProfile(email: ""));
+        member.UpdateProfile(email: "");
+
+        Assert.That(member.Email, Is.Null);
     }
 
     [Test]
@@ -114,17 +154,45 @@ public class FamilyMemberTests
     }
 
     [Test]
+    public void UpdateProfile_IsImmediate_UpdatesIsImmediate()
+    {
+        var member = CreateDefaultMember();
+        Assert.That(member.IsImmediate, Is.True);
+
+        member.UpdateProfile(isImmediate: false);
+
+        Assert.That(member.IsImmediate, Is.False);
+    }
+
+    [Test]
+    public void UpdateProfile_RelationType_UpdatesRelationType()
+    {
+        var member = CreateDefaultMember();
+
+        member.UpdateProfile(relationType: RelationType.Spouse);
+
+        Assert.That(member.RelationType, Is.EqualTo(RelationType.Spouse));
+    }
+
+    [Test]
     public void UpdateProfile_MultipleProperties_UpdatesAll()
     {
         var member = CreateDefaultMember();
 
-        member.UpdateProfile(name: "New Name", email: "new@example.com", color: "#123456");
+        member.UpdateProfile(
+            name: "New Name",
+            email: "new@example.com",
+            color: "#123456",
+            isImmediate: false,
+            relationType: RelationType.Parent);
 
         Assert.Multiple(() =>
         {
             Assert.That(member.Name, Is.EqualTo("New Name"));
             Assert.That(member.Email, Is.EqualTo("new@example.com"));
             Assert.That(member.Color, Is.EqualTo("#123456"));
+            Assert.That(member.IsImmediate, Is.False);
+            Assert.That(member.RelationType, Is.EqualTo(RelationType.Parent));
         });
     }
 

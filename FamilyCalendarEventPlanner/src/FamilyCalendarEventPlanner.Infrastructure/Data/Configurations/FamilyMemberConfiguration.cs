@@ -18,14 +18,24 @@ public class FamilyMemberConfiguration : IEntityTypeConfiguration<FamilyMember>
             .HasMaxLength(100);
 
         builder.Property(m => m.Email)
-            .IsRequired()
+            .IsRequired(false)
             .HasMaxLength(255);
 
         builder.Property(m => m.Color)
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(m => m.IsImmediate)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(m => m.RelationType)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         builder.HasIndex(m => m.FamilyId);
         builder.HasIndex(m => m.Email);
+        builder.HasIndex(m => m.IsImmediate);
     }
 }

@@ -6,7 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { FamilyMemberDto } from '../../models/family-member-dto';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FamilyMemberDto, RelationType } from '../../models/family-member-dto';
 import { CreateFamilyMemberCommand } from '../../models/create-family-member-command';
 
 export interface CreateOrEditFamilyMemberDialogData {
@@ -29,7 +30,8 @@ export interface CreateOrEditFamilyMemberDialogResult {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSelectModule
+    MatSelectModule,
+    MatCheckboxModule
   ],
   templateUrl: './create-or-edit-family-member-dialog.html',
   styleUrls: ['./create-or-edit-family-member-dialog.scss']
@@ -56,15 +58,32 @@ export class CreateOrEditFamilyMemberDialog {
     { value: 'ViewOnly', label: 'View Only' }
   ];
 
+  availableRelationTypes: { value: RelationType; label: string }[] = [
+    { value: 'Self', label: 'Self' },
+    { value: 'Spouse', label: 'Spouse' },
+    { value: 'Child', label: 'Child' },
+    { value: 'Parent', label: 'Parent' },
+    { value: 'Sibling', label: 'Sibling' },
+    { value: 'Grandparent', label: 'Grandparent' },
+    { value: 'Grandchild', label: 'Grandchild' },
+    { value: 'AuntUncle', label: 'Aunt/Uncle' },
+    { value: 'NieceNephew', label: 'Niece/Nephew' },
+    { value: 'Cousin', label: 'Cousin' },
+    { value: 'InLaw', label: 'In-Law' },
+    { value: 'Other', label: 'Other' }
+  ];
+
   constructor(
     public dialogRef: MatDialogRef<CreateOrEditFamilyMemberDialog>,
     @Inject(MAT_DIALOG_DATA) public data: CreateOrEditFamilyMemberDialogData
   ) {
     this.form = this.fb.group({
       name: [data.member?.name || '', Validators.required],
-      email: [data.member?.email || '', [Validators.required, Validators.email]],
+      email: [data.member?.email || '', [Validators.email]],
       color: [data.member?.color || '#3b82f6', Validators.required],
-      role: [data.member?.role || 'Member', Validators.required]
+      role: [data.member?.role || 'Member', Validators.required],
+      isImmediate: [data.member?.isImmediate ?? true],
+      relationType: [data.member?.relationType || 'Self', Validators.required]
     });
   }
 
@@ -85,9 +104,11 @@ export class CreateOrEditFamilyMemberDialog {
         data: {
           familyId: this.data.familyId,
           name: formValue.name,
-          email: formValue.email,
+          email: formValue.email || null,
           color: formValue.color,
           role: formValue.role,
+          isImmediate: formValue.isImmediate,
+          relationType: formValue.relationType,
           ...(this.isEditMode && { memberId: this.data.member!.memberId })
         }
       };

@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { FamilyMember, MemberRole } from '../../services/models';
+import { FamilyMember, MemberRole, RelationType } from '../../services/models';
 
 @Component({
   selector: 'app-member-card',
@@ -39,6 +39,24 @@ export class MemberCard {
       default:
         return 'person';
     }
+  }
+
+  getRelationTypeLabel(): string {
+    const labels: Record<RelationType, string> = {
+      [RelationType.Self]: 'Self',
+      [RelationType.Spouse]: 'Spouse',
+      [RelationType.Child]: 'Child',
+      [RelationType.Parent]: 'Parent',
+      [RelationType.Sibling]: 'Sibling',
+      [RelationType.Grandparent]: 'Grandparent',
+      [RelationType.Grandchild]: 'Grandchild',
+      [RelationType.AuntUncle]: 'Aunt/Uncle',
+      [RelationType.NieceNephew]: 'Niece/Nephew',
+      [RelationType.Cousin]: 'Cousin',
+      [RelationType.InLaw]: 'In-Law',
+      [RelationType.Other]: 'Other'
+    };
+    return labels[this.member.relationType] || this.member.relationType;
   }
 
   onEditClick(): void {

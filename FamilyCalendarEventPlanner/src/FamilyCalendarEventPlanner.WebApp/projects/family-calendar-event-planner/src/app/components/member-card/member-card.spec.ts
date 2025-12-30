@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MemberCard } from './member-card';
-import { FamilyMember, MemberRole } from '../../services/models';
+import { FamilyMember, MemberRole, RelationType } from '../../services/models';
 
 describe('MemberCard', () => {
   let component: MemberCard;
@@ -12,7 +12,9 @@ describe('MemberCard', () => {
     name: 'John Doe',
     email: 'john@example.com',
     color: '#3b82f6',
-    role: MemberRole.Admin
+    role: MemberRole.Admin,
+    isImmediate: true,
+    relationType: RelationType.Self
   };
 
   beforeEach(async () => {
@@ -38,6 +40,13 @@ describe('MemberCard', () => {
   it('should display member email', () => {
     const compiled = fixture.nativeElement;
     expect(compiled.textContent).toContain('john@example.com');
+  });
+
+  it('should not display email when null', () => {
+    component.member = { ...mockMember, email: null };
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement;
+    expect(compiled.querySelector('.member-card__email')).toBeFalsy();
   });
 
   it('should get correct initials', () => {
@@ -70,6 +79,35 @@ describe('MemberCard', () => {
   it('should return correct role icon for ViewOnly', () => {
     component.member = { ...mockMember, role: MemberRole.ViewOnly };
     expect(component.getRoleIcon()).toBe('visibility');
+  });
+
+  it('should return correct relation type label for Self', () => {
+    expect(component.getRelationTypeLabel()).toBe('Self');
+  });
+
+  it('should return correct relation type label for Spouse', () => {
+    component.member = { ...mockMember, relationType: RelationType.Spouse };
+    expect(component.getRelationTypeLabel()).toBe('Spouse');
+  });
+
+  it('should return correct relation type label for AuntUncle', () => {
+    component.member = { ...mockMember, relationType: RelationType.AuntUncle };
+    expect(component.getRelationTypeLabel()).toBe('Aunt/Uncle');
+  });
+
+  it('should display immediate badge when isImmediate is true', () => {
+    component.member = { ...mockMember, isImmediate: true };
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement;
+    expect(compiled.textContent).toContain('Immediate');
+  });
+
+  it('should not display immediate badge when isImmediate is false', () => {
+    component.member = { ...mockMember, isImmediate: false };
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement;
+    const immediateBadge = compiled.querySelector('.member-card__immediate-badge');
+    expect(immediateBadge).toBeFalsy();
   });
 
   it('should emit editClick event', () => {
