@@ -281,6 +281,76 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("EventReminders");
                 });
 
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.Role", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("Salt")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.EventAggregate.CalendarEvent", b =>
                 {
                     b.OwnsOne("FamilyCalendarEventPlanner.Core.Model.EventAggregate.RecurrencePattern", "RecurrencePattern", b1 =>
@@ -311,6 +381,20 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 
                     b.Navigation("RecurrencePattern")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.UserRole", b =>
+                {
+                    b.HasOne("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", null)
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", b =>
+                {
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }
