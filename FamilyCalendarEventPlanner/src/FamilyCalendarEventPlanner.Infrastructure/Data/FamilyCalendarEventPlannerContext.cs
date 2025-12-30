@@ -5,6 +5,7 @@ using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 using FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate;
 using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 
 namespace FamilyCalendarEventPlanner.Infrastructure.Data;
@@ -29,6 +30,10 @@ public class FamilyCalendarEventPlannerContext : DbContext, IFamilyCalendarEvent
     public DbSet<EventReminder> EventReminders { get; set; } = null!;
 
     public DbSet<Household> Households { get; set; } = null!;
+
+    public DbSet<User> Users { get; set; } = null!;
+
+    public DbSet<FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.Role> Roles { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
