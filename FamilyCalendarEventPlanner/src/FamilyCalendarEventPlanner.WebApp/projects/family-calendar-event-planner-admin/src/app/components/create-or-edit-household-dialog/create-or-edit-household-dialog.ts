@@ -48,7 +48,7 @@ export class CreateOrEditHouseholdDialog {
       name: [data.household?.name || '', Validators.required],
       street: [data.household?.street || '', Validators.required],
       city: [data.household?.city || '', Validators.required],
-      province: [data.household?.province || 'Ontario', Validators.required],
+      province: [data.household?.province ?? CanadianProvince.Ontario, Validators.required],
       postalCode: [data.household?.postalCode || '', [Validators.required, Validators.pattern(/^[A-Za-z]\d[A-Za-z][ ]?\d[A-Za-z]\d$/)]]
     });
   }

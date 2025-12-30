@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { HouseholdsService } from '../../services/households.service';
-import { HouseholdDto, getProvinceLabel } from '../../models/household-dto';
+import { HouseholdDto, CanadianProvince, getProvinceLabel } from '../../models/household-dto';
 import { CreateOrEditHouseholdDialog, CreateOrEditHouseholdDialogResult } from '../../components/create-or-edit-household-dialog';
 
 @Component({
@@ -37,8 +37,8 @@ export class Households {
     switchMap(() => this.householdsService.getHouseholds())
   );
 
-  getProvinceLabel(province: string): string {
-    return getProvinceLabel(province as any);
+  getProvinceLabel(province: CanadianProvince): string {
+    return getProvinceLabel(province);
   }
 
   onCreateHousehold(): void {

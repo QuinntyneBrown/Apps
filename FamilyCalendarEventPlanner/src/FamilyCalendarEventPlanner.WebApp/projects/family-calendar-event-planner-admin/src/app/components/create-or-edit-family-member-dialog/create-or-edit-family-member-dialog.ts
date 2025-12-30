@@ -1,4 +1,4 @@
-import { Component, inject, Inject } from '@angular/core';
+import { Component, inject, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -9,6 +9,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FamilyMemberDto, RelationType } from '../../models/family-member-dto';
 import { CreateFamilyMemberCommand } from '../../models/create-family-member-command';
+import { HouseholdsService } from '../../services/households.service';
+import { HouseholdDto } from '../../models/household-dto';
+import { Observable } from 'rxjs';
 
 export interface CreateOrEditFamilyMemberDialogData {
   member?: FamilyMemberDto;
@@ -36,10 +39,12 @@ export interface CreateOrEditFamilyMemberDialogResult {
   templateUrl: './create-or-edit-family-member-dialog.html',
   styleUrls: ['./create-or-edit-family-member-dialog.scss']
 })
-export class CreateOrEditFamilyMemberDialog {
+export class CreateOrEditFamilyMemberDialog implements OnInit {
   private fb = inject(FormBuilder);
+  private householdsService = inject(HouseholdsService);
 
   form: FormGroup;
+  households$!: Observable<HouseholdDto[]>;
 
   availableColors = [
     { value: '#ef4444', label: 'Red' },
@@ -77,14 +82,19 @@ export class CreateOrEditFamilyMemberDialog {
     public dialogRef: MatDialogRef<CreateOrEditFamilyMemberDialog>,
     @Inject(MAT_DIALOG_DATA) public data: CreateOrEditFamilyMemberDialogData
   ) {
-        this.form = this.fb.group({
+    this.form = this.fb.group({
       name: [data.member?.name || '', Validators.required],
       email: [data.member?.email || '', [Validators.email]],
+      householdId: [data.member?.householdId || null],
       color: [data.member?.color || '#3b82f6', Validators.required],
       role: [data.member?.role ?? 1, Validators.required],
       isImmediate: [data.member?.isImmediate ?? true],
       relationType: [data.member?.relationType || 'Self', Validators.required]
     });
+  }
+
+  ngOnInit(): void {
+    this.households$ = this.householdsService.getHouseholds();
   }
 
   get isEditMode(): boolean {
@@ -121,6 +131,7 @@ export class CreateOrEditFamilyMemberDialog {
           familyId: this.data.familyId,
           name: formValue.name,
           email: formValue.email || null,
+          householdId: formValue.householdId || null,
           color: formValue.color,
           role: formValue.role, // already number
           isImmediate: formValue.isImmediate,

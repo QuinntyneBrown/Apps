@@ -89,6 +89,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 {
                     MemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FamilyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    HouseholdId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     Color = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -99,6 +100,22 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FamilyMembers", x => x.MemberId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Households",
+                columns: table => new
+                {
+                    HouseholdId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Street = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Province = table.Column<int>(type: "int", nullable: false),
+                    PostalCode = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Households", x => x.HouseholdId);
                 });
 
             migrationBuilder.CreateTable(
@@ -226,6 +243,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "FamilyMembers");
+
+            migrationBuilder.DropTable(
+                name: "Households");
 
             migrationBuilder.DropTable(
                 name: "ScheduleConflicts");

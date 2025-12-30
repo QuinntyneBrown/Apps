@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 {
     [DbContext(typeof(FamilyCalendarEventPlannerContext))]
-    [Migration("20251230154713_InitialCreate")]
+    [Migration("20251230171018_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -189,6 +189,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<Guid>("FamilyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsImmediate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -216,6 +219,36 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.HasIndex("IsImmediate");
 
                     b.ToTable("FamilyMembers");
+                });
+
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate.Household", b =>
+                {
+                    b.Property<Guid>("HouseholdId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Province")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("HouseholdId");
+
+                    b.ToTable("Households");
                 });
 
             modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.EventReminder", b =>
