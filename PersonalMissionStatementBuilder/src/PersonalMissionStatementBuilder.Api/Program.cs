@@ -1,9 +1,56 @@
+using PersonalMissionStatementBuilder.Infrastructure;
+using PersonalMissionStatementBuilder.Infrastructure.Data;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .Enrich.WithEnvironmentName()
+        .Enrich.WithMachineName()
+        .Enrich.WithThreadId()
+        .WriteTo.Console();
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "PersonalMissionStatementBuilder API",
+        Version = "v1",
+        Description = "API for building and managing personal mission statements, values, goals, and progress tracking",
+    });
+});
+
+// Add MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+});
+
+// Add Infrastructure services
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Configure CORS
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -15,7 +62,26 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSerilogRequestLogging();
+
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
+
 app.MapControllers();
 
+// Seed the database in development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<PersonalMissionStatementBuilderContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await SeedData.SeedAsync(context, logger);
+}
+
 app.Run();
+
+public partial class Program
+{
+}
