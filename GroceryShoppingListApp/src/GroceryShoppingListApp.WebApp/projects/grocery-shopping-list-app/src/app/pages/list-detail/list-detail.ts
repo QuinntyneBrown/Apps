@@ -17,6 +17,7 @@ interface ListDetailViewModel {
   items: GroceryItem[];
   loading: boolean;
   error: string | null;
+  completedCount: number;
 }
 
 @Component({
@@ -56,9 +57,15 @@ export class ListDetail implements OnInit {
         this._groceryListService.getById(this._listId),
         this._groceryItemService.getAll(this._listId)
       ]).pipe(
-        map(([list, items]) => ({ list, items, loading: false, error: null })),
-        startWith({ list: null, items: [], loading: true, error: null }),
-        catchError(err => of({ list: null, items: [], loading: false, error: 'Failed to load list details' }))
+        map(([list, items]) => ({
+          list,
+          items,
+          loading: false,
+          error: null,
+          completedCount: items.filter(i => i.isChecked).length
+        })),
+        startWith({ list: null, items: [], loading: true, error: null, completedCount: 0 }),
+        catchError(err => of({ list: null, items: [], loading: false, error: 'Failed to load list details', completedCount: 0 }))
       ))
     );
   }
