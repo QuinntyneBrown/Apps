@@ -5,6 +5,9 @@ using SkillDevelopmentTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using SkillDevelopmentTracker.Core.Model.UserAggregate;
+using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Services;
 namespace SkillDevelopmentTracker.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(SkillDevelopmentTrackerContext context, ILogger logger)
+    public static async Task SeedAsync(SkillDevelopmentTrackerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

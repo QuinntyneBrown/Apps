@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ProfessionalNetworkCRM.Core;
 
+using ProfessionalNetworkCRM.Core.Model.UserAggregate;
+using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Services;
 namespace ProfessionalNetworkCRM.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(ProfessionalNetworkCRMContext context, ILogger logger)
+    public static async Task SeedAsync(ProfessionalNetworkCRMContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

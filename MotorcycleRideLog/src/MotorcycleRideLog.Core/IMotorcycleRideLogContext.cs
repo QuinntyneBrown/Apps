@@ -3,6 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using MotorcycleRideLog.Core.Model.UserAggregate;
+using MotorcycleRideLog.Core.Model.UserAggregate.Entities;
 namespace MotorcycleRideLog.Core;
 
 public interface IMotorcycleRideLogContext
@@ -11,5 +13,21 @@ public interface IMotorcycleRideLogContext
     DbSet<Ride> Rides { get; }
     DbSet<Maintenance> MaintenanceRecords { get; }
     DbSet<Route> Routes { get; }
+    
+    /// <summary>
+    /// Gets the users.
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Gets the roles.
+    /// </summary>
+    DbSet<Role> Roles { get; }
+
+    /// <summary>
+    /// Gets the user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

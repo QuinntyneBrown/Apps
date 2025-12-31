@@ -1,3 +1,11 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using InvestmentPortfolioTracker.Core;
 using InvestmentPortfolioTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -71,7 +79,11 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseHttpsRedirection();
+    
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
 
     app.UseCors("AllowAll");
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProfessionalReadingList.Core;
 
+using ProfessionalReadingList.Core.Services;
 namespace ProfessionalReadingList.Infrastructure;
 
 /// <summary>
@@ -46,6 +47,11 @@ public static class ConfigureServices
         // Register multi-tenant services
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        // Register identity services
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+
 
         return services;
     }

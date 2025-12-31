@@ -1,46 +1,45 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
-using MovieTVShowWatchlist.Core;
+using MovieTVShowWatchlist.Core.Model.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace MovieTVShowWatchlist.Infrastructure;
+namespace MovieTVShowWatchlist.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// Entity Framework Core configuration for the User entity.
-/// </summary>
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
-    /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("Users");
+        builder.HasKey(u => u.UserId);
 
-        builder.HasKey(x => x.UserId);
+        builder.Property(u => u.UserId)
+            .ValueGeneratedNever();
 
-        builder.Property(x => x.UserId)
-            .ValueGeneratedOnAdd();
+        builder.Property(u => u.UserName)
+            .IsRequired()
+            .HasMaxLength(100);
 
-        builder.Property(x => x.Username)
-            .HasMaxLength(100)
+        builder.Property(u => u.Email)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(u => u.Password)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        builder.Property(u => u.Salt)
             .IsRequired();
 
-        builder.Property(x => x.Email)
-            .HasMaxLength(255)
-            .IsRequired();
+        builder.HasIndex(u => u.UserName)
+            .IsUnique();
 
-        builder.Property(x => x.DisplayName)
-            .HasMaxLength(200)
-            .IsRequired();
+        builder.HasIndex(u => u.Email)
+            .IsUnique();
 
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
+        builder.HasMany(u => u.UserRoles)
+            .WithOne()
+            .HasForeignKey(ur => ur.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(x => x.UpdatedAt)
-            .IsRequired();
-
-        builder.HasIndex(x => x.Username).IsUnique();
-        builder.HasIndex(x => x.Email).IsUnique();
+        builder.Navigation(u => u.UserRoles)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

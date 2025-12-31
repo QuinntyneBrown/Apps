@@ -1,3 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -41,6 +45,31 @@ try
 
     // Add Infrastructure services (includes DbContext registration)
     builder.Services.AddInfrastructureServices(builder.Configuration);
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "YourApp",
+        ValidAudience = jwtSettings["Audience"] ?? "YourApp",
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+    };
+});
+
+builder.Services.AddAuthorization();
+
 
     // Add CORS
     builder.Services.AddCors(options =>
@@ -67,7 +96,11 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseHttpsRedirection();
+    
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
 
     app.UseCors();
 

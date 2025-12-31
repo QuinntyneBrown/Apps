@@ -5,6 +5,9 @@ using PetCareManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using PetCareManager.Core.Model.UserAggregate;
+using PetCareManager.Core.Model.UserAggregate.Entities;
+using PetCareManager.Core.Services;
 namespace PetCareManager.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(PetCareManagerContext context, ILogger logger)
+    public static async Task SeedAsync(PetCareManagerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

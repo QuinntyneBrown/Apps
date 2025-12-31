@@ -5,6 +5,9 @@ using BucketListManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using BucketListManager.Core.Model.UserAggregate;
+using BucketListManager.Core.Model.UserAggregate.Entities;
+using BucketListManager.Core.Services;
 namespace BucketListManager.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(BucketListManagerContext context, ILogger logger)
+    public static async Task SeedAsync(BucketListManagerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

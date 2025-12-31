@@ -3,6 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using FamilyVacationPlanner.Core.Model.UserAggregate;
+using FamilyVacationPlanner.Core.Model.UserAggregate.Entities;
 namespace FamilyVacationPlanner.Core;
 
 public interface IFamilyVacationPlannerContext
@@ -12,5 +14,21 @@ public interface IFamilyVacationPlannerContext
     DbSet<Booking> Bookings { get; set; }
     DbSet<VacationBudget> VacationBudgets { get; set; }
     DbSet<PackingList> PackingLists { get; set; }
+    
+    /// <summary>
+    /// Gets the users.
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Gets the roles.
+    /// </summary>
+    DbSet<Role> Roles { get; }
+
+    /// <summary>
+    /// Gets the user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

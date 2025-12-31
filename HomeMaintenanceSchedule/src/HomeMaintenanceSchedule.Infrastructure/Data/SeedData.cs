@@ -5,6 +5,9 @@ using HomeMaintenanceSchedule.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using HomeMaintenanceSchedule.Core.Model.UserAggregate;
+using HomeMaintenanceSchedule.Core.Model.UserAggregate.Entities;
+using HomeMaintenanceSchedule.Core.Services;
 namespace HomeMaintenanceSchedule.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(HomeMaintenanceScheduleContext context, ILogger logger)
+    public static async Task SeedAsync(HomeMaintenanceScheduleContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

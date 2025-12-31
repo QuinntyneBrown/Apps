@@ -3,6 +3,9 @@
 
 using CollegeSavingsPlanner.Core;
 
+using CollegeSavingsPlanner.Core.Model.UserAggregate;
+using CollegeSavingsPlanner.Core.Model.UserAggregate.Entities;
+using CollegeSavingsPlanner.Core.Services;
 namespace CollegeSavingsPlanner.Infrastructure.Data;
 
 /// <summary>

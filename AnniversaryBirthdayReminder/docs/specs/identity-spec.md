@@ -126,10 +126,7 @@ All API endpoints except `/api/auth/login` require authentication.
 |-----------------|---------------|
 | /api/users/* | Admin |
 | /api/roles/* | Admin |
-| /api/dates/* | User or Admin |
-| /api/reminders/* | User or Admin |
-| /api/gifts/* | User or Admin |
-| /api/celebrations/* | User or Admin |
+| /api/* | User or Admin |
 
 ### 4.3 Authorization Header
 ```http
@@ -177,7 +174,7 @@ On first application startup, the system shall seed a default admin user:
 | Field | Value |
 |-------|-------|
 | Username | admin |
-| Email | admin@anniversarybirthday.local |
+| Email | admin@anniversary-birthday-reminder.local |
 | Password | Admin123! |
 | Roles | Admin |
 

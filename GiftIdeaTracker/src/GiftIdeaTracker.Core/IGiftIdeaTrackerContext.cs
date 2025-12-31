@@ -3,6 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using GiftIdeaTracker.Core.Model.UserAggregate;
+using GiftIdeaTracker.Core.Model.UserAggregate.Entities;
 namespace GiftIdeaTracker.Core;
 
 /// <summary>
@@ -30,5 +32,21 @@ public interface IGiftIdeaTrackerContext
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of state entries written to the database.</returns>
+    
+    /// <summary>
+    /// Gets the users.
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Gets the roles.
+    /// </summary>
+    DbSet<Role> Roles { get; }
+
+    /// <summary>
+    /// Gets the user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

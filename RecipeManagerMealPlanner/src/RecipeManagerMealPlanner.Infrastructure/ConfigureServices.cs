@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using RecipeManagerMealPlanner.Core.Services;
 namespace RecipeManagerMealPlanner.Infrastructure;
 
 /// <summary>
@@ -46,6 +47,11 @@ public static class ConfigureServices
         // Register multi-tenant services
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        // Register identity services
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+
 
         return services;
     }

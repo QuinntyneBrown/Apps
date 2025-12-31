@@ -3,6 +3,9 @@
 
 using ConferenceEventManager.Core;
 
+using ConferenceEventManager.Core.Model.UserAggregate;
+using ConferenceEventManager.Core.Model.UserAggregate.Entities;
+using ConferenceEventManager.Core.Services;
 namespace ConferenceEventManager.Infrastructure.Data;
 
 /// <summary>

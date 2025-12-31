@@ -5,6 +5,9 @@ using MorningRoutineBuilder.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using MorningRoutineBuilder.Core.Model.UserAggregate;
+using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Services;
 namespace MorningRoutineBuilder.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(MorningRoutineBuilderContext context, ILogger logger)
+    public static async Task SeedAsync(MorningRoutineBuilderContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {
