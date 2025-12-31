@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using GroceryShoppingListApp.Core;
+using GroceryShoppingListApp.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GroceryShoppingListApp.Infrastructure;
@@ -40,15 +41,11 @@ public class GroceryShoppingListAppContext : DbContext, IGroceryShoppingListAppC
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply tenant isolation filters
-        if (_tenantContext != null)
-        {
-            modelBuilder.Entity<GroceryList>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
-            modelBuilder.Entity<GroceryItem>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
-            modelBuilder.Entity<Store>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
-            modelBuilder.Entity<PriceHistory>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
-        }
-
+        // Apply tenant isolation filters - these are evaluated at query time, not at startup
+        modelBuilder.Entity<GroceryList>().HasQueryFilter(e => _tenantContext == null || e.TenantId == _tenantContext.TenantId);
+        modelBuilder.Entity<GroceryItem>().HasQueryFilter(e => _tenantContext == null || e.TenantId == _tenantContext.TenantId);
+        modelBuilder.Entity<Store>().HasQueryFilter(e => _tenantContext == null || e.TenantId == _tenantContext.TenantId);
+        modelBuilder.Entity<PriceHistory>().HasQueryFilter(e => _tenantContext == null || e.TenantId == _tenantContext.TenantId);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GroceryShoppingListAppContext).Assembly);
     }

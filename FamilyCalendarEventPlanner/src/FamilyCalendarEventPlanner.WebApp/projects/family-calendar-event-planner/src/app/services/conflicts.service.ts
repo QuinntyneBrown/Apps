@@ -2,14 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments';
-import { ScheduleConflict, CreateConflictRequest } from './models';
+import { ScheduleConflict, CreateConflictRequest } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConflictsService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly baseUrl = environment.baseUrl;
 
   getConflicts(memberId?: string, isResolved?: boolean): Observable<ScheduleConflict[]> {
     let params = new HttpParams();

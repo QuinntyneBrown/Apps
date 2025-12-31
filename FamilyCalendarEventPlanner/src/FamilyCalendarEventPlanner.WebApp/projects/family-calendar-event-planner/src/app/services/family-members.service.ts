@@ -7,7 +7,7 @@ import {
   CreateFamilyMemberRequest,
   UpdateFamilyMemberRequest,
   ChangeMemberRoleRequest
-} from './models';
+} from '../models';
 
 export interface GetFamilyMembersParams {
   familyId?: string;
@@ -20,7 +20,7 @@ export interface GetFamilyMembersParams {
 })
 export class FamilyMembersService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly baseUrl = environment.baseUrl;
 
   getFamilyMembers(params?: GetFamilyMembersParams): Observable<FamilyMember[]> {
     let httpParams = new HttpParams();

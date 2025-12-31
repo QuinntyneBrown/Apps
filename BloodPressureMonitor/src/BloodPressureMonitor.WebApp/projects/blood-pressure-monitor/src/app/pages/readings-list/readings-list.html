@@ -1,0 +1,94 @@
+<div class="readings-list">
+  <div class="readings-list__header">
+    <h1 class="readings-list__title">Blood Pressure Readings</h1>
+    <button mat-raised-button color="primary" (click)="onAddReading()" class="readings-list__add-button">
+      <mat-icon>add</mat-icon>
+      Add Reading
+    </button>
+  </div>
+
+  <div class="readings-list__filters">
+    <form [formGroup]="filterForm" class="readings-list__filter-form">
+      <mat-form-field appearance="outline" class="readings-list__filter-field">
+        <mat-label>Start Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="startPicker"
+          formControlName="startDate"
+          placeholder="Select start date"
+        />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="readings-list__filter-field">
+        <mat-label>End Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="endPicker"
+          formControlName="endDate"
+          placeholder="Select end date"
+        />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="onClearFilters()"
+        class="readings-list__clear-button"
+      >
+        <mat-icon>clear</mat-icon>
+        Clear Filters
+      </button>
+    </form>
+  </div>
+
+  @if (loading) {
+    <div class="readings-list__loading">
+      <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      <p>Loading readings...</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="readings-list__error">
+      <mat-icon>error</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="readings-list__content">
+      @if (filteredReadings.length === 0) {
+        <div class="readings-list__empty-state">
+          <mat-icon>favorite_border</mat-icon>
+          <p>{{ readings.length === 0 ? 'No readings recorded yet' : 'No readings match the selected filters' }}</p>
+          @if (readings.length === 0) {
+            <button mat-raised-button color="primary" (click)="onAddReading()">
+              Add Your First Reading
+            </button>
+          } @else {
+            <button mat-button (click)="onClearFilters()">
+              Clear Filters
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="readings-list__summary">
+          <p>Showing {{ filteredReadings.length }} reading(s)</p>
+        </div>
+        <div class="readings-list__items">
+          @for (reading of filteredReadings; track reading.readingId) {
+            <app-reading-card
+              [reading]="reading"
+              (edit)="onEditReading($event)"
+              (delete)="onDeleteReading($event)"
+            ></app-reading-card>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

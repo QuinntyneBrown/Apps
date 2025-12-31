@@ -1,0 +1,181 @@
+<div class="vehicle-details" *ngIf="viewModel$ | async as vm">
+  <div class="vehicle-details__header">
+    <button mat-icon-button routerLink="/vehicles" class="vehicle-details__back">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="vehicle-details__title">
+      {{ vm.vehicle.year }} {{ vm.vehicle.make }} {{ vm.vehicle.model }}
+    </h1>
+  </div>
+
+  <mat-card class="vehicle-details__info-card">
+    <mat-card-content>
+      <div class="vehicle-details__info-grid">
+        <div class="vehicle-details__info-item">
+          <mat-icon class="vehicle-details__info-icon">category</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">Type</p>
+            <p class="vehicle-details__info-value">{{ vm.vehicle.vehicleType }}</p>
+          </div>
+        </div>
+        <div class="vehicle-details__info-item">
+          <mat-icon class="vehicle-details__info-icon">speed</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">Current Mileage</p>
+            <p class="vehicle-details__info-value">{{ vm.vehicle.currentMileage | number }} miles</p>
+          </div>
+        </div>
+        <div class="vehicle-details__info-item" *ngIf="vm.vehicle.licensePlate">
+          <mat-icon class="vehicle-details__info-icon">badge</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">License Plate</p>
+            <p class="vehicle-details__info-value">{{ vm.vehicle.licensePlate }}</p>
+          </div>
+        </div>
+        <div class="vehicle-details__info-item" *ngIf="vm.vehicle.vin">
+          <mat-icon class="vehicle-details__info-icon">fingerprint</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">VIN</p>
+            <p class="vehicle-details__info-value">{{ vm.vehicle.vin }}</p>
+          </div>
+        </div>
+        <div class="vehicle-details__info-item" *ngIf="vm.vehicle.purchaseDate">
+          <mat-icon class="vehicle-details__info-icon">event</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">Purchase Date</p>
+            <p class="vehicle-details__info-value">{{ vm.vehicle.purchaseDate | date }}</p>
+          </div>
+        </div>
+        <div class="vehicle-details__info-item">
+          <mat-icon class="vehicle-details__info-icon">attach_money</mat-icon>
+          <div class="vehicle-details__info-text">
+            <p class="vehicle-details__info-label">Total Service Cost</p>
+            <p class="vehicle-details__info-value">\${{ vm.totalCost | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="vehicle-details__chips" *ngIf="vm.vehicle.notes">
+        <mat-chip-set>
+          <mat-chip [highlighted]="vm.vehicle.isActive">
+            {{ vm.vehicle.isActive ? 'Active' : 'Inactive' }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+      <div class="vehicle-details__notes" *ngIf="vm.vehicle.notes">
+        <p class="vehicle-details__notes-label">Notes:</p>
+        <p class="vehicle-details__notes-text">{{ vm.vehicle.notes }}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-tab-group class="vehicle-details__tabs">
+    <mat-tab label="Service Records">
+      <div class="vehicle-details__tab-content">
+        <div class="vehicle-details__tab-header">
+          <h2 class="vehicle-details__tab-title">Service History</h2>
+          <button mat-raised-button color="primary" (click)="openAddServiceDialog(vm.vehicle.vehicleId)">
+            <mat-icon>add</mat-icon>
+            Add Service Record
+          </button>
+        </div>
+
+        <div *ngIf="vm.serviceRecords.length === 0" class="vehicle-details__empty">
+          <p>No service records yet</p>
+          <button mat-raised-button color="primary" (click)="openAddServiceDialog(vm.vehicle.vehicleId)">
+            Add First Service Record
+          </button>
+        </div>
+
+        <table mat-table [dataSource]="vm.serviceRecords" *ngIf="vm.serviceRecords.length > 0" class="vehicle-details__table">
+          <ng-container matColumnDef="serviceDate">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.serviceDate | date }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="serviceType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let record">{{ record.serviceType }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="mileageAtService">
+            <th mat-header-cell *matHeaderCellDef>Mileage</th>
+            <td mat-cell *matCellDef="let record">{{ record.mileageAtService | number }} mi</td>
+          </ng-container>
+
+          <ng-container matColumnDef="cost">
+            <th mat-header-cell *matHeaderCellDef>Cost</th>
+            <td mat-cell *matCellDef="let record">\${{ record.cost | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="serviceProvider">
+            <th mat-header-cell *matHeaderCellDef>Provider</th>
+            <td mat-cell *matCellDef="let record">{{ record.serviceProvider || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let record">
+              <button mat-icon-button (click)="openEditServiceDialog(record)" color="primary">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteServiceRecord(record)" color="warn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="serviceColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: serviceColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Maintenance Schedules">
+      <div class="vehicle-details__tab-content">
+        <div class="vehicle-details__tab-header">
+          <h2 class="vehicle-details__tab-title">Maintenance Schedules</h2>
+        </div>
+
+        <div *ngIf="vm.schedules.length === 0" class="vehicle-details__empty">
+          <p>No maintenance schedules yet</p>
+        </div>
+
+        <table mat-table [dataSource]="vm.schedules" *ngIf="vm.schedules.length > 0" class="vehicle-details__table">
+          <ng-container matColumnDef="serviceType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let schedule">{{ schedule.serviceType }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let schedule">{{ schedule.description }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nextServiceDate">
+            <th mat-header-cell *matHeaderCellDef>Next Service Date</th>
+            <td mat-cell *matCellDef="let schedule">{{ schedule.nextServiceDate ? (schedule.nextServiceDate | date) : 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nextServiceMileage">
+            <th mat-header-cell *matHeaderCellDef>Next Service Mileage</th>
+            <td mat-cell *matCellDef="let schedule">{{ schedule.nextServiceMileage ? (schedule.nextServiceMileage | number) + ' mi' : 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let schedule">
+              <mat-chip-set>
+                <mat-chip [highlighted]="schedule.isActive">
+                  {{ schedule.isActive ? 'Active' : 'Inactive' }}
+                </mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="scheduleColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: scheduleColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

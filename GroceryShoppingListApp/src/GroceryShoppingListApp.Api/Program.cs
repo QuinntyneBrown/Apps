@@ -2,18 +2,14 @@ using GroceryShoppingListApp.Infrastructure;
 using Serilog;
 using System.Text.Json.Serialization;
 
-// Configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(new ConfigurationBuilder()
-        .AddJsonFile("appsettings.json")
-        .Build())
-    .CreateLogger();
-
 try
 {
-    Log.Information("Starting GroceryShoppingListApp API");
-
     var builder = WebApplication.CreateBuilder(args);
+
+    // Configure Serilog
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(builder.Configuration)
+        .CreateLogger();
 
     // Add Serilog
     builder.Host.UseSerilog();

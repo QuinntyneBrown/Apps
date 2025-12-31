@@ -1,0 +1,64 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { GoalCard, CreateGoalDialog } from '../../components';
+import { GoalService } from '../../services';
+import { Goal } from '../../models';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatGridListModule,
+    GoalCard
+  ],
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.scss'
+})
+export class Dashboard implements OnInit {
+  goals$ = this.goalService.goals$;
+  userId = '00000000-0000-0000-0000-000000000001'; // Mock user ID
+
+  constructor(
+    private goalService: GoalService,
+    private dialog: MatDialog,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadGoals();
+  }
+
+  loadGoals(): void {
+    this.goalService.getAll(this.userId).subscribe();
+  }
+
+  openCreateGoalDialog(): void {
+    const dialogRef = this.dialog.open(CreateGoalDialog, {
+      width: '600px',
+      data: { userId: this.userId }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.goalService.create(result).subscribe(() => {
+          this.loadGoals();
+        });
+      }
+    });
+  }
+
+  onDeleteGoal(goalId: string): void {
+    this.goalService.delete(goalId).subscribe(() => {
+      this.loadGoals();
+    });
+  }
+}

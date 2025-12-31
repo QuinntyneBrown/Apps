@@ -1,0 +1,132 @@
+<div class="reminders">
+  <div class="reminders__header">
+    <h1 class="reminders__title">Event Reminders</h1>
+  </div>
+
+  <div *ngIf="viewModel$ | async as vm" class="reminders__content">
+    <div class="reminders__stats">
+      <mat-card class="reminders__stat-card">
+        <mat-card-content>
+          <div class="reminders__stat-value">{{ vm.pendingReminders }}</div>
+          <div class="reminders__stat-label">Pending</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="reminders__stat-card">
+        <mat-card-content>
+          <div class="reminders__stat-value">{{ vm.sentReminders }}</div>
+          <div class="reminders__stat-label">Sent</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="reminders__filters">
+      <mat-card-content>
+        <div class="reminders__filters-row">
+          <mat-form-field>
+            <mat-label>Filter by Event</mat-label>
+            <mat-select (selectionChange)="onEventFilterChange($event.value)" [value]="selectedEvent$ | async">
+              <mat-option [value]="null">All Events</mat-option>
+              <mat-option *ngFor="let event of vm.events" [value]="event.eventId">
+                {{ event.title }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Filter by Recipient</mat-label>
+            <mat-select (selectionChange)="onRecipientFilterChange($event.value)" [value]="selectedRecipient$ | async">
+              <mat-option [value]="null">All Recipients</mat-option>
+              <mat-option *ngFor="let member of vm.members" [value]="member.memberId">
+                {{ member.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-raised-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="reminders__table-card">
+      <mat-card-content>
+        <table mat-table [dataSource]="vm.reminders" class="reminders__table">
+          <ng-container matColumnDef="event">
+            <th mat-header-cell *matHeaderCellDef>Event</th>
+            <td mat-cell *matCellDef="let reminder">
+              <div class="reminders__event">
+                <strong>{{ reminder.event?.title }}</strong>
+                <span class="reminders__event-time">{{ formatDateTime(reminder.event?.startTime || '') }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="recipient">
+            <th mat-header-cell *matHeaderCellDef>Recipient</th>
+            <td mat-cell *matCellDef="let reminder">
+              <div class="reminders__recipient">
+                <div class="reminders__recipient-avatar" [style.background-color]="reminder.recipient?.color">
+                  {{ reminder.recipient?.name?.charAt(0) }}
+                </div>
+                <span>{{ reminder.recipient?.name }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="reminderTime">
+            <th mat-header-cell *matHeaderCellDef>Reminder Time</th>
+            <td mat-cell *matCellDef="let reminder">
+              {{ formatDateTime(reminder.reminderTime) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="channel">
+            <th mat-header-cell *matHeaderCellDef>Channel</th>
+            <td mat-cell *matCellDef="let reminder">
+              <mat-chip-listbox>
+                <mat-chip>
+                  <mat-icon>{{ getChannelIcon(reminder.deliveryChannel) }}</mat-icon>
+                  {{ reminder.deliveryChannel }}
+                </mat-chip>
+              </mat-chip-listbox>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let reminder">
+              <mat-chip-listbox>
+                <mat-chip [class.reminders__chip--sent]="reminder.sent" [class.reminders__chip--pending]="!reminder.sent">
+                  {{ reminder.sent ? 'Sent' : 'Pending' }}
+                </mat-chip>
+              </mat-chip-listbox>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let reminder">
+              <button mat-icon-button *ngIf="!reminder.sent" (click)="sendReminder(reminder.reminderId)" matTooltip="Send Now">
+                <mat-icon>send</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteReminder(reminder.reminderId)" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="vm.reminders.length === 0" class="reminders__empty">
+          <mat-icon>notifications_none</mat-icon>
+          <p>No reminders found</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

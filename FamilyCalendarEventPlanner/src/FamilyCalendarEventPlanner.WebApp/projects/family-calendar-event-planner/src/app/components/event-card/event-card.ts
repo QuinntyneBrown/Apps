@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { CalendarEvent, FamilyMember, EventAttendee } from '../../services/models';
+import { CalendarEvent, FamilyMember, EventAttendee } from '../../models';
 
 @Component({
   selector: 'app-event-card',

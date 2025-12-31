@@ -2,14 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments';
-import { AvailabilityBlock, CreateAvailabilityBlockRequest } from './models';
+import { AvailabilityBlock, CreateAvailabilityBlockRequest } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AvailabilityService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly baseUrl = environment.baseUrl;
 
   getAvailabilityBlocks(memberId: string): Observable<AvailabilityBlock[]> {
     const params = new HttpParams().set('memberId', memberId);

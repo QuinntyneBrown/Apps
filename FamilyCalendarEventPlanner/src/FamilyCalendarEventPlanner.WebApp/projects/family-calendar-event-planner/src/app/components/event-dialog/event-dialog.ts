@@ -17,7 +17,7 @@ import {
   EventType,
   FamilyMember,
   RecurrenceFrequency
-} from '../../services/models';
+} from '../../models';
 
 export interface EventDialogData {
   event?: CalendarEvent;
