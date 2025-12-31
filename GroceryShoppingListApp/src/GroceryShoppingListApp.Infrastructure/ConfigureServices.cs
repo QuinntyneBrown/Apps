@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using GroceryShoppingListApp.Core;
+using GroceryShoppingListApp.Core.Services;
+using GroceryShoppingListApp.Infrastructure.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,13 +33,9 @@ public static class ConfigureServices
 
         services.AddDbContext<GroceryShoppingListAppContext>(options =>
         {
-            options.UseSqlServer(connectionString, sqlOptions =>
+            options.UseSqlite(connectionString, sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(GroceryShoppingListAppContext).Assembly.FullName);
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
             });
         });
 
