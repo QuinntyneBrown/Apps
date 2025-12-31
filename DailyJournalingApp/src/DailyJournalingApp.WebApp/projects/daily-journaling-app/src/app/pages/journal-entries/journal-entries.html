@@ -1,0 +1,73 @@
+<div class="journal-entries">
+  <div class="journal-entries__header">
+    <h1 class="journal-entries__title">Journal Entries</h1>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()" class="journal-entries__create-btn">
+      <mat-icon>add</mat-icon>
+      New Entry
+    </button>
+  </div>
+
+  <mat-card class="journal-entries__filters">
+    <mat-card-content>
+      <div class="journal-entries__filters-grid">
+        <mat-form-field class="journal-entries__filter-field">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="journal-entries__filter-field">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="journal-entries__filter-field">
+          <mat-label>Mood</mat-label>
+          <mat-select [(ngModel)]="selectedMood">
+            <mat-option [value]="null">All Moods</mat-option>
+            @for (mood of moods; track mood.value) {
+              <mat-option [value]="mood.value">{{ mood.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="journal-entries__filter-checkbox">
+          <mat-checkbox [(ngModel)]="favoritesOnly">Favorites Only</mat-checkbox>
+        </div>
+      </div>
+
+      <div class="journal-entries__filter-actions">
+        <button mat-button (click)="clearFilters()">Clear</button>
+        <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="journal-entries__list">
+    @if ((entries$ | async); as entries) {
+      @if (entries.length === 0) {
+        <mat-card class="journal-entries__empty">
+          <mat-card-content>
+            <mat-icon class="journal-entries__empty-icon">article</mat-icon>
+            <p class="journal-entries__empty-text">No journal entries found</p>
+            <button mat-raised-button color="primary" (click)="openCreateDialog()">
+              Create First Entry
+            </button>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        @for (entry of entries; track entry.journalEntryId) {
+          <app-journal-entry-card
+            [entry]="entry"
+            (edit)="onEdit($event)"
+            (delete)="onDelete($event)"
+            (toggleFavorite)="onToggleFavorite($event)"
+          />
+        }
+      }
+    }
+  </div>
+</div>
