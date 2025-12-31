@@ -1,0 +1,103 @@
+<div class="dashboard" *ngIf="viewModel$ | async as vm">
+  <div class="dashboard__header">
+    <h1 class="dashboard__title">Subscription Dashboard</h1>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      Add Subscription
+    </button>
+  </div>
+
+  <div class="dashboard__stats">
+    <mat-card class="dashboard__stat-card">
+      <mat-card-header>
+        <mat-card-title>Monthly Cost</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="dashboard__stat-value">${{ vm.totalMonthly.toFixed(2) }}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__stat-card">
+      <mat-card-header>
+        <mat-card-title>Annual Cost</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="dashboard__stat-value">${{ vm.totalAnnual.toFixed(2) }}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__stat-card">
+      <mat-card-header>
+        <mat-card-title>Active Subscriptions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="dashboard__stat-value">{{ vm.activeCount }}</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card class="dashboard__table-card">
+    <mat-card-header>
+      <mat-card-title>All Subscriptions</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="dashboard__table-container">
+        <table mat-table [dataSource]="vm.subscriptions" class="dashboard__table">
+          <ng-container matColumnDef="serviceName">
+            <th mat-header-cell *matHeaderCellDef>Service</th>
+            <td mat-cell *matCellDef="let subscription">{{ subscription.serviceName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="cost">
+            <th mat-header-cell *matHeaderCellDef>Cost</th>
+            <td mat-cell *matCellDef="let subscription">${{ subscription.cost.toFixed(2) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="billingCycle">
+            <th mat-header-cell *matHeaderCellDef>Billing Cycle</th>
+            <td mat-cell *matCellDef="let subscription">{{ getBillingCycleLabel(subscription.billingCycle) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nextBillingDate">
+            <th mat-header-cell *matHeaderCellDef>Next Billing</th>
+            <td mat-cell *matCellDef="let subscription">{{ formatDate(subscription.nextBillingDate) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="categoryName">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let subscription">{{ subscription.categoryName || 'Uncategorized' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let subscription">
+              <mat-chip [color]="getStatusColor(subscription.status)" highlighted>
+                {{ getStatusLabel(subscription.status) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let subscription">
+              <button mat-icon-button (click)="openEditDialog(subscription)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteSubscription(subscription)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="vm.subscriptions.length === 0" class="dashboard__empty">
+          <mat-icon>inbox</mat-icon>
+          <p>No subscriptions found. Add your first subscription to get started!</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
