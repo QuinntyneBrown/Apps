@@ -5,7 +5,7 @@ using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
-using FamilyCalendarEventPlanner.Infrastructure.Services;
+using FamilyCalendarEventPlanner.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

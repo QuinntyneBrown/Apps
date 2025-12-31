@@ -7,6 +7,7 @@ using FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate;
 using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace FamilyCalendarEventPlanner.Infrastructure.Data;

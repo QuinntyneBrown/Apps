@@ -1,7 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace FamilyCalendarEventPlanner.Core;
+namespace FamilyCalendarEventPlanner.Core.Services;
 
 /// <summary>
 /// Provides tenant context for multi-tenant isolation.

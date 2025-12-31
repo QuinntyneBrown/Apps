@@ -1,6 +1,6 @@
 using FamilyCalendarEventPlanner.Core;
+using FamilyCalendarEventPlanner.Core.Services;
 using FamilyCalendarEventPlanner.Infrastructure.Data;
-using FamilyCalendarEventPlanner.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

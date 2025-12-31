@@ -1,4 +1,4 @@
-namespace FamilyCalendarEventPlanner.Infrastructure.Services;
+namespace FamilyCalendarEventPlanner.Core.Services;
 
 public interface IPasswordHasher
 {

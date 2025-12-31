@@ -1,78 +1,62 @@
-// Copyright (c) Quinntyne Brown. All Rights Reserved.
-// Licensed under the MIT License. See License.txt in the project root for license information.
-
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FamilyCalendarEventPlanner.Core.Services;
 
 public class JwtTokenService : IJwtTokenService
 {
-    private readonly string _secret;
-    private readonly string _issuer;
-    private readonly string _audience;
-    private readonly int _expiryMinutes;
+    private readonly IConfiguration _configuration;
+    private readonly int _expiresInHours;
 
-    public JwtTokenService(string secret, string issuer, string audience, int expiryMinutes = 60)
+    public JwtTokenService(IConfiguration configuration)
     {
-        _secret = secret;
-        _issuer = issuer;
-        _audience = audience;
-        _expiryMinutes = expiryMinutes;
+        _configuration = configuration;
+        _expiresInHours = configuration.GetValue<int>("Jwt:ExpiresInHours", 24);
     }
 
-    public string GenerateToken(string userId, string userName, string email, IEnumerable<string> roles)
+    public string GenerateToken(User user, IEnumerable<Role> roles)
     {
+        var key = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT Key is not configured.");
+        var issuer = _configuration["Jwt:Issuer"]
+            ?? "FamilyCalendarEventPlanner";
+        var audience = _configuration["Jwt:Audience"]
+            ?? "FamilyCalendarEventPlanner.Api";
+
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId),
-            new Claim(JwtRegisteredClaimNames.UniqueName, userName),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Name, user.UserName),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
+
         foreach (var role in roles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim(ClaimTypes.Role, role.Name));
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
-            issuer: _issuer,
-            audience: _audience,
+            issuer: issuer,
+            audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_expiryMinutes),
-            signingCredentials: creds
-        );
+            expires: GetTokenExpiration(),
+            signingCredentials: credentials);
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public ClaimsPrincipal? ValidateToken(string token)
+    public DateTime GetTokenExpiration()
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_secret);
-        try
-        {
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _issuer,
-                ValidAudience = _audience,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero
-            }, out _);
-            return principal;
-        }
-        catch
-        {
-            return null;
-        }
+        return DateTime.UtcNow.AddHours(_expiresInHours);
     }
 }

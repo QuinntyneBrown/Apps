@@ -1,6 +1,7 @@
 using FamilyCalendarEventPlanner.Core;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

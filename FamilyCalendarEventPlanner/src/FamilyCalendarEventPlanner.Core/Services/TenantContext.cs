@@ -1,11 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using FamilyCalendarEventPlanner.Core;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
-namespace FamilyCalendarEventPlanner.Infrastructure;
+namespace FamilyCalendarEventPlanner.Core.Services;
 
 /// <summary>
 /// Provides tenant context by extracting tenant information from the current HTTP context.

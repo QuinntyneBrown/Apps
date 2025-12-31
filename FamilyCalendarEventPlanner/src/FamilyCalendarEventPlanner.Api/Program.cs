@@ -1,7 +1,7 @@
 using System.Text;
 using FamilyCalendarEventPlanner.Infrastructure;
 using FamilyCalendarEventPlanner.Infrastructure.Data;
-using FamilyCalendarEventPlanner.Infrastructure.Services;
+using FamilyCalendarEventPlanner.Core.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -145,11 +145,6 @@ if (app.Environment.IsDevelopment())
     var context = scope.ServiceProvider.GetRequiredService<FamilyCalendarEventPlannerContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-
-    context.Database.EnsureDeleted();
-    
-    context.Database.EnsureCreated();
-
     await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 

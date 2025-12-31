@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
-namespace FamilyCalendarEventPlanner.Infrastructure.Services;
+namespace FamilyCalendarEventPlanner.Core.Services;
 
 public class PasswordHasher : IPasswordHasher
 {
