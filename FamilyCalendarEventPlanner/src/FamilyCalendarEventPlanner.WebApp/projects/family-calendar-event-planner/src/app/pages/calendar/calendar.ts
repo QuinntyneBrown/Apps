@@ -12,7 +12,7 @@ import { map, combineLatest, BehaviorSubject, switchMap, of } from 'rxjs';
 
 import { EventsService, FamilyMembersService, ConflictsService, HouseholdsService } from '../../services';
 import { EventDialog, EventDialogData, EventDialogResult } from '../../components';
-import { CalendarEvent, FamilyMember, ScheduleConflict, Household } from '../../services/models';
+import { CalendarEvent, FamilyMember, ScheduleConflict, Household } from '../../models';
 
 type ViewMode = 'day' | 'week' | 'month';
 

@@ -2,14 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments';
-import { CalendarEvent, CreateEventRequest, UpdateEventRequest } from './models';
+import { CalendarEvent, CreateEventRequest, UpdateEventRequest } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EventsService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly baseUrl = environment.baseUrl;
 
   getEvents(familyId?: string): Observable<CalendarEvent[]> {
     let params = new HttpParams();

@@ -9,7 +9,7 @@ import { map, combineLatest, switchMap, BehaviorSubject } from 'rxjs';
 
 import { FamilyMembersService, EventsService } from '../../services';
 import { MemberCard } from '../../components';
-import { FamilyMember, MemberRole } from '../../services/models';
+import { FamilyMember, MemberRole } from '../../models';
 
 type ImmediateFilter = 'all' | 'immediate' | 'extended';
 

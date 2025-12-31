@@ -9,7 +9,7 @@ import { map, combineLatest } from 'rxjs';
 
 import { EventsService, FamilyMembersService, ConflictsService, AttendeesService } from '../../services';
 import { EventCard, MiniCalendar, EventDialog, EventDialogData, EventDialogResult } from '../../components';
-import { CalendarEvent, FamilyMember, ScheduleConflict, EventAttendee } from '../../services/models';
+import { CalendarEvent, FamilyMember, ScheduleConflict, EventAttendee } from '../../models';
 
 @Component({
   selector: 'app-dashboard',

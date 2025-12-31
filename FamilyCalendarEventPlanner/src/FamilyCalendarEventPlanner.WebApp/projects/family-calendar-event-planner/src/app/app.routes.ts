@@ -14,6 +14,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/family-members/family-members').then(m => m.FamilyMembers)
   },
   {
+    path: 'reminders',
+    loadComponent: () => import('./pages/reminders/reminders').then(m => m.Reminders)
+  },
+  {
+    path: 'households',
+    loadComponent: () => import('./pages/households/households').then(m => m.Households)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

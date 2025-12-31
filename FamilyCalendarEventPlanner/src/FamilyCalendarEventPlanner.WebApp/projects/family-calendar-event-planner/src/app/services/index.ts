@@ -1,4 +1,3 @@
-export * from './models';
 export * from './events.service';
 export * from './family-members.service';
 export * from './households.service';
