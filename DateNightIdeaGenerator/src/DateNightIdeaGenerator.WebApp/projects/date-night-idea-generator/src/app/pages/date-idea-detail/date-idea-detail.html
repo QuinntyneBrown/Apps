@@ -1,0 +1,141 @@
+<div class="date-idea-detail" *ngIf="dateIdea$ | async as dateIdea">
+  <div class="date-idea-detail__header">
+    <button mat-icon-button routerLink="/date-ideas">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="date-idea-detail__title">{{ dateIdea.title }}</h1>
+    <div class="date-idea-detail__actions">
+      <button mat-icon-button (click)="toggleFavorite(dateIdea)" [color]="dateIdea.isFavorite ? 'accent' : ''">
+        <mat-icon>{{ dateIdea.isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
+      <button mat-icon-button [routerLink]="['/date-ideas', dateIdea.dateIdeaId, 'edit']">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button color="warn" (click)="delete(dateIdea.dateIdeaId)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <mat-tab-group>
+    <mat-tab label="Details">
+      <div class="date-idea-detail__content">
+        <mat-card>
+          <mat-card-content>
+            <div class="date-idea-detail__field">
+              <label>Description</label>
+              <p>{{ dateIdea.description }}</p>
+            </div>
+
+            <div class="date-idea-detail__field-group">
+              <div class="date-idea-detail__field">
+                <label>Category</label>
+                <mat-chip-set>
+                  <mat-chip>{{ getCategoryName(dateIdea.category) }}</mat-chip>
+                </mat-chip-set>
+              </div>
+
+              <div class="date-idea-detail__field">
+                <label>Budget Range</label>
+                <mat-chip-set>
+                  <mat-chip>{{ getBudgetRangeName(dateIdea.budgetRange) }}</mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+
+            <div class="date-idea-detail__field-group" *ngIf="dateIdea.location || dateIdea.durationMinutes">
+              <div class="date-idea-detail__field" *ngIf="dateIdea.location">
+                <label>Location</label>
+                <p>
+                  <mat-icon>location_on</mat-icon>
+                  {{ dateIdea.location }}
+                </p>
+              </div>
+
+              <div class="date-idea-detail__field" *ngIf="dateIdea.durationMinutes">
+                <label>Duration</label>
+                <p>
+                  <mat-icon>schedule</mat-icon>
+                  {{ dateIdea.durationMinutes }} minutes
+                </p>
+              </div>
+            </div>
+
+            <div class="date-idea-detail__field" *ngIf="dateIdea.season">
+              <label>Best Season</label>
+              <p>
+                <mat-icon>wb_sunny</mat-icon>
+                {{ dateIdea.season }}
+              </p>
+            </div>
+
+            <div class="date-idea-detail__field-group">
+              <div class="date-idea-detail__field">
+                <label>Status</label>
+                <mat-chip-set>
+                  <mat-chip [color]="dateIdea.hasBeenTried ? 'accent' : ''">
+                    {{ dateIdea.hasBeenTried ? 'Tried' : 'Not Tried Yet' }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+
+              <div class="date-idea-detail__field" *ngIf="dateIdea.averageRating">
+                <label>Average Rating</label>
+                <p>
+                  <mat-icon>star</mat-icon>
+                  {{ dateIdea.averageRating.toFixed(1) }} / 5.0
+                </p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Experiences">
+      <div class="date-idea-detail__content">
+        <div class="date-idea-detail__experiences">
+          <button mat-raised-button color="primary" [routerLink]="['/experiences/new']" [queryParams]="{dateIdeaId: dateIdea.dateIdeaId}">
+            <mat-icon>add</mat-icon>
+            Add Experience
+          </button>
+
+          <div *ngIf="(experiences$ | async)?.length === 0" class="date-idea-detail__empty">
+            <mat-icon>event</mat-icon>
+            <p>No experiences recorded yet.</p>
+          </div>
+
+          <mat-card *ngFor="let experience of experiences$ | async" class="date-idea-detail__experience-card">
+            <mat-card-header>
+              <mat-card-title>{{ experience.experienceDate | date }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>{{ experience.notes }}</p>
+              <div class="date-idea-detail__experience-meta">
+                <mat-chip-set>
+                  <mat-chip *ngIf="experience.actualCost">
+                    <mat-icon>attach_money</mat-icon>
+                    ${{ experience.actualCost }}
+                  </mat-chip>
+                  <mat-chip [color]="experience.wasSuccessful ? 'accent' : ''">
+                    <mat-icon>{{ experience.wasSuccessful ? 'check_circle' : 'cancel' }}</mat-icon>
+                    {{ experience.wasSuccessful ? 'Success' : 'Not Successful' }}
+                  </mat-chip>
+                  <mat-chip [color]="experience.wouldRepeat ? 'primary' : ''">
+                    <mat-icon>{{ experience.wouldRepeat ? 'repeat' : 'block' }}</mat-icon>
+                    {{ experience.wouldRepeat ? 'Would Repeat' : 'Would Not Repeat' }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button [routerLink]="['/experiences', experience.experienceId]">
+                View Details
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
