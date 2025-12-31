@@ -1,0 +1,100 @@
+<div class="letters">
+  <div class="letters__header">
+    <div>
+      <h1 class="letters__title">Letters</h1>
+      <p class="letters__subtitle">Manage your letters to future self</p>
+    </div>
+    <a mat-raised-button color="primary" routerLink="/letters/new" class="letters__create-btn">
+      <mat-icon>add</mat-icon>
+      Create Letter
+    </a>
+  </div>
+
+  <div *ngIf="loading$ | async" class="letters__loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="!(loading$ | async)" class="letters__card">
+    <mat-card-content>
+      <div *ngIf="(letters$ | async)?.length === 0" class="letters__empty">
+        <mat-icon class="letters__empty-icon">mail_outline</mat-icon>
+        <p class="letters__empty-text">No letters found</p>
+        <a mat-raised-button color="primary" routerLink="/letters/new">Create Your First Letter</a>
+      </div>
+
+      <div *ngIf="(letters$ | async)?.length > 0" class="letters__table-container">
+        <table mat-table [dataSource]="letters$ | async" class="letters__table">
+          <ng-container matColumnDef="subject">
+            <th mat-header-cell *matHeaderCellDef>Subject</th>
+            <td mat-cell *matCellDef="let letter">
+              <div class="letters__subject">
+                <strong>{{ letter.subject }}</strong>
+                <span *ngIf="letter.isDueForDelivery" class="letters__badge" matTooltip="Due for delivery">
+                  <mat-icon>notifications_active</mat-icon>
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="writtenDate">
+            <th mat-header-cell *matHeaderCellDef>Written Date</th>
+            <td mat-cell *matCellDef="let letter">{{ formatDate(letter.writtenDate) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="scheduledDeliveryDate">
+            <th mat-header-cell *matHeaderCellDef>Scheduled Delivery</th>
+            <td mat-cell *matCellDef="let letter">{{ formatDate(letter.scheduledDeliveryDate) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="deliveryStatus">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let letter">
+              <mat-chip [color]="getStatusColor(letter.deliveryStatus)" highlighted>
+                {{ DeliveryStatusLabels[letter.deliveryStatus] }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="hasBeenRead">
+            <th mat-header-cell *matHeaderCellDef>Read Status</th>
+            <td mat-cell *matCellDef="let letter">
+              <mat-chip *ngIf="letter.hasBeenRead" color="primary" highlighted>
+                <mat-icon>done</mat-icon>
+                Read
+              </mat-chip>
+              <mat-chip *ngIf="!letter.hasBeenRead">
+                <mat-icon>mail</mat-icon>
+                Unread
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let letter">
+              <div class="letters__actions">
+                <button mat-icon-button color="primary" (click)="onEdit(letter)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="onMarkAsRead(letter)"
+                  [disabled]="letter.hasBeenRead || letter.deliveryStatus !== 1"
+                  matTooltip="Mark as read">
+                  <mat-icon>mark_email_read</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="onDelete(letter)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="letters__row"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

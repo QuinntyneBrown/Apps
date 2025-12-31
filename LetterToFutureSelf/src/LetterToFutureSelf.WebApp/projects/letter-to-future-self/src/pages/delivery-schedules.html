@@ -1,0 +1,87 @@
+<div class="delivery-schedules">
+  <div class="delivery-schedules__header">
+    <div>
+      <h1 class="delivery-schedules__title">Delivery Schedules</h1>
+      <p class="delivery-schedules__subtitle">Manage your letter delivery schedules</p>
+    </div>
+    <a mat-raised-button color="primary" routerLink="/delivery-schedules/new" class="delivery-schedules__create-btn">
+      <mat-icon>add</mat-icon>
+      Create Schedule
+    </a>
+  </div>
+
+  <div *ngIf="loading$ | async" class="delivery-schedules__loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="!(loading$ | async)" class="delivery-schedules__card">
+    <mat-card-content>
+      <div *ngIf="(deliverySchedules$ | async)?.length === 0" class="delivery-schedules__empty">
+        <mat-icon class="delivery-schedules__empty-icon">schedule</mat-icon>
+        <p class="delivery-schedules__empty-text">No delivery schedules found</p>
+        <a mat-raised-button color="primary" routerLink="/delivery-schedules/new">Create Your First Schedule</a>
+      </div>
+
+      <div *ngIf="(deliverySchedules$ | async)?.length > 0" class="delivery-schedules__table-container">
+        <table mat-table [dataSource]="deliverySchedules$ | async" class="delivery-schedules__table">
+          <ng-container matColumnDef="letterId">
+            <th mat-header-cell *matHeaderCellDef>Letter ID</th>
+            <td mat-cell *matCellDef="let schedule">
+              <code class="delivery-schedules__letter-id">{{ formatLetterId(schedule.letterId) }}...</code>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="scheduledDateTime">
+            <th mat-header-cell *matHeaderCellDef>Scheduled Date & Time</th>
+            <td mat-cell *matCellDef="let schedule">{{ formatDateTime(schedule.scheduledDateTime) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="deliveryMethod">
+            <th mat-header-cell *matHeaderCellDef>Delivery Method</th>
+            <td mat-cell *matCellDef="let schedule">
+              <mat-chip>{{ schedule.deliveryMethod }}</mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="recipientContact">
+            <th mat-header-cell *matHeaderCellDef>Recipient Contact</th>
+            <td mat-cell *matCellDef="let schedule">
+              {{ schedule.recipientContact || 'N/A' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let schedule">
+              <mat-chip *ngIf="schedule.isActive" color="primary" highlighted>
+                <mat-icon>check_circle</mat-icon>
+                Active
+              </mat-chip>
+              <mat-chip *ngIf="!schedule.isActive">
+                <mat-icon>cancel</mat-icon>
+                Inactive
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let schedule">
+              <div class="delivery-schedules__actions">
+                <button mat-icon-button color="primary" (click)="onEdit(schedule)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="onDelete(schedule)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="delivery-schedules__row"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
