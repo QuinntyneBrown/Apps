@@ -1,0 +1,84 @@
+<div class="prompts">
+  <div class="prompts__container">
+    <header class="prompts__header">
+      <h1 class="prompts__title">Conversation Prompts</h1>
+      <p class="prompts__subtitle">Browse and filter conversation starter prompts</p>
+    </header>
+
+    <section class="prompts__filters">
+      <mat-card>
+        <mat-card-content>
+          <div class="prompts__filters-row">
+            <mat-form-field class="prompts__filter">
+              <mat-label>Category</mat-label>
+              <mat-select [(ngModel)]="selectedCategory" (selectionChange)="applyFilters()">
+                <mat-option [value]="undefined">All Categories</mat-option>
+                <mat-option *ngFor="let cat of categories" [value]="cat">
+                  {{ categoryLabels[cat] }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="prompts__filter">
+              <mat-label>Depth</mat-label>
+              <mat-select [(ngModel)]="selectedDepth" (selectionChange)="applyFilters()">
+                <mat-option [value]="undefined">All Depths</mat-option>
+                <mat-option *ngFor="let depth of depths" [value]="depth">
+                  {{ depthLabels[depth] }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="getRandom()">
+              <mat-icon>shuffle</mat-icon>
+              Random
+            </button>
+
+            <button mat-button (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear Filters
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="prompts__list">
+      <mat-card class="prompts__card" *ngFor="let prompt of prompts$ | async">
+        <mat-card-header>
+          <mat-card-title class="prompts__card-title">{{ prompt.text }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="prompts__card-meta">
+            <mat-chip-set>
+              <mat-chip>{{ categoryLabels[prompt.category] }}</mat-chip>
+              <mat-chip>{{ depthLabels[prompt.depth] }}</mat-chip>
+              <mat-chip *ngIf="prompt.usageCount > 0">Used {{ prompt.usageCount }} times</mat-chip>
+              <mat-chip *ngIf="prompt.isSystemPrompt" color="accent">System</mat-chip>
+            </mat-chip-set>
+            <p *ngIf="prompt.tags" class="prompts__card-tags">Tags: {{ prompt.tags }}</p>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="usePrompt(prompt)">
+            <mat-icon>check_circle</mat-icon>
+            Use
+          </button>
+          <button
+            mat-icon-button
+            [color]="isFavorite(prompt.promptId) ? 'warn' : ''"
+            (click)="toggleFavorite(prompt)">
+            <mat-icon>{{ isFavorite(prompt.promptId) ? 'favorite' : 'favorite_border' }}</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="prompts__empty" *ngIf="(prompts$ | async)?.length === 0">
+        <mat-card-content>
+          <mat-icon class="prompts__empty-icon">search_off</mat-icon>
+          <p>No prompts found. Try adjusting your filters.</p>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </div>
+</div>
