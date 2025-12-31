@@ -1,0 +1,137 @@
+<div class="trends">
+  <div class="trends__header">
+    <h1 class="trends__title">Blood Pressure Trends</h1>
+    <div class="trends__actions">
+      <button mat-button (click)="onCalculateTrend(7)">
+        <mat-icon>date_range</mat-icon>
+        7 Days
+      </button>
+      <button mat-button (click)="onCalculateTrend(30)">
+        <mat-icon>date_range</mat-icon>
+        30 Days
+      </button>
+      <button mat-button (click)="onCalculateTrend(90)">
+        <mat-icon>date_range</mat-icon>
+        90 Days
+      </button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="trends__loading">
+      <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      <p>Loading trends...</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="trends__error">
+      <mat-icon>error</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    @if (trends.length === 0) {
+      <div class="trends__empty-state">
+        <mat-icon>trending_up</mat-icon>
+        <p>No trend analyses calculated yet</p>
+        <p class="trends__empty-state-subtitle">Calculate a trend to see patterns in your blood pressure over time</p>
+        <div class="trends__empty-state-actions">
+          <button mat-raised-button color="primary" (click)="onCalculateTrend(7)">
+            Calculate 7-Day Trend
+          </button>
+          <button mat-raised-button color="primary" (click)="onCalculateTrend(30)">
+            Calculate 30-Day Trend
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="trends__list">
+        @for (trend of trends; track trend.trendId) {
+          <mat-card class="trends__card">
+            <mat-card-header class="trends__card-header">
+              <mat-card-title class="trends__card-title">
+                <div class="trends__period">
+                  <mat-icon>event</mat-icon>
+                  <span>{{ trend.startDate | date: 'mediumDate' }} - {{ trend.endDate | date: 'mediumDate' }}</span>
+                </div>
+                <span class="trends__duration">({{ trend.periodDuration }} days)</span>
+              </mat-card-title>
+              <button mat-icon-button (click)="onDeleteTrend(trend.trendId)" aria-label="Delete trend">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-card-header>
+
+            <mat-card-content class="trends__card-content">
+              <div class="trends__direction-container">
+                <mat-chip-set>
+                  <mat-chip [class]="getTrendDirectionClass(trend.trendDirection)">
+                    <mat-icon>{{ getTrendDirectionIcon(trend.trendDirection) }}</mat-icon>
+                    {{ trend.trendDirection }}
+                  </mat-chip>
+                  @if (trend.isImproving) {
+                    <mat-chip class="trends__improving-chip">
+                      <mat-icon>check_circle</mat-icon>
+                      Improving
+                    </mat-chip>
+                  }
+                </mat-chip-set>
+              </div>
+
+              <div class="trends__stats">
+                <div class="trends__stat-group">
+                  <h3 class="trends__stat-group-title">Average Blood Pressure</h3>
+                  <div class="trends__bp-value">
+                    <span class="trends__bp-number">{{ trend.averageSystolic | number:'1.0-0' }}</span>
+                    <span class="trends__bp-separator">/</span>
+                    <span class="trends__bp-number">{{ trend.averageDiastolic | number:'1.0-0' }}</span>
+                    <span class="trends__bp-unit">mmHg</span>
+                  </div>
+                </div>
+
+                <div class="trends__stat-row">
+                  <div class="trends__stat">
+                    <div class="trends__stat-label">Highest</div>
+                    <div class="trends__stat-value trends__stat-value--high">
+                      {{ trend.highestSystolic }}/{{ trend.highestDiastolic }}
+                    </div>
+                  </div>
+
+                  <div class="trends__stat">
+                    <div class="trends__stat-label">Lowest</div>
+                    <div class="trends__stat-value trends__stat-value--low">
+                      {{ trend.lowestSystolic }}/{{ trend.lowestDiastolic }}
+                    </div>
+                  </div>
+
+                  <div class="trends__stat">
+                    <div class="trends__stat-label">Readings</div>
+                    <div class="trends__stat-value">
+                      {{ trend.readingCount }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @if (trend.insights) {
+                <div class="trends__insights">
+                  <div class="trends__insights-header">
+                    <mat-icon>lightbulb</mat-icon>
+                    <h3>Insights</h3>
+                  </div>
+                  <p>{{ trend.insights }}</p>
+                </div>
+              }
+
+              <div class="trends__metadata">
+                <mat-icon>schedule</mat-icon>
+                <span>Calculated on {{ trend.createdAt | date: 'medium' }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

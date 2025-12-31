@@ -1,0 +1,138 @@
+<div class="dashboard">
+  <div class="dashboard__header">
+    <h1 class="dashboard__title">Dashboard</h1>
+    <button mat-raised-button color="primary" (click)="onAddReading()" class="dashboard__add-button">
+      <mat-icon>add</mat-icon>
+      Add Reading
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="dashboard__loading">
+      <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="dashboard__error">
+      <mat-icon>error</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="dashboard__content">
+      <!-- Critical Readings Alert -->
+      @if (criticalReadings.length > 0) {
+        <mat-card class="dashboard__alert dashboard__alert--critical">
+          <mat-card-header>
+            <mat-card-title class="dashboard__alert-title">
+              <mat-icon class="dashboard__alert-icon">warning</mat-icon>
+              Critical Readings Alert
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>You have {{ criticalReadings.length }} critical reading(s) in the last 30 days.</p>
+            <button mat-button color="warn" (click)="onViewAllReadings()">
+              View Critical Readings
+            </button>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Latest Trend Summary -->
+      @if (latestTrend) {
+        <mat-card class="dashboard__trend-card">
+          <mat-card-header>
+            <mat-card-title class="dashboard__section-title">
+              <mat-icon>trending_up</mat-icon>
+              Latest Trend (Last 30 Days)
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="dashboard__trend-stats">
+              <div class="dashboard__stat">
+                <div class="dashboard__stat-label">Average BP</div>
+                <div class="dashboard__stat-value">
+                  {{ latestTrend.averageSystolic | number:'1.0-0' }}/{{ latestTrend.averageDiastolic | number:'1.0-0' }}
+                </div>
+              </div>
+              <div class="dashboard__stat">
+                <div class="dashboard__stat-label">Trend Direction</div>
+                <div class="dashboard__stat-value" [class.dashboard__stat-value--improving]="latestTrend.isImproving">
+                  {{ latestTrend.trendDirection }}
+                </div>
+              </div>
+              <div class="dashboard__stat">
+                <div class="dashboard__stat-label">Readings</div>
+                <div class="dashboard__stat-value">{{ latestTrend.readingCount }}</div>
+              </div>
+            </div>
+            @if (latestTrend.insights) {
+              <div class="dashboard__insights">
+                <mat-icon>lightbulb</mat-icon>
+                <p>{{ latestTrend.insights }}</p>
+              </div>
+            }
+            <div class="dashboard__trend-actions">
+              <button mat-button color="primary" (click)="onViewTrends()">View All Trends</button>
+              <button mat-button (click)="onCalculateTrend()">Calculate New Trend</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <mat-card class="dashboard__trend-card">
+          <mat-card-content>
+            <div class="dashboard__empty-state">
+              <mat-icon>trending_up</mat-icon>
+              <p>No trends calculated yet</p>
+              <button mat-raised-button color="primary" (click)="onCalculateTrend()">
+                Calculate Trend
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Recent Readings -->
+      <div class="dashboard__section">
+        <div class="dashboard__section-header">
+          <h2 class="dashboard__section-title">
+            <mat-icon>history</mat-icon>
+            Recent Readings
+          </h2>
+          @if (recentReadings.length > 0) {
+            <button mat-button color="primary" (click)="onViewAllReadings()">
+              View All
+            </button>
+          }
+        </div>
+
+        @if (recentReadings.length === 0) {
+          <mat-card class="dashboard__empty-state-card">
+            <mat-card-content>
+              <div class="dashboard__empty-state">
+                <mat-icon>favorite_border</mat-icon>
+                <p>No readings recorded yet</p>
+                <button mat-raised-button color="primary" (click)="onAddReading()">
+                  Add Your First Reading
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        } @else {
+          <div class="dashboard__readings-list">
+            @for (reading of recentReadings; track reading.readingId) {
+              <app-reading-card
+                [reading]="reading"
+                (edit)="onEditReading($event)"
+                (delete)="onDeleteReading($event)"
+              ></app-reading-card>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
