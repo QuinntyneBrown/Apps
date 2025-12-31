@@ -44,6 +44,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<DateTime?>("ResponseTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("AttendeeId");
 
                     b.HasIndex("EventId");
@@ -77,6 +80,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ConflictId");
 
@@ -118,6 +124,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -157,6 +166,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("BlockId");
 
@@ -207,6 +219,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("MemberId");
 
                     b.HasIndex("Email");
@@ -243,6 +258,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("HouseholdId");
 
                     b.ToTable("Households");
@@ -268,6 +286,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<bool>("Sent")
                         .HasColumnType("bit");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("ReminderId");
 
                     b.HasIndex("EventId");
@@ -291,6 +312,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("RoleId");
 
                     b.HasIndex("Name")
@@ -305,6 +329,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("UserId", "RoleId");
@@ -334,6 +361,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.Property<byte[]>("Salt")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserName")
                         .IsRequired()

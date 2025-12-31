@@ -10,7 +10,7 @@ public class FamilyMemberTests
     [Test]
     public void Constructor_ValidParameters_CreatesMember()
     {
-        var member = new FamilyMember(_familyId, "John Doe", "john@example.com", "#FF5733");
+        var member = new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "John Doe", "john@example.com", "#FF5733");
 
         Assert.Multiple(() =>
         {
@@ -28,7 +28,7 @@ public class FamilyMemberTests
     [Test]
     public void Constructor_WithRole_SetsRole()
     {
-        var member = new FamilyMember(_familyId, "Jane Doe", "jane@example.com", "#0000FF", MemberRole.Admin);
+        var member = new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "Jane Doe", "jane@example.com", "#0000FF", MemberRole.Admin);
 
         Assert.That(member.Role, Is.EqualTo(MemberRole.Admin));
     }
@@ -37,6 +37,7 @@ public class FamilyMemberTests
     public void Constructor_WithIsImmediateAndRelationType_SetsProperties()
     {
         var member = new FamilyMember(
+            TestHelpers.DefaultTenantId,
             _familyId,
             "Uncle Bob",
             "bob@example.com",
@@ -55,7 +56,7 @@ public class FamilyMemberTests
     [Test]
     public void Constructor_WithNullEmail_SetsEmailToNull()
     {
-        var member = new FamilyMember(_familyId, "John Doe", null, "#FF5733");
+        var member = new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "John Doe", null, "#FF5733");
 
         Assert.That(member.Email, Is.Null);
     }
@@ -63,7 +64,7 @@ public class FamilyMemberTests
     [Test]
     public void Constructor_WithEmptyEmail_SetsEmailToNull()
     {
-        var member = new FamilyMember(_familyId, "John Doe", "", "#FF5733");
+        var member = new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "John Doe", "", "#FF5733");
 
         Assert.That(member.Email, Is.Null);
     }
@@ -71,7 +72,7 @@ public class FamilyMemberTests
     [Test]
     public void Constructor_WithWhitespaceEmail_SetsEmailToNull()
     {
-        var member = new FamilyMember(_familyId, "John Doe", "   ", "#FF5733");
+        var member = new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "John Doe", "   ", "#FF5733");
 
         Assert.That(member.Email, Is.Null);
     }
@@ -80,21 +81,21 @@ public class FamilyMemberTests
     public void Constructor_EmptyName_ThrowsArgumentException()
     {
         Assert.Throws<ArgumentException>(() =>
-            new FamilyMember(_familyId, "", "test@example.com", "#000000"));
+            new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "", "test@example.com", "#000000"));
     }
 
     [Test]
     public void Constructor_WhitespaceName_ThrowsArgumentException()
     {
         Assert.Throws<ArgumentException>(() =>
-            new FamilyMember(_familyId, "   ", "test@example.com", "#000000"));
+            new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "   ", "test@example.com", "#000000"));
     }
 
     [Test]
     public void Constructor_EmptyColor_ThrowsArgumentException()
     {
         Assert.Throws<ArgumentException>(() =>
-            new FamilyMember(_familyId, "Test", "test@example.com", ""));
+            new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "Test", "test@example.com", ""));
     }
 
     [Test]
@@ -252,7 +253,7 @@ public class FamilyMemberTests
         var member = CreateDefaultMember();
         var blocks = new List<AvailabilityBlock>
         {
-            new AvailabilityBlock(member.MemberId, DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddHours(2), BlockType.Busy)
+            new AvailabilityBlock(TestHelpers.DefaultTenantId, member.MemberId, DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddHours(2), BlockType.Busy)
         };
 
         var isAvailable = member.IsAvailable(DateTime.UtcNow, DateTime.UtcNow.AddHours(1), blocks);
@@ -266,7 +267,7 @@ public class FamilyMemberTests
         var member = CreateDefaultMember();
         var blocks = new List<AvailabilityBlock>
         {
-            new AvailabilityBlock(member.MemberId, DateTime.UtcNow.AddHours(3), DateTime.UtcNow.AddHours(4), BlockType.Busy)
+            new AvailabilityBlock(TestHelpers.DefaultTenantId, member.MemberId, DateTime.UtcNow.AddHours(3), DateTime.UtcNow.AddHours(4), BlockType.Busy)
         };
 
         var isAvailable = member.IsAvailable(DateTime.UtcNow, DateTime.UtcNow.AddHours(1), blocks);
@@ -281,7 +282,7 @@ public class FamilyMemberTests
         var otherMemberId = Guid.NewGuid();
         var blocks = new List<AvailabilityBlock>
         {
-            new AvailabilityBlock(otherMemberId, DateTime.UtcNow, DateTime.UtcNow.AddHours(2), BlockType.Busy)
+            new AvailabilityBlock(TestHelpers.DefaultTenantId, otherMemberId, DateTime.UtcNow, DateTime.UtcNow.AddHours(2), BlockType.Busy)
         };
 
         var isAvailable = member.IsAvailable(DateTime.UtcNow, DateTime.UtcNow.AddHours(1), blocks);
@@ -291,6 +292,6 @@ public class FamilyMemberTests
 
     private FamilyMember CreateDefaultMember()
     {
-        return new FamilyMember(_familyId, "Test User", "test@example.com", "#FF0000");
+        return new FamilyMember(TestHelpers.DefaultTenantId, _familyId, "Test User", "test@example.com", "#FF0000");
     }
 }

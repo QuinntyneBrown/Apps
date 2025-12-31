@@ -14,13 +14,16 @@ public record CreateRoleCommand : IRequest<RoleDto>
 public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, RoleDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateRoleCommandHandler> _logger;
 
     public CreateRoleCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateRoleCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -36,7 +39,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, RoleD
             throw new InvalidOperationException($"Role with name '{request.Name}' already exists.");
         }
 
-        var role = new Role(request.Name);
+        var role = new Role(_tenantContext.TenantId, request.Name);
 
         _context.Roles.Add(role);
         await _context.SaveChangesAsync(cancellationToken);

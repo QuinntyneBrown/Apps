@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
 public class EventAttendee
 {
     public Guid AttendeeId { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid EventId { get; private set; }
     public Guid FamilyMemberId { get; private set; }
     public RSVPStatus RSVPStatus { get; private set; }
@@ -15,9 +16,10 @@ public class EventAttendee
     {
     }
 
-    public EventAttendee(Guid eventId, Guid familyMemberId, string? notes = null)
+    public EventAttendee(Guid tenantId, Guid eventId, Guid familyMemberId, string? notes = null)
     {
         AttendeeId = Guid.NewGuid();
+        TenantId = tenantId;
         EventId = eventId;
         FamilyMemberId = familyMemberId;
         RSVPStatus = RSVPStatus.Pending;

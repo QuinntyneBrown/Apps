@@ -17,13 +17,16 @@ public record CreateReminderCommand : IRequest<EventReminderDto>
 public class CreateReminderCommandHandler : IRequestHandler<CreateReminderCommand, EventReminderDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateReminderCommandHandler> _logger;
 
     public CreateReminderCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateReminderCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -35,6 +38,7 @@ public class CreateReminderCommandHandler : IRequestHandler<CreateReminderComman
             request.RecipientId);
 
         var reminder = new EventReminder(
+            _tenantContext.TenantId,
             request.EventId,
             request.RecipientId,
             request.ReminderTime,

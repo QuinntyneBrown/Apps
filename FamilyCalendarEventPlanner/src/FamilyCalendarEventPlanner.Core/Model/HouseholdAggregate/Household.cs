@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate;
 public class Household
 {
     public Guid HouseholdId { get; private set; }
+    public Guid TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string Street { get; private set; } = string.Empty;
     public string City { get; private set; } = string.Empty;
@@ -16,6 +17,7 @@ public class Household
     }
 
     public Household(
+        Guid tenantId,
         string name,
         string street,
         string city,
@@ -48,6 +50,7 @@ public class Household
         }
 
         HouseholdId = Guid.NewGuid();
+        TenantId = tenantId;
         Name = name;
         Street = street;
         City = city;

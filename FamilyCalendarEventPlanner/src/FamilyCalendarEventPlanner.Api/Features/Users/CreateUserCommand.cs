@@ -18,15 +18,18 @@ public record CreateUserCommand : IRequest<UserDto>
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<CreateUserCommandHandler> _logger;
 
     public CreateUserCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         IPasswordHasher passwordHasher,
         ILogger<CreateUserCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _passwordHasher = passwordHasher;
         _logger = logger;
     }
@@ -54,6 +57,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         var (hashedPassword, salt) = _passwordHasher.HashPassword(request.Password);
 
         var user = new User(
+            tenantId: _tenantContext.TenantId,
             userName: request.UserName,
             email: request.Email,
             hashedPassword: hashedPassword,

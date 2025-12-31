@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 public class AvailabilityBlock
 {
     public Guid BlockId { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid MemberId { get; private set; }
     public DateTime StartTime { get; private set; }
     public DateTime EndTime { get; private set; }
@@ -15,7 +16,7 @@ public class AvailabilityBlock
     {
     }
 
-    public AvailabilityBlock(Guid memberId, DateTime startTime, DateTime endTime, BlockType blockType, string? reason = null)
+    public AvailabilityBlock(Guid tenantId, Guid memberId, DateTime startTime, DateTime endTime, BlockType blockType, string? reason = null)
     {
         if (endTime <= startTime)
         {
@@ -23,6 +24,7 @@ public class AvailabilityBlock
         }
 
         BlockId = Guid.NewGuid();
+        TenantId = tenantId;
         MemberId = memberId;
         StartTime = startTime;
         EndTime = endTime;

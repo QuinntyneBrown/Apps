@@ -22,13 +22,16 @@ public record CreateEventCommand : IRequest<CalendarEventDto>
 public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, CalendarEventDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateEventCommandHandler> _logger;
 
     public CreateEventCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateEventCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -50,6 +53,7 @@ public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, Cal
         }
 
         var calendarEvent = new CalendarEvent(
+            _tenantContext.TenantId,
             request.FamilyId,
             request.CreatorId,
             request.Title,

@@ -15,13 +15,16 @@ public record AddAttendeeCommand : IRequest<EventAttendeeDto>
 public class AddAttendeeCommandHandler : IRequestHandler<AddAttendeeCommand, EventAttendeeDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<AddAttendeeCommandHandler> _logger;
 
     public AddAttendeeCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<AddAttendeeCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -32,7 +35,7 @@ public class AddAttendeeCommandHandler : IRequestHandler<AddAttendeeCommand, Eve
             request.FamilyMemberId,
             request.EventId);
 
-        var attendee = new EventAttendee(request.EventId, request.FamilyMemberId, request.Notes);
+        var attendee = new EventAttendee(_tenantContext.TenantId, request.EventId, request.FamilyMemberId, request.Notes);
 
         _context.EventAttendees.Add(attendee);
         await _context.SaveChangesAsync(cancellationToken);

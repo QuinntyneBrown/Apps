@@ -16,6 +16,7 @@ public class User
     private readonly List<UserRole> _userRoles = new();
 
     public Guid UserId { get; private set; }
+    public Guid TenantId { get; private set; }
     public string UserName { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
@@ -24,7 +25,7 @@ public class User
 
     private User() { }
 
-    public User(string userName, string email, string hashedPassword, byte[] salt)
+    public User(Guid tenantId, string userName, string email, string hashedPassword, byte[] salt)
     {
         if (string.IsNullOrWhiteSpace(userName))
             throw new ArgumentException("UserName cannot be empty.", nameof(userName));
@@ -36,6 +37,7 @@ public class User
             throw new ArgumentException("Salt cannot be empty.", nameof(salt));
 
         UserId = Guid.NewGuid();
+        TenantId = tenantId;
         UserName = userName;
         Email = email;
         Password = hashedPassword;
@@ -78,7 +80,7 @@ public class User
         if (_userRoles.Any(ur => ur.RoleId == role.RoleId))
             return; // Role already assigned, idempotent operation
 
-        _userRoles.Add(new UserRole(UserId, role.RoleId));
+        _userRoles.Add(new UserRole(TenantId, UserId, role.RoleId));
     }
 
     public void RemoveRole(Guid roleId)

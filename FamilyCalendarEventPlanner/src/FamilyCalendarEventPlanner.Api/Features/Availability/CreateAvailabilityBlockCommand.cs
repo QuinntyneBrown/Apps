@@ -18,13 +18,16 @@ public record CreateAvailabilityBlockCommand : IRequest<AvailabilityBlockDto>
 public class CreateAvailabilityBlockCommandHandler : IRequestHandler<CreateAvailabilityBlockCommand, AvailabilityBlockDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateAvailabilityBlockCommandHandler> _logger;
 
     public CreateAvailabilityBlockCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateAvailabilityBlockCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -35,6 +38,7 @@ public class CreateAvailabilityBlockCommandHandler : IRequestHandler<CreateAvail
             request.MemberId);
 
         var block = new AvailabilityBlock(
+            _tenantContext.TenantId,
             request.MemberId,
             request.StartTime,
             request.EndTime,

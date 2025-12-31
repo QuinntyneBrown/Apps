@@ -1,3 +1,4 @@
+using FamilyCalendarEventPlanner.Core;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
 using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
@@ -5,6 +6,7 @@ using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
 using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
 using FamilyCalendarEventPlanner.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace FamilyCalendarEventPlanner.Infrastructure.Data;
@@ -21,10 +23,9 @@ public static class SeedData
         {
             await context.Database.EnsureCreatedAsync();
 
-            // Seed roles and admin user (always check for these)
             await SeedRolesAndAdminUserAsync(context, logger, passwordHasher);
 
-            if (context.FamilyMembers.Any())
+            if (context.FamilyMembers.IgnoreQueryFilters().Any())
             {
                 logger.LogInformation("Database already contains family data. Skipping family seed.");
                 return;
@@ -32,14 +33,16 @@ public static class SeedData
 
             logger.LogInformation("Seeding database...");
 
+            var tenantId = Constants.DefaultTenantId;
+
             var familyId = Guid.NewGuid();
 
             var members = new List<FamilyMember>
             {
-                new FamilyMember(familyId, "John Smith", "john@example.com", "#4285F4", MemberRole.Admin),
-                new FamilyMember(familyId, "Jane Smith", "jane@example.com", "#EA4335", MemberRole.Admin),
-                new FamilyMember(familyId, "Tommy Smith", "tommy@example.com", "#34A853", MemberRole.Member),
-                new FamilyMember(familyId, "Sarah Smith", "sarah@example.com", "#FBBC05", MemberRole.Member),
+                new FamilyMember(tenantId, familyId, "John Smith", "john@example.com", "#4285F4", MemberRole.Admin),
+                new FamilyMember(tenantId, familyId, "Jane Smith", "jane@example.com", "#EA4335", MemberRole.Admin),
+                new FamilyMember(tenantId, familyId, "Tommy Smith", "tommy@example.com", "#34A853", MemberRole.Member),
+                new FamilyMember(tenantId, familyId, "Sarah Smith", "sarah@example.com", "#FBBC05", MemberRole.Member),
             };
 
             context.FamilyMembers.AddRange(members);
@@ -48,6 +51,7 @@ public static class SeedData
             var events = new List<CalendarEvent>
             {
                 new CalendarEvent(
+                    tenantId,
                     familyId,
                     members[0].MemberId,
                     "Weekly Family Dinner",
@@ -58,6 +62,7 @@ public static class SeedData
                     "Home",
                     RecurrencePattern.Weekly(1, null, new List<DayOfWeek> { DayOfWeek.Sunday })),
                 new CalendarEvent(
+                    tenantId,
                     familyId,
                     members[0].MemberId,
                     "Tommy's Soccer Practice",
@@ -68,6 +73,7 @@ public static class SeedData
                     "Community Sports Field",
                     RecurrencePattern.Weekly(1, null, new List<DayOfWeek> { DayOfWeek.Tuesday, DayOfWeek.Thursday })),
                 new CalendarEvent(
+                    tenantId,
                     familyId,
                     members[1].MemberId,
                     "Parent-Teacher Conference",
@@ -77,6 +83,7 @@ public static class SeedData
                     "Discuss progress reports",
                     "Lincoln Elementary School"),
                 new CalendarEvent(
+                    tenantId,
                     familyId,
                     members[0].MemberId,
                     "Family Vacation",
@@ -104,22 +111,25 @@ public static class SeedData
         ILogger logger,
         IPasswordHasher passwordHasher)
     {
+        // Use a default tenant ID for seed data
+        var defaultTenantId = Constants.DefaultTenantId;
+
         // Seed roles if they don't exist
         var adminRoleName = "Admin";
         var userRoleName = "User";
 
-        var adminRole = context.Roles.FirstOrDefault(r => r.Name == adminRoleName);
+        var adminRole = context.Roles.IgnoreQueryFilters().FirstOrDefault(r => r.Name == adminRoleName);
         if (adminRole == null)
         {
-            adminRole = new Role(adminRoleName);
+            adminRole = new Role(defaultTenantId, adminRoleName);
             context.Roles.Add(adminRole);
             logger.LogInformation("Created Admin role.");
         }
 
-        var userRole = context.Roles.FirstOrDefault(r => r.Name == userRoleName);
+        var userRole = context.Roles.IgnoreQueryFilters().FirstOrDefault(r => r.Name == userRoleName);
         if (userRole == null)
         {
-            userRole = new Role(userRoleName);
+            userRole = new Role(defaultTenantId, userRoleName);
             context.Roles.Add(userRole);
             logger.LogInformation("Created User role.");
         }
@@ -128,11 +138,12 @@ public static class SeedData
 
         // Seed admin user if it doesn't exist
         var adminUserName = "admin";
-        var adminUser = context.Users.FirstOrDefault(u => u.UserName == adminUserName);
+        var adminUser = context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.UserName == adminUserName);
         if (adminUser == null)
         {
             var (hashedPassword, salt) = passwordHasher.HashPassword("Admin123!");
             adminUser = new User(
+                tenantId: defaultTenantId,
                 userName: adminUserName,
                 email: "admin@familycalendar.local",
                 hashedPassword: hashedPassword,

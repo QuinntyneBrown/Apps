@@ -15,6 +15,7 @@ public class CalendarEventTests
         var endTime = DateTime.UtcNow.AddHours(2);
 
         var calendarEvent = new CalendarEvent(
+            TestHelpers.DefaultTenantId,
             _familyId,
             _creatorId,
             "Family Dinner",
@@ -42,7 +43,7 @@ public class CalendarEventTests
         var endTime = DateTime.UtcNow.AddHours(2);
 
         Assert.Throws<ArgumentException>(() =>
-            new CalendarEvent(_familyId, _creatorId, "", startTime, endTime, EventType.Other));
+            new CalendarEvent(TestHelpers.DefaultTenantId, _familyId, _creatorId, "", startTime, endTime, EventType.Other));
     }
 
     [Test]
@@ -52,7 +53,7 @@ public class CalendarEventTests
         var endTime = DateTime.UtcNow.AddHours(2);
 
         Assert.Throws<ArgumentException>(() =>
-            new CalendarEvent(_familyId, _creatorId, "   ", startTime, endTime, EventType.Other));
+            new CalendarEvent(TestHelpers.DefaultTenantId, _familyId, _creatorId, "   ", startTime, endTime, EventType.Other));
     }
 
     [Test]
@@ -62,7 +63,7 @@ public class CalendarEventTests
         var endTime = DateTime.UtcNow.AddHours(1);
 
         Assert.Throws<ArgumentException>(() =>
-            new CalendarEvent(_familyId, _creatorId, "Test Event", startTime, endTime, EventType.Other));
+            new CalendarEvent(TestHelpers.DefaultTenantId, _familyId, _creatorId, "Test Event", startTime, endTime, EventType.Other));
     }
 
     [Test]
@@ -71,7 +72,7 @@ public class CalendarEventTests
         var time = DateTime.UtcNow.AddHours(1);
 
         Assert.Throws<ArgumentException>(() =>
-            new CalendarEvent(_familyId, _creatorId, "Test Event", time, time, EventType.Other));
+            new CalendarEvent(TestHelpers.DefaultTenantId, _familyId, _creatorId, "Test Event", time, time, EventType.Other));
     }
 
     [Test]
@@ -82,6 +83,7 @@ public class CalendarEventTests
         var recurrence = RecurrencePattern.Weekly();
 
         var calendarEvent = new CalendarEvent(
+            TestHelpers.DefaultTenantId,
             _familyId,
             _creatorId,
             "Weekly Meeting",
@@ -202,6 +204,7 @@ public class CalendarEventTests
     private CalendarEvent CreateDefaultEvent()
     {
         return new CalendarEvent(
+            TestHelpers.DefaultTenantId,
             _familyId,
             _creatorId,
             "Test Event",

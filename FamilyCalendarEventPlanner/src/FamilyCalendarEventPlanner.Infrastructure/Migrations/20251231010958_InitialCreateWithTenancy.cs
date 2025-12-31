@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateWithTenancy : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     BlockId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     MemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -32,6 +33,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FamilyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
@@ -56,6 +58,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     AttendeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FamilyMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RSVPStatus = table.Column<int>(type: "int", nullable: false),
@@ -72,6 +75,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     ReminderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RecipientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ReminderTime = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -88,6 +92,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     MemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FamilyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     HouseholdId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
@@ -107,6 +112,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     HouseholdId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Street = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -123,6 +129,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
@@ -135,6 +142,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     ConflictId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ConflictingEventIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AffectedMemberIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ConflictSeverity = table.Column<int>(type: "int", nullable: false),
@@ -151,6 +159,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Password = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
@@ -166,7 +175,8 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {

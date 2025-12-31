@@ -60,7 +60,6 @@ public class FamilyCalendarEventPlannerContext : DbContext, IFamilyCalendarEvent
             modelBuilder.Entity<UserRole>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
         }
 
-
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FamilyCalendarEventPlannerContext).Assembly);
     }
 }

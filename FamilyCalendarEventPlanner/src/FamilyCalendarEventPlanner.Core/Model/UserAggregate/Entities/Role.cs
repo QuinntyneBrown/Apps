@@ -8,16 +8,18 @@ namespace FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
 public class Role
 {
     public Guid RoleId { get; private set; }
+    public Guid TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
 
     private Role() { }
 
-    public Role(string name)
+    public Role(Guid tenantId, string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Role name cannot be empty.", nameof(name));
 
         RoleId = Guid.NewGuid();
+        TenantId = tenantId;
         Name = name;
     }
 

@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
 public class FamilyMember
 {
     public Guid MemberId { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid FamilyId { get; private set; }
     public Guid? HouseholdId { get; private set; }
     public string Name { get; private set; } = string.Empty;
@@ -19,6 +20,7 @@ public class FamilyMember
     }
 
     public FamilyMember(
+        Guid tenantId,
         Guid familyId,
         string name,
         string? email,
@@ -39,6 +41,7 @@ public class FamilyMember
         }
 
         MemberId = Guid.NewGuid();
+        TenantId = tenantId;
         FamilyId = familyId;
         HouseholdId = householdId;
         Name = name;
@@ -110,7 +113,7 @@ public class FamilyMember
 
     public AvailabilityBlock BlockAvailability(DateTime startTime, DateTime endTime, BlockType blockType, string? reason = null)
     {
-        return new AvailabilityBlock(MemberId, startTime, endTime, blockType, reason);
+        return new AvailabilityBlock(TenantId, MemberId, startTime, endTime, blockType, reason);
     }
 
     public bool IsAvailable(DateTime startTime, DateTime endTime, IEnumerable<AvailabilityBlock> blocks)

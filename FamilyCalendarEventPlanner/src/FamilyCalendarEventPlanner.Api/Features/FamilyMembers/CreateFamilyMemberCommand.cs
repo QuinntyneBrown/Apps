@@ -21,13 +21,16 @@ public record CreateFamilyMemberCommand : IRequest<FamilyMemberDto>
 public class CreateFamilyMemberCommandHandler : IRequestHandler<CreateFamilyMemberCommand, FamilyMemberDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateFamilyMemberCommandHandler> _logger;
 
     public CreateFamilyMemberCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateFamilyMemberCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -39,6 +42,7 @@ public class CreateFamilyMemberCommandHandler : IRequestHandler<CreateFamilyMemb
             request.Name);
 
         var member = new FamilyMember(
+            _tenantContext.TenantId,
             request.FamilyId,
             request.Name,
             request.Email,

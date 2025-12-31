@@ -11,7 +11,7 @@ public class ScheduleConflictTests
         var eventIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         var memberIds = new List<Guid> { Guid.NewGuid() };
 
-        var conflict = new ScheduleConflict(eventIds, memberIds, ConflictSeverity.Medium);
+        var conflict = new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.Medium);
 
         Assert.Multiple(() =>
         {
@@ -31,7 +31,7 @@ public class ScheduleConflictTests
         var memberIds = new List<Guid> { Guid.NewGuid() };
 
         Assert.Throws<ArgumentException>(() =>
-            new ScheduleConflict(eventIds, memberIds, ConflictSeverity.Low));
+            new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.Low));
     }
 
     [Test]
@@ -41,7 +41,7 @@ public class ScheduleConflictTests
         var memberIds = new List<Guid> { Guid.NewGuid() };
 
         Assert.Throws<ArgumentException>(() =>
-            new ScheduleConflict(eventIds, memberIds, ConflictSeverity.Low));
+            new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.Low));
     }
 
     [Test]
@@ -51,7 +51,7 @@ public class ScheduleConflictTests
         var memberIds = new List<Guid>();
 
         Assert.Throws<ArgumentException>(() =>
-            new ScheduleConflict(eventIds, memberIds, ConflictSeverity.Low));
+            new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.Low));
     }
 
     [Test]
@@ -129,7 +129,7 @@ public class ScheduleConflictTests
         var eventIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
         var memberIds = new List<Guid> { Guid.NewGuid() };
 
-        var conflict = new ScheduleConflict(eventIds, memberIds, ConflictSeverity.High);
+        var conflict = new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.High);
 
         Assert.That(conflict.ConflictingEventIds, Has.Count.EqualTo(3));
     }
@@ -140,7 +140,7 @@ public class ScheduleConflictTests
         var eventIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         var memberIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
 
-        var conflict = new ScheduleConflict(eventIds, memberIds, ConflictSeverity.Medium);
+        var conflict = new ScheduleConflict(TestHelpers.DefaultTenantId, eventIds, memberIds, ConflictSeverity.Medium);
 
         Assert.That(conflict.AffectedMemberIds, Has.Count.EqualTo(3));
     }
@@ -148,6 +148,7 @@ public class ScheduleConflictTests
     private static ScheduleConflict CreateDefaultConflict(ConflictSeverity severity = ConflictSeverity.Medium)
     {
         return new ScheduleConflict(
+            TestHelpers.DefaultTenantId,
             new List<Guid> { Guid.NewGuid(), Guid.NewGuid() },
             new List<Guid> { Guid.NewGuid() },
             severity);

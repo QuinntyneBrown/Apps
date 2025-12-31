@@ -13,7 +13,7 @@ public class AvailabilityBlockTests
         var startTime = DateTime.UtcNow.AddHours(1);
         var endTime = DateTime.UtcNow.AddHours(2);
 
-        var block = new AvailabilityBlock(_memberId, startTime, endTime, BlockType.Busy);
+        var block = new AvailabilityBlock(TestHelpers.DefaultTenantId, _memberId, startTime, endTime, BlockType.Busy);
 
         Assert.Multiple(() =>
         {
@@ -31,7 +31,7 @@ public class AvailabilityBlockTests
         var startTime = DateTime.UtcNow.AddHours(1);
         var endTime = DateTime.UtcNow.AddHours(2);
 
-        var block = new AvailabilityBlock(_memberId, startTime, endTime, BlockType.OutOfOffice, "Vacation");
+        var block = new AvailabilityBlock(TestHelpers.DefaultTenantId, _memberId, startTime, endTime, BlockType.OutOfOffice, "Vacation");
 
         Assert.That(block.Reason, Is.EqualTo("Vacation"));
     }
@@ -43,7 +43,7 @@ public class AvailabilityBlockTests
         var endTime = DateTime.UtcNow.AddHours(1);
 
         Assert.Throws<ArgumentException>(() =>
-            new AvailabilityBlock(_memberId, startTime, endTime, BlockType.Busy));
+            new AvailabilityBlock(TestHelpers.DefaultTenantId, _memberId, startTime, endTime, BlockType.Busy));
     }
 
     [Test]
@@ -52,13 +52,14 @@ public class AvailabilityBlockTests
         var time = DateTime.UtcNow.AddHours(1);
 
         Assert.Throws<ArgumentException>(() =>
-            new AvailabilityBlock(_memberId, time, time, BlockType.Busy));
+            new AvailabilityBlock(TestHelpers.DefaultTenantId, _memberId, time, time, BlockType.Busy));
     }
 
     [Test]
     public void Constructor_NullReason_SetsEmptyString()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(2),
@@ -71,6 +72,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_FullyOverlapping_ReturnsTrue()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(3),
@@ -85,6 +87,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_PartiallyOverlappingStart_ReturnsTrue()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(3),
@@ -99,6 +102,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_PartiallyOverlappingEnd_ReturnsTrue()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(3),
@@ -113,6 +117,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_ContainedWithinBlock_ReturnsTrue()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(5),
@@ -127,6 +132,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_NoOverlapBefore_ReturnsFalse()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(3),
             DateTime.UtcNow.AddHours(4),
@@ -141,6 +147,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_NoOverlapAfter_ReturnsFalse()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(2),
@@ -155,6 +162,7 @@ public class AvailabilityBlockTests
     public void OverlapsWith_TouchingAtEnd_ReturnsFalse()
     {
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             DateTime.UtcNow.AddHours(1),
             DateTime.UtcNow.AddHours(2),
@@ -170,6 +178,7 @@ public class AvailabilityBlockTests
     {
         var now = DateTime.UtcNow;
         var block = new AvailabilityBlock(
+            TestHelpers.DefaultTenantId,
             _memberId,
             now.AddHours(2),
             now.AddHours(3),

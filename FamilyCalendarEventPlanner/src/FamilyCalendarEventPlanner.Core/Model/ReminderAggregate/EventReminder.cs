@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
 public class EventReminder
 {
     public Guid ReminderId { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid EventId { get; private set; }
     public Guid RecipientId { get; private set; }
     public DateTime ReminderTime { get; private set; }
@@ -15,7 +16,7 @@ public class EventReminder
     {
     }
 
-    public EventReminder(Guid eventId, Guid recipientId, DateTime reminderTime, NotificationChannel deliveryChannel)
+    public EventReminder(Guid tenantId, Guid eventId, Guid recipientId, DateTime reminderTime, NotificationChannel deliveryChannel)
     {
         if (reminderTime < DateTime.UtcNow)
         {
@@ -23,6 +24,7 @@ public class EventReminder
         }
 
         ReminderId = Guid.NewGuid();
+        TenantId = tenantId;
         EventId = eventId;
         RecipientId = recipientId;
         ReminderTime = reminderTime;

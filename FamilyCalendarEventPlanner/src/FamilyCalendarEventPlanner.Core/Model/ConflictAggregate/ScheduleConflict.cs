@@ -8,6 +8,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
 public class ScheduleConflict
 {
     public Guid ConflictId { get; private set; }
+    public Guid TenantId { get; private set; }
     public List<Guid> ConflictingEventIds { get; private set; }
     public List<Guid> AffectedMemberIds { get; private set; }
     public ConflictSeverity ConflictSeverity { get; private set; }
@@ -21,6 +22,7 @@ public class ScheduleConflict
     }
 
     public ScheduleConflict(
+        Guid tenantId,
         IEnumerable<Guid> conflictingEventIds,
         IEnumerable<Guid> affectedMemberIds,
         ConflictSeverity severity)
@@ -39,6 +41,7 @@ public class ScheduleConflict
         }
 
         ConflictId = Guid.NewGuid();
+        TenantId = tenantId;
         ConflictingEventIds = eventIds;
         AffectedMemberIds = memberIds;
         ConflictSeverity = severity;

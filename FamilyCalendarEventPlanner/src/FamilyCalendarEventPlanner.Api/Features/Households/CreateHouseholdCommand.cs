@@ -18,13 +18,16 @@ public record CreateHouseholdCommand : IRequest<HouseholdDto>
 public class CreateHouseholdCommandHandler : IRequestHandler<CreateHouseholdCommand, HouseholdDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateHouseholdCommandHandler> _logger;
 
     public CreateHouseholdCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateHouseholdCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -37,6 +40,7 @@ public class CreateHouseholdCommandHandler : IRequestHandler<CreateHouseholdComm
             request.Province);
 
         var household = new Household(
+            _tenantContext.TenantId,
             request.Name,
             request.Street,
             request.City,

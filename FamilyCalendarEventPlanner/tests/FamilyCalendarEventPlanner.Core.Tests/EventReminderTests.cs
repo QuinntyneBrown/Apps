@@ -13,7 +13,7 @@ public class EventReminderTests
     {
         var reminderTime = DateTime.UtcNow.AddHours(1);
 
-        var reminder = new EventReminder(_eventId, _recipientId, reminderTime, NotificationChannel.Email);
+        var reminder = new EventReminder(TestHelpers.DefaultTenantId, _eventId, _recipientId, reminderTime, NotificationChannel.Email);
 
         Assert.Multiple(() =>
         {
@@ -32,7 +32,7 @@ public class EventReminderTests
         var pastTime = DateTime.UtcNow.AddHours(-1);
 
         Assert.Throws<ArgumentException>(() =>
-            new EventReminder(_eventId, _recipientId, pastTime, NotificationChannel.Email));
+            new EventReminder(TestHelpers.DefaultTenantId, _eventId, _recipientId, pastTime, NotificationChannel.Email));
     }
 
     [Test]
@@ -154,6 +154,7 @@ public class EventReminderTests
     private EventReminder CreateDefaultReminder(NotificationChannel channel = NotificationChannel.Email)
     {
         return new EventReminder(
+            TestHelpers.DefaultTenantId,
             _eventId,
             _recipientId,
             DateTime.UtcNow.AddHours(1),

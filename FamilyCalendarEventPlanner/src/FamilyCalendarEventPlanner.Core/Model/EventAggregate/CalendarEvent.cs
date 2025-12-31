@@ -5,6 +5,7 @@ namespace FamilyCalendarEventPlanner.Core.Model.EventAggregate;
 public class CalendarEvent
 {
     public Guid EventId { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid FamilyId { get; private set; }
     public Guid CreatorId { get; private set; }
     public string Title { get; private set; } = string.Empty;
@@ -21,6 +22,7 @@ public class CalendarEvent
     }
 
     public CalendarEvent(
+        Guid tenantId,
         Guid familyId,
         Guid creatorId,
         string title,
@@ -42,6 +44,7 @@ public class CalendarEvent
         }
 
         EventId = Guid.NewGuid();
+        TenantId = tenantId;
         FamilyId = familyId;
         CreatorId = creatorId;
         Title = title;

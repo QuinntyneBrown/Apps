@@ -11,7 +11,7 @@ public class EventAttendeeTests
     [Test]
     public void Constructor_ValidParameters_CreatesAttendee()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         Assert.Multiple(() =>
         {
@@ -26,7 +26,7 @@ public class EventAttendeeTests
     [Test]
     public void Constructor_WithNotes_SetsNotes()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId, "Will bring dessert");
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId, "Will bring dessert");
 
         Assert.That(attendee.Notes, Is.EqualTo("Will bring dessert"));
     }
@@ -34,7 +34,7 @@ public class EventAttendeeTests
     [Test]
     public void Respond_AcceptedStatus_UpdatesStatusAndResponseTime()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
         var beforeResponse = DateTime.UtcNow;
 
         attendee.Respond(RSVPStatus.Accepted);
@@ -50,7 +50,7 @@ public class EventAttendeeTests
     [Test]
     public void Respond_WithNotes_UpdatesNotes()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Respond(RSVPStatus.Accepted, "Looking forward to it!");
 
@@ -60,7 +60,7 @@ public class EventAttendeeTests
     [Test]
     public void Accept_SetsStatusToAccepted()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Accept();
 
@@ -70,7 +70,7 @@ public class EventAttendeeTests
     [Test]
     public void Accept_WithNotes_SetsNotesAndStatus()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Accept("I'll be there!");
 
@@ -84,7 +84,7 @@ public class EventAttendeeTests
     [Test]
     public void Decline_SetsStatusToDeclined()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Decline();
 
@@ -94,7 +94,7 @@ public class EventAttendeeTests
     [Test]
     public void Decline_WithNotes_SetsNotesAndStatus()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Decline("Can't make it, sorry!");
 
@@ -108,7 +108,7 @@ public class EventAttendeeTests
     [Test]
     public void MarkTentative_SetsStatusToTentative()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.MarkTentative();
 
@@ -118,7 +118,7 @@ public class EventAttendeeTests
     [Test]
     public void MarkTentative_WithNotes_SetsNotesAndStatus()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.MarkTentative("Not sure yet, will confirm later");
 
@@ -132,7 +132,7 @@ public class EventAttendeeTests
     [Test]
     public void Respond_MultipleResponses_UpdatesEachTime()
     {
-        var attendee = new EventAttendee(_eventId, _familyMemberId);
+        var attendee = new EventAttendee(TestHelpers.DefaultTenantId, _eventId, _familyMemberId);
 
         attendee.Accept();
         var firstResponseTime = attendee.ResponseTime!.Value;

@@ -9,16 +9,18 @@ public class UserRole
 {
     public Guid UserId { get; private set; }
     public Guid RoleId { get; private set; }
+    public Guid TenantId { get; private set; }
 
     private UserRole() { }
 
-    public UserRole(Guid userId, Guid roleId)
+    public UserRole(Guid tenantId, Guid userId, Guid roleId)
     {
         if (userId == Guid.Empty)
             throw new ArgumentException("UserId cannot be empty.", nameof(userId));
         if (roleId == Guid.Empty)
             throw new ArgumentException("RoleId cannot be empty.", nameof(roleId));
 
+        TenantId = tenantId;
         UserId = userId;
         RoleId = roleId;
     }

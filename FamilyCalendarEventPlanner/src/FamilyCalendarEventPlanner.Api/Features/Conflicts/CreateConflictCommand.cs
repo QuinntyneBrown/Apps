@@ -16,13 +16,16 @@ public record CreateConflictCommand : IRequest<ScheduleConflictDto>
 public class CreateConflictCommandHandler : IRequestHandler<CreateConflictCommand, ScheduleConflictDto>
 {
     private readonly IFamilyCalendarEventPlannerContext _context;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateConflictCommandHandler> _logger;
 
     public CreateConflictCommandHandler(
         IFamilyCalendarEventPlannerContext context,
+        ITenantContext tenantContext,
         ILogger<CreateConflictCommandHandler> logger)
     {
         _context = context;
+        _tenantContext = tenantContext;
         _logger = logger;
     }
 
@@ -34,6 +37,7 @@ public class CreateConflictCommandHandler : IRequestHandler<CreateConflictComman
             request.AffectedMemberIds.Count);
 
         var conflict = new ScheduleConflict(
+            _tenantContext.TenantId,
             request.ConflictingEventIds,
             request.AffectedMemberIds,
             request.ConflictSeverity);
