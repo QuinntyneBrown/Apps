@@ -6,6 +6,11 @@ namespace FinancialGoalTracker.Core;
 public class Goal
 {
     public Guid GoalId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public GoalType GoalType { get; set; }

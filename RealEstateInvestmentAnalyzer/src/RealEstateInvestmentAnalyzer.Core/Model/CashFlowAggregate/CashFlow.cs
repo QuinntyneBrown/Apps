@@ -6,6 +6,11 @@ namespace RealEstateInvestmentAnalyzer.Core;
 public class CashFlow
 {
     public Guid CashFlowId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid PropertyId { get; set; }
     public DateTime Date { get; set; }
     public decimal Income { get; set; }

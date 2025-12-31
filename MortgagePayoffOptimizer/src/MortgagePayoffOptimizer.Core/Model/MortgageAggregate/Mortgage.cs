@@ -14,6 +14,11 @@ public class Mortgage
     public Guid MortgageId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the property address.
     /// </summary>
     public string PropertyAddress { get; set; } = string.Empty;

@@ -6,6 +6,11 @@ namespace CharitableGivingTracker.Core;
 public class Donation
 {
     public Guid DonationId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid OrganizationId { get; set; }
     public decimal Amount { get; set; }
     public DateTime DonationDate { get; set; }

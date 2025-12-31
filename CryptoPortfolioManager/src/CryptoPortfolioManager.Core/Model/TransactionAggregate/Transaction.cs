@@ -6,6 +6,11 @@ namespace CryptoPortfolioManager.Core;
 public class Transaction
 {
     public Guid TransactionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid WalletId { get; set; }
     public DateTime TransactionDate { get; set; }
     public TransactionType TransactionType { get; set; }

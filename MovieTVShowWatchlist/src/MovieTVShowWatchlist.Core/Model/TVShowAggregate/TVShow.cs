@@ -3,6 +3,11 @@ namespace MovieTVShowWatchlist.Core;
 public class TVShow
 {
     public Guid TVShowId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public int PremiereYear { get; set; }
     public int? NumberOfSeasons { get; set; }

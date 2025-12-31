@@ -6,6 +6,11 @@ namespace ApplianceWarrantyManualOrganizer.Core;
 public class Warranty
 {
     public Guid WarrantyId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid ApplianceId { get; set; }
     public Appliance? Appliance { get; set; }
     public string? Provider { get; set; }

@@ -6,6 +6,11 @@ namespace HabitFormationApp.Core;
 public class Streak
 {
     public Guid StreakId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid HabitId { get; set; }
     public int CurrentStreak { get; set; }
     public int LongestStreak { get; set; }

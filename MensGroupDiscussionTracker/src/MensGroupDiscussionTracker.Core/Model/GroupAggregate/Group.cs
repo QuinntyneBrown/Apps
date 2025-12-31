@@ -14,6 +14,11 @@ public class Group
     public Guid GroupId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the user ID who created this group.
     /// </summary>
     public Guid CreatedByUserId { get; set; }

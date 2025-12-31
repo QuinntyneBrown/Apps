@@ -3,6 +3,11 @@ namespace MovieTVShowWatchlist.Core;
 public class SimilarContent
 {
     public Guid SimilarContentId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid SourceContentId { get; set; }
     public ContentType SourceContentType { get; set; }
     public Guid SimilarToContentId { get; set; }

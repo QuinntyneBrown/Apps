@@ -14,6 +14,11 @@ public class Subscription
     public Guid SubscriptionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the service name.
     /// </summary>
     public string ServiceName { get; set; } = string.Empty;

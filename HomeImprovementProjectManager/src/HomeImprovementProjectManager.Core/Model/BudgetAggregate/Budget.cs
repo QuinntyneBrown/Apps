@@ -6,6 +6,11 @@ namespace HomeImprovementProjectManager.Core;
 public class Budget
 {
     public Guid BudgetId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid ProjectId { get; set; }
     public Project? Project { get; set; }
     public string Category { get; set; } = string.Empty;

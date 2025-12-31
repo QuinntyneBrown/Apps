@@ -6,6 +6,11 @@ namespace RealEstateInvestmentAnalyzer.Core;
 public class Lease
 {
     public Guid LeaseId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid PropertyId { get; set; }
     public string TenantName { get; set; } = string.Empty;
     public decimal MonthlyRent { get; set; }

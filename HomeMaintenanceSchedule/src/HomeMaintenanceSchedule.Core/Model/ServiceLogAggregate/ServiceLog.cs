@@ -14,6 +14,11 @@ public class ServiceLog
     public Guid ServiceLogId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the maintenance task ID.
     /// </summary>
     public Guid MaintenanceTaskId { get; set; }

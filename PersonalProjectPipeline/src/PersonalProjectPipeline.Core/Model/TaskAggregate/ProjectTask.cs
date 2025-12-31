@@ -14,6 +14,11 @@ public class ProjectTask
     public Guid ProjectTaskId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the project ID this task belongs to.
     /// </summary>
     public Guid ProjectId { get; set; }

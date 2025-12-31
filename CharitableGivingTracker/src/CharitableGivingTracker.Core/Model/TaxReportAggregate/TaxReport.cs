@@ -6,6 +6,11 @@ namespace CharitableGivingTracker.Core;
 public class TaxReport
 {
     public Guid TaxReportId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public int TaxYear { get; set; }
     public decimal TotalCashDonations { get; set; }
     public decimal TotalNonCashDonations { get; set; }

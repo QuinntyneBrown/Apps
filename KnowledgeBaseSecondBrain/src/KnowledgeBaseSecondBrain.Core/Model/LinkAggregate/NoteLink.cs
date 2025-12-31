@@ -14,6 +14,11 @@ public class NoteLink
     public Guid NoteLinkId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the source note ID.
     /// </summary>
     public Guid SourceNoteId { get; set; }

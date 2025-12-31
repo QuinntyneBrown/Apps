@@ -6,6 +6,11 @@ namespace CryptoPortfolioManager.Core;
 public class TaxLot
 {
     public Guid TaxLotId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid CryptoHoldingId { get; set; }
     public DateTime AcquisitionDate { get; set; }
     public decimal Quantity { get; set; }

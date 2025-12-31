@@ -119,6 +119,25 @@ Id
 
 **REQ-SYS-022**: All errors and exceptions SHALL be clearly logged with sufficient context to enable debugging and troubleshooting.
 
+
+### 2.11 Multi-Tenancy Architecture
+**REQ-SYS-023**: **CRITICAL** - The system SHALL implement row-level multi-tenancy with TenantId on all aggregate entities.
+
+**REQ-SYS-024**: Every aggregate root entity SHALL have a `TenantId` property of type `Guid`.
+
+**REQ-SYS-025**: The `TenantId` property SHALL be set during entity creation and SHALL NOT be modifiable after creation.
+
+**REQ-SYS-026**: An `ITenantContext` interface SHALL be defined in the Core project to provide the current tenant identifier.
+
+**REQ-SYS-027**: Global query filters SHALL be applied in the DbContext to automatically filter all queries by TenantId.
+
+**REQ-SYS-028**: The TenantId SHALL be extracted from JWT claims (`tenant_id` claim) or HTTP headers (`X-Tenant-Id`).
+
+**REQ-SYS-029**: All command handlers that create entities SHALL inject `ITenantContext` and pass the TenantId to entity constructors.
+
+**REQ-SYS-030**: The database schema SHALL include TenantId as a non-nullable column on all aggregate tables.
+
+
 ---
 
 ## 3. Core Project Requirements

@@ -14,6 +14,11 @@ public class TaxEstimate
     public Guid TaxEstimateId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the business.
     /// </summary>
     public Guid BusinessId { get; set; }

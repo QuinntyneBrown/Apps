@@ -9,6 +9,11 @@ namespace TaxDeductionOrganizer.Core;
 public class Deduction
 {
     public Guid DeductionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid TaxYearId { get; set; }
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }

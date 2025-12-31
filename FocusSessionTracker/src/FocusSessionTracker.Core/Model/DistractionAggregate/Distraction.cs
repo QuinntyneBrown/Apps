@@ -14,6 +14,11 @@ public class Distraction
     public Guid DistractionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the session ID this distraction belongs to.
     /// </summary>
     public Guid FocusSessionId { get; set; }

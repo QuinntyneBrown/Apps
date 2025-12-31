@@ -14,6 +14,11 @@ public class Ingredient
     public Guid IngredientId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the recipe ID.
     /// </summary>
     public Guid RecipeId { get; set; }

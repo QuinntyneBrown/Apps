@@ -6,6 +6,11 @@ namespace GolfScoreTracker.Core;
 public class HoleScore
 {
     public Guid HoleScoreId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid RoundId { get; set; }
     public int HoleNumber { get; set; }
     public int Par { get; set; }

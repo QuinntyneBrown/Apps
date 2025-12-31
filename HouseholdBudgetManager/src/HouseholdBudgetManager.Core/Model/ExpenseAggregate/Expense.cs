@@ -14,6 +14,11 @@ public class Expense
     public Guid ExpenseId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the budget.
     /// </summary>
     public Guid BudgetId { get; set; }

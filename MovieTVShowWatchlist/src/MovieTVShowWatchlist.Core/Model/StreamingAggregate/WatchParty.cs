@@ -3,6 +3,11 @@ namespace MovieTVShowWatchlist.Core;
 public class WatchParty
 {
     public Guid WatchPartyId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid HostUserId { get; set; }
     public Guid ContentId { get; set; }
     public ContentType ContentType { get; set; }

@@ -6,6 +6,11 @@ namespace CharitableGivingTracker.Core;
 public class Organization
 {
     public Guid OrganizationId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? EIN { get; set; }
     public string? Address { get; set; }

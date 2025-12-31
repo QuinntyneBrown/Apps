@@ -14,6 +14,11 @@ public class DeliverySchedule
     public Guid DeliveryScheduleId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the letter ID this schedule belongs to.
     /// </summary>
     public Guid LetterId { get; set; }
