@@ -6,6 +6,11 @@ namespace GiftIdeaTracker.Core;
 public class Purchase
 {
     public Guid PurchaseId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid GiftIdeaId { get; set; }
     public DateTime PurchaseDate { get; set; }
     public decimal ActualPrice { get; set; }

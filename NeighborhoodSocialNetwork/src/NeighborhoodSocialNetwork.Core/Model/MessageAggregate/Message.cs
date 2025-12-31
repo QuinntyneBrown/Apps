@@ -14,6 +14,11 @@ public class Message
     public Guid MessageId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the sender neighbor ID.
     /// </summary>
     public Guid SenderNeighborId { get; set; }

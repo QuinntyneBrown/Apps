@@ -186,3 +186,21 @@ The Family Calendar & Event Planner is a shared scheduling application that help
   - **AC3**: Then the action completes successfully and the user receives appropriate feedback
 - US-4: As a parent, I want to track my kids' sports and school events so I don't miss them
 - US-5: As a family member, I want to RSVP to events so the organizer knows if I'm attending
+
+
+## Multi-Tenancy Support
+
+### Tenant Isolation
+- **FR-MT-1**: Support for multi-tenant architecture with complete data isolation
+  - **AC1**: Each tenant's data is completely isolated from other tenants
+  - **AC2**: All queries are automatically filtered by TenantId
+  - **AC3**: Cross-tenant data access is prevented at the database level
+- **FR-MT-2**: TenantId property on all aggregate entities
+  - **AC1**: Every aggregate root has a TenantId property
+  - **AC2**: TenantId is set during entity creation
+  - **AC3**: TenantId cannot be modified after creation
+- **FR-MT-3**: Automatic tenant context resolution
+  - **AC1**: TenantId is extracted from JWT claims or HTTP headers
+  - **AC2**: Invalid or missing tenant context is handled gracefully
+  - **AC3**: Tenant context is available throughout the request pipeline
+

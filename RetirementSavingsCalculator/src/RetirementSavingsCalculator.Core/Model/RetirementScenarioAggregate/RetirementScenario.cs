@@ -14,6 +14,11 @@ public class RetirementScenario
     public Guid RetirementScenarioId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the scenario.
     /// </summary>
     public string Name { get; set; } = string.Empty;

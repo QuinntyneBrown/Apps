@@ -14,6 +14,11 @@ public class BreachAlert
     public Guid BreachAlertId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the account affected by the breach.
     /// </summary>
     public Guid AccountId { get; set; }

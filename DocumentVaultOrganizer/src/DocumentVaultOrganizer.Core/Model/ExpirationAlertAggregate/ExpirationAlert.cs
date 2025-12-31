@@ -6,6 +6,11 @@ namespace DocumentVaultOrganizer.Core;
 public class ExpirationAlert
 {
     public Guid ExpirationAlertId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid DocumentId { get; set; }
     public DateTime AlertDate { get; set; }
     public bool IsAcknowledged { get; set; }

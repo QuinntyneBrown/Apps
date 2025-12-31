@@ -14,6 +14,11 @@ public class Prompt
     public Guid PromptId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the text of the prompt.
     /// </summary>
     public string Text { get; set; } = string.Empty;

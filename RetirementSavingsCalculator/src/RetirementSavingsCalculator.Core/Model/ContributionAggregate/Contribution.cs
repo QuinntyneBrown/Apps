@@ -14,6 +14,11 @@ public class Contribution
     public Guid ContributionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the retirement scenario.
     /// </summary>
     public Guid RetirementScenarioId { get; set; }

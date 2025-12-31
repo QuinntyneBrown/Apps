@@ -14,6 +14,11 @@ public class Vehicle
     public Guid VehicleId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the vehicle make (manufacturer).
     /// </summary>
     public string Make { get; set; } = string.Empty;

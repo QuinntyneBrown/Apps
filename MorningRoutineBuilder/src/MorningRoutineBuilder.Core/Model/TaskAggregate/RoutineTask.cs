@@ -14,6 +14,11 @@ public class RoutineTask
     public Guid RoutineTaskId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the routine ID this task belongs to.
     /// </summary>
     public Guid RoutineId { get; set; }

@@ -14,6 +14,11 @@ public class Assignment
     public Guid AssignmentId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the chore ID.
     /// </summary>
     public Guid ChoreId { get; set; }

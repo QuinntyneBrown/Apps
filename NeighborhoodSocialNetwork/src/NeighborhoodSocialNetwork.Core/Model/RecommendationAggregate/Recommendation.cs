@@ -14,6 +14,11 @@ public class Recommendation
     public Guid RecommendationId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the neighbor ID who made this recommendation.
     /// </summary>
     public Guid NeighborId { get; set; }

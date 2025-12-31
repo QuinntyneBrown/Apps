@@ -14,6 +14,11 @@ public class Projection
     public Guid ProjectionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the plan.
     /// </summary>
     public Guid PlanId { get; set; }

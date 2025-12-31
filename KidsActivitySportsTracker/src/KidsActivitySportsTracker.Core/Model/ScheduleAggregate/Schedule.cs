@@ -14,6 +14,11 @@ public class Schedule
     public Guid ScheduleId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the activity ID.
     /// </summary>
     public Guid ActivityId { get; set; }

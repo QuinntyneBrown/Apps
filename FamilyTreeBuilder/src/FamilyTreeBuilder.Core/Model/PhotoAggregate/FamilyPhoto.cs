@@ -6,6 +6,11 @@ namespace FamilyTreeBuilder.Core;
 public class FamilyPhoto
 {
     public Guid FamilyPhotoId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid PersonId { get; set; }
     public Person? Person { get; set; }
     public string? PhotoUrl { get; set; }

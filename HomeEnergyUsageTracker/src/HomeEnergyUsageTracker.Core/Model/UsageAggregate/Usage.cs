@@ -6,6 +6,11 @@ namespace HomeEnergyUsageTracker.Core;
 public class Usage
 {
     public Guid UsageId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid UtilityBillId { get; set; }
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }

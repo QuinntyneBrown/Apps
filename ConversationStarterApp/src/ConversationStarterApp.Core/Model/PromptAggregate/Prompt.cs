@@ -14,6 +14,11 @@ public class Prompt
     public Guid PromptId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the user ID who created this prompt (null for system prompts).
     /// </summary>
     public Guid? UserId { get; set; }

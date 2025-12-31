@@ -14,6 +14,11 @@ public class WeeklyPriority
     public Guid WeeklyPriorityId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the review ID this priority belongs to.
     /// </summary>
     public Guid WeeklyReviewId { get; set; }

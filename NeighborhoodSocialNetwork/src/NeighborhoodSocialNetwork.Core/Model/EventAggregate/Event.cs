@@ -14,6 +14,11 @@ public class Event
     public Guid EventId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the neighbor ID who created this event.
     /// </summary>
     public Guid CreatedByNeighborId { get; set; }

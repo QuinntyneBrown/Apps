@@ -6,6 +6,11 @@ namespace CryptoPortfolioManager.Core;
 public class CryptoHolding
 {
     public Guid CryptoHoldingId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid WalletId { get; set; }
     public string Symbol { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

@@ -6,6 +6,11 @@ namespace PersonalLoanComparisonTool.Core;
 public class Offer
 {
     public Guid OfferId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid LoanId { get; set; }
     public string LenderName { get; set; } = string.Empty;
     public decimal LoanAmount { get; set; }

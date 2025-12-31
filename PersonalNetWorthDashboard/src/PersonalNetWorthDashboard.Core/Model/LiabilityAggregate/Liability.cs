@@ -14,6 +14,11 @@ public class Liability
     public Guid LiabilityId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the liability.
     /// </summary>
     public string Name { get; set; } = string.Empty;

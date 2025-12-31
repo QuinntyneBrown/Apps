@@ -6,6 +6,11 @@ namespace GroceryShoppingListApp.Core;
 public class GroceryItem
 {
     public Guid GroceryItemId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid? GroceryListId { get; set; }
     public GroceryList? GroceryList { get; set; }
     public string Name { get; set; } = string.Empty;

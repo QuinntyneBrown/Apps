@@ -9,6 +9,17 @@ Collaborative budgeting app for couples with expense categorization and spending
 - **Frontend**: Angular 18+
 - **Authentication**: ASP.NET Core Identity
 
+
+## Multi-Tenancy
+
+This application supports multi-tenant architecture with complete data isolation:
+
+- **TenantId** property on all aggregate entities
+- **Automatic query filtering** by tenant
+- **JWT/Header-based** tenant identification
+- **Row-level security** for data isolation
+
+
 ## Getting Started
 
 1. Clone the repository

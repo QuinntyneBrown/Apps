@@ -14,6 +14,11 @@ public class Receipt
     public Guid ReceiptId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the purchase.
     /// </summary>
     public Guid PurchaseId { get; set; }

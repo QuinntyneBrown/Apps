@@ -6,6 +6,11 @@ namespace GroceryShoppingListApp.Core;
 public class PriceHistory
 {
     public Guid PriceHistoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid GroceryItemId { get; set; }
     public Guid StoreId { get; set; }
     public decimal Price { get; set; }

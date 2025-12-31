@@ -14,6 +14,11 @@ public class Challenge
     public Guid ChallengeId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the review ID this challenge belongs to.
     /// </summary>
     public Guid WeeklyReviewId { get; set; }

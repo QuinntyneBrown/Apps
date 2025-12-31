@@ -14,6 +14,11 @@ public class NutritionInfo
     public Guid NutritionInfoId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the product ID.
     /// </summary>
     public Guid ProductId { get; set; }

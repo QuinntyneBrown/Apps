@@ -14,6 +14,11 @@ public class NetWorthSnapshot
     public Guid NetWorthSnapshotId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the date of the snapshot.
     /// </summary>
     public DateTime SnapshotDate { get; set; }

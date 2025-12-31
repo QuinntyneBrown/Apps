@@ -14,6 +14,11 @@ public class Resource
     public Guid ResourceId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the group ID this resource belongs to.
     /// </summary>
     public Guid GroupId { get; set; }

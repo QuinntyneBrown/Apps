@@ -6,6 +6,11 @@ namespace PetCareManager.Core;
 public class Medication
 {
     public Guid MedicationId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid PetId { get; set; }
     public Pet? Pet { get; set; }
     public string Name { get; set; } = string.Empty;

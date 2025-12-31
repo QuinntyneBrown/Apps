@@ -14,6 +14,11 @@ public class InsuranceInfo
     public Guid InsuranceInfoId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference to the vehicle.
     /// </summary>
     public Guid VehicleId { get; set; }

@@ -6,6 +6,11 @@ namespace BillPaymentScheduler.Core;
 public class Payment
 {
     public Guid PaymentId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tenant ID for multi-tenant isolation.
+    /// </summary>
+    public Guid TenantId { get; set; }
     public Guid BillId { get; set; }
     public decimal Amount { get; set; }
     public DateTime PaymentDate { get; set; }
