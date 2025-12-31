@@ -3,6 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using CampingTripPlanner.Core.Model.UserAggregate;
+using CampingTripPlanner.Core.Model.UserAggregate.Entities;
 namespace CampingTripPlanner.Core;
 
 public interface ICampingTripPlannerContext
@@ -11,5 +13,21 @@ public interface ICampingTripPlannerContext
     DbSet<Campsite> Campsites { get; set; }
     DbSet<GearChecklist> GearChecklists { get; set; }
     DbSet<Review> Reviews { get; set; }
+    
+    /// <summary>
+    /// Gets the users.
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Gets the roles.
+    /// </summary>
+    DbSet<Role> Roles { get; }
+
+    /// <summary>
+    /// Gets the user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

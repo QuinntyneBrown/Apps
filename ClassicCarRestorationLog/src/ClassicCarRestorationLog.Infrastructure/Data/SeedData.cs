@@ -3,6 +3,9 @@
 
 using ClassicCarRestorationLog.Core;
 
+using ClassicCarRestorationLog.Core.Model.UserAggregate;
+using ClassicCarRestorationLog.Core.Model.UserAggregate.Entities;
+using ClassicCarRestorationLog.Core.Services;
 namespace ClassicCarRestorationLog.Infrastructure.Data;
 
 /// <summary>

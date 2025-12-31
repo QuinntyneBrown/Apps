@@ -1,3 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MedicationReminderSystem.Infrastructure;
 using Serilog;
 using Serilog.Events;
@@ -41,6 +45,31 @@ try
 
     // Add Infrastructure services
     builder.Services.AddInfrastructureServices(builder.Configuration);
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "YourApp",
+        ValidAudience = jwtSettings["Audience"] ?? "YourApp",
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+    };
+});
+
+builder.Services.AddAuthorization();
+
 
     // Add CORS
     builder.Services.AddCors(options =>
@@ -68,7 +97,11 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
     app.UseCors("AllowAll");
     app.UseAuthorization();
     app.MapControllers();

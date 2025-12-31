@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AnniversaryBirthdayReminder.Core;
+using AnniversaryBirthdayReminder.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +47,10 @@ public static class ConfigureServices
         // Register multi-tenant services
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+
+        // Register identity services
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

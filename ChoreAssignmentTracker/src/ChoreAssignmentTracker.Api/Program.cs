@@ -1,3 +1,11 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using ChoreAssignmentTracker.Infrastructure;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -62,7 +70,11 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseHttpsRedirection();
+    
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
 
     app.UseCors();
 

@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WeeklyReviewSystem.Core;
 
+using WeeklyReviewSystem.Core.Model.UserAggregate;
+using WeeklyReviewSystem.Core.Model.UserAggregate.Entities;
+using WeeklyReviewSystem.Core.Services;
 namespace WeeklyReviewSystem.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(WeeklyReviewSystemContext context, ILogger logger)
+    public static async Task SeedAsync(WeeklyReviewSystemContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

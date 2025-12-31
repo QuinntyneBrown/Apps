@@ -5,6 +5,9 @@ using GolfScoreTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using GolfScoreTracker.Core.Model.UserAggregate;
+using GolfScoreTracker.Core.Model.UserAggregate.Entities;
+using GolfScoreTracker.Core.Services;
 namespace GolfScoreTracker.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(GolfScoreTrackerContext context, ILogger logger)
+    public static async Task SeedAsync(GolfScoreTrackerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

@@ -3,6 +3,9 @@
 
 using ChoreAssignmentTracker.Core;
 
+using ChoreAssignmentTracker.Core.Model.UserAggregate;
+using ChoreAssignmentTracker.Core.Model.UserAggregate.Entities;
+using ChoreAssignmentTracker.Core.Services;
 namespace ChoreAssignmentTracker.Infrastructure.Data;
 
 /// <summary>

@@ -5,6 +5,9 @@ using WoodworkingProjectManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using WoodworkingProjectManager.Core.Model.UserAggregate;
+using WoodworkingProjectManager.Core.Model.UserAggregate.Entities;
+using WoodworkingProjectManager.Core.Services;
 namespace WoodworkingProjectManager.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(WoodworkingProjectManagerContext context, ILogger logger)
+    public static async Task SeedAsync(WoodworkingProjectManagerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

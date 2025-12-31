@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SportsTeamFollowingTracker.Core;
 
+using SportsTeamFollowingTracker.Core.Model.UserAggregate;
+using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
+using SportsTeamFollowingTracker.Core.Services;
 namespace SportsTeamFollowingTracker.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(SportsTeamFollowingTrackerContext context, ILogger logger)
+    public static async Task SeedAsync(SportsTeamFollowingTrackerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

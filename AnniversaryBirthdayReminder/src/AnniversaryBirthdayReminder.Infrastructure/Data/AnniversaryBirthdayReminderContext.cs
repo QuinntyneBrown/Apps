@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AnniversaryBirthdayReminder.Core;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AnniversaryBirthdayReminder.Infrastructure;
@@ -36,6 +38,15 @@ public class AnniversaryBirthdayReminderContext : DbContext, IAnniversaryBirthda
     public DbSet<Celebration> Celebrations { get; set; } = null!;
 
     /// <inheritdoc/>
+    public DbSet<User> Users { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<Role> Roles { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<UserRole> UserRoles { get; set; } = null!;
+
+    /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -47,6 +58,9 @@ public class AnniversaryBirthdayReminderContext : DbContext, IAnniversaryBirthda
             modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Gift>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Celebration>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<UserRole>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
         }
 
 

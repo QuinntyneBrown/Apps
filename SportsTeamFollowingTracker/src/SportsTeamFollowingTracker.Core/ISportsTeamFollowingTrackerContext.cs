@@ -3,6 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using SportsTeamFollowingTracker.Core.Model.UserAggregate;
+using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
 namespace SportsTeamFollowingTracker.Core;
 
 public interface ISportsTeamFollowingTrackerContext
@@ -11,5 +13,21 @@ public interface ISportsTeamFollowingTrackerContext
     DbSet<Game> Games { get; set; }
     DbSet<Season> Seasons { get; set; }
     DbSet<Statistic> Statistics { get; set; }
+    
+    /// <summary>
+    /// Gets the users.
+    /// </summary>
+    DbSet<User> Users { get; }
+
+    /// <summary>
+    /// Gets the roles.
+    /// </summary>
+    DbSet<Role> Roles { get; }
+
+    /// <summary>
+    /// Gets the user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -5,6 +5,9 @@ using PersonalWiki.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using PersonalWiki.Core.Model.UserAggregate;
+using PersonalWiki.Core.Model.UserAggregate.Entities;
+using PersonalWiki.Core.Services;
 namespace PersonalWiki.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(PersonalWikiContext context, ILogger logger)
+    public static async Task SeedAsync(PersonalWikiContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

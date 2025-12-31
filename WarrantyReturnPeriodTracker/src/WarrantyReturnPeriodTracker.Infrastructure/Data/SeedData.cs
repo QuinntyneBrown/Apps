@@ -5,6 +5,9 @@ using WarrantyReturnPeriodTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Model.UserAggregate.Entities;
+using WarrantyReturnPeriodTracker.Core.Services;
 namespace WarrantyReturnPeriodTracker.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(WarrantyReturnPeriodTrackerContext context, ILogger logger)
+    public static async Task SeedAsync(WarrantyReturnPeriodTrackerContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

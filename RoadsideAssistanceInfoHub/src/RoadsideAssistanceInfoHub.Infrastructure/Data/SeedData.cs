@@ -5,6 +5,9 @@ using RoadsideAssistanceInfoHub.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using RoadsideAssistanceInfoHub.Core.Model.UserAggregate;
+using RoadsideAssistanceInfoHub.Core.Model.UserAggregate.Entities;
+using RoadsideAssistanceInfoHub.Core.Services;
 namespace RoadsideAssistanceInfoHub.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(RoadsideAssistanceInfoHubContext context, ILogger logger)
+    public static async Task SeedAsync(RoadsideAssistanceInfoHubContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {

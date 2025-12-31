@@ -5,6 +5,9 @@ using PersonalHealthDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using PersonalHealthDashboard.Core.Model.UserAggregate;
+using PersonalHealthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalHealthDashboard.Core.Services;
 namespace PersonalHealthDashboard.Infrastructure;
 
 /// <summary>
@@ -18,10 +21,11 @@ public static class SeedData
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(PersonalHealthDashboardContext context, ILogger logger)
+    public static async Task SeedAsync(PersonalHealthDashboardContext context context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {
