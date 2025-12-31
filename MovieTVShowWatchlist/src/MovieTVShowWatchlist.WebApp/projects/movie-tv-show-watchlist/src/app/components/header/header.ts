@@ -14,7 +14,11 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class Header {
   navLinks = [
+    { path: '/dashboard', label: 'Dashboard' },
     { path: '/watchlist', label: 'Watchlist' },
+    { path: '/favorites', label: 'Favorites' },
+    { path: '/ratings', label: 'Ratings' },
+    { path: '/reviews', label: 'Reviews' },
     { path: '/history', label: 'History' },
     { path: '/statistics', label: 'Statistics' },
     { path: '/discover', label: 'Discover' }

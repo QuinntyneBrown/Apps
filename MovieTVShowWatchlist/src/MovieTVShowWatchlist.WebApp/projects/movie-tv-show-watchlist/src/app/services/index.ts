@@ -3,3 +3,7 @@ export * from './watchlist.service';
 export * from './stats.service';
 export * from './history.service';
 export * from './recommendation.service';
+export * from './favorite.service';
+export * from './rating.service';
+export * from './review.service';
+export * from './viewing.service';
