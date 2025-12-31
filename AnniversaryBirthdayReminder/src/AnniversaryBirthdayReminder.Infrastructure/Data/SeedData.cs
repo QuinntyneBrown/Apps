@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AnniversaryBirthdayReminder.Core;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -17,17 +20,21 @@ public static class SeedData
     /// </summary>
     /// <param name="context">The database context.</param>
     /// <param name="logger">The logger.</param>
+    /// <param name="passwordHasher">The password hasher.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(AnniversaryBirthdayReminderContext context, ILogger logger)
+    public static async Task SeedAsync(AnniversaryBirthdayReminderContext context, ILogger logger, IPasswordHasher passwordHasher)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
 
         try
         {
-            await context.Database.MigrateAsync();
+            await context.Database.EnsureCreatedAsync();
 
-            if (!await context.ImportantDates.AnyAsync())
+            await SeedRolesAndAdminUserAsync(context, logger, passwordHasher);
+
+            if (!await context.ImportantDates.IgnoreQueryFilters().AnyAsync())
             {
                 logger.LogInformation("Seeding initial data...");
                 await SeedImportantDatesAsync(context);
@@ -42,6 +49,54 @@ public static class SeedData
         {
             logger.LogError(ex, "An error occurred while seeding the database.");
             throw;
+        }
+    }
+
+    private static async Task SeedRolesAndAdminUserAsync(
+        AnniversaryBirthdayReminderContext context,
+        ILogger logger,
+        IPasswordHasher passwordHasher)
+    {
+        var defaultTenantId = Constants.DefaultTenantId;
+
+        var adminRoleName = "Admin";
+        var userRoleName = "User";
+
+        var adminRole = context.Roles.IgnoreQueryFilters().FirstOrDefault(r => r.Name == adminRoleName);
+        if (adminRole == null)
+        {
+            adminRole = new Role(defaultTenantId, adminRoleName);
+            context.Roles.Add(adminRole);
+            logger.LogInformation("Created Admin role.");
+        }
+
+        var userRole = context.Roles.IgnoreQueryFilters().FirstOrDefault(r => r.Name == userRoleName);
+        if (userRole == null)
+        {
+            userRole = new Role(defaultTenantId, userRoleName);
+            context.Roles.Add(userRole);
+            logger.LogInformation("Created User role.");
+        }
+
+        await context.SaveChangesAsync();
+
+        var adminUserName = "admin";
+        var adminUser = context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.UserName == adminUserName);
+        if (adminUser == null)
+        {
+            var (hashedPassword, salt) = passwordHasher.HashPassword("Admin123!");
+            adminUser = new User(
+                tenantId: defaultTenantId,
+                userName: adminUserName,
+                email: "admin@anniversarybirthday.local",
+                hashedPassword: hashedPassword,
+                salt: salt);
+
+            adminUser.AddRole(adminRole);
+            context.Users.Add(adminUser);
+            await context.SaveChangesAsync();
+
+            logger.LogInformation("Created admin user with Admin role.");
         }
     }
 

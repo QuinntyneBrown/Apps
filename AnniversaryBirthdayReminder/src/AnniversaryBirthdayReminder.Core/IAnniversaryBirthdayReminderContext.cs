@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.EntityFrameworkCore;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
 
 namespace AnniversaryBirthdayReminder.Core;
 
@@ -29,6 +31,21 @@ public interface IAnniversaryBirthdayReminderContext
     /// Gets or sets the DbSet of celebrations.
     /// </summary>
     DbSet<Celebration> Celebrations { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of users.
+    /// </summary>
+    DbSet<User> Users { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of roles.
+    /// </summary>
+    DbSet<Role> Roles { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of user roles.
+    /// </summary>
+    DbSet<UserRole> UserRoles { get; set; }
 
     /// <summary>
     /// Saves all changes made in this context to the database.
