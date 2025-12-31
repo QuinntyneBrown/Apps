@@ -1,0 +1,128 @@
+<div class="training-plans">
+  <div class="training-plans__container">
+    <div class="training-plans__header">
+      <h1 class="training-plans__title">Training Plans</h1>
+      <button mat-raised-button color="primary" (click)="openDialog(planDialog)">
+        <mat-icon>add</mat-icon>
+        Add Training Plan
+      </button>
+    </div>
+
+    <mat-card class="training-plans__card">
+      <mat-card-content>
+        <div *ngIf="trainingPlans$ | async as plans" class="training-plans__content">
+          <div *ngIf="plans.length === 0" class="training-plans__empty">
+            No training plans found. Create your first training plan to get started!
+          </div>
+
+          <table mat-table [dataSource]="plans" class="training-plans__table" *ngIf="plans.length > 0">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let plan">{{ plan.name }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="startDate">
+              <th mat-header-cell *matHeaderCellDef>Start Date</th>
+              <td mat-cell *matCellDef="let plan">{{ plan.startDate | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="endDate">
+              <th mat-header-cell *matHeaderCellDef>End Date</th>
+              <td mat-cell *matCellDef="let plan">{{ plan.endDate | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="weeklyMileageGoal">
+              <th mat-header-cell *matHeaderCellDef>Weekly Goal (km)</th>
+              <td mat-cell *matCellDef="let plan">{{ plan.weeklyMileageGoal || '-' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="isActive">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let plan">
+                <span [class.training-plans__status--active]="plan.isActive">
+                  {{ plan.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let plan">
+                <button mat-icon-button (click)="openDialog(planDialog, plan)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteTrainingPlan(plan)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<ng-template #planDialog>
+  <h2 mat-dialog-title>{{ isEditing ? 'Edit Training Plan' : 'Add Training Plan' }}</h2>
+  <mat-dialog-content>
+    <form [formGroup]="trainingPlanForm" class="training-plans__form">
+      <mat-form-field class="training-plans__form-field training-plans__form-field--full">
+        <mat-label>Plan Name</mat-label>
+        <input matInput formControlName="name">
+      </mat-form-field>
+
+      <mat-form-field class="training-plans__form-field training-plans__form-field--full">
+        <mat-label>Associated Race</mat-label>
+        <mat-select formControlName="raceId">
+          <mat-option [value]="null">None</mat-option>
+          <mat-option *ngFor="let race of races$ | async" [value]="race.raceId">
+            {{ race.name }} - {{ race.raceDate | date:'mediumDate' }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="training-plans__form-field">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field class="training-plans__form-field">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field class="training-plans__form-field training-plans__form-field--full">
+        <mat-label>Weekly Mileage Goal (km)</mat-label>
+        <input matInput type="number" formControlName="weeklyMileageGoal" step="0.1">
+      </mat-form-field>
+
+      <div class="training-plans__form-field training-plans__form-field--full">
+        <mat-checkbox formControlName="isActive">Plan Active</mat-checkbox>
+      </div>
+
+      <mat-form-field class="training-plans__form-field training-plans__form-field--full">
+        <mat-label>Plan Details</mat-label>
+        <textarea matInput formControlName="planDetails" rows="4"></textarea>
+      </mat-form-field>
+
+      <mat-form-field class="training-plans__form-field training-plans__form-field--full">
+        <mat-label>Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="3"></textarea>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="closeDialog()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="saveTrainingPlan()" [disabled]="!trainingPlanForm.valid">
+      {{ isEditing ? 'Update' : 'Create' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
