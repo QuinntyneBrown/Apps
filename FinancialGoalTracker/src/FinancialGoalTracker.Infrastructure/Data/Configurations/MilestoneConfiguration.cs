@@ -44,8 +44,6 @@ public class MilestoneConfiguration : IEntityTypeConfiguration<Milestone>
         builder.Property(x => x.Notes)
             .HasMaxLength(1000);
 
-        builder.Ignore(x => x.MarkAsCompleted);
-
         builder.HasIndex(x => x.GoalId);
         builder.HasIndex(x => x.IsCompleted);
         builder.HasIndex(x => x.TargetDate);

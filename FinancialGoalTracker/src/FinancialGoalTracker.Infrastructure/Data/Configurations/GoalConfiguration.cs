@@ -55,8 +55,6 @@ public class GoalConfiguration : IEntityTypeConfiguration<Goal>
             .HasForeignKey(x => x.GoalId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Ignore(x => x.CalculateProgress);
-
         builder.HasIndex(x => x.GoalType);
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.TargetDate);
