@@ -118,7 +118,7 @@ public static class SeedData
                 OrganizationId = organizations[2].OrganizationId,
                 Amount = 250.00m,
                 DonationDate = new DateTime(2024, 6, 10),
-                DonationType = DonationType.Goods,
+                DonationType = DonationType.InKind,
                 ReceiptNumber = "LFB-2024-156",
                 IsTaxDeductible = true,
                 Notes = "Food and clothing donation",

@@ -22,7 +22,11 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Prevent schema ID collisions when multiple nested types share the same name (e.g., "Command").
+    options.CustomSchemaIds(type => (type.FullName ?? type.Name).Replace("+", "."));
+});
 
 // Add MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
@@ -77,12 +81,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseHttpsRedirection();
 app.UseCors("DefaultPolicy");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
