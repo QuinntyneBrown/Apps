@@ -40,6 +40,19 @@ public class RatingConfiguration : IEntityTypeConfiguration<Rating>
 
         builder.Property(x => x.UpdatedAt);
 
+        // Configure relationships with NO ACTION to avoid cascade delete conflicts
+        builder.HasOne<DateIdea>()
+            .WithMany()
+            .HasForeignKey(x => x.DateIdeaId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
+        builder.HasOne<Experience>()
+            .WithMany()
+            .HasForeignKey(x => x.ExperienceId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
         builder.HasIndex(x => x.DateIdeaId);
         builder.HasIndex(x => x.ExperienceId);
         builder.HasIndex(x => x.UserId);
