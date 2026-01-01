@@ -68,7 +68,7 @@ interface ContributionWithGoal extends Contribution {
 
       <mat-card class="contributions__content">
         <div *ngIf="(contributionsWithGoals$ | async)?.length; else noContributions">
-          <table mat-table [dataSource]="contributionsWithGoals$ | async" class="contributions__table">
+          <table mat-table [dataSource]="(contributionsWithGoals$ | async) || []" class="contributions__table">
             <ng-container matColumnDef="date">
               <th mat-header-cell *matHeaderCellDef>Date</th>
               <td mat-cell *matCellDef="let contribution">{{ contribution.contributionDate | date:'mediumDate' }}</td>

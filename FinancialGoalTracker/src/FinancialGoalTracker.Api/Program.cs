@@ -119,16 +119,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -139,7 +136,8 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<FinancialGoalTrackerContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await SeedData.SeedAsync(context, logger);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<FinancialGoalTracker.Core.Services.IPasswordHasher>();
+    await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 
 app.Run();

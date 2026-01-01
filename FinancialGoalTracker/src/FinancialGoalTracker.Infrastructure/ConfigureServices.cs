@@ -31,14 +31,26 @@ public static class ConfigureServices
 
         services.AddDbContext<FinancialGoalTrackerContext>(options =>
         {
-            options.UseSqlServer(connectionString, sqlOptions =>
+            // Use SQLite if the connection string contains "Data Source" or is a file path, otherwise use SQL Server
+            if (connectionString?.Contains("Data Source", StringComparison.OrdinalIgnoreCase) == true || 
+                connectionString?.EndsWith(".db", StringComparison.OrdinalIgnoreCase) == true)
             {
-                sqlOptions.MigrationsAssembly(typeof(FinancialGoalTrackerContext).Assembly.FullName);
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
-            });
+                options.UseSqlite(connectionString, sqliteOptions =>
+                {
+                    sqliteOptions.MigrationsAssembly(typeof(FinancialGoalTrackerContext).Assembly.FullName);
+                });
+            }
+            else
+            {
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(FinancialGoalTrackerContext).Assembly.FullName);
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 3,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                });
+            }
         });
 
         services.AddScoped<IFinancialGoalTrackerContext>(provider =>
