@@ -55,18 +55,13 @@ public class FreelanceProjectManagerContext : DbContext, IFreelanceProjectManage
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
-        // Apply tenant filter to User
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
-
-        // Apply tenant filter to Role
-        modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
-
         base.OnModelCreating(modelBuilder);
 
         // Apply tenant isolation filters
         if (_tenantContext != null)
         {
+            modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Client>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<TimeEntry>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);

@@ -52,18 +52,13 @@ public class PersonalLibraryLessonsLearnedContext : DbContext, IPersonalLibraryL
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
-        // Apply tenant filter to User
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
-
-        // Apply tenant filter to Role
-        modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
-
         base.OnModelCreating(modelBuilder);
 
         // Apply tenant isolation filters
         if (_tenantContext != null)
         {
+            modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Lesson>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Source>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<LessonReminder>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
