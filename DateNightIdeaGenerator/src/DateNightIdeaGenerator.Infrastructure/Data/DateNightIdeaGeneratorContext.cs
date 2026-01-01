@@ -57,12 +57,8 @@ public class DateNightIdeaGeneratorContext : DbContext, IDateNightIdeaGeneratorC
         // Apply tenant isolation filters
         if (_tenantContext != null)
         {
-            // Apply tenant filter to User
             modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
-
-            // Apply tenant filter to Role
             modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
-
             modelBuilder.Entity<DateIdea>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Experience>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Rating>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);

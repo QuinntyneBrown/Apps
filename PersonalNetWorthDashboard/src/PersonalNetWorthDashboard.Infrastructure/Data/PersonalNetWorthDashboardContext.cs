@@ -52,18 +52,13 @@ public class PersonalNetWorthDashboardContext : DbContext, IPersonalNetWorthDash
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
-        // Apply tenant filter to User
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
-
-        // Apply tenant filter to Role
-        modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
-
         base.OnModelCreating(modelBuilder);
 
         // Apply tenant isolation filters
         if (_tenantContext != null)
         {
+            modelBuilder.Entity<User>().HasQueryFilter(u => u.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(r => r.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Asset>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Liability>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<NetWorthSnapshot>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
