@@ -61,7 +61,7 @@ interface MilestoneWithGoal extends Milestone {
 
       <mat-card class="milestones__content">
         <div *ngIf="(milestonesWithGoals$ | async)?.length; else noMilestones">
-          <table mat-table [dataSource]="milestonesWithGoals$ | async" class="milestones__table">
+          <table mat-table [dataSource]="(milestonesWithGoals$ | async) || []" class="milestones__table">
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>Status</th>
               <td mat-cell *matCellDef="let milestone">

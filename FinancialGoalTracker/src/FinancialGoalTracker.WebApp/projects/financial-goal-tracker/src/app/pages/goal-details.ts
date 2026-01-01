@@ -219,7 +219,7 @@ export class MilestoneFormDialog {
               </button>
             </div>
             <div *ngIf="(contributions$ | async)?.length; else noContributions">
-              <table mat-table [dataSource]="contributions$ | async" class="goal-details__table">
+              <table mat-table [dataSource]="(contributions$ | async) || []" class="goal-details__table">
                 <ng-container matColumnDef="date">
                   <th mat-header-cell *matHeaderCellDef>Date</th>
                   <td mat-cell *matCellDef="let contribution">{{ contribution.contributionDate | date:'mediumDate' }}</td>
@@ -267,7 +267,7 @@ export class MilestoneFormDialog {
               </button>
             </div>
             <div *ngIf="(milestones$ | async)?.length; else noMilestones">
-              <table mat-table [dataSource]="milestones$ | async" class="goal-details__table">
+              <table mat-table [dataSource]="(milestones$ | async) || []" class="goal-details__table">
                 <ng-container matColumnDef="name">
                   <th mat-header-cell *matHeaderCellDef>Name</th>
                   <td mat-cell *matCellDef="let milestone">{{ milestone.name }}</td>
