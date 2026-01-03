@@ -129,8 +129,6 @@ app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthorization();
-
 app.MapControllers();
 
 // Seed the database in development
@@ -139,7 +137,8 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<BucketListManagerContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await SeedData.SeedAsync(context, logger);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<BucketListManager.Core.Services.IPasswordHasher>();
+    await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 
 app.Run();

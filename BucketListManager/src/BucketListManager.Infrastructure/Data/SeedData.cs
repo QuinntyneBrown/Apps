@@ -87,7 +87,7 @@ public static class SeedData
                 UserId = sampleUserId,
                 Title = "Run a marathon",
                 Description = "Complete a full 26.2-mile marathon",
-                Category = Category.Fitness,
+                Category = Category.Health,
                 Priority = Priority.Medium,
                 Status = ItemStatus.Completed,
                 TargetDate = DateTime.UtcNow.AddMonths(-1),
