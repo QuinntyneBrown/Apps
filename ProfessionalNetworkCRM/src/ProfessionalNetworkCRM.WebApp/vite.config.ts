@@ -14,6 +14,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['projects/professional-network-crm/src/test-setup.ts'],
     include: ['projects/**/*.spec.ts'],
+    exclude: ['projects/**/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
