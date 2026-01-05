@@ -3,7 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { InteractionsService } from './interactions.service';
 import { Interaction, CreateInteractionRequest } from '../models';
 import { environment } from '../environments';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('InteractionsService', () => {
   let service: InteractionsService;

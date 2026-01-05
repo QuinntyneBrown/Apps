@@ -185,7 +185,10 @@ describe('AuthService', () => {
         btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) + 
         '.signature';
       
-      // Clear any existing service instance
+      // Note: resetTestingModule is necessary here because AuthService reads from
+      // localStorage in its constructor. The service instance created in beforeEach
+      // already has isAuthenticated=false. To test the valid token path, we need
+      // to create a fresh service instance after setting up the valid token.
       TestBed.resetTestingModule();
       
       // Set up storage before creating service
@@ -202,8 +205,6 @@ describe('AuthService', () => {
       
       const service2 = TestBed.inject(AuthService);
       expect(service2.isAuthenticated()).toBe(true);
-      
-      TestBed.resetTestingModule();
     });
   });
 });

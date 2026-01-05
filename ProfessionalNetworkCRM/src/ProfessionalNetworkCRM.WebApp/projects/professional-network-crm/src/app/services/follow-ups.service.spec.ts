@@ -3,7 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { FollowUpsService } from './follow-ups.service';
 import { FollowUp, CreateFollowUpRequest } from '../models';
 import { environment } from '../environments';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('FollowUpsService', () => {
   let service: FollowUpsService;

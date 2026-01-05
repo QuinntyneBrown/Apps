@@ -3,7 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { ContactsService } from './contacts.service';
 import { Contact, CreateContactRequest, UpdateContactRequest } from '../models';
 import { environment } from '../environments';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('ContactsService', () => {
   let service: ContactsService;
