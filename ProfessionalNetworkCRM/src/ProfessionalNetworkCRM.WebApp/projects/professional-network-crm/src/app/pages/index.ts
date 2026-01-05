@@ -6,3 +6,4 @@ export * from './follow-ups-list/follow-ups-list.component';
 export * from './interaction-form/interaction-form.component';
 export * from './interactions-list/interactions-list.component';
 export * from './login/login.component';
+export * from './opportunities';
