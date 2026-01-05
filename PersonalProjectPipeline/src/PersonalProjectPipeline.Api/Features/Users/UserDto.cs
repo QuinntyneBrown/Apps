@@ -1,4 +1,4 @@
-using PersonalProjectPipeline.Core.Model.UserAggregate;
+using PersonalProjectPipeline.Core.Models.UserAggregate;
 using PersonalProjectPipeline.Api.Features.Roles;
 
 namespace PersonalProjectPipeline.Api.Features.Users;

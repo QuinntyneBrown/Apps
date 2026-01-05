@@ -1,4 +1,4 @@
-using HomeInventoryManager.Core.Model.UserAggregate.Entities;
+using HomeInventoryManager.Core.Models.UserAggregate.Entities;
 
 namespace HomeInventoryManager.Api.Features.Roles;
 

@@ -6,8 +6,8 @@ using ProfessionalNetworkCRM.Api.Features.Opportunities;
 using ProfessionalNetworkCRM.Api.Features.Introductions;
 using ProfessionalNetworkCRM.Api.Features.Referrals;
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate.Enums;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate.Enums;
 
 namespace ProfessionalNetworkCRM.Api.Tests;
 

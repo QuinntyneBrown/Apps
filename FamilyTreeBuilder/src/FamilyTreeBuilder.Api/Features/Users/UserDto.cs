@@ -1,4 +1,4 @@
-using FamilyTreeBuilder.Core.Model.UserAggregate;
+using FamilyTreeBuilder.Core.Models.UserAggregate;
 using FamilyTreeBuilder.Api.Features.Roles;
 
 namespace FamilyTreeBuilder.Api.Features.Users;

@@ -1,10 +1,10 @@
 using FamilyCalendarEventPlanner.Core;
-using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
-using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
-using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
-using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.Enums;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Core.Models.EventAggregate;
+using FamilyCalendarEventPlanner.Core.Models.EventAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.FamilyMemberAggregate;
+using FamilyCalendarEventPlanner.Core.Models.FamilyMemberAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities;
 using FamilyCalendarEventPlanner.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

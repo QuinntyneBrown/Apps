@@ -5,8 +5,8 @@ using WorkoutPlanBuilder.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
-using WorkoutPlanBuilder.Core.Model.UserAggregate.Entities;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate.Entities;
 using WorkoutPlanBuilder.Core.Services;
 namespace WorkoutPlanBuilder.Infrastructure;
 

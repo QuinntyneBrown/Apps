@@ -1,4 +1,4 @@
-using ConferenceEventManager.Core.Model.UserAggregate;
+using ConferenceEventManager.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

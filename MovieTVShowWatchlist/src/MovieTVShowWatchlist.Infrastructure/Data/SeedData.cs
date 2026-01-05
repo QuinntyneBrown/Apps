@@ -5,8 +5,8 @@ using MovieTVShowWatchlist.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using MovieTVShowWatchlist.Core.Model.UserAggregate;
-using MovieTVShowWatchlist.Core.Model.UserAggregate.Entities;
+using MovieTVShowWatchlist.Core.Models.UserAggregate;
+using MovieTVShowWatchlist.Core.Models.UserAggregate.Entities;
 using MovieTVShowWatchlist.Core.Services;
 namespace MovieTVShowWatchlist.Infrastructure;
 

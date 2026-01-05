@@ -1,5 +1,5 @@
 using ConferenceEventManager.Core;
-using ConferenceEventManager.Core.Model.UserAggregate;
+using ConferenceEventManager.Core.Models.UserAggregate;
 using ConferenceEventManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

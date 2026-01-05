@@ -1,4 +1,4 @@
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

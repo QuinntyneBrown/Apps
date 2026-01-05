@@ -5,8 +5,8 @@ using NutritionLabelScanner.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using NutritionLabelScanner.Core.Model.UserAggregate;
-using NutritionLabelScanner.Core.Model.UserAggregate.Entities;
+using NutritionLabelScanner.Core.Models.UserAggregate;
+using NutritionLabelScanner.Core.Models.UserAggregate.Entities;
 using NutritionLabelScanner.Core.Services;
 namespace NutritionLabelScanner.Infrastructure;
 

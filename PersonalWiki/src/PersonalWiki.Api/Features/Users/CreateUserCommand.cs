@@ -1,5 +1,5 @@
 using PersonalWiki.Core;
-using PersonalWiki.Core.Model.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate;
 using PersonalWiki.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

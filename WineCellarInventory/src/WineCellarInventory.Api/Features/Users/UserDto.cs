@@ -1,4 +1,4 @@
-using WineCellarInventory.Core.Model.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate;
 using WineCellarInventory.Api.Features.Roles;
 
 namespace WineCellarInventory.Api.Features.Users;

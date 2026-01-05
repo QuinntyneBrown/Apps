@@ -1,4 +1,4 @@
-using DailyJournalingApp.Core.Model.UserAggregate.Entities;
+using DailyJournalingApp.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

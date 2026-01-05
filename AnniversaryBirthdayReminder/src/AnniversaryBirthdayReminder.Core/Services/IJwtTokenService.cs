@@ -1,5 +1,5 @@
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate.Entities;
 
 namespace AnniversaryBirthdayReminder.Core.Services;
 

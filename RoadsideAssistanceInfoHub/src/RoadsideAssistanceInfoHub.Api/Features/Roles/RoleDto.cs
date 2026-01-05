@@ -1,4 +1,4 @@
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate.Entities;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate.Entities;
 
 namespace RoadsideAssistanceInfoHub.Api.Features.Roles;
 

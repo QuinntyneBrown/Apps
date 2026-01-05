@@ -1,4 +1,4 @@
-using BucketListManager.Core.Model.UserAggregate;
+using BucketListManager.Core.Models.UserAggregate;
 using BucketListManager.Api.Features.Roles;
 
 namespace BucketListManager.Api.Features.Users;

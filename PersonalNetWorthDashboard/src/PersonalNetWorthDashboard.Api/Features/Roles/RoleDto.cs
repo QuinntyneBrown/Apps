@@ -1,4 +1,4 @@
-using PersonalNetWorthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate.Entities;
 
 namespace PersonalNetWorthDashboard.Api.Features.Roles;
 

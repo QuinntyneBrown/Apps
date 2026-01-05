@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using TimeAuditTracker.Core.Model.UserAggregate;
-using TimeAuditTracker.Core.Model.UserAggregate.Entities;
+using TimeAuditTracker.Core.Models.UserAggregate;
+using TimeAuditTracker.Core.Models.UserAggregate.Entities;
 namespace TimeAuditTracker.Core;
 
 /// <summary>

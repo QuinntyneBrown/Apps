@@ -5,8 +5,8 @@ using MensGroupDiscussionTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using MensGroupDiscussionTracker.Core.Model.UserAggregate;
-using MensGroupDiscussionTracker.Core.Model.UserAggregate.Entities;
+using MensGroupDiscussionTracker.Core.Models.UserAggregate;
+using MensGroupDiscussionTracker.Core.Models.UserAggregate.Entities;
 using MensGroupDiscussionTracker.Core.Services;
 namespace MensGroupDiscussionTracker.Infrastructure;
 

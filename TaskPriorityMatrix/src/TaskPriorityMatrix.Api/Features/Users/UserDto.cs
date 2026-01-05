@@ -1,4 +1,4 @@
-using TaskPriorityMatrix.Core.Model.UserAggregate;
+using TaskPriorityMatrix.Core.Models.UserAggregate;
 using TaskPriorityMatrix.Api.Features.Roles;
 
 namespace TaskPriorityMatrix.Api.Features.Users;

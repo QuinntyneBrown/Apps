@@ -1,4 +1,4 @@
-using StressMoodTracker.Core.Model.UserAggregate.Entities;
+using StressMoodTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

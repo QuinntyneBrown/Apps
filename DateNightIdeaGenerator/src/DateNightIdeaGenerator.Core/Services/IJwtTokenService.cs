@@ -1,5 +1,5 @@
-using DateNightIdeaGenerator.Core.Model.UserAggregate;
-using DateNightIdeaGenerator.Core.Model.UserAggregate.Entities;
+using DateNightIdeaGenerator.Core.Models.UserAggregate;
+using DateNightIdeaGenerator.Core.Models.UserAggregate.Entities;
 
 namespace DateNightIdeaGenerator.Core.Services;
 

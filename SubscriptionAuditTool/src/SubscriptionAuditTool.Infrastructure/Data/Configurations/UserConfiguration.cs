@@ -1,4 +1,4 @@
-using SubscriptionAuditTool.Core.Model.UserAggregate;
+using SubscriptionAuditTool.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

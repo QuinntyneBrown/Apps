@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using FuelEconomyTracker.Core.Model.UserAggregate;
-using FuelEconomyTracker.Core.Model.UserAggregate.Entities;
+using FuelEconomyTracker.Core.Models.UserAggregate;
+using FuelEconomyTracker.Core.Models.UserAggregate.Entities;
 namespace FuelEconomyTracker.Core;
 
 /// <summary>

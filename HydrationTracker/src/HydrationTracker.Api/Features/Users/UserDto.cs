@@ -1,4 +1,4 @@
-using HydrationTracker.Core.Model.UserAggregate;
+using HydrationTracker.Core.Models.UserAggregate;
 using HydrationTracker.Api.Features.Roles;
 
 namespace HydrationTracker.Api.Features.Users;

@@ -5,8 +5,8 @@ using PersonalLibraryLessonsLearned.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate;
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate.Entities;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate.Entities;
 using PersonalLibraryLessonsLearned.Core.Services;
 namespace PersonalLibraryLessonsLearned.Infrastructure;
 

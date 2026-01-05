@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PhotographySessionLogger.Core.Model.UserAggregate;
-using PhotographySessionLogger.Core.Model.UserAggregate.Entities;
+using PhotographySessionLogger.Core.Models.UserAggregate;
+using PhotographySessionLogger.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

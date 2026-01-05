@@ -1,5 +1,5 @@
-using ProfessionalReadingList.Core.Model.UserAggregate;
-using ProfessionalReadingList.Core.Model.UserAggregate.Entities;
+using ProfessionalReadingList.Core.Models.UserAggregate;
+using ProfessionalReadingList.Core.Models.UserAggregate.Entities;
 
 namespace ProfessionalReadingList.Core.Services;
 

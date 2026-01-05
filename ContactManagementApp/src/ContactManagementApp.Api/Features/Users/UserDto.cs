@@ -1,4 +1,4 @@
-using ContactManagementApp.Core.Model.UserAggregate;
+using ContactManagementApp.Core.Models.UserAggregate;
 using ContactManagementApp.Api.Features.Roles;
 
 namespace ContactManagementApp.Api.Features.Users;

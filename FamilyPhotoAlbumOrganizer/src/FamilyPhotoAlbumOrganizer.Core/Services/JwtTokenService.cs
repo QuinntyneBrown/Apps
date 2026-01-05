@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate;
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate.Entities;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

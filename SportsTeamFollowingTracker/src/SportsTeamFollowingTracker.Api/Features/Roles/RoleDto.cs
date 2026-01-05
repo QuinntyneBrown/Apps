@@ -1,4 +1,4 @@
-using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate.Entities;
 
 namespace SportsTeamFollowingTracker.Api.Features.Roles;
 

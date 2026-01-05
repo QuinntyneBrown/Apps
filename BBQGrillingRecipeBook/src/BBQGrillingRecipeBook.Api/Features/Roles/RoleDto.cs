@@ -1,4 +1,4 @@
-using BBQGrillingRecipeBook.Core.Model.UserAggregate.Entities;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate.Entities;
 
 namespace BBQGrillingRecipeBook.Api.Features.Roles;
 

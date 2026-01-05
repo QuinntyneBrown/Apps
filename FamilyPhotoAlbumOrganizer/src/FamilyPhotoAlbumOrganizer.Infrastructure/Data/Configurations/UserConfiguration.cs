@@ -1,4 +1,4 @@
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

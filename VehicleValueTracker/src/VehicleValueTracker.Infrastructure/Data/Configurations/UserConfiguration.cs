@@ -1,4 +1,4 @@
-using VehicleValueTracker.Core.Model.UserAggregate;
+using VehicleValueTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

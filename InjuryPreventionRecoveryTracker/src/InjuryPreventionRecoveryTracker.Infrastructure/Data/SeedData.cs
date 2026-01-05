@@ -5,8 +5,8 @@ using InjuryPreventionRecoveryTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate;
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate.Entities;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate.Entities;
 using InjuryPreventionRecoveryTracker.Core.Services;
 namespace InjuryPreventionRecoveryTracker.Infrastructure;
 

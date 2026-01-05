@@ -1,4 +1,4 @@
-using HabitFormationApp.Core.Model.UserAggregate;
+using HabitFormationApp.Core.Models.UserAggregate;
 using HabitFormationApp.Api.Features.Roles;
 
 namespace HabitFormationApp.Api.Features.Users;

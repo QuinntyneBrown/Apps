@@ -1,4 +1,4 @@
-using RecipeManagerMealPlanner.Core.Model.UserAggregate.Entities;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate.Entities;
 
 namespace RecipeManagerMealPlanner.Api.Features.Roles;
 

@@ -1,4 +1,4 @@
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate.Entities;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

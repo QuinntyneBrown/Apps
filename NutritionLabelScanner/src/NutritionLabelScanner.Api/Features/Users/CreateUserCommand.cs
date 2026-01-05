@@ -1,5 +1,5 @@
 using NutritionLabelScanner.Core;
-using NutritionLabelScanner.Core.Model.UserAggregate;
+using NutritionLabelScanner.Core.Models.UserAggregate;
 using NutritionLabelScanner.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

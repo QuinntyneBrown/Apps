@@ -1,5 +1,5 @@
-using VehicleMaintenanceLogger.Core.Model.UserAggregate;
-using VehicleMaintenanceLogger.Core.Model.UserAggregate.Entities;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate.Entities;
 
 namespace VehicleMaintenanceLogger.Core.Services;
 

@@ -1,4 +1,4 @@
-using TimeAuditTracker.Core.Model.UserAggregate.Entities;
+using TimeAuditTracker.Core.Models.UserAggregate.Entities;
 
 namespace TimeAuditTracker.Api.Features.Roles;
 

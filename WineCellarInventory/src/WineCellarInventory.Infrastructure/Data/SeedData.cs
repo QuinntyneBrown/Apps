@@ -5,8 +5,8 @@ using WineCellarInventory.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using WineCellarInventory.Core.Model.UserAggregate;
-using WineCellarInventory.Core.Model.UserAggregate.Entities;
+using WineCellarInventory.Core.Models.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate.Entities;
 using WineCellarInventory.Core.Services;
 namespace WineCellarInventory.Infrastructure;
 

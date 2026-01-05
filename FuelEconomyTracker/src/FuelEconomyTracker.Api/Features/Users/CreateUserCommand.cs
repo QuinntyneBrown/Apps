@@ -1,5 +1,5 @@
 using FuelEconomyTracker.Core;
-using FuelEconomyTracker.Core.Model.UserAggregate;
+using FuelEconomyTracker.Core.Models.UserAggregate;
 using FuelEconomyTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

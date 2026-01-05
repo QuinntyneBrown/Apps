@@ -1,5 +1,5 @@
 using GiftIdeaTracker.Core;
-using GiftIdeaTracker.Core.Model.UserAggregate;
+using GiftIdeaTracker.Core.Models.UserAggregate;
 using GiftIdeaTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

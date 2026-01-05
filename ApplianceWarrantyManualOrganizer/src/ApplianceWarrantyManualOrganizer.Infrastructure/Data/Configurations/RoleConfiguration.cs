@@ -1,4 +1,4 @@
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate.Entities;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

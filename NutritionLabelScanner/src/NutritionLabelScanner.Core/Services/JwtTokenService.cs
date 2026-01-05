@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using NutritionLabelScanner.Core.Model.UserAggregate;
-using NutritionLabelScanner.Core.Model.UserAggregate.Entities;
+using NutritionLabelScanner.Core.Models.UserAggregate;
+using NutritionLabelScanner.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

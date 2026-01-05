@@ -1,4 +1,4 @@
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

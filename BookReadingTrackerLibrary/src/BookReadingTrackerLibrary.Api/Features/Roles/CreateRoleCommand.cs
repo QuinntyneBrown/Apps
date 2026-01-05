@@ -1,5 +1,5 @@
 using BookReadingTrackerLibrary.Core;
-using BookReadingTrackerLibrary.Core.Model.UserAggregate.Entities;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

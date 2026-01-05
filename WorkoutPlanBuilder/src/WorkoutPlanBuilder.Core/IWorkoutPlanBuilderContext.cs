@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
-using WorkoutPlanBuilder.Core.Model.UserAggregate.Entities;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate.Entities;
 namespace WorkoutPlanBuilder.Core;
 
 /// <summary>

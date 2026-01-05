@@ -1,5 +1,5 @@
 using LifeAdminDashboard.Core;
-using LifeAdminDashboard.Core.Model.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate;
 using LifeAdminDashboard.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

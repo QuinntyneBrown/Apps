@@ -157,7 +157,7 @@ namespace ChoreAssignmentTracker.Infrastructure.Migrations
                     b.ToTable("FamilyMembers");
                 });
 
-            modelBuilder.Entity("ChoreAssignmentTracker.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("ChoreAssignmentTracker.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -178,7 +178,7 @@ namespace ChoreAssignmentTracker.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("ChoreAssignmentTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("ChoreAssignmentTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -198,7 +198,7 @@ namespace ChoreAssignmentTracker.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("ChoreAssignmentTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("ChoreAssignmentTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -302,9 +302,9 @@ namespace ChoreAssignmentTracker.Infrastructure.Migrations
                     b.Navigation("FamilyMember");
                 });
 
-            modelBuilder.Entity("ChoreAssignmentTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("ChoreAssignmentTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("ChoreAssignmentTracker.Core.Model.UserAggregate.User", null)
+                    b.HasOne("ChoreAssignmentTracker.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -333,7 +333,7 @@ namespace ChoreAssignmentTracker.Infrastructure.Migrations
                     b.Navigation("RedeemedRewards");
                 });
 
-            modelBuilder.Entity("ChoreAssignmentTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("ChoreAssignmentTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

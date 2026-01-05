@@ -1,6 +1,6 @@
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

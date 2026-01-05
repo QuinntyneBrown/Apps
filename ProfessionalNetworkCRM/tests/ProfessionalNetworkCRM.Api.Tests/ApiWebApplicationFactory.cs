@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate;
 using ProfessionalNetworkCRM.Core.Services;
 using ProfessionalNetworkCRM.Infrastructure;
 

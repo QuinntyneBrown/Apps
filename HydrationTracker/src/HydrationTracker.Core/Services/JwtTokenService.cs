@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using HydrationTracker.Core.Model.UserAggregate;
-using HydrationTracker.Core.Model.UserAggregate.Entities;
+using HydrationTracker.Core.Models.UserAggregate;
+using HydrationTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

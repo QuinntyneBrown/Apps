@@ -1,4 +1,4 @@
-using GolfScoreTracker.Core.Model.UserAggregate;
+using GolfScoreTracker.Core.Models.UserAggregate;
 using GolfScoreTracker.Api.Features.Roles;
 
 namespace GolfScoreTracker.Api.Features.Users;

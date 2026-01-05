@@ -5,8 +5,8 @@ using PersonalHealthDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalHealthDashboard.Core.Model.UserAggregate;
-using PersonalHealthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalHealthDashboard.Core.Models.UserAggregate;
+using PersonalHealthDashboard.Core.Models.UserAggregate.Entities;
 using PersonalHealthDashboard.Core.Services;
 namespace PersonalHealthDashboard.Infrastructure;
 

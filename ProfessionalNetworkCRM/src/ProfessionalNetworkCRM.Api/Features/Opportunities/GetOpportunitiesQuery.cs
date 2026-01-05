@@ -1,5 +1,5 @@
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

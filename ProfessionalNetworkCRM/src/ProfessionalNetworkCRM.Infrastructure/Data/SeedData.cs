@@ -4,8 +4,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities;
 using ProfessionalNetworkCRM.Core.Services;
 
 namespace ProfessionalNetworkCRM.Infrastructure;

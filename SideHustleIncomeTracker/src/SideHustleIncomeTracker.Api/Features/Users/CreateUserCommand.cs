@@ -1,5 +1,5 @@
 using SideHustleIncomeTracker.Core;
-using SideHustleIncomeTracker.Core.Model.UserAggregate;
+using SideHustleIncomeTracker.Core.Models.UserAggregate;
 using SideHustleIncomeTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

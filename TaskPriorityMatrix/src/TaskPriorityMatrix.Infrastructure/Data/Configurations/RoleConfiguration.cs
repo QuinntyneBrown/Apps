@@ -1,4 +1,4 @@
-using TaskPriorityMatrix.Core.Model.UserAggregate.Entities;
+using TaskPriorityMatrix.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

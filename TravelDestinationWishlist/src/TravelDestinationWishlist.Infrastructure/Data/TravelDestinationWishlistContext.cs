@@ -4,8 +4,8 @@
 using TravelDestinationWishlist.Core;
 using Microsoft.EntityFrameworkCore;
 
-using TravelDestinationWishlist.Core.Model.UserAggregate;
-using TravelDestinationWishlist.Core.Model.UserAggregate.Entities;
+using TravelDestinationWishlist.Core.Models.UserAggregate;
+using TravelDestinationWishlist.Core.Models.UserAggregate.Entities;
 namespace TravelDestinationWishlist.Infrastructure;
 
 /// <summary>

@@ -5,8 +5,8 @@ using DigitalLegacyPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using DigitalLegacyPlanner.Core.Model.UserAggregate;
-using DigitalLegacyPlanner.Core.Model.UserAggregate.Entities;
+using DigitalLegacyPlanner.Core.Models.UserAggregate;
+using DigitalLegacyPlanner.Core.Models.UserAggregate.Entities;
 using DigitalLegacyPlanner.Core.Services;
 namespace DigitalLegacyPlanner.Infrastructure;
 

@@ -1,5 +1,5 @@
 using MorningRoutineBuilder.Core;
-using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

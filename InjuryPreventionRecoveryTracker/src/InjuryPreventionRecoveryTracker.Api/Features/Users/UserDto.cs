@@ -1,4 +1,4 @@
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate;
 using InjuryPreventionRecoveryTracker.Api.Features.Roles;
 
 namespace InjuryPreventionRecoveryTracker.Api.Features.Users;

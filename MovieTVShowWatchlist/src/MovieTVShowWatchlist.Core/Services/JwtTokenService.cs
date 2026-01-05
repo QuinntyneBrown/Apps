@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using MovieTVShowWatchlist.Core.Model.UserAggregate;
-using MovieTVShowWatchlist.Core.Model.UserAggregate.Entities;
+using MovieTVShowWatchlist.Core.Models.UserAggregate;
+using MovieTVShowWatchlist.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

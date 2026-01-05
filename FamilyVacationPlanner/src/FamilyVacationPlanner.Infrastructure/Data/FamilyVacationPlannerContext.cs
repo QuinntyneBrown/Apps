@@ -4,8 +4,8 @@
 using FamilyVacationPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 
-using FamilyVacationPlanner.Core.Model.UserAggregate;
-using FamilyVacationPlanner.Core.Model.UserAggregate.Entities;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate.Entities;
 namespace FamilyVacationPlanner.Infrastructure;
 
 /// <summary>

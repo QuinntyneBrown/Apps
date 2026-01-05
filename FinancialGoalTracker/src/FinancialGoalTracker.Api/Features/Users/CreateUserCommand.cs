@@ -1,5 +1,5 @@
 using FinancialGoalTracker.Core;
-using FinancialGoalTracker.Core.Model.UserAggregate;
+using FinancialGoalTracker.Core.Models.UserAggregate;
 using FinancialGoalTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

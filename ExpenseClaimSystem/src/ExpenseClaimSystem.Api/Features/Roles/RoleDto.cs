@@ -1,4 +1,4 @@
-using ExpenseClaimSystem.Core.Model.UserAggregate.Entities;
+using ExpenseClaimSystem.Core.Models.UserAggregate.Entities;
 
 namespace ExpenseClaimSystem.Api.Features.Roles;
 

@@ -1,5 +1,5 @@
 using ResumeCareerAchievementTracker.Core;
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate;
 using ResumeCareerAchievementTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

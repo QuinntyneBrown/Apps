@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
-using TaxDeductionOrganizer.Core.Model.UserAggregate.Entities;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

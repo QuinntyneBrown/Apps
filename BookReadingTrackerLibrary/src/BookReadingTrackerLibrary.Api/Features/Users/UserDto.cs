@@ -1,4 +1,4 @@
-using BookReadingTrackerLibrary.Core.Model.UserAggregate;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate;
 using BookReadingTrackerLibrary.Api.Features.Roles;
 
 namespace BookReadingTrackerLibrary.Api.Features.Users;

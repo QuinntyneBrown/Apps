@@ -1,5 +1,5 @@
 using SkillDevelopmentTracker.Core;
-using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

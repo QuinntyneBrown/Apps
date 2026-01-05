@@ -1,4 +1,4 @@
-using HouseholdBudgetManager.Core.Model.UserAggregate.Entities;
+using HouseholdBudgetManager.Core.Models.UserAggregate.Entities;
 
 namespace HouseholdBudgetManager.Api.Features.Roles;
 

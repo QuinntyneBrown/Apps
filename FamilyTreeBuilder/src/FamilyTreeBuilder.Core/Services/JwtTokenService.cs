@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FamilyTreeBuilder.Core.Model.UserAggregate;
-using FamilyTreeBuilder.Core.Model.UserAggregate.Entities;
+using FamilyTreeBuilder.Core.Models.UserAggregate;
+using FamilyTreeBuilder.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

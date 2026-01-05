@@ -4,8 +4,8 @@
 using SkillDevelopmentTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using SkillDevelopmentTracker.Core.Model.UserAggregate;
-using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Models.UserAggregate;
+using SkillDevelopmentTracker.Core.Models.UserAggregate.Entities;
 namespace SkillDevelopmentTracker.Infrastructure;
 
 /// <summary>

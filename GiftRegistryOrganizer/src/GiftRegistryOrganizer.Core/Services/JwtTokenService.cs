@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GiftRegistryOrganizer.Core.Model.UserAggregate;
-using GiftRegistryOrganizer.Core.Model.UserAggregate.Entities;
+using GiftRegistryOrganizer.Core.Models.UserAggregate;
+using GiftRegistryOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

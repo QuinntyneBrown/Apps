@@ -65,7 +65,7 @@ namespace CharitableGivingTracker.Infrastructure.Data.Migrations
                     b.ToTable("Donations", (string)null);
                 });
 
-            modelBuilder.Entity("CharitableGivingTracker.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("CharitableGivingTracker.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -86,7 +86,7 @@ namespace CharitableGivingTracker.Infrastructure.Data.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("CharitableGivingTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("CharitableGivingTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -106,7 +106,7 @@ namespace CharitableGivingTracker.Infrastructure.Data.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("CharitableGivingTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("CharitableGivingTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -236,16 +236,16 @@ namespace CharitableGivingTracker.Infrastructure.Data.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("CharitableGivingTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("CharitableGivingTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("CharitableGivingTracker.Core.Model.UserAggregate.User", null)
+                    b.HasOne("CharitableGivingTracker.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CharitableGivingTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("CharitableGivingTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

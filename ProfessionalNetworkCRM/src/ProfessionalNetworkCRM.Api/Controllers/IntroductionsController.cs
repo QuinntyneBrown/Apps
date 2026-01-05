@@ -1,5 +1,5 @@
 using ProfessionalNetworkCRM.Api.Features.Introductions;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

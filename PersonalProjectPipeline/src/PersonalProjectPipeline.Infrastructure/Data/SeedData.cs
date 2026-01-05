@@ -5,8 +5,8 @@ using PersonalProjectPipeline.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalProjectPipeline.Core.Model.UserAggregate;
-using PersonalProjectPipeline.Core.Model.UserAggregate.Entities;
+using PersonalProjectPipeline.Core.Models.UserAggregate;
+using PersonalProjectPipeline.Core.Models.UserAggregate.Entities;
 using PersonalProjectPipeline.Core.Services;
 namespace PersonalProjectPipeline.Infrastructure;
 

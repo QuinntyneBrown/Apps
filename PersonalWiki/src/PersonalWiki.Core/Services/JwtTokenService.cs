@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PersonalWiki.Core.Model.UserAggregate;
-using PersonalWiki.Core.Model.UserAggregate.Entities;
+using PersonalWiki.Core.Models.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -1,4 +1,4 @@
-using ConferenceEventManager.Core.Model.UserAggregate;
+using ConferenceEventManager.Core.Models.UserAggregate;
 using ConferenceEventManager.Api.Features.Roles;
 
 namespace ConferenceEventManager.Api.Features.Users;

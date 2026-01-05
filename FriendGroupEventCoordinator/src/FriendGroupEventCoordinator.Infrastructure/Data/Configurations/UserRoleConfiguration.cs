@@ -1,4 +1,4 @@
-using FriendGroupEventCoordinator.Core.Model.UserAggregate.Entities;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,5 +1,5 @@
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate;
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate.Enums;
 
 namespace ProfessionalNetworkCRM.Api.Features.Opportunities;
 

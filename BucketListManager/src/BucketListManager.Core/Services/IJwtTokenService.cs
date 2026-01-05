@@ -1,5 +1,5 @@
-using BucketListManager.Core.Model.UserAggregate;
-using BucketListManager.Core.Model.UserAggregate.Entities;
+using BucketListManager.Core.Models.UserAggregate;
+using BucketListManager.Core.Models.UserAggregate.Entities;
 
 namespace BucketListManager.Core.Services;
 

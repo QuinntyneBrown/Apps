@@ -1,5 +1,5 @@
 using FamilyTreeBuilder.Core;
-using FamilyTreeBuilder.Core.Model.UserAggregate.Entities;
+using FamilyTreeBuilder.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

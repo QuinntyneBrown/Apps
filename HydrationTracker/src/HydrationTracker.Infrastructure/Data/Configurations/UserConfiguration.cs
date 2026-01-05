@@ -1,4 +1,4 @@
-using HydrationTracker.Core.Model.UserAggregate;
+using HydrationTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

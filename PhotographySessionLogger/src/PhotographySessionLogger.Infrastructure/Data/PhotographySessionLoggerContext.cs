@@ -4,8 +4,8 @@
 using Microsoft.EntityFrameworkCore;
 using PhotographySessionLogger.Core;
 
-using PhotographySessionLogger.Core.Model.UserAggregate;
-using PhotographySessionLogger.Core.Model.UserAggregate.Entities;
+using PhotographySessionLogger.Core.Models.UserAggregate;
+using PhotographySessionLogger.Core.Models.UserAggregate.Entities;
 namespace PhotographySessionLogger.Infrastructure;
 
 /// <summary>

@@ -4,8 +4,8 @@
 using DateNightIdeaGenerator.Core;
 using Microsoft.EntityFrameworkCore;
 
-using DateNightIdeaGenerator.Core.Model.UserAggregate;
-using DateNightIdeaGenerator.Core.Model.UserAggregate.Entities;
+using DateNightIdeaGenerator.Core.Models.UserAggregate;
+using DateNightIdeaGenerator.Core.Models.UserAggregate.Entities;
 namespace DateNightIdeaGenerator.Infrastructure;
 
 /// <summary>

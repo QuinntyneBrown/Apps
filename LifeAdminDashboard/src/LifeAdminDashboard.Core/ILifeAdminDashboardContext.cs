@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using LifeAdminDashboard.Core.Model.UserAggregate;
-using LifeAdminDashboard.Core.Model.UserAggregate.Entities;
+using LifeAdminDashboard.Core.Models.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate.Entities;
 namespace LifeAdminDashboard.Core;
 
 /// <summary>

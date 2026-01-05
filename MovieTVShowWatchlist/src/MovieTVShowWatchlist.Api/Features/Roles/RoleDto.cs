@@ -1,4 +1,4 @@
-using MovieTVShowWatchlist.Core.Model.UserAggregate.Entities;
+using MovieTVShowWatchlist.Core.Models.UserAggregate.Entities;
 
 namespace MovieTVShowWatchlist.Api.Features.Roles;
 

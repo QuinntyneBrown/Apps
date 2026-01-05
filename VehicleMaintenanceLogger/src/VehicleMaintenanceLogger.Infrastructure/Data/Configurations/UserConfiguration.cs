@@ -1,4 +1,4 @@
-using VehicleMaintenanceLogger.Core.Model.UserAggregate;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

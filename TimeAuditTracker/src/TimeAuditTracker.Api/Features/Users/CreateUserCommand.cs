@@ -1,5 +1,5 @@
 using TimeAuditTracker.Core;
-using TimeAuditTracker.Core.Model.UserAggregate;
+using TimeAuditTracker.Core.Models.UserAggregate;
 using TimeAuditTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

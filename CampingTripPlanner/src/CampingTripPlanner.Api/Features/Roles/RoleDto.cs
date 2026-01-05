@@ -1,4 +1,4 @@
-using CampingTripPlanner.Core.Model.UserAggregate.Entities;
+using CampingTripPlanner.Core.Models.UserAggregate.Entities;
 
 namespace CampingTripPlanner.Api.Features.Roles;
 

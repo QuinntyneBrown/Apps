@@ -1,4 +1,4 @@
-using GroceryShoppingListApp.Core.Model.UserAggregate.Entities;
+using GroceryShoppingListApp.Core.Models.UserAggregate.Entities;
 
 namespace GroceryShoppingListApp.Api.Features.Roles;
 

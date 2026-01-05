@@ -1,4 +1,4 @@
-using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

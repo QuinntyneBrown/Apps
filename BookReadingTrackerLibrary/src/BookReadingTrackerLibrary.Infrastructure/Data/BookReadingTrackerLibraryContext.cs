@@ -4,8 +4,8 @@
 using BookReadingTrackerLibrary.Core;
 using Microsoft.EntityFrameworkCore;
 
-using BookReadingTrackerLibrary.Core.Model.UserAggregate;
-using BookReadingTrackerLibrary.Core.Model.UserAggregate.Entities;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate.Entities;
 namespace BookReadingTrackerLibrary.Infrastructure;
 
 /// <summary>

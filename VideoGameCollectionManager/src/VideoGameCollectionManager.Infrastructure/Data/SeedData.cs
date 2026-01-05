@@ -5,8 +5,8 @@ using VideoGameCollectionManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using VideoGameCollectionManager.Core.Model.UserAggregate;
-using VideoGameCollectionManager.Core.Model.UserAggregate.Entities;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate.Entities;
 using VideoGameCollectionManager.Core.Services;
 namespace VideoGameCollectionManager.Infrastructure;
 

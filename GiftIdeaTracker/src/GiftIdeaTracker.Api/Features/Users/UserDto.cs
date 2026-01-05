@@ -1,4 +1,4 @@
-using GiftIdeaTracker.Core.Model.UserAggregate;
+using GiftIdeaTracker.Core.Models.UserAggregate;
 using GiftIdeaTracker.Api.Features.Roles;
 
 namespace GiftIdeaTracker.Api.Features.Users;

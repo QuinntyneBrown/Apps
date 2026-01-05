@@ -5,8 +5,8 @@ using GiftIdeaTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using GiftIdeaTracker.Core.Model.UserAggregate;
-using GiftIdeaTracker.Core.Model.UserAggregate.Entities;
+using GiftIdeaTracker.Core.Models.UserAggregate;
+using GiftIdeaTracker.Core.Models.UserAggregate.Entities;
 using GiftIdeaTracker.Core.Services;
 namespace GiftIdeaTracker.Infrastructure;
 

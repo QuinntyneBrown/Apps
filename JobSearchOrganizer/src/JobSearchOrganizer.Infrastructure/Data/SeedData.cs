@@ -5,8 +5,8 @@ using JobSearchOrganizer.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using JobSearchOrganizer.Core.Model.UserAggregate;
-using JobSearchOrganizer.Core.Model.UserAggregate.Entities;
+using JobSearchOrganizer.Core.Models.UserAggregate;
+using JobSearchOrganizer.Core.Models.UserAggregate.Entities;
 using JobSearchOrganizer.Core.Services;
 namespace JobSearchOrganizer.Infrastructure;
 

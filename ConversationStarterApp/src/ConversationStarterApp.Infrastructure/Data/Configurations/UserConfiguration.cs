@@ -1,4 +1,4 @@
-using ConversationStarterApp.Core.Model.UserAggregate;
+using ConversationStarterApp.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate;
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate.Entities;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

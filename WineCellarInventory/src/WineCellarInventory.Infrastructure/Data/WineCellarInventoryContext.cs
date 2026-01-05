@@ -4,8 +4,8 @@
 using WineCellarInventory.Core;
 using Microsoft.EntityFrameworkCore;
 
-using WineCellarInventory.Core.Model.UserAggregate;
-using WineCellarInventory.Core.Model.UserAggregate.Entities;
+using WineCellarInventory.Core.Models.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate.Entities;
 namespace WineCellarInventory.Infrastructure;
 
 /// <summary>

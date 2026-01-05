@@ -5,8 +5,8 @@ using VehicleValueTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using VehicleValueTracker.Core.Model.UserAggregate;
-using VehicleValueTracker.Core.Model.UserAggregate.Entities;
+using VehicleValueTracker.Core.Models.UserAggregate;
+using VehicleValueTracker.Core.Models.UserAggregate.Entities;
 using VehicleValueTracker.Core.Services;
 namespace VehicleValueTracker.Infrastructure;
 

@@ -5,8 +5,8 @@ using SideHustleIncomeTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using SideHustleIncomeTracker.Core.Model.UserAggregate;
-using SideHustleIncomeTracker.Core.Model.UserAggregate.Entities;
+using SideHustleIncomeTracker.Core.Models.UserAggregate;
+using SideHustleIncomeTracker.Core.Models.UserAggregate.Entities;
 using SideHustleIncomeTracker.Core.Services;
 namespace SideHustleIncomeTracker.Infrastructure;
 

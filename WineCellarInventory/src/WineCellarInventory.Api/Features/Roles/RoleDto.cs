@@ -1,4 +1,4 @@
-using WineCellarInventory.Core.Model.UserAggregate.Entities;
+using WineCellarInventory.Core.Models.UserAggregate.Entities;
 
 namespace WineCellarInventory.Api.Features.Roles;
 

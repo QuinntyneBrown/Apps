@@ -1,5 +1,5 @@
 using StressMoodTracker.Core;
-using StressMoodTracker.Core.Model.UserAggregate;
+using StressMoodTracker.Core.Models.UserAggregate;
 using StressMoodTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

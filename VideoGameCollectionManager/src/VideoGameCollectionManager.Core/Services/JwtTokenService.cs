@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using VideoGameCollectionManager.Core.Model.UserAggregate;
-using VideoGameCollectionManager.Core.Model.UserAggregate.Entities;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

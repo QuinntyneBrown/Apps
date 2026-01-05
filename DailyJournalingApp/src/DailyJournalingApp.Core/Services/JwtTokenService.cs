@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using DailyJournalingApp.Core.Model.UserAggregate;
-using DailyJournalingApp.Core.Model.UserAggregate.Entities;
+using DailyJournalingApp.Core.Models.UserAggregate;
+using DailyJournalingApp.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

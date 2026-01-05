@@ -1,4 +1,4 @@
-using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ConflictAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

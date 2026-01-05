@@ -1,5 +1,5 @@
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate;
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate.Entities;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate.Entities;
 
 namespace RoadsideAssistanceInfoHub.Core.Services;
 

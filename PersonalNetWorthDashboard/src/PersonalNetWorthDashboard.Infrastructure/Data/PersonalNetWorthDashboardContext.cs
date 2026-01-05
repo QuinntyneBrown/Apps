@@ -4,8 +4,8 @@
 using PersonalNetWorthDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 
-using PersonalNetWorthDashboard.Core.Model.UserAggregate;
-using PersonalNetWorthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate.Entities;
 namespace PersonalNetWorthDashboard.Infrastructure;
 
 /// <summary>

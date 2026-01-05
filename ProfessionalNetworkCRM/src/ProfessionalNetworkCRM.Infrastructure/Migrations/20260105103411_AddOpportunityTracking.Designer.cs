@@ -222,7 +222,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("Interactions", (string)null);
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.IntroductionAggregate.Introduction", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.IntroductionAggregate.Introduction", b =>
                 {
                     b.Property<Guid>("IntroductionId")
                         .ValueGeneratedOnAdd()
@@ -270,7 +270,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("Introductions", (string)null);
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.OpportunityAggregate.Opportunity", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.OpportunityAggregate.Opportunity", b =>
                 {
                     b.Property<Guid>("OpportunityId")
                         .ValueGeneratedOnAdd()
@@ -320,7 +320,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("Opportunities", (string)null);
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.ReferralAggregate.Referral", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.ReferralAggregate.Referral", b =>
                 {
                     b.Property<Guid>("ReferralId")
                         .ValueGeneratedOnAdd()
@@ -367,7 +367,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("Referrals", (string)null);
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -388,7 +388,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -408,7 +408,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -468,9 +468,9 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.Navigation("Contact");
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("ProfessionalNetworkCRM.Core.Model.UserAggregate.User", null)
+                    b.HasOne("ProfessionalNetworkCRM.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -484,7 +484,7 @@ namespace ProfessionalNetworkCRM.Infrastructure.Migrations
                     b.Navigation("Interactions");
                 });
 
-            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("ProfessionalNetworkCRM.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

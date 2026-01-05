@@ -5,8 +5,8 @@ using FreelanceProjectManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FreelanceProjectManager.Core.Model.UserAggregate;
-using FreelanceProjectManager.Core.Model.UserAggregate.Entities;
+using FreelanceProjectManager.Core.Models.UserAggregate;
+using FreelanceProjectManager.Core.Models.UserAggregate.Entities;
 using FreelanceProjectManager.Core.Services;
 namespace FreelanceProjectManager.Infrastructure;
 

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using HabitFormationApp.Core.Model.UserAggregate;
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

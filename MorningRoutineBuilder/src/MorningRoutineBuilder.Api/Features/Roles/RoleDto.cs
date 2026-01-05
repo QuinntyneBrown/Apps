@@ -1,4 +1,4 @@
-using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Models.UserAggregate.Entities;
 
 namespace MorningRoutineBuilder.Api.Features.Roles;
 

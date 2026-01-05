@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using PersonalWiki.Core.Model.UserAggregate;
-using PersonalWiki.Core.Model.UserAggregate.Entities;
+using PersonalWiki.Core.Models.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate.Entities;
 namespace PersonalWiki.Core;
 
 /// <summary>

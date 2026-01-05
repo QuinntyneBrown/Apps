@@ -1,5 +1,5 @@
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

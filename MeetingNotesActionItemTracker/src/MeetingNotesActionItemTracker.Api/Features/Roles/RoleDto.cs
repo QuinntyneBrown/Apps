@@ -1,4 +1,4 @@
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate.Entities;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate.Entities;
 
 namespace MeetingNotesActionItemTracker.Api.Features.Roles;
 

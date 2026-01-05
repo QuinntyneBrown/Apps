@@ -1,5 +1,5 @@
 using PersonalHealthDashboard.Core;
-using PersonalHealthDashboard.Core.Model.UserAggregate;
+using PersonalHealthDashboard.Core.Models.UserAggregate;
 using PersonalHealthDashboard.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

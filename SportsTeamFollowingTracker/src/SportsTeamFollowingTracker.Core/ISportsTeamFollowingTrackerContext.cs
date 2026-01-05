@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using SportsTeamFollowingTracker.Core.Model.UserAggregate;
-using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate.Entities;
 namespace SportsTeamFollowingTracker.Core;
 
 public interface ISportsTeamFollowingTrackerContext

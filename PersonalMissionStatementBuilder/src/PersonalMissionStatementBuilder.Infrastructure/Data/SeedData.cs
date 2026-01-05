@@ -5,8 +5,8 @@ using PersonalMissionStatementBuilder.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate;
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate.Entities;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate.Entities;
 using PersonalMissionStatementBuilder.Core.Services;
 namespace PersonalMissionStatementBuilder.Infrastructure;
 

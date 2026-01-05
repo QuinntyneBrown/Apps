@@ -1,4 +1,4 @@
-using MensGroupDiscussionTracker.Core.Model.UserAggregate;
+using MensGroupDiscussionTracker.Core.Models.UserAggregate;
 using MensGroupDiscussionTracker.Api.Features.Roles;
 
 namespace MensGroupDiscussionTracker.Api.Features.Users;

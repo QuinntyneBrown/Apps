@@ -1,4 +1,4 @@
-using GroceryShoppingListApp.Core.Model.UserAggregate;
+using GroceryShoppingListApp.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

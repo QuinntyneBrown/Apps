@@ -4,8 +4,8 @@
 using DailyJournalingApp.Core;
 using Microsoft.EntityFrameworkCore;
 
-using DailyJournalingApp.Core.Model.UserAggregate;
-using DailyJournalingApp.Core.Model.UserAggregate.Entities;
+using DailyJournalingApp.Core.Models.UserAggregate;
+using DailyJournalingApp.Core.Models.UserAggregate.Entities;
 namespace DailyJournalingApp.Infrastructure;
 
 /// <summary>

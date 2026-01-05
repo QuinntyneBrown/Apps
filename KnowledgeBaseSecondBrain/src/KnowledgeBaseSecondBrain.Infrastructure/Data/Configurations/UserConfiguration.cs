@@ -1,4 +1,4 @@
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

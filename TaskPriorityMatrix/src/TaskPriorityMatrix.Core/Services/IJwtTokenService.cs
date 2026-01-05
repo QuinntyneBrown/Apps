@@ -1,5 +1,5 @@
-using TaskPriorityMatrix.Core.Model.UserAggregate;
-using TaskPriorityMatrix.Core.Model.UserAggregate.Entities;
+using TaskPriorityMatrix.Core.Models.UserAggregate;
+using TaskPriorityMatrix.Core.Models.UserAggregate.Entities;
 
 namespace TaskPriorityMatrix.Core.Services;
 

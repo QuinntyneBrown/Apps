@@ -1,4 +1,4 @@
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

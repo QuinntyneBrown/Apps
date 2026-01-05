@@ -1,4 +1,4 @@
-using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
+using FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

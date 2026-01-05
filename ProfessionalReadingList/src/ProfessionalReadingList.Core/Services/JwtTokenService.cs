@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ProfessionalReadingList.Core.Model.UserAggregate;
-using ProfessionalReadingList.Core.Model.UserAggregate.Entities;
+using ProfessionalReadingList.Core.Models.UserAggregate;
+using ProfessionalReadingList.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

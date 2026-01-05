@@ -1,4 +1,4 @@
-using InvestmentPortfolioTracker.Core.Model.UserAggregate;
+using InvestmentPortfolioTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

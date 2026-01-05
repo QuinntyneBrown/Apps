@@ -1,4 +1,4 @@
-using HomeGymEquipmentManager.Core.Model.UserAggregate.Entities;
+using HomeGymEquipmentManager.Core.Models.UserAggregate.Entities;
 
 namespace HomeGymEquipmentManager.Api.Features.Roles;
 

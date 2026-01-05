@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SideHustleIncomeTracker.Core.Model.UserAggregate;
-using SideHustleIncomeTracker.Core.Model.UserAggregate.Entities;
+using SideHustleIncomeTracker.Core.Models.UserAggregate;
+using SideHustleIncomeTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

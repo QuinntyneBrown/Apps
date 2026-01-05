@@ -4,8 +4,8 @@
 using SalaryCompensationTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using SalaryCompensationTracker.Core.Model.UserAggregate;
-using SalaryCompensationTracker.Core.Model.UserAggregate.Entities;
+using SalaryCompensationTracker.Core.Models.UserAggregate;
+using SalaryCompensationTracker.Core.Models.UserAggregate.Entities;
 namespace SalaryCompensationTracker.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using KidsActivitySportsTracker.Core.Model.UserAggregate;
+using KidsActivitySportsTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

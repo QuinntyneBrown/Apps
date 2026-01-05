@@ -1,4 +1,4 @@
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

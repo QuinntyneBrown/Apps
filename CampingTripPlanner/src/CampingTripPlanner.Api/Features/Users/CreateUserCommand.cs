@@ -1,5 +1,5 @@
 using CampingTripPlanner.Core;
-using CampingTripPlanner.Core.Model.UserAggregate;
+using CampingTripPlanner.Core.Models.UserAggregate;
 using CampingTripPlanner.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

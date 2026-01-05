@@ -4,8 +4,8 @@
 using BillPaymentScheduler.Core;
 using Microsoft.EntityFrameworkCore;
 
-using BillPaymentScheduler.Core.Model.UserAggregate;
-using BillPaymentScheduler.Core.Model.UserAggregate.Entities;
+using BillPaymentScheduler.Core.Models.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate.Entities;
 namespace BillPaymentScheduler.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using FamilyTreeBuilder.Core.Model.UserAggregate;
+using FamilyTreeBuilder.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

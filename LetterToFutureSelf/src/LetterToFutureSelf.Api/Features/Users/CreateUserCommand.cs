@@ -1,5 +1,5 @@
 using LetterToFutureSelf.Core;
-using LetterToFutureSelf.Core.Model.UserAggregate;
+using LetterToFutureSelf.Core.Models.UserAggregate;
 using LetterToFutureSelf.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

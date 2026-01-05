@@ -1,5 +1,5 @@
 using CouplesGoalTracker.Core;
-using CouplesGoalTracker.Core.Model.UserAggregate.Entities;
+using CouplesGoalTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

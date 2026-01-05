@@ -1,5 +1,5 @@
 using MealPrepPlanner.Core;
-using MealPrepPlanner.Core.Model.UserAggregate.Entities;
+using MealPrepPlanner.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

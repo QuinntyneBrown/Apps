@@ -1,4 +1,4 @@
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate.Entities;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate.Entities;
 
 namespace ResumeCareerAchievementTracker.Api.Features.Roles;
 

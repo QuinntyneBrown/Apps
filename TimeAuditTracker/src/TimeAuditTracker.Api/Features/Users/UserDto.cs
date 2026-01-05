@@ -1,4 +1,4 @@
-using TimeAuditTracker.Core.Model.UserAggregate;
+using TimeAuditTracker.Core.Models.UserAggregate;
 using TimeAuditTracker.Api.Features.Roles;
 
 namespace TimeAuditTracker.Api.Features.Users;

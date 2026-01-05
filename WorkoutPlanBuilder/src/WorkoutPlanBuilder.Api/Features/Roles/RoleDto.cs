@@ -1,4 +1,4 @@
-using WorkoutPlanBuilder.Core.Model.UserAggregate.Entities;
+using WorkoutPlanBuilder.Core.Models.UserAggregate.Entities;
 
 namespace WorkoutPlanBuilder.Api.Features.Roles;
 

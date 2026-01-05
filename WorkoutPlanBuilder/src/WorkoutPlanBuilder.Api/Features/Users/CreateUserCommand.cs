@@ -1,5 +1,5 @@
 using WorkoutPlanBuilder.Core;
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
 using WorkoutPlanBuilder.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,4 @@
-using ConversationStarterApp.Core.Model.UserAggregate;
+using ConversationStarterApp.Core.Models.UserAggregate;
 using ConversationStarterApp.Api.Features.Roles;
 
 namespace ConversationStarterApp.Api.Features.Users;

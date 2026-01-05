@@ -1,4 +1,4 @@
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

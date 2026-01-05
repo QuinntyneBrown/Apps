@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TaskPriorityMatrix.Core.Model.UserAggregate;
-using TaskPriorityMatrix.Core.Model.UserAggregate.Entities;
+using TaskPriorityMatrix.Core.Models.UserAggregate;
+using TaskPriorityMatrix.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

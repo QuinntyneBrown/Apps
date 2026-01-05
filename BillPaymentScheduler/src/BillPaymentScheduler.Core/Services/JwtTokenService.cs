@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BillPaymentScheduler.Core.Model.UserAggregate;
-using BillPaymentScheduler.Core.Model.UserAggregate.Entities;
+using BillPaymentScheduler.Core.Models.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

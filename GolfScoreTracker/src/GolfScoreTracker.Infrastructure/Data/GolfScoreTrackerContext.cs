@@ -4,8 +4,8 @@
 using GolfScoreTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using GolfScoreTracker.Core.Model.UserAggregate;
-using GolfScoreTracker.Core.Model.UserAggregate.Entities;
+using GolfScoreTracker.Core.Models.UserAggregate;
+using GolfScoreTracker.Core.Models.UserAggregate.Entities;
 namespace GolfScoreTracker.Infrastructure;
 
 /// <summary>

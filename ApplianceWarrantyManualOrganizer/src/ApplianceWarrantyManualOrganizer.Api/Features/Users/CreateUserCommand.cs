@@ -1,5 +1,5 @@
 using ApplianceWarrantyManualOrganizer.Core;
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate;
 using ApplianceWarrantyManualOrganizer.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

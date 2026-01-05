@@ -1,5 +1,5 @@
-using GiftRegistryOrganizer.Core.Model.UserAggregate;
-using GiftRegistryOrganizer.Core.Model.UserAggregate.Entities;
+using GiftRegistryOrganizer.Core.Models.UserAggregate;
+using GiftRegistryOrganizer.Core.Models.UserAggregate.Entities;
 
 namespace GiftRegistryOrganizer.Core.Services;
 

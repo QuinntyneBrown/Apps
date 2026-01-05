@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ConferenceEventManager.Core.Model.UserAggregate;
-using ConferenceEventManager.Core.Model.UserAggregate.Entities;
+using ConferenceEventManager.Core.Models.UserAggregate;
+using ConferenceEventManager.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

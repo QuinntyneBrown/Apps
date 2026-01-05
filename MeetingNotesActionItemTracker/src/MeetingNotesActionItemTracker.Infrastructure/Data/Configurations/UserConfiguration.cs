@@ -1,4 +1,4 @@
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

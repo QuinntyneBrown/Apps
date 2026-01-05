@@ -1,4 +1,4 @@
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate;
 using RoadsideAssistanceInfoHub.Api.Features.Roles;
 
 namespace RoadsideAssistanceInfoHub.Api.Features.Users;

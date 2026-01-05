@@ -4,8 +4,8 @@
 using InvestmentPortfolioTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using InvestmentPortfolioTracker.Core.Model.UserAggregate;
-using InvestmentPortfolioTracker.Core.Model.UserAggregate.Entities;
+using InvestmentPortfolioTracker.Core.Models.UserAggregate;
+using InvestmentPortfolioTracker.Core.Models.UserAggregate.Entities;
 namespace InvestmentPortfolioTracker.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using MensGroupDiscussionTracker.Core.Model.UserAggregate;
+using MensGroupDiscussionTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -5,8 +5,8 @@ using BillPaymentScheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using BillPaymentScheduler.Core.Model.UserAggregate;
-using BillPaymentScheduler.Core.Model.UserAggregate.Entities;
+using BillPaymentScheduler.Core.Models.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate.Entities;
 using BillPaymentScheduler.Core.Services;
 namespace BillPaymentScheduler.Infrastructure;
 

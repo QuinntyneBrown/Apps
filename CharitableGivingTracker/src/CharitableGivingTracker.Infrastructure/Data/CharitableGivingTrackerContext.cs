@@ -4,8 +4,8 @@
 using CharitableGivingTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using CharitableGivingTracker.Core.Model.UserAggregate;
-using CharitableGivingTracker.Core.Model.UserAggregate.Entities;
+using CharitableGivingTracker.Core.Models.UserAggregate;
+using CharitableGivingTracker.Core.Models.UserAggregate.Entities;
 namespace CharitableGivingTracker.Infrastructure;
 
 /// <summary>

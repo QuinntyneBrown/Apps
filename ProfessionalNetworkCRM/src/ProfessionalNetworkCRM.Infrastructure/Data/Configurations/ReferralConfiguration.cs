@@ -3,7 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
+using ProfessionalNetworkCRM.Core.Models.ReferralAggregate;
 
 namespace ProfessionalNetworkCRM.Infrastructure.Data.Configurations;
 

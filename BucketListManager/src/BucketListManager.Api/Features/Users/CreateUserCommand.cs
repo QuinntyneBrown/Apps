@@ -1,5 +1,5 @@
 using BucketListManager.Core;
-using BucketListManager.Core.Model.UserAggregate;
+using BucketListManager.Core.Models.UserAggregate;
 using BucketListManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

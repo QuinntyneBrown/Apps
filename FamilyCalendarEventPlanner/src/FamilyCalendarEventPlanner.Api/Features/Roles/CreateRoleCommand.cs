@@ -1,5 +1,5 @@
 using FamilyCalendarEventPlanner.Core;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities;
 using FamilyCalendarEventPlanner.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

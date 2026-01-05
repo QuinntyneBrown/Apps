@@ -1,5 +1,5 @@
 using GroceryShoppingListApp.Core;
-using GroceryShoppingListApp.Core.Model.UserAggregate.Entities;
+using GroceryShoppingListApp.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

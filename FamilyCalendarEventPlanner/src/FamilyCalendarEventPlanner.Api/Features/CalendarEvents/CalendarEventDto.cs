@@ -1,5 +1,5 @@
-using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
-using FamilyCalendarEventPlanner.Core.Model.EventAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.EventAggregate;
+using FamilyCalendarEventPlanner.Core.Models.EventAggregate.Enums;
 
 namespace FamilyCalendarEventPlanner.Api.Features.CalendarEvents;
 

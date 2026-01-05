@@ -1,12 +1,12 @@
 using FamilyCalendarEventPlanner.Core;
-using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
-using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
-using FamilyCalendarEventPlanner.Core.Model.EventAggregate;
-using FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate;
-using FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate;
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ConflictAggregate;
+using FamilyCalendarEventPlanner.Core.Models.EventAggregate;
+using FamilyCalendarEventPlanner.Core.Models.FamilyMemberAggregate;
+using FamilyCalendarEventPlanner.Core.Models.HouseholdAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities;
 using FamilyCalendarEventPlanner.Core.Services;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,5 @@
-using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate;
-using FamilyCalendarEventPlanner.Core.Model.ConflictAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.ConflictAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ConflictAggregate.Enums;
 
 namespace FamilyCalendarEventPlanner.Core.Tests;
 

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BookReadingTrackerLibrary.Core.Model.UserAggregate;
-using BookReadingTrackerLibrary.Core.Model.UserAggregate.Entities;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

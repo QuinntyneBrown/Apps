@@ -1,4 +1,4 @@
-using LetterToFutureSelf.Core.Model.UserAggregate.Entities;
+using LetterToFutureSelf.Core.Models.UserAggregate.Entities;
 
 namespace LetterToFutureSelf.Api.Features.Roles;
 

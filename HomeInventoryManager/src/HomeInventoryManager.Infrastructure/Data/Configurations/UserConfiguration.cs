@@ -1,4 +1,4 @@
-using HomeInventoryManager.Core.Model.UserAggregate;
+using HomeInventoryManager.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

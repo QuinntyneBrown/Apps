@@ -5,8 +5,8 @@ using HabitFormationApp.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using HabitFormationApp.Core.Model.UserAggregate;
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 using HabitFormationApp.Core.Services;
 namespace HabitFormationApp.Infrastructure;
 

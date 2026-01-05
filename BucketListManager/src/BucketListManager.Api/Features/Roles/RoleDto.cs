@@ -1,4 +1,4 @@
-using BucketListManager.Core.Model.UserAggregate.Entities;
+using BucketListManager.Core.Models.UserAggregate.Entities;
 
 namespace BucketListManager.Api.Features.Roles;
 

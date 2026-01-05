@@ -1,4 +1,4 @@
-using CarModificationPartsDatabase.Core.Model.UserAggregate;
+using CarModificationPartsDatabase.Core.Models.UserAggregate;
 using CarModificationPartsDatabase.Api.Features.Roles;
 
 namespace CarModificationPartsDatabase.Api.Features.Users;

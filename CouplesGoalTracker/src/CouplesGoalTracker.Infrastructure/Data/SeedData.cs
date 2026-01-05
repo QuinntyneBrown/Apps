@@ -5,8 +5,8 @@ using CouplesGoalTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using CouplesGoalTracker.Core.Model.UserAggregate;
-using CouplesGoalTracker.Core.Model.UserAggregate.Entities;
+using CouplesGoalTracker.Core.Models.UserAggregate;
+using CouplesGoalTracker.Core.Models.UserAggregate.Entities;
 using CouplesGoalTracker.Core.Services;
 namespace CouplesGoalTracker.Infrastructure;
 

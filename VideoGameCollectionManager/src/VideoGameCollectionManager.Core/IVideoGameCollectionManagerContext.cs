@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using VideoGameCollectionManager.Core.Model.UserAggregate;
-using VideoGameCollectionManager.Core.Model.UserAggregate.Entities;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate.Entities;
 namespace VideoGameCollectionManager.Core;
 
 public interface IVideoGameCollectionManagerContext

@@ -1,5 +1,5 @@
-using LetterToFutureSelf.Core.Model.UserAggregate;
-using LetterToFutureSelf.Core.Model.UserAggregate.Entities;
+using LetterToFutureSelf.Core.Models.UserAggregate;
+using LetterToFutureSelf.Core.Models.UserAggregate.Entities;
 
 namespace LetterToFutureSelf.Core.Services;
 

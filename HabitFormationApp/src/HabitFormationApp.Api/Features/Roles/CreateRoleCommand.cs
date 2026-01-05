@@ -1,5 +1,5 @@
 using HabitFormationApp.Core;
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

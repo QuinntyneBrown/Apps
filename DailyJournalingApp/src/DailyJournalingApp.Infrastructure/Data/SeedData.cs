@@ -5,8 +5,8 @@ using DailyJournalingApp.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using DailyJournalingApp.Core.Model.UserAggregate;
-using DailyJournalingApp.Core.Model.UserAggregate.Entities;
+using DailyJournalingApp.Core.Models.UserAggregate;
+using DailyJournalingApp.Core.Models.UserAggregate.Entities;
 using DailyJournalingApp.Core.Services;
 namespace DailyJournalingApp.Infrastructure;
 

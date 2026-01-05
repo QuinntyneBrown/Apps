@@ -4,8 +4,8 @@
 using CampingTripPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 
-using CampingTripPlanner.Core.Model.UserAggregate;
-using CampingTripPlanner.Core.Model.UserAggregate.Entities;
+using CampingTripPlanner.Core.Models.UserAggregate;
+using CampingTripPlanner.Core.Models.UserAggregate.Entities;
 namespace CampingTripPlanner.Infrastructure;
 
 /// <summary>

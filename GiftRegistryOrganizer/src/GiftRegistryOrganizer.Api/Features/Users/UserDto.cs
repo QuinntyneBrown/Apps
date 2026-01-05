@@ -1,4 +1,4 @@
-using GiftRegistryOrganizer.Core.Model.UserAggregate;
+using GiftRegistryOrganizer.Core.Models.UserAggregate;
 using GiftRegistryOrganizer.Api.Features.Roles;
 
 namespace GiftRegistryOrganizer.Api.Features.Users;

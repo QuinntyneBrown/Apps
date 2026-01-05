@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate;
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate.Entities;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate.Entities;
 namespace InjuryPreventionRecoveryTracker.Core;
 
 /// <summary>

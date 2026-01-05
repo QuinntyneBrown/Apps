@@ -5,8 +5,8 @@ using FocusSessionTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FocusSessionTracker.Core.Model.UserAggregate;
-using FocusSessionTracker.Core.Model.UserAggregate.Entities;
+using FocusSessionTracker.Core.Models.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate.Entities;
 using FocusSessionTracker.Core.Services;
 namespace FocusSessionTracker.Infrastructure;
 

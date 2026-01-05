@@ -1,4 +1,4 @@
-using BillPaymentScheduler.Core.Model.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate;
 using BillPaymentScheduler.Api.Features.Roles;
 
 namespace BillPaymentScheduler.Api.Features.Users;

@@ -1,4 +1,4 @@
-using WineCellarInventory.Core.Model.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

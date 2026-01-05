@@ -1,4 +1,4 @@
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 
 namespace HabitFormationApp.Api.Features.Roles;
 

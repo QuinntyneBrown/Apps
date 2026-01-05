@@ -5,8 +5,8 @@ using FriendGroupEventCoordinator.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FriendGroupEventCoordinator.Core.Model.UserAggregate;
-using FriendGroupEventCoordinator.Core.Model.UserAggregate.Entities;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate.Entities;
 using FriendGroupEventCoordinator.Core.Services;
 namespace FriendGroupEventCoordinator.Infrastructure;
 

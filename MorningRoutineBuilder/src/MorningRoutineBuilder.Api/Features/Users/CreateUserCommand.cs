@@ -1,5 +1,5 @@
 using MorningRoutineBuilder.Core;
-using MorningRoutineBuilder.Core.Model.UserAggregate;
+using MorningRoutineBuilder.Core.Models.UserAggregate;
 using MorningRoutineBuilder.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

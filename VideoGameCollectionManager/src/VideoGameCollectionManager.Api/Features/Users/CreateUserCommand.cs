@@ -1,5 +1,5 @@
 using VideoGameCollectionManager.Core;
-using VideoGameCollectionManager.Core.Model.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
 using VideoGameCollectionManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,4 @@
-using ChoreAssignmentTracker.Core.Model.UserAggregate.Entities;
+using ChoreAssignmentTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

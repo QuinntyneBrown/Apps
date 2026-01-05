@@ -1,5 +1,5 @@
 using PersonalLibraryLessonsLearned.Core;
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate;
 using PersonalLibraryLessonsLearned.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

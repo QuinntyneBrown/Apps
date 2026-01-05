@@ -1,5 +1,5 @@
 using MovieTVShowWatchlist.Core;
-using MovieTVShowWatchlist.Core.Model.UserAggregate;
+using MovieTVShowWatchlist.Core.Models.UserAggregate;
 using MovieTVShowWatchlist.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

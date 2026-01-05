@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

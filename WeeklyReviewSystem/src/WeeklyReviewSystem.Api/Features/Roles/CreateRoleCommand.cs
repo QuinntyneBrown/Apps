@@ -1,5 +1,5 @@
 using WeeklyReviewSystem.Core;
-using WeeklyReviewSystem.Core.Model.UserAggregate.Entities;
+using WeeklyReviewSystem.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

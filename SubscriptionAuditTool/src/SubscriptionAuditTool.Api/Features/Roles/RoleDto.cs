@@ -1,4 +1,4 @@
-using SubscriptionAuditTool.Core.Model.UserAggregate.Entities;
+using SubscriptionAuditTool.Core.Models.UserAggregate.Entities;
 
 namespace SubscriptionAuditTool.Api.Features.Roles;
 

@@ -1,5 +1,5 @@
 using CharitableGivingTracker.Core;
-using CharitableGivingTracker.Core.Model.UserAggregate.Entities;
+using CharitableGivingTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

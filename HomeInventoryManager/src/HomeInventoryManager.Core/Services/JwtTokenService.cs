@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using HomeInventoryManager.Core.Model.UserAggregate;
-using HomeInventoryManager.Core.Model.UserAggregate.Entities;
+using HomeInventoryManager.Core.Models.UserAggregate;
+using HomeInventoryManager.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

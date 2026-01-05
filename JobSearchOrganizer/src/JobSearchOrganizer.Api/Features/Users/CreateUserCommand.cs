@@ -1,5 +1,5 @@
 using JobSearchOrganizer.Core;
-using JobSearchOrganizer.Core.Model.UserAggregate;
+using JobSearchOrganizer.Core.Models.UserAggregate;
 using JobSearchOrganizer.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

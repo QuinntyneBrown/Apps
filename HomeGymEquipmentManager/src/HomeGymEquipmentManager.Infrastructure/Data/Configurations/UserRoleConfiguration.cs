@@ -1,4 +1,4 @@
-using HomeGymEquipmentManager.Core.Model.UserAggregate.Entities;
+using HomeGymEquipmentManager.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

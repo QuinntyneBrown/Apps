@@ -1,6 +1,6 @@
 using FamilyCalendarEventPlanner.Core;
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate.Enums;
 using FamilyCalendarEventPlanner.Core.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;

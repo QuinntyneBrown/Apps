@@ -5,8 +5,8 @@ using PersonalWiki.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalWiki.Core.Model.UserAggregate;
-using PersonalWiki.Core.Model.UserAggregate.Entities;
+using PersonalWiki.Core.Models.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate.Entities;
 using PersonalWiki.Core.Services;
 namespace PersonalWiki.Infrastructure;
 

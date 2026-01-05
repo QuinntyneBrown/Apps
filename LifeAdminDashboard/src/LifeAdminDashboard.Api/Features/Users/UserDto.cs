@@ -1,4 +1,4 @@
-using LifeAdminDashboard.Core.Model.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate;
 using LifeAdminDashboard.Api.Features.Roles;
 
 namespace LifeAdminDashboard.Api.Features.Users;

@@ -1,5 +1,5 @@
 using FocusSessionTracker.Core;
-using FocusSessionTracker.Core.Model.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate;
 using FocusSessionTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

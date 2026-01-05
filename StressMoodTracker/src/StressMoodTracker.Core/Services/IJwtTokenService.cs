@@ -1,5 +1,5 @@
-using StressMoodTracker.Core.Model.UserAggregate;
-using StressMoodTracker.Core.Model.UserAggregate.Entities;
+using StressMoodTracker.Core.Models.UserAggregate;
+using StressMoodTracker.Core.Models.UserAggregate.Entities;
 
 namespace StressMoodTracker.Core.Services;
 

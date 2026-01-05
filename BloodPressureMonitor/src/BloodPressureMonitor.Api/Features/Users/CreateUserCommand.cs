@@ -1,5 +1,5 @@
 using BloodPressureMonitor.Core;
-using BloodPressureMonitor.Core.Model.UserAggregate;
+using BloodPressureMonitor.Core.Models.UserAggregate;
 using BloodPressureMonitor.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

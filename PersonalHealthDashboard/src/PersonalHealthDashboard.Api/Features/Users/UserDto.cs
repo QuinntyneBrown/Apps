@@ -1,4 +1,4 @@
-using PersonalHealthDashboard.Core.Model.UserAggregate;
+using PersonalHealthDashboard.Core.Models.UserAggregate;
 using PersonalHealthDashboard.Api.Features.Roles;
 
 namespace PersonalHealthDashboard.Api.Features.Users;

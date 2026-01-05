@@ -1,5 +1,5 @@
-using PersonalBudgetTracker.Core.Model.UserAggregate;
-using PersonalBudgetTracker.Core.Model.UserAggregate.Entities;
+using PersonalBudgetTracker.Core.Models.UserAggregate;
+using PersonalBudgetTracker.Core.Models.UserAggregate.Entities;
 
 namespace PersonalBudgetTracker.Core.Services;
 

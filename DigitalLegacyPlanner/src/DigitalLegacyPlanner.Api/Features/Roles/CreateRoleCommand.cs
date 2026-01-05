@@ -1,5 +1,5 @@
 using DigitalLegacyPlanner.Core;
-using DigitalLegacyPlanner.Core.Model.UserAggregate.Entities;
+using DigitalLegacyPlanner.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

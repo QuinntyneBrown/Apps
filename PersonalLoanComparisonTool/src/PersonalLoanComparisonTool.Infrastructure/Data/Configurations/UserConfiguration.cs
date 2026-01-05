@@ -1,4 +1,4 @@
-using PersonalLoanComparisonTool.Core.Model.UserAggregate;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

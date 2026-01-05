@@ -1,5 +1,5 @@
 using RunningLogRaceTracker.Core;
-using RunningLogRaceTracker.Core.Model.UserAggregate;
+using RunningLogRaceTracker.Core.Models.UserAggregate;
 using RunningLogRaceTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -4,8 +4,8 @@
 using JobSearchOrganizer.Core;
 using Microsoft.EntityFrameworkCore;
 
-using JobSearchOrganizer.Core.Model.UserAggregate;
-using JobSearchOrganizer.Core.Model.UserAggregate.Entities;
+using JobSearchOrganizer.Core.Models.UserAggregate;
+using JobSearchOrganizer.Core.Models.UserAggregate.Entities;
 namespace JobSearchOrganizer.Infrastructure;
 
 /// <summary>
