@@ -1,5 +1,5 @@
 using HomeGymEquipmentManager.Core;
-using HomeGymEquipmentManager.Core.Model.UserAggregate;
+using HomeGymEquipmentManager.Core.Models.UserAggregate;
 using HomeGymEquipmentManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

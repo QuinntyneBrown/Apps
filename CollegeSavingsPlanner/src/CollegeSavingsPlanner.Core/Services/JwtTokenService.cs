@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using CollegeSavingsPlanner.Core.Model.UserAggregate;
-using CollegeSavingsPlanner.Core.Model.UserAggregate.Entities;
+using CollegeSavingsPlanner.Core.Models.UserAggregate;
+using CollegeSavingsPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

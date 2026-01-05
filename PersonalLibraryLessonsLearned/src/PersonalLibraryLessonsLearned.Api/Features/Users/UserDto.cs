@@ -1,4 +1,4 @@
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate;
 using PersonalLibraryLessonsLearned.Api.Features.Roles;
 
 namespace PersonalLibraryLessonsLearned.Api.Features.Users;

@@ -1,4 +1,4 @@
-using ChoreAssignmentTracker.Core.Model.UserAggregate;
+using ChoreAssignmentTracker.Core.Models.UserAggregate;
 using ChoreAssignmentTracker.Api.Features.Roles;
 
 namespace ChoreAssignmentTracker.Api.Features.Users;

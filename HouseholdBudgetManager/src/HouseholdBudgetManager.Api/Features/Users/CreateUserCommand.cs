@@ -1,5 +1,5 @@
 using HouseholdBudgetManager.Core;
-using HouseholdBudgetManager.Core.Model.UserAggregate;
+using HouseholdBudgetManager.Core.Models.UserAggregate;
 using HouseholdBudgetManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

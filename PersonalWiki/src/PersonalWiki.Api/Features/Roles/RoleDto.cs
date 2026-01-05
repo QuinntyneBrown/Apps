@@ -1,4 +1,4 @@
-using PersonalWiki.Core.Model.UserAggregate.Entities;
+using PersonalWiki.Core.Models.UserAggregate.Entities;
 
 namespace PersonalWiki.Api.Features.Roles;
 

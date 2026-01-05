@@ -1,5 +1,5 @@
-using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate;
-using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate;
+using FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate.Enums;
 
 namespace FamilyCalendarEventPlanner.Core.Tests;
 

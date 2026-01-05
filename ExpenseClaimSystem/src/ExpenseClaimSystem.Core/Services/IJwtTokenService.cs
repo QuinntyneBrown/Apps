@@ -1,5 +1,5 @@
-using ExpenseClaimSystem.Core.Model.UserAggregate;
-using ExpenseClaimSystem.Core.Model.UserAggregate.Entities;
+using ExpenseClaimSystem.Core.Models.UserAggregate;
+using ExpenseClaimSystem.Core.Models.UserAggregate.Entities;
 
 namespace ExpenseClaimSystem.Core.Services;
 

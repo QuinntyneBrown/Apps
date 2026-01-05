@@ -1,5 +1,5 @@
 using TaskPriorityMatrix.Core;
-using TaskPriorityMatrix.Core.Model.UserAggregate;
+using TaskPriorityMatrix.Core.Models.UserAggregate;
 using TaskPriorityMatrix.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

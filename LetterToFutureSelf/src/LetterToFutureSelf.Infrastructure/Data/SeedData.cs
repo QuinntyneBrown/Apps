@@ -5,8 +5,8 @@ using LetterToFutureSelf.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using LetterToFutureSelf.Core.Model.UserAggregate;
-using LetterToFutureSelf.Core.Model.UserAggregate.Entities;
+using LetterToFutureSelf.Core.Models.UserAggregate;
+using LetterToFutureSelf.Core.Models.UserAggregate.Entities;
 using LetterToFutureSelf.Core.Services;
 namespace LetterToFutureSelf.Infrastructure;
 

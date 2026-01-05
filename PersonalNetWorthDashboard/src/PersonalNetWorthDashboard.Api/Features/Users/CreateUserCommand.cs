@@ -1,5 +1,5 @@
 using PersonalNetWorthDashboard.Core;
-using PersonalNetWorthDashboard.Core.Model.UserAggregate;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate;
 using PersonalNetWorthDashboard.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

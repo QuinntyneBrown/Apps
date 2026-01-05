@@ -1,4 +1,4 @@
-using BucketListManager.Core.Model.UserAggregate;
+using BucketListManager.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

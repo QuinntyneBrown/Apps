@@ -3,11 +3,11 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using ProfessionalNetworkCRM.Core.Model.UserAggregate;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate;
-using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate;
+using ProfessionalNetworkCRM.Core.Models.ReferralAggregate;
 namespace ProfessionalNetworkCRM.Core;
 
 /// <summary>

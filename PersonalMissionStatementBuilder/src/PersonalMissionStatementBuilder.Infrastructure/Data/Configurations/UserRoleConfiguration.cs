@@ -1,4 +1,4 @@
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate.Entities;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

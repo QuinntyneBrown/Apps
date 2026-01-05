@@ -1,5 +1,5 @@
 using MarriageEnrichmentJournal.Core;
-using MarriageEnrichmentJournal.Core.Model.UserAggregate.Entities;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

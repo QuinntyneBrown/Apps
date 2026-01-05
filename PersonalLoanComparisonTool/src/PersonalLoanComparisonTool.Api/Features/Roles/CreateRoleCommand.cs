@@ -1,5 +1,5 @@
 using PersonalLoanComparisonTool.Core;
-using PersonalLoanComparisonTool.Core.Model.UserAggregate.Entities;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SkillDevelopmentTracker.Core.Model.UserAggregate;
-using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Models.UserAggregate;
+using SkillDevelopmentTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

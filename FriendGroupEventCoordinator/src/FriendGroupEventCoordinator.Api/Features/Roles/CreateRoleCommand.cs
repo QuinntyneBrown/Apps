@@ -1,5 +1,5 @@
 using FriendGroupEventCoordinator.Core;
-using FriendGroupEventCoordinator.Core.Model.UserAggregate.Entities;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

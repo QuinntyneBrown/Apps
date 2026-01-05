@@ -1,4 +1,4 @@
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

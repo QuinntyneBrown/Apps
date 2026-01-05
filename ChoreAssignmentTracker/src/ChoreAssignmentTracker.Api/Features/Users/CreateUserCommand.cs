@@ -1,5 +1,5 @@
 using ChoreAssignmentTracker.Core;
-using ChoreAssignmentTracker.Core.Model.UserAggregate;
+using ChoreAssignmentTracker.Core.Models.UserAggregate;
 using ChoreAssignmentTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

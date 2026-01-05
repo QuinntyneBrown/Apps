@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ContactManagementApp.Core.Model.UserAggregate;
-using ContactManagementApp.Core.Model.UserAggregate.Entities;
+using ContactManagementApp.Core.Models.UserAggregate;
+using ContactManagementApp.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -1,5 +1,5 @@
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate;
-using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate;
+using ProfessionalNetworkCRM.Core.Models.IntroductionAggregate.Enums;
 
 namespace ProfessionalNetworkCRM.Api.Features.Introductions;
 

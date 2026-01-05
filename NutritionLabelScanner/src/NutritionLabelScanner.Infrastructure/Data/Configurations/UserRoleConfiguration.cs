@@ -1,4 +1,4 @@
-using NutritionLabelScanner.Core.Model.UserAggregate.Entities;
+using NutritionLabelScanner.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

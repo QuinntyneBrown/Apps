@@ -1,4 +1,4 @@
-using RunningLogRaceTracker.Core.Model.UserAggregate.Entities;
+using RunningLogRaceTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

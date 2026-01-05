@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using JobSearchOrganizer.Core.Model.UserAggregate;
-using JobSearchOrganizer.Core.Model.UserAggregate.Entities;
+using JobSearchOrganizer.Core.Models.UserAggregate;
+using JobSearchOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

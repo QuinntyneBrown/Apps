@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using FocusSessionTracker.Core.Model.UserAggregate;
-using FocusSessionTracker.Core.Model.UserAggregate.Entities;
+using FocusSessionTracker.Core.Models.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate.Entities;
 namespace FocusSessionTracker.Core;
 
 /// <summary>

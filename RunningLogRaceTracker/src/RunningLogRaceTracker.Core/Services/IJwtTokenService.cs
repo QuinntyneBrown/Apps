@@ -1,5 +1,5 @@
-using RunningLogRaceTracker.Core.Model.UserAggregate;
-using RunningLogRaceTracker.Core.Model.UserAggregate.Entities;
+using RunningLogRaceTracker.Core.Models.UserAggregate;
+using RunningLogRaceTracker.Core.Models.UserAggregate.Entities;
 
 namespace RunningLogRaceTracker.Core.Services;
 

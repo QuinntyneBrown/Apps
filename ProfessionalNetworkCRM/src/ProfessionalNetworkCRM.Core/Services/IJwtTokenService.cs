@@ -1,5 +1,5 @@
-using ProfessionalNetworkCRM.Core.Model.UserAggregate;
-using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate.Entities;
 
 namespace ProfessionalNetworkCRM.Core.Services;
 

@@ -1,4 +1,4 @@
-using DailyJournalingApp.Core.Model.UserAggregate;
+using DailyJournalingApp.Core.Models.UserAggregate;
 using DailyJournalingApp.Api.Features.Roles;
 
 namespace DailyJournalingApp.Api.Features.Users;

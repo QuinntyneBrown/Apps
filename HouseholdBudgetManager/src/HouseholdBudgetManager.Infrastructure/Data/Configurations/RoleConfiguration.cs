@@ -1,4 +1,4 @@
-using HouseholdBudgetManager.Core.Model.UserAggregate.Entities;
+using HouseholdBudgetManager.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

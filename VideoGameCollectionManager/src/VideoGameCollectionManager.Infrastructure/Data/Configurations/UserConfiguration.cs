@@ -1,4 +1,4 @@
-using VideoGameCollectionManager.Core.Model.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

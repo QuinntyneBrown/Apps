@@ -1,5 +1,5 @@
 using MensGroupDiscussionTracker.Core;
-using MensGroupDiscussionTracker.Core.Model.UserAggregate;
+using MensGroupDiscussionTracker.Core.Models.UserAggregate;
 using MensGroupDiscussionTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

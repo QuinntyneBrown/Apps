@@ -1,4 +1,4 @@
-using GiftRegistryOrganizer.Core.Model.UserAggregate;
+using GiftRegistryOrganizer.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

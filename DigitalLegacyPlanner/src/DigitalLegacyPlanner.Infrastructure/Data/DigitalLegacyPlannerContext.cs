@@ -4,8 +4,8 @@
 using DigitalLegacyPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 
-using DigitalLegacyPlanner.Core.Model.UserAggregate;
-using DigitalLegacyPlanner.Core.Model.UserAggregate.Entities;
+using DigitalLegacyPlanner.Core.Models.UserAggregate;
+using DigitalLegacyPlanner.Core.Models.UserAggregate.Entities;
 namespace DigitalLegacyPlanner.Infrastructure;
 
 /// <summary>

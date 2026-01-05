@@ -1,4 +1,4 @@
-using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

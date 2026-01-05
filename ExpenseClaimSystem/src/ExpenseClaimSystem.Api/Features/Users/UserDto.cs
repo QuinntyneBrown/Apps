@@ -1,4 +1,4 @@
-using ExpenseClaimSystem.Core.Model.UserAggregate;
+using ExpenseClaimSystem.Core.Models.UserAggregate;
 using ExpenseClaimSystem.Api.Features.Roles;
 
 namespace ExpenseClaimSystem.Api.Features.Users;

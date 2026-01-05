@@ -1,5 +1,5 @@
-using MovieTVShowWatchlist.Core.Model.UserAggregate;
-using MovieTVShowWatchlist.Core.Model.UserAggregate.Entities;
+using MovieTVShowWatchlist.Core.Models.UserAggregate;
+using MovieTVShowWatchlist.Core.Models.UserAggregate.Entities;
 
 namespace MovieTVShowWatchlist.Core.Services;
 

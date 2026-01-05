@@ -1,5 +1,5 @@
 using DailyJournalingApp.Core;
-using DailyJournalingApp.Core.Model.UserAggregate.Entities;
+using DailyJournalingApp.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

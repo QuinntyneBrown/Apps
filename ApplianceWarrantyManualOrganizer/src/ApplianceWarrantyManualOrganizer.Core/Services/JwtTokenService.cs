@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate;
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate.Entities;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

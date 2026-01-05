@@ -5,8 +5,8 @@ using NeighborhoodSocialNetwork.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate.Entities;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate.Entities;
 using NeighborhoodSocialNetwork.Core.Services;
 namespace NeighborhoodSocialNetwork.Infrastructure;
 

@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AnniversaryBirthdayReminder.Core;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AnniversaryBirthdayReminder.Infrastructure;

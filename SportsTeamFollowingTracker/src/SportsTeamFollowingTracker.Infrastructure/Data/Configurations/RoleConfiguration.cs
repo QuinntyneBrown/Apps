@@ -1,4 +1,4 @@
-using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

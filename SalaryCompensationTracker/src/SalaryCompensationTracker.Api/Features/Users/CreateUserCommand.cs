@@ -1,5 +1,5 @@
 using SalaryCompensationTracker.Core;
-using SalaryCompensationTracker.Core.Model.UserAggregate;
+using SalaryCompensationTracker.Core.Models.UserAggregate;
 using SalaryCompensationTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

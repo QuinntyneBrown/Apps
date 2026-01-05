@@ -1,5 +1,5 @@
 using AnnualHealthScreeningReminder.Core;
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate.Entities;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

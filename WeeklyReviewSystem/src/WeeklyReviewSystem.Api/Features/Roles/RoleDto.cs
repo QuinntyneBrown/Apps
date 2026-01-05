@@ -1,4 +1,4 @@
-using WeeklyReviewSystem.Core.Model.UserAggregate.Entities;
+using WeeklyReviewSystem.Core.Models.UserAggregate.Entities;
 
 namespace WeeklyReviewSystem.Api.Features.Roles;
 

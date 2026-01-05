@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate;
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate.Entities;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

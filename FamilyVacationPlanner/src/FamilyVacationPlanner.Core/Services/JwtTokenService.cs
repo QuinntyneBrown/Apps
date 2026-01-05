@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FamilyVacationPlanner.Core.Model.UserAggregate;
-using FamilyVacationPlanner.Core.Model.UserAggregate.Entities;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

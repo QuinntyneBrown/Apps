@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using StressMoodTracker.Core.Model.UserAggregate;
-using StressMoodTracker.Core.Model.UserAggregate.Entities;
+using StressMoodTracker.Core.Models.UserAggregate;
+using StressMoodTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

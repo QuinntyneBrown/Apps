@@ -1,5 +1,5 @@
 using PersonalBudgetTracker.Core;
-using PersonalBudgetTracker.Core.Model.UserAggregate;
+using PersonalBudgetTracker.Core.Models.UserAggregate;
 using PersonalBudgetTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,4 @@
-using PersonalBudgetTracker.Core.Model.UserAggregate;
+using PersonalBudgetTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

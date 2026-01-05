@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ConversationStarterApp.Core.Model.UserAggregate;
-using ConversationStarterApp.Core.Model.UserAggregate.Entities;
+using ConversationStarterApp.Core.Models.UserAggregate;
+using ConversationStarterApp.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -1,5 +1,5 @@
 using ProfessionalReadingList.Core;
-using ProfessionalReadingList.Core.Model.UserAggregate;
+using ProfessionalReadingList.Core.Models.UserAggregate;
 using ProfessionalReadingList.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

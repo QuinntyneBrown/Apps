@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ProfessionalReadingList.Core;
 
-using ProfessionalReadingList.Core.Model.UserAggregate;
-using ProfessionalReadingList.Core.Model.UserAggregate.Entities;
+using ProfessionalReadingList.Core.Models.UserAggregate;
+using ProfessionalReadingList.Core.Models.UserAggregate.Entities;
 using ProfessionalReadingList.Core.Services;
 namespace ProfessionalReadingList.Infrastructure;
 

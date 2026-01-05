@@ -1,4 +1,4 @@
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

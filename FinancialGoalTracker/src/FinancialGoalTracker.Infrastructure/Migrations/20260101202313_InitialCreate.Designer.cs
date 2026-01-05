@@ -148,7 +148,7 @@ namespace FinancialGoalTracker.Infrastructure.Migrations
                     b.ToTable("Milestones", (string)null);
                 });
 
-            modelBuilder.Entity("FinancialGoalTracker.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("FinancialGoalTracker.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("TEXT");
@@ -169,7 +169,7 @@ namespace FinancialGoalTracker.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("FinancialGoalTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("FinancialGoalTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
@@ -189,7 +189,7 @@ namespace FinancialGoalTracker.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("FinancialGoalTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("FinancialGoalTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
@@ -249,9 +249,9 @@ namespace FinancialGoalTracker.Infrastructure.Migrations
                     b.Navigation("Goal");
                 });
 
-            modelBuilder.Entity("FinancialGoalTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("FinancialGoalTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("FinancialGoalTracker.Core.Model.UserAggregate.User", null)
+                    b.HasOne("FinancialGoalTracker.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -263,7 +263,7 @@ namespace FinancialGoalTracker.Infrastructure.Migrations
                     b.Navigation("Milestones");
                 });
 
-            modelBuilder.Entity("FinancialGoalTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("FinancialGoalTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

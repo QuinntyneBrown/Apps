@@ -1,5 +1,5 @@
 using WeeklyReviewSystem.Core;
-using WeeklyReviewSystem.Core.Model.UserAggregate;
+using WeeklyReviewSystem.Core.Models.UserAggregate;
 using WeeklyReviewSystem.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

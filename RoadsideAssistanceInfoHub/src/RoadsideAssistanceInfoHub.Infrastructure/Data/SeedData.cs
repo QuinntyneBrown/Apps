@@ -5,8 +5,8 @@ using RoadsideAssistanceInfoHub.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate;
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate.Entities;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate.Entities;
 using RoadsideAssistanceInfoHub.Core.Services;
 namespace RoadsideAssistanceInfoHub.Infrastructure;
 

@@ -1,5 +1,5 @@
-using ChoreAssignmentTracker.Core.Model.UserAggregate;
-using ChoreAssignmentTracker.Core.Model.UserAggregate.Entities;
+using ChoreAssignmentTracker.Core.Models.UserAggregate;
+using ChoreAssignmentTracker.Core.Models.UserAggregate.Entities;
 
 namespace ChoreAssignmentTracker.Core.Services;
 

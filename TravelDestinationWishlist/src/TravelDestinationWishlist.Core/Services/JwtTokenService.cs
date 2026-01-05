@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TravelDestinationWishlist.Core.Model.UserAggregate;
-using TravelDestinationWishlist.Core.Model.UserAggregate.Entities;
+using TravelDestinationWishlist.Core.Models.UserAggregate;
+using TravelDestinationWishlist.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

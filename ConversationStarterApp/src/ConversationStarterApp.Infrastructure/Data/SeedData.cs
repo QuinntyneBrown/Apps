@@ -3,8 +3,8 @@
 
 using ConversationStarterApp.Core;
 
-using ConversationStarterApp.Core.Model.UserAggregate;
-using ConversationStarterApp.Core.Model.UserAggregate.Entities;
+using ConversationStarterApp.Core.Models.UserAggregate;
+using ConversationStarterApp.Core.Models.UserAggregate.Entities;
 using ConversationStarterApp.Core.Services;
 namespace ConversationStarterApp.Infrastructure.Data;
 

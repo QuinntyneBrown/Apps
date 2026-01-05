@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SportsTeamFollowingTracker.Core;
 
-using SportsTeamFollowingTracker.Core.Model.UserAggregate;
-using SportsTeamFollowingTracker.Core.Model.UserAggregate.Entities;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate.Entities;
 using SportsTeamFollowingTracker.Core.Services;
 namespace SportsTeamFollowingTracker.Infrastructure;
 

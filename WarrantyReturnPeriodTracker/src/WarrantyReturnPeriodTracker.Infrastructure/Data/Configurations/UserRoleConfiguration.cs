@@ -1,4 +1,4 @@
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate.Entities;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

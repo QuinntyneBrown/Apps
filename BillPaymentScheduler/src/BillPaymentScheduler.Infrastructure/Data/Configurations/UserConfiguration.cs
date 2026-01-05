@@ -1,4 +1,4 @@
-using BillPaymentScheduler.Core.Model.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

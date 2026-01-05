@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SalaryCompensationTracker.Core.Model.UserAggregate;
-using SalaryCompensationTracker.Core.Model.UserAggregate.Entities;
+using SalaryCompensationTracker.Core.Models.UserAggregate;
+using SalaryCompensationTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

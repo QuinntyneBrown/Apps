@@ -1,4 +1,4 @@
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
 using WorkoutPlanBuilder.Api.Features.Roles;
 
 namespace WorkoutPlanBuilder.Api.Features.Users;

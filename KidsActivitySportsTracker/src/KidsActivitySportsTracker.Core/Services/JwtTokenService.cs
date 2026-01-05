@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using KidsActivitySportsTracker.Core.Model.UserAggregate;
-using KidsActivitySportsTracker.Core.Model.UserAggregate.Entities;
+using KidsActivitySportsTracker.Core.Models.UserAggregate;
+using KidsActivitySportsTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

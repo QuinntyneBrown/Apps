@@ -1,5 +1,5 @@
 using FamilyVacationPlanner.Core;
-using FamilyVacationPlanner.Core.Model.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
 using FamilyVacationPlanner.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

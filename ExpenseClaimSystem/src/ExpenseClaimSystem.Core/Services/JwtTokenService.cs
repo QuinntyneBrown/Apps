@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ExpenseClaimSystem.Core.Model.UserAggregate;
-using ExpenseClaimSystem.Core.Model.UserAggregate.Entities;
+using ExpenseClaimSystem.Core.Models.UserAggregate;
+using ExpenseClaimSystem.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -1,4 +1,4 @@
-using BookReadingTrackerLibrary.Core.Model.UserAggregate;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

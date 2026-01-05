@@ -1,5 +1,5 @@
 using FamilyCalendarEventPlanner.Core;
-using FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

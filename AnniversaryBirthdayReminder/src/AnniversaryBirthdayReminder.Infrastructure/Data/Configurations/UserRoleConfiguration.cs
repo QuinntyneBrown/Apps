@@ -1,4 +1,4 @@
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

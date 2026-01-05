@@ -1,4 +1,4 @@
-using GroceryShoppingListApp.Core.Model.UserAggregate;
+using GroceryShoppingListApp.Core.Models.UserAggregate;
 using GroceryShoppingListApp.Api.Features.Roles;
 
 namespace GroceryShoppingListApp.Api.Features.Users;

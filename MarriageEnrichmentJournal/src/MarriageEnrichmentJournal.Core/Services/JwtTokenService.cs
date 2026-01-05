@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using MarriageEnrichmentJournal.Core.Model.UserAggregate;
-using MarriageEnrichmentJournal.Core.Model.UserAggregate.Entities;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

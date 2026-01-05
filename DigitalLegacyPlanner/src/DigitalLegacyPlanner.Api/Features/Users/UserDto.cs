@@ -1,4 +1,4 @@
-using DigitalLegacyPlanner.Core.Model.UserAggregate;
+using DigitalLegacyPlanner.Core.Models.UserAggregate;
 using DigitalLegacyPlanner.Api.Features.Roles;
 
 namespace DigitalLegacyPlanner.Api.Features.Users;

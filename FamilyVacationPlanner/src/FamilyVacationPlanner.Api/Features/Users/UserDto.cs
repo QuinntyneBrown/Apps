@@ -1,4 +1,4 @@
-using FamilyVacationPlanner.Core.Model.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
 using FamilyVacationPlanner.Api.Features.Roles;
 
 namespace FamilyVacationPlanner.Api.Features.Users;

@@ -1,4 +1,4 @@
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate;
 using WarrantyReturnPeriodTracker.Api.Features.Roles;
 
 namespace WarrantyReturnPeriodTracker.Api.Features.Users;

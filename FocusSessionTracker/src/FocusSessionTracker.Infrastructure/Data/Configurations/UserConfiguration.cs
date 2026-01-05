@@ -1,4 +1,4 @@
-using FocusSessionTracker.Core.Model.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

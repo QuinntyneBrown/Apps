@@ -1,5 +1,5 @@
 using HomeInventoryManager.Core;
-using HomeInventoryManager.Core.Model.UserAggregate;
+using HomeInventoryManager.Core.Models.UserAggregate;
 using HomeInventoryManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

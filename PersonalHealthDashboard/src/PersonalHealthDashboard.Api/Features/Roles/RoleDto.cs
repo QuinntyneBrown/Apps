@@ -1,4 +1,4 @@
-using PersonalHealthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalHealthDashboard.Core.Models.UserAggregate.Entities;
 
 namespace PersonalHealthDashboard.Api.Features.Roles;
 

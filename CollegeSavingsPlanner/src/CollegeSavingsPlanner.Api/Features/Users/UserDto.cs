@@ -1,4 +1,4 @@
-using CollegeSavingsPlanner.Core.Model.UserAggregate;
+using CollegeSavingsPlanner.Core.Models.UserAggregate;
 using CollegeSavingsPlanner.Api.Features.Roles;
 
 namespace CollegeSavingsPlanner.Api.Features.Users;

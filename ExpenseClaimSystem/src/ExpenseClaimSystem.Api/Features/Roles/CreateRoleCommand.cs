@@ -1,5 +1,5 @@
 using ExpenseClaimSystem.Core;
-using ExpenseClaimSystem.Core.Model.UserAggregate.Entities;
+using ExpenseClaimSystem.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

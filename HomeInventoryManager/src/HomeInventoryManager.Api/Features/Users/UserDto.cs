@@ -1,4 +1,4 @@
-using HomeInventoryManager.Core.Model.UserAggregate;
+using HomeInventoryManager.Core.Models.UserAggregate;
 using HomeInventoryManager.Api.Features.Roles;
 
 namespace HomeInventoryManager.Api.Features.Users;

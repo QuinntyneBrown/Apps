@@ -1,4 +1,4 @@
-using FriendGroupEventCoordinator.Core.Model.UserAggregate.Entities;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate.Entities;
 
 namespace FriendGroupEventCoordinator.Api.Features.Roles;
 

@@ -1,4 +1,4 @@
-using FriendGroupEventCoordinator.Core.Model.UserAggregate;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate;
 using FriendGroupEventCoordinator.Api.Features.Roles;
 
 namespace FriendGroupEventCoordinator.Api.Features.Users;

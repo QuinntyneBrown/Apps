@@ -1,5 +1,5 @@
-using BloodPressureMonitor.Core.Model.UserAggregate;
-using BloodPressureMonitor.Core.Model.UserAggregate.Entities;
+using BloodPressureMonitor.Core.Models.UserAggregate;
+using BloodPressureMonitor.Core.Models.UserAggregate.Entities;
 
 namespace BloodPressureMonitor.Core.Services;
 

@@ -1,4 +1,4 @@
-using SideHustleIncomeTracker.Core.Model.UserAggregate;
+using SideHustleIncomeTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

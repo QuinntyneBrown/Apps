@@ -1,4 +1,4 @@
-using JobSearchOrganizer.Core.Model.UserAggregate;
+using JobSearchOrganizer.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

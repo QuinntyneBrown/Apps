@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate;
-using PersonalLibraryLessonsLearned.Core.Model.UserAggregate.Entities;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate;
+using PersonalLibraryLessonsLearned.Core.Models.UserAggregate.Entities;
 namespace PersonalLibraryLessonsLearned.Core;
 
 /// <summary>

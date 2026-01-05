@@ -1,4 +1,4 @@
-using FreelanceProjectManager.Core.Model.UserAggregate.Entities;
+using FreelanceProjectManager.Core.Models.UserAggregate.Entities;
 
 namespace FreelanceProjectManager.Api.Features.Roles;
 

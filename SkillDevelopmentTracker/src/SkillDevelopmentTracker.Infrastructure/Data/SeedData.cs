@@ -5,8 +5,8 @@ using SkillDevelopmentTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using SkillDevelopmentTracker.Core.Model.UserAggregate;
-using SkillDevelopmentTracker.Core.Model.UserAggregate.Entities;
+using SkillDevelopmentTracker.Core.Models.UserAggregate;
+using SkillDevelopmentTracker.Core.Models.UserAggregate.Entities;
 using SkillDevelopmentTracker.Core.Services;
 namespace SkillDevelopmentTracker.Infrastructure;
 

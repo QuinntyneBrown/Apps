@@ -5,8 +5,8 @@ using CarModificationPartsDatabase.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using CarModificationPartsDatabase.Core.Model.UserAggregate;
-using CarModificationPartsDatabase.Core.Model.UserAggregate.Entities;
+using CarModificationPartsDatabase.Core.Models.UserAggregate;
+using CarModificationPartsDatabase.Core.Models.UserAggregate.Entities;
 using CarModificationPartsDatabase.Core.Services;
 namespace CarModificationPartsDatabase.Infrastructure;
 

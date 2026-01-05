@@ -1,4 +1,4 @@
-using MorningRoutineBuilder.Core.Model.UserAggregate;
+using MorningRoutineBuilder.Core.Models.UserAggregate;
 using MorningRoutineBuilder.Api.Features.Roles;
 
 namespace MorningRoutineBuilder.Api.Features.Users;

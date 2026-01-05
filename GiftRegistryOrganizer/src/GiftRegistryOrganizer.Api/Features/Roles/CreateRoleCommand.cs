@@ -1,5 +1,5 @@
 using GiftRegistryOrganizer.Core;
-using GiftRegistryOrganizer.Core.Model.UserAggregate.Entities;
+using GiftRegistryOrganizer.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

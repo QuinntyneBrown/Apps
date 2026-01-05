@@ -1,5 +1,5 @@
-using KidsActivitySportsTracker.Core.Model.UserAggregate;
-using KidsActivitySportsTracker.Core.Model.UserAggregate.Entities;
+using KidsActivitySportsTracker.Core.Models.UserAggregate;
+using KidsActivitySportsTracker.Core.Models.UserAggregate.Entities;
 
 namespace KidsActivitySportsTracker.Core.Services;
 

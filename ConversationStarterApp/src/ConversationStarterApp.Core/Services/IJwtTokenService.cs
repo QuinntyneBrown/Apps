@@ -1,5 +1,5 @@
-using ConversationStarterApp.Core.Model.UserAggregate;
-using ConversationStarterApp.Core.Model.UserAggregate.Entities;
+using ConversationStarterApp.Core.Models.UserAggregate;
+using ConversationStarterApp.Core.Models.UserAggregate.Entities;
 
 namespace ConversationStarterApp.Core.Services;
 

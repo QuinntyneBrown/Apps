@@ -1,5 +1,5 @@
 using SportsTeamFollowingTracker.Core;
-using SportsTeamFollowingTracker.Core.Model.UserAggregate;
+using SportsTeamFollowingTracker.Core.Models.UserAggregate;
 using SportsTeamFollowingTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

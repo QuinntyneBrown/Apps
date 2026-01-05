@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FuelEconomyTracker.Core.Model.UserAggregate;
-using FuelEconomyTracker.Core.Model.UserAggregate.Entities;
+using FuelEconomyTracker.Core.Models.UserAggregate;
+using FuelEconomyTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

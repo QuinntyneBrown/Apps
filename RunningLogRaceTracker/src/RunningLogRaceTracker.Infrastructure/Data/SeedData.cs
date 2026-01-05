@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RunningLogRaceTracker.Core;
 
-using RunningLogRaceTracker.Core.Model.UserAggregate;
-using RunningLogRaceTracker.Core.Model.UserAggregate.Entities;
+using RunningLogRaceTracker.Core.Models.UserAggregate;
+using RunningLogRaceTracker.Core.Models.UserAggregate.Entities;
 using RunningLogRaceTracker.Core.Services;
 namespace RunningLogRaceTracker.Infrastructure;
 

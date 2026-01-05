@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate.Entities;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

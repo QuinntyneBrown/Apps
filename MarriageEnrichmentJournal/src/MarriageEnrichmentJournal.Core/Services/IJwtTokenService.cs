@@ -1,5 +1,5 @@
-using MarriageEnrichmentJournal.Core.Model.UserAggregate;
-using MarriageEnrichmentJournal.Core.Model.UserAggregate.Entities;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate.Entities;
 
 namespace MarriageEnrichmentJournal.Core.Services;
 

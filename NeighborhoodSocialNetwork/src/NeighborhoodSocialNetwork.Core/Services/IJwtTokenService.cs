@@ -1,5 +1,5 @@
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate.Entities;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate.Entities;
 
 namespace NeighborhoodSocialNetwork.Core.Services;
 

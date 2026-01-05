@@ -1,5 +1,5 @@
 using TaxDeductionOrganizer.Core;
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
 using TaxDeductionOrganizer.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

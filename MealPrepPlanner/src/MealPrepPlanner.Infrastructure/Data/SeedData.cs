@@ -5,8 +5,8 @@ using MealPrepPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using MealPrepPlanner.Core.Model.UserAggregate;
-using MealPrepPlanner.Core.Model.UserAggregate.Entities;
+using MealPrepPlanner.Core.Models.UserAggregate;
+using MealPrepPlanner.Core.Models.UserAggregate.Entities;
 using MealPrepPlanner.Core.Services;
 namespace MealPrepPlanner.Infrastructure;
 

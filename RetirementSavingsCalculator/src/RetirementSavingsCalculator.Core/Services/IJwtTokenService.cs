@@ -1,5 +1,5 @@
-using RetirementSavingsCalculator.Core.Model.UserAggregate;
-using RetirementSavingsCalculator.Core.Model.UserAggregate.Entities;
+using RetirementSavingsCalculator.Core.Models.UserAggregate;
+using RetirementSavingsCalculator.Core.Models.UserAggregate.Entities;
 
 namespace RetirementSavingsCalculator.Core.Services;
 

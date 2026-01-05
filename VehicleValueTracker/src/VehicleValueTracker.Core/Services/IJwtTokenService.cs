@@ -1,5 +1,5 @@
-using VehicleValueTracker.Core.Model.UserAggregate;
-using VehicleValueTracker.Core.Model.UserAggregate.Entities;
+using VehicleValueTracker.Core.Models.UserAggregate;
+using VehicleValueTracker.Core.Models.UserAggregate.Entities;
 
 namespace VehicleValueTracker.Core.Services;
 

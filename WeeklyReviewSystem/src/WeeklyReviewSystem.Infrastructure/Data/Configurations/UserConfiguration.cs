@@ -1,4 +1,4 @@
-using WeeklyReviewSystem.Core.Model.UserAggregate;
+using WeeklyReviewSystem.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

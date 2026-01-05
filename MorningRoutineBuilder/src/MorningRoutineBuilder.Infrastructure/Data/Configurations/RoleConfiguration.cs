@@ -1,4 +1,4 @@
-using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

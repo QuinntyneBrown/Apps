@@ -1,5 +1,5 @@
 using InjuryPreventionRecoveryTracker.Core;
-using InjuryPreventionRecoveryTracker.Core.Model.UserAggregate.Entities;
+using InjuryPreventionRecoveryTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

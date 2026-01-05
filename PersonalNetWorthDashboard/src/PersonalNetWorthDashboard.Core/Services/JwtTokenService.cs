@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PersonalNetWorthDashboard.Core.Model.UserAggregate;
-using PersonalNetWorthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

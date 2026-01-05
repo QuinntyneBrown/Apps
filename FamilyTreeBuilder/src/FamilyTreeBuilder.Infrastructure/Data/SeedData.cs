@@ -5,8 +5,8 @@ using FamilyTreeBuilder.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FamilyTreeBuilder.Core.Model.UserAggregate;
-using FamilyTreeBuilder.Core.Model.UserAggregate.Entities;
+using FamilyTreeBuilder.Core.Models.UserAggregate;
+using FamilyTreeBuilder.Core.Models.UserAggregate.Entities;
 using FamilyTreeBuilder.Core.Services;
 namespace FamilyTreeBuilder.Infrastructure;
 

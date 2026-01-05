@@ -4,8 +4,8 @@
 using AnnualHealthScreeningReminder.Core;
 using Microsoft.EntityFrameworkCore;
 
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate;
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate.Entities;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate.Entities;
 namespace AnnualHealthScreeningReminder.Infrastructure;
 
 /// <summary>

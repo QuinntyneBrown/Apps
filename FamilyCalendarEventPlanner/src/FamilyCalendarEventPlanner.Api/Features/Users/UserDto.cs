@@ -1,4 +1,4 @@
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate;
 using FamilyCalendarEventPlanner.Api.Features.Roles;
 
 namespace FamilyCalendarEventPlanner.Api.Features.Users;

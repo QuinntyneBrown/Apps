@@ -1,5 +1,5 @@
 using ContactManagementApp.Core;
-using ContactManagementApp.Core.Model.UserAggregate.Entities;
+using ContactManagementApp.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

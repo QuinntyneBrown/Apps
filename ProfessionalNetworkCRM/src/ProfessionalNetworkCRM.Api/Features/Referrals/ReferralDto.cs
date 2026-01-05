@@ -1,4 +1,4 @@
-using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
+using ProfessionalNetworkCRM.Core.Models.ReferralAggregate;
 
 namespace ProfessionalNetworkCRM.Api.Features.Referrals;
 

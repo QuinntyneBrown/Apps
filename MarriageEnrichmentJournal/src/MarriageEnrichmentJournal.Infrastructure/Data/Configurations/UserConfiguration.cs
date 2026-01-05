@@ -1,4 +1,4 @@
-using MarriageEnrichmentJournal.Core.Model.UserAggregate;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

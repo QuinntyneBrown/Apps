@@ -1,4 +1,4 @@
-using PhotographySessionLogger.Core.Model.UserAggregate.Entities;
+using PhotographySessionLogger.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,5 +1,5 @@
 using RoadsideAssistanceInfoHub.Core;
-using RoadsideAssistanceInfoHub.Core.Model.UserAggregate;
+using RoadsideAssistanceInfoHub.Core.Models.UserAggregate;
 using RoadsideAssistanceInfoHub.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

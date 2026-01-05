@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PersonalBudgetTracker.Core.Model.UserAggregate;
-using PersonalBudgetTracker.Core.Model.UserAggregate.Entities;
+using PersonalBudgetTracker.Core.Models.UserAggregate;
+using PersonalBudgetTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

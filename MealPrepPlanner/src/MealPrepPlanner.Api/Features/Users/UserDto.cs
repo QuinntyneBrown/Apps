@@ -1,4 +1,4 @@
-using MealPrepPlanner.Core.Model.UserAggregate;
+using MealPrepPlanner.Core.Models.UserAggregate;
 using MealPrepPlanner.Api.Features.Roles;
 
 namespace MealPrepPlanner.Api.Features.Users;

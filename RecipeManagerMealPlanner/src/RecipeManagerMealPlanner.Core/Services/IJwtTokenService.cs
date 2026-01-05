@@ -1,5 +1,5 @@
-using RecipeManagerMealPlanner.Core.Model.UserAggregate;
-using RecipeManagerMealPlanner.Core.Model.UserAggregate.Entities;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate.Entities;
 
 namespace RecipeManagerMealPlanner.Core.Services;
 

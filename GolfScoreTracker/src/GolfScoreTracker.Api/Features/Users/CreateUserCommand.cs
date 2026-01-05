@@ -1,5 +1,5 @@
 using GolfScoreTracker.Core;
-using GolfScoreTracker.Core.Model.UserAggregate;
+using GolfScoreTracker.Core.Models.UserAggregate;
 using GolfScoreTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

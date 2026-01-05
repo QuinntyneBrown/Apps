@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate;
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate.Entities;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate.Entities;
 namespace PersonalMissionStatementBuilder.Core;
 
 /// <summary>

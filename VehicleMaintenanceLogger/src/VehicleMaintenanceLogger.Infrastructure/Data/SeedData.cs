@@ -5,8 +5,8 @@ using VehicleMaintenanceLogger.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using VehicleMaintenanceLogger.Core.Model.UserAggregate;
-using VehicleMaintenanceLogger.Core.Model.UserAggregate.Entities;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate.Entities;
 using VehicleMaintenanceLogger.Core.Services;
 namespace VehicleMaintenanceLogger.Infrastructure;
 

@@ -1,4 +1,4 @@
-using BloodPressureMonitor.Core.Model.UserAggregate.Entities;
+using BloodPressureMonitor.Core.Models.UserAggregate.Entities;
 
 namespace BloodPressureMonitor.Api.Features.Roles;
 

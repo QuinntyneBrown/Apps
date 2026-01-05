@@ -1,5 +1,5 @@
 using WarrantyReturnPeriodTracker.Core;
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate;
 using WarrantyReturnPeriodTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

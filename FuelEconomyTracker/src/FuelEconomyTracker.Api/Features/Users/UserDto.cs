@@ -1,4 +1,4 @@
-using FuelEconomyTracker.Core.Model.UserAggregate;
+using FuelEconomyTracker.Core.Models.UserAggregate;
 using FuelEconomyTracker.Api.Features.Roles;
 
 namespace FuelEconomyTracker.Api.Features.Users;

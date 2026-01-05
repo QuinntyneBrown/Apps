@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using VehicleMaintenanceLogger.Core.Model.UserAggregate;
-using VehicleMaintenanceLogger.Core.Model.UserAggregate.Entities;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -1,5 +1,5 @@
 using CollegeSavingsPlanner.Core;
-using CollegeSavingsPlanner.Core.Model.UserAggregate;
+using CollegeSavingsPlanner.Core.Models.UserAggregate;
 using CollegeSavingsPlanner.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

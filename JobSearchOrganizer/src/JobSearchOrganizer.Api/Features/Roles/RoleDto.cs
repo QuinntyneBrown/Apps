@@ -1,4 +1,4 @@
-using JobSearchOrganizer.Core.Model.UserAggregate.Entities;
+using JobSearchOrganizer.Core.Models.UserAggregate.Entities;
 
 namespace JobSearchOrganizer.Api.Features.Roles;
 

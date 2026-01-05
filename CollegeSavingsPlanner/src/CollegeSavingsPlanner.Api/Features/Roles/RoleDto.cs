@@ -1,4 +1,4 @@
-using CollegeSavingsPlanner.Core.Model.UserAggregate.Entities;
+using CollegeSavingsPlanner.Core.Models.UserAggregate.Entities;
 
 namespace CollegeSavingsPlanner.Api.Features.Roles;
 

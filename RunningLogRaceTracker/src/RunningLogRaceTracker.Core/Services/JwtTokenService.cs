@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using RunningLogRaceTracker.Core.Model.UserAggregate;
-using RunningLogRaceTracker.Core.Model.UserAggregate.Entities;
+using RunningLogRaceTracker.Core.Models.UserAggregate;
+using RunningLogRaceTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

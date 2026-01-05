@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate;
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate.Entities;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate.Entities;
 namespace MeetingNotesActionItemTracker.Core;
 
 /// <summary>

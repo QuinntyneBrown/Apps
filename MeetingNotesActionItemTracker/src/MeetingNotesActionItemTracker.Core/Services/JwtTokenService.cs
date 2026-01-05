@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate;
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate.Entities;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

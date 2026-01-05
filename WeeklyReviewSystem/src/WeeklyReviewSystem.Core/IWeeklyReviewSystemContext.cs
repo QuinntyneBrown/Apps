@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using WeeklyReviewSystem.Core.Model.UserAggregate;
-using WeeklyReviewSystem.Core.Model.UserAggregate.Entities;
+using WeeklyReviewSystem.Core.Models.UserAggregate;
+using WeeklyReviewSystem.Core.Models.UserAggregate.Entities;
 namespace WeeklyReviewSystem.Core;
 
 /// <summary>

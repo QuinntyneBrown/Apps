@@ -5,8 +5,8 @@ using MorningRoutineBuilder.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using MorningRoutineBuilder.Core.Model.UserAggregate;
-using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Models.UserAggregate;
+using MorningRoutineBuilder.Core.Models.UserAggregate.Entities;
 using MorningRoutineBuilder.Core.Services;
 namespace MorningRoutineBuilder.Infrastructure;
 

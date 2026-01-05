@@ -1,4 +1,4 @@
-using DateNightIdeaGenerator.Core.Model.UserAggregate;
+using DateNightIdeaGenerator.Core.Models.UserAggregate;
 using DateNightIdeaGenerator.Api.Features.Roles;
 
 namespace DateNightIdeaGenerator.Api.Features.Users;

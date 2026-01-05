@@ -1,5 +1,5 @@
 using AnniversaryBirthdayReminder.Core;
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate;
 using AnniversaryBirthdayReminder.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

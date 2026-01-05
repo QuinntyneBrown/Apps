@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FinancialGoalTracker.Core.Model.UserAggregate;
-using FinancialGoalTracker.Core.Model.UserAggregate.Entities;
+using FinancialGoalTracker.Core.Models.UserAggregate;
+using FinancialGoalTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

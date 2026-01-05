@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using FinancialGoalTracker.Core.Model.UserAggregate;
-using FinancialGoalTracker.Core.Model.UserAggregate.Entities;
+using FinancialGoalTracker.Core.Models.UserAggregate;
+using FinancialGoalTracker.Core.Models.UserAggregate.Entities;
 namespace FinancialGoalTracker.Core;
 
 /// <summary>

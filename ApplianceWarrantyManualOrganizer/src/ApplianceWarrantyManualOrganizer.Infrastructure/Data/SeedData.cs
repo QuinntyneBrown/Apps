@@ -5,8 +5,8 @@ using ApplianceWarrantyManualOrganizer.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate;
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate.Entities;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate.Entities;
 using ApplianceWarrantyManualOrganizer.Core.Services;
 namespace ApplianceWarrantyManualOrganizer.Infrastructure;
 

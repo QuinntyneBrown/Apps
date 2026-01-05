@@ -1,5 +1,5 @@
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.Enums;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate.Enums;
 
 namespace FamilyCalendarEventPlanner.Core.Tests;
 

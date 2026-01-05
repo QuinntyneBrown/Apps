@@ -5,8 +5,8 @@ using RecipeManagerMealPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using RecipeManagerMealPlanner.Core.Model.UserAggregate;
-using RecipeManagerMealPlanner.Core.Model.UserAggregate.Entities;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate.Entities;
 using RecipeManagerMealPlanner.Core.Services;
 namespace RecipeManagerMealPlanner.Infrastructure;
 

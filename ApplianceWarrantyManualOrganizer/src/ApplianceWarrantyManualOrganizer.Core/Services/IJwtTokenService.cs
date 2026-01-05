@@ -1,5 +1,5 @@
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate;
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate.Entities;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate.Entities;
 
 namespace ApplianceWarrantyManualOrganizer.Core.Services;
 

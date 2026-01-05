@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using VehicleValueTracker.Core.Model.UserAggregate;
-using VehicleValueTracker.Core.Model.UserAggregate.Entities;
+using VehicleValueTracker.Core.Models.UserAggregate;
+using VehicleValueTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

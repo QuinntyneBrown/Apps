@@ -5,8 +5,8 @@ using TimeAuditTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using TimeAuditTracker.Core.Model.UserAggregate;
-using TimeAuditTracker.Core.Model.UserAggregate.Entities;
+using TimeAuditTracker.Core.Models.UserAggregate;
+using TimeAuditTracker.Core.Models.UserAggregate.Entities;
 using TimeAuditTracker.Core.Services;
 namespace TimeAuditTracker.Infrastructure;
 

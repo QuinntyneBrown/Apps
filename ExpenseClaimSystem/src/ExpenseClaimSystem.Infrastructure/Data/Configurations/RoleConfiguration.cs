@@ -1,4 +1,4 @@
-using ExpenseClaimSystem.Core.Model.UserAggregate.Entities;
+using ExpenseClaimSystem.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

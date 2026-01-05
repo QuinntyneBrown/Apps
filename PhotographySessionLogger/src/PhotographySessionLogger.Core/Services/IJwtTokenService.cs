@@ -1,5 +1,5 @@
-using PhotographySessionLogger.Core.Model.UserAggregate;
-using PhotographySessionLogger.Core.Model.UserAggregate.Entities;
+using PhotographySessionLogger.Core.Models.UserAggregate;
+using PhotographySessionLogger.Core.Models.UserAggregate.Entities;
 
 namespace PhotographySessionLogger.Core.Services;
 

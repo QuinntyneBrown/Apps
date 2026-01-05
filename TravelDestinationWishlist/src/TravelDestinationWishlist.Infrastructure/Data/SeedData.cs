@@ -5,8 +5,8 @@ using TravelDestinationWishlist.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using TravelDestinationWishlist.Core.Model.UserAggregate;
-using TravelDestinationWishlist.Core.Model.UserAggregate.Entities;
+using TravelDestinationWishlist.Core.Models.UserAggregate;
+using TravelDestinationWishlist.Core.Models.UserAggregate.Entities;
 using TravelDestinationWishlist.Core.Services;
 namespace TravelDestinationWishlist.Infrastructure;
 

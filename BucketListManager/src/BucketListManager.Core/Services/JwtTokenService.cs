@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BucketListManager.Core.Model.UserAggregate;
-using BucketListManager.Core.Model.UserAggregate.Entities;
+using BucketListManager.Core.Models.UserAggregate;
+using BucketListManager.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

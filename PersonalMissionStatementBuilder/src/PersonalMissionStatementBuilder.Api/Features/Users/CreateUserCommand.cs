@@ -1,5 +1,5 @@
 using PersonalMissionStatementBuilder.Core;
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate;
 using PersonalMissionStatementBuilder.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

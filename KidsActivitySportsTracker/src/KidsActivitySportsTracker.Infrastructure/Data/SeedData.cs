@@ -5,8 +5,8 @@ using KidsActivitySportsTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using KidsActivitySportsTracker.Core.Model.UserAggregate;
-using KidsActivitySportsTracker.Core.Model.UserAggregate.Entities;
+using KidsActivitySportsTracker.Core.Models.UserAggregate;
+using KidsActivitySportsTracker.Core.Models.UserAggregate.Entities;
 using KidsActivitySportsTracker.Core.Services;
 namespace KidsActivitySportsTracker.Infrastructure;
 

@@ -1,4 +1,4 @@
-using PersonalWiki.Core.Model.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate;
 using PersonalWiki.Api.Features.Roles;
 
 namespace PersonalWiki.Api.Features.Users;

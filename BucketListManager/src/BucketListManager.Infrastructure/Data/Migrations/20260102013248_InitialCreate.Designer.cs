@@ -171,7 +171,7 @@ namespace BucketListManager.Infrastructure.Data.Migrations
                     b.ToTable("Milestones", (string)null);
                 });
 
-            modelBuilder.Entity("BucketListManager.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("BucketListManager.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -192,7 +192,7 @@ namespace BucketListManager.Infrastructure.Data.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("BucketListManager.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("BucketListManager.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -212,7 +212,7 @@ namespace BucketListManager.Infrastructure.Data.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("BucketListManager.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("BucketListManager.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -272,9 +272,9 @@ namespace BucketListManager.Infrastructure.Data.Migrations
                     b.Navigation("BucketListItem");
                 });
 
-            modelBuilder.Entity("BucketListManager.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("BucketListManager.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("BucketListManager.Core.Model.UserAggregate.User", null)
+                    b.HasOne("BucketListManager.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -288,7 +288,7 @@ namespace BucketListManager.Infrastructure.Data.Migrations
                     b.Navigation("Milestones");
                 });
 
-            modelBuilder.Entity("BucketListManager.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("BucketListManager.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

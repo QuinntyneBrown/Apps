@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using CollegeSavingsPlanner.Core.Model.UserAggregate;
-using CollegeSavingsPlanner.Core.Model.UserAggregate.Entities;
+using CollegeSavingsPlanner.Core.Models.UserAggregate;
+using CollegeSavingsPlanner.Core.Models.UserAggregate.Entities;
 namespace CollegeSavingsPlanner.Core;
 
 /// <summary>

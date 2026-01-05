@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ChoreAssignmentTracker.Core.Model.UserAggregate;
-using ChoreAssignmentTracker.Core.Model.UserAggregate.Entities;
+using ChoreAssignmentTracker.Core.Models.UserAggregate;
+using ChoreAssignmentTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

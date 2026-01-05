@@ -4,8 +4,8 @@
 using SideHustleIncomeTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using SideHustleIncomeTracker.Core.Model.UserAggregate;
-using SideHustleIncomeTracker.Core.Model.UserAggregate.Entities;
+using SideHustleIncomeTracker.Core.Models.UserAggregate;
+using SideHustleIncomeTracker.Core.Models.UserAggregate.Entities;
 namespace SideHustleIncomeTracker.Infrastructure;
 
 /// <summary>

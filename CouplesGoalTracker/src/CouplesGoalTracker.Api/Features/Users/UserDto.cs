@@ -1,4 +1,4 @@
-using CouplesGoalTracker.Core.Model.UserAggregate;
+using CouplesGoalTracker.Core.Models.UserAggregate;
 using CouplesGoalTracker.Api.Features.Roles;
 
 namespace CouplesGoalTracker.Api.Features.Users;

@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using LifeAdminDashboard.Core.Model.UserAggregate;
-using LifeAdminDashboard.Core.Model.UserAggregate.Entities;
+using LifeAdminDashboard.Core.Models.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

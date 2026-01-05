@@ -1,4 +1,4 @@
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate.Entities;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate.Entities;
 
 namespace FamilyPhotoAlbumOrganizer.Api.Features.Roles;
 

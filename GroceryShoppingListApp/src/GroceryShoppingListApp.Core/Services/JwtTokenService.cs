@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GroceryShoppingListApp.Core.Model.UserAggregate;
-using GroceryShoppingListApp.Core.Model.UserAggregate.Entities;
+using GroceryShoppingListApp.Core.Models.UserAggregate;
+using GroceryShoppingListApp.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

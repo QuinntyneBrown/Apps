@@ -5,8 +5,8 @@ using BBQGrillingRecipeBook.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using BBQGrillingRecipeBook.Core.Model.UserAggregate;
-using BBQGrillingRecipeBook.Core.Model.UserAggregate.Entities;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate.Entities;
 using BBQGrillingRecipeBook.Core.Services;
 namespace BBQGrillingRecipeBook.Infrastructure;
 

@@ -1,4 +1,4 @@
-using DateNightIdeaGenerator.Core.Model.UserAggregate;
+using DateNightIdeaGenerator.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

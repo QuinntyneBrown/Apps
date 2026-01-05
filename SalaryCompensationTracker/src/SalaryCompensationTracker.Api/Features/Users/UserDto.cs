@@ -1,4 +1,4 @@
-using SalaryCompensationTracker.Core.Model.UserAggregate;
+using SalaryCompensationTracker.Core.Models.UserAggregate;
 using SalaryCompensationTracker.Api.Features.Roles;
 
 namespace SalaryCompensationTracker.Api.Features.Users;

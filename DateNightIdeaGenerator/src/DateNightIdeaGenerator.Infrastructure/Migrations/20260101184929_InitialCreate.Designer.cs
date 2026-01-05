@@ -144,7 +144,7 @@ namespace DateNightIdeaGenerator.Infrastructure.Migrations
                     b.ToTable("Experiences", (string)null);
                 });
 
-            modelBuilder.Entity("DateNightIdeaGenerator.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("DateNightIdeaGenerator.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -165,7 +165,7 @@ namespace DateNightIdeaGenerator.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("DateNightIdeaGenerator.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("DateNightIdeaGenerator.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -185,7 +185,7 @@ namespace DateNightIdeaGenerator.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("DateNightIdeaGenerator.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("DateNightIdeaGenerator.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -288,9 +288,9 @@ namespace DateNightIdeaGenerator.Infrastructure.Migrations
                     b.Navigation("DateIdea");
                 });
 
-            modelBuilder.Entity("DateNightIdeaGenerator.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("DateNightIdeaGenerator.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("DateNightIdeaGenerator.Core.Model.UserAggregate.User", null)
+                    b.HasOne("DateNightIdeaGenerator.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -334,7 +334,7 @@ namespace DateNightIdeaGenerator.Infrastructure.Migrations
                     b.Navigation("Ratings");
                 });
 
-            modelBuilder.Entity("DateNightIdeaGenerator.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("DateNightIdeaGenerator.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

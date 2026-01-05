@@ -1,4 +1,4 @@
-using PersonalMissionStatementBuilder.Core.Model.UserAggregate;
+using PersonalMissionStatementBuilder.Core.Models.UserAggregate;
 using PersonalMissionStatementBuilder.Api.Features.Roles;
 
 namespace PersonalMissionStatementBuilder.Api.Features.Users;

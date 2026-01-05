@@ -1,4 +1,4 @@
-using HouseholdBudgetManager.Core.Model.UserAggregate;
+using HouseholdBudgetManager.Core.Models.UserAggregate;
 using HouseholdBudgetManager.Api.Features.Roles;
 
 namespace HouseholdBudgetManager.Api.Features.Users;

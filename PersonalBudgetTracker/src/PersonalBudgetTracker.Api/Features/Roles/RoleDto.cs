@@ -1,4 +1,4 @@
-using PersonalBudgetTracker.Core.Model.UserAggregate.Entities;
+using PersonalBudgetTracker.Core.Models.UserAggregate.Entities;
 
 namespace PersonalBudgetTracker.Api.Features.Roles;
 

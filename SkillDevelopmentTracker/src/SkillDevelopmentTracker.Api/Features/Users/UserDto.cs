@@ -1,4 +1,4 @@
-using SkillDevelopmentTracker.Core.Model.UserAggregate;
+using SkillDevelopmentTracker.Core.Models.UserAggregate;
 using SkillDevelopmentTracker.Api.Features.Roles;
 
 namespace SkillDevelopmentTracker.Api.Features.Users;

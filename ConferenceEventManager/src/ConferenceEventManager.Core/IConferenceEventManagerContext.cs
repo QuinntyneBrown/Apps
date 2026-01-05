@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using ConferenceEventManager.Core.Model.UserAggregate;
-using ConferenceEventManager.Core.Model.UserAggregate.Entities;
+using ConferenceEventManager.Core.Models.UserAggregate;
+using ConferenceEventManager.Core.Models.UserAggregate.Entities;
 namespace ConferenceEventManager.Core;
 
 /// <summary>

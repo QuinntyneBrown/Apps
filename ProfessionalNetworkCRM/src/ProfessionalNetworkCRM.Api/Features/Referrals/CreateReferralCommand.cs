@@ -1,5 +1,5 @@
 using ProfessionalNetworkCRM.Core;
-using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
+using ProfessionalNetworkCRM.Core.Models.ReferralAggregate;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

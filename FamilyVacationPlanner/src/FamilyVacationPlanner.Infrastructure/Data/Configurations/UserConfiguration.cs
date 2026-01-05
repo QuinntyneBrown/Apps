@@ -1,4 +1,4 @@
-using FamilyVacationPlanner.Core.Model.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

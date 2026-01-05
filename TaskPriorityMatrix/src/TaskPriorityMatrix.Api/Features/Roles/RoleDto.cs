@@ -1,4 +1,4 @@
-using TaskPriorityMatrix.Core.Model.UserAggregate.Entities;
+using TaskPriorityMatrix.Core.Models.UserAggregate.Entities;
 
 namespace TaskPriorityMatrix.Api.Features.Roles;
 

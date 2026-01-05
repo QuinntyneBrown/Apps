@@ -1,5 +1,5 @@
 using PersonalProjectPipeline.Core;
-using PersonalProjectPipeline.Core.Model.UserAggregate;
+using PersonalProjectPipeline.Core.Models.UserAggregate;
 using PersonalProjectPipeline.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

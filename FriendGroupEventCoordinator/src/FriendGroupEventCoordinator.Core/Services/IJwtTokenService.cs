@@ -1,5 +1,5 @@
-using FriendGroupEventCoordinator.Core.Model.UserAggregate;
-using FriendGroupEventCoordinator.Core.Model.UserAggregate.Entities;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate;
+using FriendGroupEventCoordinator.Core.Models.UserAggregate.Entities;
 
 namespace FriendGroupEventCoordinator.Core.Services;
 

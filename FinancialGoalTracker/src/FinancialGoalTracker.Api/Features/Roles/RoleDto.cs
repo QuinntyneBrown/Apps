@@ -1,4 +1,4 @@
-using FinancialGoalTracker.Core.Model.UserAggregate.Entities;
+using FinancialGoalTracker.Core.Models.UserAggregate.Entities;
 
 namespace FinancialGoalTracker.Api.Features.Roles;
 

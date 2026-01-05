@@ -1,5 +1,5 @@
 using NeighborhoodSocialNetwork.Core;
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
 using NeighborhoodSocialNetwork.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

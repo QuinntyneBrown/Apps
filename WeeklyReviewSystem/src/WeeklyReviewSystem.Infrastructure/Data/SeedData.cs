@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WeeklyReviewSystem.Core;
 
-using WeeklyReviewSystem.Core.Model.UserAggregate;
-using WeeklyReviewSystem.Core.Model.UserAggregate.Entities;
+using WeeklyReviewSystem.Core.Models.UserAggregate;
+using WeeklyReviewSystem.Core.Models.UserAggregate.Entities;
 using WeeklyReviewSystem.Core.Services;
 namespace WeeklyReviewSystem.Infrastructure;
 

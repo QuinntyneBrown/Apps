@@ -1,4 +1,4 @@
-using VideoGameCollectionManager.Core.Model.UserAggregate;
+using VideoGameCollectionManager.Core.Models.UserAggregate;
 using VideoGameCollectionManager.Api.Features.Roles;
 
 namespace VideoGameCollectionManager.Api.Features.Users;

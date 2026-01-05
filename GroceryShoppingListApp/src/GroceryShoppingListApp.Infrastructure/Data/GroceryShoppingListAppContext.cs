@@ -5,8 +5,8 @@ using GroceryShoppingListApp.Core;
 using GroceryShoppingListApp.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
-using GroceryShoppingListApp.Core.Model.UserAggregate;
-using GroceryShoppingListApp.Core.Model.UserAggregate.Entities;
+using GroceryShoppingListApp.Core.Models.UserAggregate;
+using GroceryShoppingListApp.Core.Models.UserAggregate.Entities;
 namespace GroceryShoppingListApp.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using SubscriptionAuditTool.Core.Model.UserAggregate;
+using SubscriptionAuditTool.Core.Models.UserAggregate;
 using SubscriptionAuditTool.Api.Features.Roles;
 
 namespace SubscriptionAuditTool.Api.Features.Users;

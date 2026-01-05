@@ -1,5 +1,5 @@
 using ProfessionalNetworkCRM.Api.Features.Opportunities;
-using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate.Enums;
+using ProfessionalNetworkCRM.Core.Models.OpportunityAggregate.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

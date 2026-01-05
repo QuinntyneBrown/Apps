@@ -1,4 +1,4 @@
-using CouplesGoalTracker.Core.Model.UserAggregate.Entities;
+using CouplesGoalTracker.Core.Models.UserAggregate.Entities;
 
 namespace CouplesGoalTracker.Api.Features.Roles;
 

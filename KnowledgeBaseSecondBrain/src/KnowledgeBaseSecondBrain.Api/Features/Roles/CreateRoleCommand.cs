@@ -1,5 +1,5 @@
 using KnowledgeBaseSecondBrain.Core;
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate.Entities;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

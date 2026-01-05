@@ -1,5 +1,5 @@
 using CarModificationPartsDatabase.Core;
-using CarModificationPartsDatabase.Core.Model.UserAggregate.Entities;
+using CarModificationPartsDatabase.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

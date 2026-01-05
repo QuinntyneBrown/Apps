@@ -5,8 +5,8 @@ using TaxDeductionOrganizer.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
-using TaxDeductionOrganizer.Core.Model.UserAggregate.Entities;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate.Entities;
 using TaxDeductionOrganizer.Core.Services;
 namespace TaxDeductionOrganizer.Infrastructure;
 

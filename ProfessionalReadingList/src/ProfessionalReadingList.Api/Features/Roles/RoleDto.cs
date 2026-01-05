@@ -1,4 +1,4 @@
-using ProfessionalReadingList.Core.Model.UserAggregate.Entities;
+using ProfessionalReadingList.Core.Models.UserAggregate.Entities;
 
 namespace ProfessionalReadingList.Api.Features.Roles;
 

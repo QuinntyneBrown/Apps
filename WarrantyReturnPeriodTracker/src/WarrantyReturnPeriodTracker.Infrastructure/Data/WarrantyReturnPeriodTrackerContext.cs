@@ -4,8 +4,8 @@
 using WarrantyReturnPeriodTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate.Entities;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate.Entities;
 namespace WarrantyReturnPeriodTracker.Infrastructure;
 
 /// <summary>

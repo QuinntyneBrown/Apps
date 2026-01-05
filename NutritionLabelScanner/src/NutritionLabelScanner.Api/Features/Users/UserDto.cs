@@ -1,4 +1,4 @@
-using NutritionLabelScanner.Core.Model.UserAggregate;
+using NutritionLabelScanner.Core.Models.UserAggregate;
 using NutritionLabelScanner.Api.Features.Roles;
 
 namespace NutritionLabelScanner.Api.Features.Users;

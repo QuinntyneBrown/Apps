@@ -5,8 +5,8 @@ using LifeAdminDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using LifeAdminDashboard.Core.Model.UserAggregate;
-using LifeAdminDashboard.Core.Model.UserAggregate.Entities;
+using LifeAdminDashboard.Core.Models.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate.Entities;
 using LifeAdminDashboard.Core.Services;
 namespace LifeAdminDashboard.Infrastructure;
 

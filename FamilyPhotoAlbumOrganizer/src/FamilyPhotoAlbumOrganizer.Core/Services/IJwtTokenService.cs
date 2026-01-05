@@ -1,5 +1,5 @@
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate;
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate.Entities;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate.Entities;
 
 namespace FamilyPhotoAlbumOrganizer.Core.Services;
 

@@ -1,5 +1,5 @@
 using VehicleValueTracker.Core;
-using VehicleValueTracker.Core.Model.UserAggregate;
+using VehicleValueTracker.Core.Models.UserAggregate;
 using VehicleValueTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

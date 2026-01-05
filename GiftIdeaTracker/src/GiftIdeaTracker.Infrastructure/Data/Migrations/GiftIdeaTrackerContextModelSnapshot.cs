@@ -67,7 +67,7 @@ namespace GiftIdeaTracker.Infrastructure.Data.Migrations
                     b.ToTable("GiftIdeas", (string)null);
                 });
 
-            modelBuilder.Entity("GiftIdeaTracker.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("GiftIdeaTracker.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -88,7 +88,7 @@ namespace GiftIdeaTracker.Infrastructure.Data.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("GiftIdeaTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("GiftIdeaTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -108,7 +108,7 @@ namespace GiftIdeaTracker.Infrastructure.Data.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("GiftIdeaTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("GiftIdeaTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -222,16 +222,16 @@ namespace GiftIdeaTracker.Infrastructure.Data.Migrations
                     b.Navigation("Recipient");
                 });
 
-            modelBuilder.Entity("GiftIdeaTracker.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("GiftIdeaTracker.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("GiftIdeaTracker.Core.Model.UserAggregate.User", null)
+                    b.HasOne("GiftIdeaTracker.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GiftIdeaTracker.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("GiftIdeaTracker.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

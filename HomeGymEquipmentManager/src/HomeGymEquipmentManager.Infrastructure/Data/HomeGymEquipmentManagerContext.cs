@@ -4,8 +4,8 @@
 using HomeGymEquipmentManager.Core;
 using Microsoft.EntityFrameworkCore;
 
-using HomeGymEquipmentManager.Core.Model.UserAggregate;
-using HomeGymEquipmentManager.Core.Model.UserAggregate.Entities;
+using HomeGymEquipmentManager.Core.Models.UserAggregate;
+using HomeGymEquipmentManager.Core.Models.UserAggregate.Entities;
 namespace HomeGymEquipmentManager.Infrastructure;
 
 /// <summary>

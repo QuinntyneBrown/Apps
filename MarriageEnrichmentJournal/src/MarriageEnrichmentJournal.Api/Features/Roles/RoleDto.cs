@@ -1,4 +1,4 @@
-using MarriageEnrichmentJournal.Core.Model.UserAggregate.Entities;
+using MarriageEnrichmentJournal.Core.Models.UserAggregate.Entities;
 
 namespace MarriageEnrichmentJournal.Api.Features.Roles;
 

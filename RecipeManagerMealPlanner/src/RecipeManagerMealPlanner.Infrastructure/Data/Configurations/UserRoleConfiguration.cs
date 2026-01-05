@@ -1,4 +1,4 @@
-using RecipeManagerMealPlanner.Core.Model.UserAggregate.Entities;
+using RecipeManagerMealPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

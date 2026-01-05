@@ -5,8 +5,8 @@ using BookReadingTrackerLibrary.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using BookReadingTrackerLibrary.Core.Model.UserAggregate;
-using BookReadingTrackerLibrary.Core.Model.UserAggregate.Entities;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate;
+using BookReadingTrackerLibrary.Core.Models.UserAggregate.Entities;
 using BookReadingTrackerLibrary.Core.Services;
 namespace BookReadingTrackerLibrary.Infrastructure;
 

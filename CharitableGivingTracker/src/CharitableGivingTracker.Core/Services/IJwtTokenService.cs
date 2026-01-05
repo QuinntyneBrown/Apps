@@ -1,5 +1,5 @@
-using CharitableGivingTracker.Core.Model.UserAggregate;
-using CharitableGivingTracker.Core.Model.UserAggregate.Entities;
+using CharitableGivingTracker.Core.Models.UserAggregate;
+using CharitableGivingTracker.Core.Models.UserAggregate.Entities;
 
 namespace CharitableGivingTracker.Core.Services;
 

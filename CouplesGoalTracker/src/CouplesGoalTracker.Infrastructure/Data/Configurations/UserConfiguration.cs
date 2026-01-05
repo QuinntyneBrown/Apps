@@ -1,4 +1,4 @@
-using CouplesGoalTracker.Core.Model.UserAggregate;
+using CouplesGoalTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

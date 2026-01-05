@@ -1,4 +1,4 @@
-using PersonalWiki.Core.Model.UserAggregate;
+using PersonalWiki.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

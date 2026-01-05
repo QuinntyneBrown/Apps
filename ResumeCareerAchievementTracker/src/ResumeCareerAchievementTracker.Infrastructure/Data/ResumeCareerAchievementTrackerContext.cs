@@ -4,8 +4,8 @@
 using ResumeCareerAchievementTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate;
-using ResumeCareerAchievementTracker.Core.Model.UserAggregate.Entities;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate;
+using ResumeCareerAchievementTracker.Core.Models.UserAggregate.Entities;
 namespace ResumeCareerAchievementTracker.Infrastructure;
 
 /// <summary>

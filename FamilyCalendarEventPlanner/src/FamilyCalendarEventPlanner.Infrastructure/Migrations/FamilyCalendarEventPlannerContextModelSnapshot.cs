@@ -22,7 +22,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.AttendeeAggregate.EventAttendee", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.AttendeeAggregate.EventAttendee", b =>
                 {
                     b.Property<Guid>("AttendeeId")
                         .HasColumnType("uniqueidentifier");
@@ -59,7 +59,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("EventAttendees");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.ConflictAggregate.ScheduleConflict", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.ConflictAggregate.ScheduleConflict", b =>
                 {
                     b.Property<Guid>("ConflictId")
                         .HasColumnType("uniqueidentifier");
@@ -91,7 +91,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("ScheduleConflicts");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.EventAggregate.CalendarEvent", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.EventAggregate.CalendarEvent", b =>
                 {
                     b.Property<Guid>("EventId")
                         .HasColumnType("uniqueidentifier");
@@ -145,7 +145,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("CalendarEvents");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.AvailabilityBlock", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.FamilyMemberAggregate.AvailabilityBlock", b =>
                 {
                     b.Property<Guid>("BlockId")
                         .HasColumnType("uniqueidentifier");
@@ -181,7 +181,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("AvailabilityBlocks");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.FamilyMemberAggregate.FamilyMember", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.FamilyMemberAggregate.FamilyMember", b =>
                 {
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
@@ -233,7 +233,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("FamilyMembers");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.HouseholdAggregate.Household", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.HouseholdAggregate.Household", b =>
                 {
                     b.Property<Guid>("HouseholdId")
                         .ValueGeneratedOnAdd()
@@ -266,7 +266,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("Households");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.ReminderAggregate.EventReminder", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.ReminderAggregate.EventReminder", b =>
                 {
                     b.Property<Guid>("ReminderId")
                         .HasColumnType("uniqueidentifier");
@@ -302,7 +302,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("EventReminders");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.Role", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -323,7 +323,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -343,7 +343,7 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.UserAggregate.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -381,9 +381,9 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.EventAggregate.CalendarEvent", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.EventAggregate.CalendarEvent", b =>
                 {
-                    b.OwnsOne("FamilyCalendarEventPlanner.Core.Model.EventAggregate.RecurrencePattern", "RecurrencePattern", b1 =>
+                    b.OwnsOne("FamilyCalendarEventPlanner.Core.Models.EventAggregate.RecurrencePattern", "RecurrencePattern", b1 =>
                         {
                             b1.Property<Guid>("CalendarEventEventId")
                                 .HasColumnType("uniqueidentifier");
@@ -413,16 +413,16 @@ namespace FamilyCalendarEventPlanner.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities.UserRole", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities.UserRole", b =>
                 {
-                    b.HasOne("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", null)
+                    b.HasOne("FamilyCalendarEventPlanner.Core.Models.UserAggregate.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Model.UserAggregate.User", b =>
+            modelBuilder.Entity("FamilyCalendarEventPlanner.Core.Models.UserAggregate.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

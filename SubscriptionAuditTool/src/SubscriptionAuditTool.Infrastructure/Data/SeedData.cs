@@ -5,8 +5,8 @@ using SubscriptionAuditTool.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using SubscriptionAuditTool.Core.Model.UserAggregate;
-using SubscriptionAuditTool.Core.Model.UserAggregate.Entities;
+using SubscriptionAuditTool.Core.Models.UserAggregate;
+using SubscriptionAuditTool.Core.Models.UserAggregate.Entities;
 using SubscriptionAuditTool.Core.Services;
 namespace SubscriptionAuditTool.Infrastructure;
 

@@ -1,6 +1,6 @@
 using ContactManagementApp.Core;
-using ContactManagementApp.Core.Model.UserAggregate;
-using ContactManagementApp.Core.Model.UserAggregate.Entities;
+using ContactManagementApp.Core.Models.UserAggregate;
+using ContactManagementApp.Core.Models.UserAggregate.Entities;
 using ContactManagementApp.Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,5 @@
 using HydrationTracker.Core;
-using HydrationTracker.Core.Model.UserAggregate.Entities;
+using HydrationTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

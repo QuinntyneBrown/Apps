@@ -1,4 +1,4 @@
-using BloodPressureMonitor.Core.Model.UserAggregate;
+using BloodPressureMonitor.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

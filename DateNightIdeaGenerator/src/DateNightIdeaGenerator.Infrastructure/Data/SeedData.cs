@@ -5,8 +5,8 @@ using DateNightIdeaGenerator.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using DateNightIdeaGenerator.Core.Model.UserAggregate;
-using DateNightIdeaGenerator.Core.Model.UserAggregate.Entities;
+using DateNightIdeaGenerator.Core.Models.UserAggregate;
+using DateNightIdeaGenerator.Core.Models.UserAggregate.Entities;
 using DateNightIdeaGenerator.Core.Services;
 namespace DateNightIdeaGenerator.Infrastructure;
 

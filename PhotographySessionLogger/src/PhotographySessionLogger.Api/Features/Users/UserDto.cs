@@ -1,4 +1,4 @@
-using PhotographySessionLogger.Core.Model.UserAggregate;
+using PhotographySessionLogger.Core.Models.UserAggregate;
 using PhotographySessionLogger.Api.Features.Roles;
 
 namespace PhotographySessionLogger.Api.Features.Users;

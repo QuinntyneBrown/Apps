@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using BBQGrillingRecipeBook.Core.Model.UserAggregate;
-using BBQGrillingRecipeBook.Core.Model.UserAggregate.Entities;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate.Entities;
 namespace BBQGrillingRecipeBook.Core;
 
 /// <summary>

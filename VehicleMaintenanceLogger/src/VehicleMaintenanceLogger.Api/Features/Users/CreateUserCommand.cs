@@ -1,5 +1,5 @@
 using VehicleMaintenanceLogger.Core;
-using VehicleMaintenanceLogger.Core.Model.UserAggregate;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate;
 using VehicleMaintenanceLogger.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

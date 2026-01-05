@@ -1,4 +1,4 @@
-using VehicleMaintenanceLogger.Core.Model.UserAggregate.Entities;
+using VehicleMaintenanceLogger.Core.Models.UserAggregate.Entities;
 
 namespace VehicleMaintenanceLogger.Api.Features.Roles;
 

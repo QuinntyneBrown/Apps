@@ -5,8 +5,8 @@ using BloodPressureMonitor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using BloodPressureMonitor.Core.Model.UserAggregate;
-using BloodPressureMonitor.Core.Model.UserAggregate.Entities;
+using BloodPressureMonitor.Core.Models.UserAggregate;
+using BloodPressureMonitor.Core.Models.UserAggregate.Entities;
 using BloodPressureMonitor.Core.Services;
 namespace BloodPressureMonitor.Infrastructure;
 

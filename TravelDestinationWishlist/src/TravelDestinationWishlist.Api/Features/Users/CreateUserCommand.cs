@@ -1,5 +1,5 @@
 using TravelDestinationWishlist.Core;
-using TravelDestinationWishlist.Core.Model.UserAggregate;
+using TravelDestinationWishlist.Core.Models.UserAggregate;
 using TravelDestinationWishlist.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

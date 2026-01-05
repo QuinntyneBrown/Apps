@@ -5,8 +5,8 @@ using WarrantyReturnPeriodTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate.Entities;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate.Entities;
 using WarrantyReturnPeriodTracker.Core.Services;
 namespace WarrantyReturnPeriodTracker.Infrastructure;
 

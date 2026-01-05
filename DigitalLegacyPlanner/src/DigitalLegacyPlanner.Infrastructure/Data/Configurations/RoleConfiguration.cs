@@ -1,4 +1,4 @@
-using DigitalLegacyPlanner.Core.Model.UserAggregate.Entities;
+using DigitalLegacyPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

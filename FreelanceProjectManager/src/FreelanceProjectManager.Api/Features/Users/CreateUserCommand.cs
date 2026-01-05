@@ -1,5 +1,5 @@
 using FreelanceProjectManager.Core;
-using FreelanceProjectManager.Core.Model.UserAggregate;
+using FreelanceProjectManager.Core.Models.UserAggregate;
 using FreelanceProjectManager.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,4 @@
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate.Entities;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate.Entities;
 
 namespace AnnualHealthScreeningReminder.Api.Features.Roles;
 

@@ -1,5 +1,5 @@
 using SubscriptionAuditTool.Core;
-using SubscriptionAuditTool.Core.Model.UserAggregate.Entities;
+using SubscriptionAuditTool.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

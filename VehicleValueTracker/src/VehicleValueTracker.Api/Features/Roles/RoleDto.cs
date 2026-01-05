@@ -1,4 +1,4 @@
-using VehicleValueTracker.Core.Model.UserAggregate.Entities;
+using VehicleValueTracker.Core.Models.UserAggregate.Entities;
 
 namespace VehicleValueTracker.Api.Features.Roles;
 

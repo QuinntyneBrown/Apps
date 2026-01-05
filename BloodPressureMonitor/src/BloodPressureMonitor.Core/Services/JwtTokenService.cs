@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BloodPressureMonitor.Core.Model.UserAggregate;
-using BloodPressureMonitor.Core.Model.UserAggregate.Entities;
+using BloodPressureMonitor.Core.Models.UserAggregate;
+using BloodPressureMonitor.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

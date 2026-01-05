@@ -1,4 +1,4 @@
-using ApplianceWarrantyManualOrganizer.Core.Model.UserAggregate;
+using ApplianceWarrantyManualOrganizer.Core.Models.UserAggregate;
 using ApplianceWarrantyManualOrganizer.Api.Features.Roles;
 
 namespace ApplianceWarrantyManualOrganizer.Api.Features.Users;

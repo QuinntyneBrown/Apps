@@ -1,4 +1,4 @@
-using ContactManagementApp.Core.Model.UserAggregate.Entities;
+using ContactManagementApp.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

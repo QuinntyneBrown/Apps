@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate;
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate.Entities;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

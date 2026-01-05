@@ -1,5 +1,5 @@
 using InvestmentPortfolioTracker.Core;
-using InvestmentPortfolioTracker.Core.Model.UserAggregate;
+using InvestmentPortfolioTracker.Core.Models.UserAggregate;
 using InvestmentPortfolioTracker.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

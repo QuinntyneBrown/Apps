@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using CharitableGivingTracker.Core.Model.UserAggregate;
-using CharitableGivingTracker.Core.Model.UserAggregate.Entities;
+using CharitableGivingTracker.Core.Models.UserAggregate;
+using CharitableGivingTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

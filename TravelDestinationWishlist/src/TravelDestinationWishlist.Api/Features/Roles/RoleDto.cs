@@ -1,4 +1,4 @@
-using TravelDestinationWishlist.Core.Model.UserAggregate.Entities;
+using TravelDestinationWishlist.Core.Models.UserAggregate.Entities;
 
 namespace TravelDestinationWishlist.Api.Features.Roles;
 

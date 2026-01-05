@@ -1,4 +1,4 @@
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
 using TaxDeductionOrganizer.Api.Features.Roles;
 
 namespace TaxDeductionOrganizer.Api.Features.Users;

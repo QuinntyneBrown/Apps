@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PersonalLoanComparisonTool.Core.Model.UserAggregate;
-using PersonalLoanComparisonTool.Core.Model.UserAggregate.Entities;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

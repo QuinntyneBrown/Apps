@@ -4,8 +4,8 @@
 using PersonalHealthDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 
-using PersonalHealthDashboard.Core.Model.UserAggregate;
-using PersonalHealthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalHealthDashboard.Core.Models.UserAggregate;
+using PersonalHealthDashboard.Core.Models.UserAggregate.Entities;
 namespace PersonalHealthDashboard.Infrastructure;
 
 /// <summary>

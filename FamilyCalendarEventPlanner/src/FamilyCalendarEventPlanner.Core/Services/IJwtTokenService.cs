@@ -1,5 +1,5 @@
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate;
-using FamilyCalendarEventPlanner.Core.Model.UserAggregate.Entities;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate;
+using FamilyCalendarEventPlanner.Core.Models.UserAggregate.Entities;
 
 namespace FamilyCalendarEventPlanner.Core.Services;
 

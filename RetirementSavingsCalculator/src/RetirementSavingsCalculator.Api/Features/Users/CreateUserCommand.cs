@@ -1,5 +1,5 @@
 using RetirementSavingsCalculator.Core;
-using RetirementSavingsCalculator.Core.Model.UserAggregate;
+using RetirementSavingsCalculator.Core.Models.UserAggregate;
 using RetirementSavingsCalculator.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

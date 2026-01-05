@@ -1,4 +1,4 @@
-using CharitableGivingTracker.Core.Model.UserAggregate;
+using CharitableGivingTracker.Core.Models.UserAggregate;
 using CharitableGivingTracker.Api.Features.Roles;
 
 namespace CharitableGivingTracker.Api.Features.Users;

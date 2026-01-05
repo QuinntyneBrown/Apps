@@ -1,5 +1,5 @@
 using KidsActivitySportsTracker.Core;
-using KidsActivitySportsTracker.Core.Model.UserAggregate.Entities;
+using KidsActivitySportsTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

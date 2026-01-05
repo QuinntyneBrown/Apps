@@ -1,4 +1,4 @@
-using FocusSessionTracker.Core.Model.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate;
 using FocusSessionTracker.Api.Features.Roles;
 
 namespace FocusSessionTracker.Api.Features.Users;

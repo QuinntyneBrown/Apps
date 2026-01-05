@@ -1,4 +1,4 @@
-using SalaryCompensationTracker.Core.Model.UserAggregate;
+using SalaryCompensationTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

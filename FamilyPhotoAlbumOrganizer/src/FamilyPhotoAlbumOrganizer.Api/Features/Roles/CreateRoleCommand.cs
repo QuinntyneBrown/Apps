@@ -1,5 +1,5 @@
 using FamilyPhotoAlbumOrganizer.Core;
-using FamilyPhotoAlbumOrganizer.Core.Model.UserAggregate.Entities;
+using FamilyPhotoAlbumOrganizer.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

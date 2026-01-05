@@ -4,8 +4,8 @@
 using FreelanceProjectManager.Core;
 using Microsoft.EntityFrameworkCore;
 
-using FreelanceProjectManager.Core.Model.UserAggregate;
-using FreelanceProjectManager.Core.Model.UserAggregate.Entities;
+using FreelanceProjectManager.Core.Models.UserAggregate;
+using FreelanceProjectManager.Core.Models.UserAggregate.Entities;
 namespace FreelanceProjectManager.Infrastructure;
 
 /// <summary>

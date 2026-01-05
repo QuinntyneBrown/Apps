@@ -1,5 +1,5 @@
 using MeetingNotesActionItemTracker.Core;
-using MeetingNotesActionItemTracker.Core.Model.UserAggregate.Entities;
+using MeetingNotesActionItemTracker.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

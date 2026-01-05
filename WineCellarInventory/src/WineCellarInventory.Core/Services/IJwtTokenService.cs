@@ -1,5 +1,5 @@
-using WineCellarInventory.Core.Model.UserAggregate;
-using WineCellarInventory.Core.Model.UserAggregate.Entities;
+using WineCellarInventory.Core.Models.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate.Entities;
 
 namespace WineCellarInventory.Core.Services;
 

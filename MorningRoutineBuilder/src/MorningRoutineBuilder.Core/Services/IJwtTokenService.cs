@@ -1,5 +1,5 @@
-using MorningRoutineBuilder.Core.Model.UserAggregate;
-using MorningRoutineBuilder.Core.Model.UserAggregate.Entities;
+using MorningRoutineBuilder.Core.Models.UserAggregate;
+using MorningRoutineBuilder.Core.Models.UserAggregate.Entities;
 
 namespace MorningRoutineBuilder.Core.Services;
 

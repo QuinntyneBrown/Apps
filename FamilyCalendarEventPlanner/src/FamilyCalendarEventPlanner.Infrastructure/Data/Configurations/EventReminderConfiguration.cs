@@ -1,4 +1,4 @@
-using FamilyCalendarEventPlanner.Core.Model.ReminderAggregate;
+using FamilyCalendarEventPlanner.Core.Models.ReminderAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

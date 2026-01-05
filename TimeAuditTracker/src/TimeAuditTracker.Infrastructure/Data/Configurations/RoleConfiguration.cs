@@ -1,4 +1,4 @@
-using TimeAuditTracker.Core.Model.UserAggregate.Entities;
+using TimeAuditTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

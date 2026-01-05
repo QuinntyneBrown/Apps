@@ -1,4 +1,4 @@
-using MovieTVShowWatchlist.Core.Model.UserAggregate;
+using MovieTVShowWatchlist.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

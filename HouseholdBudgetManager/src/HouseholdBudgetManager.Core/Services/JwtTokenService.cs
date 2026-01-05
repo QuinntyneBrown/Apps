@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using HouseholdBudgetManager.Core.Model.UserAggregate;
-using HouseholdBudgetManager.Core.Model.UserAggregate.Entities;
+using HouseholdBudgetManager.Core.Models.UserAggregate;
+using HouseholdBudgetManager.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

@@ -4,8 +4,8 @@
 using HydrationTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
-using HydrationTracker.Core.Model.UserAggregate;
-using HydrationTracker.Core.Model.UserAggregate.Entities;
+using HydrationTracker.Core.Models.UserAggregate;
+using HydrationTracker.Core.Models.UserAggregate.Entities;
 namespace HydrationTracker.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using CampingTripPlanner.Core.Model.UserAggregate;
+using CampingTripPlanner.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

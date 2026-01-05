@@ -1,4 +1,4 @@
-using BBQGrillingRecipeBook.Core.Model.UserAggregate;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,4 +1,4 @@
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate;
 using KnowledgeBaseSecondBrain.Api.Features.Roles;
 
 namespace KnowledgeBaseSecondBrain.Api.Features.Users;

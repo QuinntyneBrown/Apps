@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using RetirementSavingsCalculator.Core.Model.UserAggregate;
-using RetirementSavingsCalculator.Core.Model.UserAggregate.Entities;
+using RetirementSavingsCalculator.Core.Models.UserAggregate;
+using RetirementSavingsCalculator.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

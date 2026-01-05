@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using CampingTripPlanner.Core.Model.UserAggregate;
-using CampingTripPlanner.Core.Model.UserAggregate.Entities;
+using CampingTripPlanner.Core.Models.UserAggregate;
+using CampingTripPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

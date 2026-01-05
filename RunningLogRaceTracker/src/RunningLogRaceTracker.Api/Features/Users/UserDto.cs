@@ -1,4 +1,4 @@
-using RunningLogRaceTracker.Core.Model.UserAggregate;
+using RunningLogRaceTracker.Core.Models.UserAggregate;
 using RunningLogRaceTracker.Api.Features.Roles;
 
 namespace RunningLogRaceTracker.Api.Features.Users;

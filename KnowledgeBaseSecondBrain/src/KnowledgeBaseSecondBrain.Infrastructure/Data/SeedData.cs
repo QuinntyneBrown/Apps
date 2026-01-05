@@ -5,8 +5,8 @@ using KnowledgeBaseSecondBrain.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate;
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate.Entities;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate.Entities;
 using KnowledgeBaseSecondBrain.Core.Services;
 namespace KnowledgeBaseSecondBrain.Infrastructure;
 

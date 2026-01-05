@@ -1,4 +1,4 @@
-using InvestmentPortfolioTracker.Core.Model.UserAggregate.Entities;
+using InvestmentPortfolioTracker.Core.Models.UserAggregate.Entities;
 
 namespace InvestmentPortfolioTracker.Api.Features.Roles;
 

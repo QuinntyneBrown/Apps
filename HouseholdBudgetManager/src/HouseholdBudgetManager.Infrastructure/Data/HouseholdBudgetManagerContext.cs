@@ -4,8 +4,8 @@
 using HouseholdBudgetManager.Core;
 using Microsoft.EntityFrameworkCore;
 
-using HouseholdBudgetManager.Core.Model.UserAggregate;
-using HouseholdBudgetManager.Core.Model.UserAggregate.Entities;
+using HouseholdBudgetManager.Core.Models.UserAggregate;
+using HouseholdBudgetManager.Core.Models.UserAggregate.Entities;
 namespace HouseholdBudgetManager.Infrastructure;
 
 /// <summary>

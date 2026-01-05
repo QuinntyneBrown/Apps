@@ -1,4 +1,4 @@
-using RetirementSavingsCalculator.Core.Model.UserAggregate;
+using RetirementSavingsCalculator.Core.Models.UserAggregate;
 using RetirementSavingsCalculator.Api.Features.Roles;
 
 namespace RetirementSavingsCalculator.Api.Features.Users;

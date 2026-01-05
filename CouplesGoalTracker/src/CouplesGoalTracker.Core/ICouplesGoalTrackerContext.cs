@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using CouplesGoalTracker.Core.Model.UserAggregate;
-using CouplesGoalTracker.Core.Model.UserAggregate.Entities;
+using CouplesGoalTracker.Core.Models.UserAggregate;
+using CouplesGoalTracker.Core.Models.UserAggregate.Entities;
 namespace CouplesGoalTracker.Core;
 
 /// <summary>

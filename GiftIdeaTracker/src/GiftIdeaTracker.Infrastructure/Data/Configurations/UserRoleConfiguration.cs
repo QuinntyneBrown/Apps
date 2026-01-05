@@ -1,4 +1,4 @@
-using GiftIdeaTracker.Core.Model.UserAggregate.Entities;
+using GiftIdeaTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

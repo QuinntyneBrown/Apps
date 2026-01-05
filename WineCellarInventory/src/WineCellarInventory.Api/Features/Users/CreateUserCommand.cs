@@ -1,5 +1,5 @@
 using WineCellarInventory.Core;
-using WineCellarInventory.Core.Model.UserAggregate;
+using WineCellarInventory.Core.Models.UserAggregate;
 using WineCellarInventory.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

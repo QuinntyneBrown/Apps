@@ -5,8 +5,8 @@ using RetirementSavingsCalculator.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using RetirementSavingsCalculator.Core.Model.UserAggregate;
-using RetirementSavingsCalculator.Core.Model.UserAggregate.Entities;
+using RetirementSavingsCalculator.Core.Models.UserAggregate;
+using RetirementSavingsCalculator.Core.Models.UserAggregate.Entities;
 using RetirementSavingsCalculator.Core.Services;
 namespace RetirementSavingsCalculator.Infrastructure;
 

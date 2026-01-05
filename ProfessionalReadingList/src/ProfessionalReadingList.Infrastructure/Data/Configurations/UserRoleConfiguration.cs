@@ -1,4 +1,4 @@
-using ProfessionalReadingList.Core.Model.UserAggregate.Entities;
+using ProfessionalReadingList.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

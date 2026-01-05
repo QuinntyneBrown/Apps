@@ -1,5 +1,5 @@
 using BillPaymentScheduler.Core;
-using BillPaymentScheduler.Core.Model.UserAggregate;
+using BillPaymentScheduler.Core.Models.UserAggregate;
 using BillPaymentScheduler.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

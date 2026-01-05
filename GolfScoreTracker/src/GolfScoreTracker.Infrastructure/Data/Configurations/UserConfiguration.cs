@@ -1,4 +1,4 @@
-using GolfScoreTracker.Core.Model.UserAggregate;
+using GolfScoreTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

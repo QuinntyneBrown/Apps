@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using NutritionLabelScanner.Core.Model.UserAggregate;
-using NutritionLabelScanner.Core.Model.UserAggregate.Entities;
+using NutritionLabelScanner.Core.Models.UserAggregate;
+using NutritionLabelScanner.Core.Models.UserAggregate.Entities;
 namespace NutritionLabelScanner.Core;
 
 /// <summary>

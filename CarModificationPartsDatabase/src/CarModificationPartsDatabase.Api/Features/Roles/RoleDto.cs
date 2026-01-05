@@ -1,4 +1,4 @@
-using CarModificationPartsDatabase.Core.Model.UserAggregate.Entities;
+using CarModificationPartsDatabase.Core.Models.UserAggregate.Entities;
 
 namespace CarModificationPartsDatabase.Api.Features.Roles;
 

@@ -1,4 +1,4 @@
-using PersonalProjectPipeline.Core.Model.UserAggregate;
+using PersonalProjectPipeline.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

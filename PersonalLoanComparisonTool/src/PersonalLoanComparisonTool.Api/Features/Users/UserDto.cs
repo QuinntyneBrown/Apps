@@ -1,4 +1,4 @@
-using PersonalLoanComparisonTool.Core.Model.UserAggregate;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate;
 using PersonalLoanComparisonTool.Api.Features.Roles;
 
 namespace PersonalLoanComparisonTool.Api.Features.Users;

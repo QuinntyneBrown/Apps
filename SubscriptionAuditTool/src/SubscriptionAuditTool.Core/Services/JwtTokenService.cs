@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SubscriptionAuditTool.Core.Model.UserAggregate;
-using SubscriptionAuditTool.Core.Model.UserAggregate.Entities;
+using SubscriptionAuditTool.Core.Models.UserAggregate;
+using SubscriptionAuditTool.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

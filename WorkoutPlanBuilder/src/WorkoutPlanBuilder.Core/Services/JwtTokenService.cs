@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using WorkoutPlanBuilder.Core.Model.UserAggregate;
-using WorkoutPlanBuilder.Core.Model.UserAggregate.Entities;
+using WorkoutPlanBuilder.Core.Models.UserAggregate;
+using WorkoutPlanBuilder.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

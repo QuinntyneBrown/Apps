@@ -1,4 +1,4 @@
-using ProfessionalNetworkCRM.Core.Model.UserAggregate;
+using ProfessionalNetworkCRM.Core.Models.UserAggregate;
 using ProfessionalNetworkCRM.Api.Features.Roles;
 
 namespace ProfessionalNetworkCRM.Api.Features.Users;

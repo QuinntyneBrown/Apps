@@ -1,4 +1,4 @@
-using NeighborhoodSocialNetwork.Core.Model.UserAggregate;
+using NeighborhoodSocialNetwork.Core.Models.UserAggregate;
 using NeighborhoodSocialNetwork.Api.Features.Roles;
 
 namespace NeighborhoodSocialNetwork.Api.Features.Users;

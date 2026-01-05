@@ -1,4 +1,4 @@
-using FuelEconomyTracker.Core.Model.UserAggregate;
+using FuelEconomyTracker.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -5,8 +5,8 @@ using FamilyVacationPlanner.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FamilyVacationPlanner.Core.Model.UserAggregate;
-using FamilyVacationPlanner.Core.Model.UserAggregate.Entities;
+using FamilyVacationPlanner.Core.Models.UserAggregate;
+using FamilyVacationPlanner.Core.Models.UserAggregate.Entities;
 using FamilyVacationPlanner.Core.Services;
 namespace FamilyVacationPlanner.Infrastructure;
 

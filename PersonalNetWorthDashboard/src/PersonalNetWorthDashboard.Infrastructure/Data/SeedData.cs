@@ -5,8 +5,8 @@ using PersonalNetWorthDashboard.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalNetWorthDashboard.Core.Model.UserAggregate;
-using PersonalNetWorthDashboard.Core.Model.UserAggregate.Entities;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate.Entities;
 using PersonalNetWorthDashboard.Core.Services;
 namespace PersonalNetWorthDashboard.Infrastructure;
 

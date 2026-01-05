@@ -1,5 +1,5 @@
 using PhotographySessionLogger.Core;
-using PhotographySessionLogger.Core.Model.UserAggregate.Entities;
+using PhotographySessionLogger.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

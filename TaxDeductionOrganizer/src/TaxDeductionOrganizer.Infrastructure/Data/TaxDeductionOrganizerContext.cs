@@ -4,8 +4,8 @@
 using TaxDeductionOrganizer.Core;
 using Microsoft.EntityFrameworkCore;
 
-using TaxDeductionOrganizer.Core.Model.UserAggregate;
-using TaxDeductionOrganizer.Core.Model.UserAggregate.Entities;
+using TaxDeductionOrganizer.Core.Models.UserAggregate;
+using TaxDeductionOrganizer.Core.Models.UserAggregate.Entities;
 namespace TaxDeductionOrganizer.Infrastructure;
 
 /// <summary>

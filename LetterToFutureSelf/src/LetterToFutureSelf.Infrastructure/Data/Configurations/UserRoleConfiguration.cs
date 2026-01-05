@@ -1,4 +1,4 @@
-using LetterToFutureSelf.Core.Model.UserAggregate.Entities;
+using LetterToFutureSelf.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

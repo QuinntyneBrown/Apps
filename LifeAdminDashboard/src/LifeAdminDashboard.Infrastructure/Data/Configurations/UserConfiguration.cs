@@ -1,4 +1,4 @@
-using LifeAdminDashboard.Core.Model.UserAggregate;
+using LifeAdminDashboard.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

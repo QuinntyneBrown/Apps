@@ -1,4 +1,4 @@
-using FreelanceProjectManager.Core.Model.UserAggregate;
+using FreelanceProjectManager.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

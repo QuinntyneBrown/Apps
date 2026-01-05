@@ -1,5 +1,5 @@
-using SubscriptionAuditTool.Core.Model.UserAggregate;
-using SubscriptionAuditTool.Core.Model.UserAggregate.Entities;
+using SubscriptionAuditTool.Core.Models.UserAggregate;
+using SubscriptionAuditTool.Core.Models.UserAggregate.Entities;
 
 namespace SubscriptionAuditTool.Core.Services;
 

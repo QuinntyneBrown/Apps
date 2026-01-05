@@ -5,8 +5,8 @@ using HomeInventoryManager.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using HomeInventoryManager.Core.Model.UserAggregate;
-using HomeInventoryManager.Core.Model.UserAggregate.Entities;
+using HomeInventoryManager.Core.Models.UserAggregate;
+using HomeInventoryManager.Core.Models.UserAggregate.Entities;
 using HomeInventoryManager.Core.Services;
 namespace HomeInventoryManager.Infrastructure;
 

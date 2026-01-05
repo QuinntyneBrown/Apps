@@ -1,5 +1,5 @@
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate;
-using WarrantyReturnPeriodTracker.Core.Model.UserAggregate.Entities;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate;
+using WarrantyReturnPeriodTracker.Core.Models.UserAggregate.Entities;
 
 namespace WarrantyReturnPeriodTracker.Core.Services;
 

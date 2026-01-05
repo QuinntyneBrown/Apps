@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate;
-using KnowledgeBaseSecondBrain.Core.Model.UserAggregate.Entities;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate;
+using KnowledgeBaseSecondBrain.Core.Models.UserAggregate.Entities;
 namespace KnowledgeBaseSecondBrain.Core;
 
 /// <summary>

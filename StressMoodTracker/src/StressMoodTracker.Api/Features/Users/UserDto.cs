@@ -1,4 +1,4 @@
-using StressMoodTracker.Core.Model.UserAggregate;
+using StressMoodTracker.Core.Models.UserAggregate;
 using StressMoodTracker.Api.Features.Roles;
 
 namespace StressMoodTracker.Api.Features.Users;

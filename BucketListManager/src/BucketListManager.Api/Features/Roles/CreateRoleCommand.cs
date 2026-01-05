@@ -1,5 +1,5 @@
 using BucketListManager.Core;
-using BucketListManager.Core.Model.UserAggregate.Entities;
+using BucketListManager.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

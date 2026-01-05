@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using PersonalLoanComparisonTool.Core.Model.UserAggregate;
-using PersonalLoanComparisonTool.Core.Model.UserAggregate.Entities;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate.Entities;
 namespace PersonalLoanComparisonTool.Core;
 
 /// <summary>

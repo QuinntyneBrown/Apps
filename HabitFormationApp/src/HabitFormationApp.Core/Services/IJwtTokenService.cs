@@ -1,5 +1,5 @@
-using HabitFormationApp.Core.Model.UserAggregate;
-using HabitFormationApp.Core.Model.UserAggregate.Entities;
+using HabitFormationApp.Core.Models.UserAggregate;
+using HabitFormationApp.Core.Models.UserAggregate.Entities;
 
 namespace HabitFormationApp.Core.Services;
 

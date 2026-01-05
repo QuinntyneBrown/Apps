@@ -5,8 +5,8 @@ using PersonalLoanComparisonTool.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using PersonalLoanComparisonTool.Core.Model.UserAggregate;
-using PersonalLoanComparisonTool.Core.Model.UserAggregate.Entities;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate.Entities;
 using PersonalLoanComparisonTool.Core.Services;
 namespace PersonalLoanComparisonTool.Infrastructure;
 

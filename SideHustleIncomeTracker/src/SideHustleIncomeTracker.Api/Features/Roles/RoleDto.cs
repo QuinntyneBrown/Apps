@@ -1,4 +1,4 @@
-using SideHustleIncomeTracker.Core.Model.UserAggregate.Entities;
+using SideHustleIncomeTracker.Core.Models.UserAggregate.Entities;
 
 namespace SideHustleIncomeTracker.Api.Features.Roles;
 

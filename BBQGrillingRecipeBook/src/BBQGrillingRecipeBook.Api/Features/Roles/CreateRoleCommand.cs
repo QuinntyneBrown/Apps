@@ -1,5 +1,5 @@
 using BBQGrillingRecipeBook.Core;
-using BBQGrillingRecipeBook.Core.Model.UserAggregate.Entities;
+using BBQGrillingRecipeBook.Core.Models.UserAggregate.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

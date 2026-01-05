@@ -1,5 +1,5 @@
 using ExpenseClaimSystem.Core;
-using ExpenseClaimSystem.Core.Model.UserAggregate;
+using ExpenseClaimSystem.Core.Models.UserAggregate;
 using ExpenseClaimSystem.Core.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

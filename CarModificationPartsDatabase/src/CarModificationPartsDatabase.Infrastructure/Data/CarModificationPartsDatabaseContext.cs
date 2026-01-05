@@ -4,8 +4,8 @@
 using CarModificationPartsDatabase.Core;
 using Microsoft.EntityFrameworkCore;
 
-using CarModificationPartsDatabase.Core.Model.UserAggregate;
-using CarModificationPartsDatabase.Core.Model.UserAggregate.Entities;
+using CarModificationPartsDatabase.Core.Models.UserAggregate;
+using CarModificationPartsDatabase.Core.Models.UserAggregate.Entities;
 namespace CarModificationPartsDatabase.Infrastructure;
 
 /// <summary>

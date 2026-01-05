@@ -1,4 +1,4 @@
-using KidsActivitySportsTracker.Core.Model.UserAggregate.Entities;
+using KidsActivitySportsTracker.Core.Models.UserAggregate.Entities;
 
 namespace KidsActivitySportsTracker.Api.Features.Roles;
 

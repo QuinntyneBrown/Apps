@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using FocusSessionTracker.Core.Model.UserAggregate;
-using FocusSessionTracker.Core.Model.UserAggregate.Entities;
+using FocusSessionTracker.Core.Models.UserAggregate;
+using FocusSessionTracker.Core.Models.UserAggregate.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 

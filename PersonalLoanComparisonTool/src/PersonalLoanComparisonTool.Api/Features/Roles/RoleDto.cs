@@ -1,4 +1,4 @@
-using PersonalLoanComparisonTool.Core.Model.UserAggregate.Entities;
+using PersonalLoanComparisonTool.Core.Models.UserAggregate.Entities;
 
 namespace PersonalLoanComparisonTool.Api.Features.Roles;
 

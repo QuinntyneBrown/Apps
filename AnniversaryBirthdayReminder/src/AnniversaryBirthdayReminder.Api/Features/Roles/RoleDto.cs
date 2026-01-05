@@ -1,4 +1,4 @@
-using AnniversaryBirthdayReminder.Core.Model.UserAggregate.Entities;
+using AnniversaryBirthdayReminder.Core.Models.UserAggregate.Entities;
 
 namespace AnniversaryBirthdayReminder.Api.Features.Roles;
 

@@ -1,4 +1,4 @@
-using PersonalNetWorthDashboard.Core.Model.UserAggregate;
+using PersonalNetWorthDashboard.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

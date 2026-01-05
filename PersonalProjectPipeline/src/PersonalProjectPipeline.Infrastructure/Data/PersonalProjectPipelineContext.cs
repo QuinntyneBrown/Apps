@@ -4,8 +4,8 @@
 using PersonalProjectPipeline.Core;
 using Microsoft.EntityFrameworkCore;
 
-using PersonalProjectPipeline.Core.Model.UserAggregate;
-using PersonalProjectPipeline.Core.Model.UserAggregate.Entities;
+using PersonalProjectPipeline.Core.Models.UserAggregate;
+using PersonalProjectPipeline.Core.Models.UserAggregate.Entities;
 namespace PersonalProjectPipeline.Infrastructure;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using CarModificationPartsDatabase.Core.Model.UserAggregate.Entities;
+using CarModificationPartsDatabase.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

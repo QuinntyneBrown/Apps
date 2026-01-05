@@ -5,8 +5,8 @@ using FinancialGoalTracker.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using FinancialGoalTracker.Core.Model.UserAggregate;
-using FinancialGoalTracker.Core.Model.UserAggregate.Entities;
+using FinancialGoalTracker.Core.Models.UserAggregate;
+using FinancialGoalTracker.Core.Models.UserAggregate.Entities;
 using FinancialGoalTracker.Core.Services;
 namespace FinancialGoalTracker.Infrastructure;
 

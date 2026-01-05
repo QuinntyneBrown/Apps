@@ -1,4 +1,4 @@
-using MealPrepPlanner.Core.Model.UserAggregate.Entities;
+using MealPrepPlanner.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

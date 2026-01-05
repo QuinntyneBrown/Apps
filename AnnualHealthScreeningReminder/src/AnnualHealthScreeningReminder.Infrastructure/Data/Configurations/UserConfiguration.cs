@@ -1,4 +1,4 @@
-using AnnualHealthScreeningReminder.Core.Model.UserAggregate;
+using AnnualHealthScreeningReminder.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

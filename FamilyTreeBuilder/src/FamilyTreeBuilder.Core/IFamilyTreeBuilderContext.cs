@@ -3,8 +3,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using FamilyTreeBuilder.Core.Model.UserAggregate;
-using FamilyTreeBuilder.Core.Model.UserAggregate.Entities;
+using FamilyTreeBuilder.Core.Models.UserAggregate;
+using FamilyTreeBuilder.Core.Models.UserAggregate.Entities;
 namespace FamilyTreeBuilder.Core;
 
 public interface IFamilyTreeBuilderContext

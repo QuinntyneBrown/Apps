@@ -1,4 +1,4 @@
-using CollegeSavingsPlanner.Core.Model.UserAggregate;
+using CollegeSavingsPlanner.Core.Models.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

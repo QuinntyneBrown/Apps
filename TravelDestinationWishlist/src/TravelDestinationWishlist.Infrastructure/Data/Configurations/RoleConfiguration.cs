@@ -1,4 +1,4 @@
-using TravelDestinationWishlist.Core.Model.UserAggregate.Entities;
+using TravelDestinationWishlist.Core.Models.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
