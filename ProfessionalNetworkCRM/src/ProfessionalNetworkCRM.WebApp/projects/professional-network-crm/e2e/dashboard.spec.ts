@@ -35,7 +35,7 @@ test.describe('Dashboard Display', () => {
       });
     });
 
-    await page.route('**/api/follow-ups', async (route) => {
+    await page.route('**/api/followups', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -67,7 +67,7 @@ test.describe('Dashboard Display', () => {
   });
 
   test('should display contacts card with count', async ({ page }) => {
-    const contactsCard = page.locator('mat-card:has-text("Contacts")');
+    const contactsCard = page.locator('mat-card', { has: page.locator('mat-icon:has-text("contacts")') });
     await expect(contactsCard).toBeVisible();
     await expect(contactsCard.locator('.dashboard__card-count')).toContainText('3');
   });

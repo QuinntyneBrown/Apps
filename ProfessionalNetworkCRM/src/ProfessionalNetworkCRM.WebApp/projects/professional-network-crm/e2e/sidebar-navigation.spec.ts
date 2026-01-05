@@ -35,7 +35,7 @@ test.describe('Sidebar Navigation', () => {
       });
     });
 
-    await page.route('**/api/follow-ups', async (route) => {
+    await page.route('**/api/followups', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -62,14 +62,14 @@ test.describe('Sidebar Navigation', () => {
   test('should display sidebar with all menu items', async ({ page }) => {
     await expect(page.locator('app-sidebar')).toBeVisible();
     
-    // Check all menu items are present
-    await expect(page.locator('text=Dashboard')).toBeVisible();
-    await expect(page.locator('text=Contacts')).toBeVisible();
-    await expect(page.locator('text=Follow-Ups')).toBeVisible();
-    await expect(page.locator('text=Events')).toBeVisible();
-    await expect(page.locator('text=Opportunities')).toBeVisible();
-    await expect(page.locator('text=Goals')).toBeVisible();
-    await expect(page.locator('text=Analytics')).toBeVisible();
+    // Check all menu items are present using more specific locators
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Dashboard' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Contacts' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Follow-Ups' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Events' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Opportunities' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Goals' })).toBeVisible();
+    await expect(page.locator('app-sidebar .sidebar__label', { hasText: 'Analytics' })).toBeVisible();
   });
 
   test('should show counts for Contacts and Follow-Ups', async ({ page }) => {

@@ -56,7 +56,7 @@ test.describe('Contacts Page', () => {
       });
     });
 
-    await page.route('**/api/follow-ups', async (route) => {
+    await page.route('**/api/followups', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

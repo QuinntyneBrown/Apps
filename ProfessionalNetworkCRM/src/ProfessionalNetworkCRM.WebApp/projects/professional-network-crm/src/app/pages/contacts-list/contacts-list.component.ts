@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -16,12 +16,16 @@ import { ContactType, ContactTypeLabels } from '../../models';
   templateUrl: './contacts-list.component.html',
   styleUrl: './contacts-list.component.scss'
 })
-export class ContactsList {
+export class ContactsList implements OnInit {
   private _contactsService = inject(ContactsService);
   private _router = inject(Router);
 
   contacts$ = this._contactsService.contacts$;
   displayedColumns: string[] = ['name', 'type', 'company', 'jobTitle', 'email', 'priority', 'actions'];
+
+  ngOnInit(): void {
+    this._contactsService.loadContacts().subscribe();
+  }
 
   getContactTypeLabel(type: number): string {
     return ContactTypeLabels[type as ContactType] || 'Unknown';

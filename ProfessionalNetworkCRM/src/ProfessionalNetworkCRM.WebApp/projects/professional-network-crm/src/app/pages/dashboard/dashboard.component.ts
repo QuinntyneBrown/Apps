@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -14,7 +14,7 @@ import { combineLatest, map } from 'rxjs';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class Dashboard {
+export class Dashboard implements OnInit {
   private _contactsService = inject(ContactsService);
   private _followUpsService = inject(FollowUpsService);
   private _interactionsService = inject(InteractionsService);
@@ -31,4 +31,10 @@ export class Dashboard {
       interactionsCount: interactions.length
     }))
   );
+
+  ngOnInit(): void {
+    this._contactsService.loadContacts().subscribe();
+    this._followUpsService.loadFollowUps().subscribe();
+    this._interactionsService.loadInteractions().subscribe();
+  }
 }
