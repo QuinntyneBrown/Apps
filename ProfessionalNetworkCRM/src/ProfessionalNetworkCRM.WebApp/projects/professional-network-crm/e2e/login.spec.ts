@@ -4,14 +4,54 @@ test.describe('Login Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Mock the authentication endpoint
     await page.route('**/api/auth/login', async (route) => {
+      // Create a mock JWT token
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const payload = btoa(JSON.stringify({ 
+        sub: 'test-user-id',
+        name: 'Test User',
+        exp: Math.floor(Date.now() / 1000) + 3600
+      }));
+      const signature = 'mock-signature';
+      const token = `${header}.${payload}.${signature}`;
+      
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          token: 'mock-jwt-token',
-          userName: 'Test User',
-          userId: 'test-user-id'
+          token: token,
+          expiresAt: new Date(Date.now() + 3600000).toISOString(),
+          user: {
+            userId: 'test-user-id',
+            userName: 'Test User',
+            email: 'test@example.com',
+            roles: []
+          }
         })
+      });
+    });
+
+    // Mock other required endpoints
+    await page.route('**/api/contacts', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
+      });
+    });
+
+    await page.route('**/api/follow-ups', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
+      });
+    });
+
+    await page.route('**/api/interactions', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
       });
     });
   });
@@ -31,6 +71,9 @@ test.describe('Login Flow', () => {
     await page.fill('input[formcontrolname="username"]', 'testuser');
     await page.fill('input[formcontrolname="password"]', 'password123');
     await page.click('button[type="submit"]');
+    
+    // Wait for navigation
+    await page.waitForURL('/');
     
     // Should redirect to dashboard
     await expect(page).toHaveURL('/');

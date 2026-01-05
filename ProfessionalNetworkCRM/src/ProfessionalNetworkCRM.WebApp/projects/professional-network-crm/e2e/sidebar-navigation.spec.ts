@@ -1,16 +1,27 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Sidebar Navigation', () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Set up authentication token
-    await context.addCookies([
-      {
-        name: 'auth_token',
-        value: 'mock-jwt-token',
-        domain: 'localhost',
-        path: '/'
-      }
-    ]);
+  test.beforeEach(async ({ page }) => {
+    // Set up authentication in localStorage
+    await page.addInitScript(() => {
+      // Create a mock JWT token that won't expire soon
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const payload = btoa(JSON.stringify({ 
+        sub: 'test-user-id',
+        name: 'Test User',
+        exp: Math.floor(Date.now() / 1000) + 3600 // Expires in 1 hour
+      }));
+      const signature = 'mock-signature';
+      const token = `${header}.${payload}.${signature}`;
+      
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_info', JSON.stringify({
+        userId: 'test-user-id',
+        userName: 'Test User',
+        email: 'test@example.com',
+        roles: []
+      }));
+    });
 
     // Mock API endpoints
     await page.route('**/api/contacts', async (route) => {
@@ -18,8 +29,8 @@ test.describe('Sidebar Navigation', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
-          { contactId: '1', name: 'John Doe', email: 'john@example.com', isPriority: false },
-          { contactId: '2', name: 'Jane Smith', email: 'jane@example.com', isPriority: true }
+          { contactId: '1', fullName: 'John Doe', email: 'john@example.com', isPriority: false },
+          { contactId: '2', fullName: 'Jane Smith', email: 'jane@example.com', isPriority: true }
         ])
       });
     });

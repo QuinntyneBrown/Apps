@@ -1,16 +1,26 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Contacts Page', () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Set up authentication
-    await context.addCookies([
-      {
-        name: 'auth_token',
-        value: 'mock-jwt-token',
-        domain: 'localhost',
-        path: '/'
-      }
-    ]);
+  test.beforeEach(async ({ page }) => {
+    // Set up authentication in localStorage
+    await page.addInitScript(() => {
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const payload = btoa(JSON.stringify({ 
+        sub: 'test-user-id',
+        name: 'Test User',
+        exp: Math.floor(Date.now() / 1000) + 3600
+      }));
+      const signature = 'mock-signature';
+      const token = `${header}.${payload}.${signature}`;
+      
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_info', JSON.stringify({
+        userId: 'test-user-id',
+        userName: 'Test User',
+        email: 'test@example.com',
+        roles: []
+      }));
+    });
 
     // Mock contacts API
     await page.route('**/api/contacts', async (route) => {
@@ -20,7 +30,7 @@ test.describe('Contacts Page', () => {
         body: JSON.stringify([
           { 
             contactId: '1', 
-            name: 'John Doe', 
+            fullName: 'John Doe', 
             email: 'john@example.com', 
             company: 'Acme Corp',
             isPriority: false,
@@ -28,7 +38,7 @@ test.describe('Contacts Page', () => {
           },
           { 
             contactId: '2', 
-            name: 'Jane Smith', 
+            fullName: 'Jane Smith', 
             email: 'jane@example.com', 
             company: 'Tech Inc',
             isPriority: true,
@@ -36,7 +46,7 @@ test.describe('Contacts Page', () => {
           },
           { 
             contactId: '3', 
-            name: 'Bob Johnson', 
+            fullName: 'Bob Johnson', 
             email: 'bob@example.com', 
             company: 'Startup LLC',
             isPriority: false,
@@ -96,10 +106,10 @@ test.describe('Contacts Page', () => {
     // Wait for contacts to load
     await page.waitForTimeout(1000);
     
-    // Click on a contact (if there's a view button or link)
-    const viewButton = page.locator('button:has-text("View")').first();
-    if (await viewButton.isVisible()) {
-      await viewButton.click();
+    // Click on a contact edit button
+    const editButton = page.locator('button[color="primary"]').first();
+    if (await editButton.isVisible()) {
+      await editButton.click();
       await expect(page.url()).toContain('/contacts/');
     }
   });
