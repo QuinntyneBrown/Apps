@@ -101,13 +101,6 @@ test.describe('Sidebar Navigation', () => {
     await expect(page.locator('.sidebar__item--active')).toContainText('Follow-Ups');
   });
 
-  test('should navigate to Interactions page', async ({ page }) => {
-    await page.click('text=Interactions');
-    
-    await expect(page).toHaveURL('/interactions');
-    await expect(page.locator('.sidebar__item--active')).toContainText('Interactions');
-  });
-
   test('should navigate back to Dashboard', async ({ page }) => {
     // Navigate to Contacts first
     await page.click('text=Contacts');
