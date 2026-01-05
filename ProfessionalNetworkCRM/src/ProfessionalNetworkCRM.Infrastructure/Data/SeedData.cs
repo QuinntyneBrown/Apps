@@ -4,10 +4,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ProfessionalNetworkCRM.Core;
-
 using ProfessionalNetworkCRM.Core.Model.UserAggregate;
 using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
 using ProfessionalNetworkCRM.Core.Services;
+
 namespace ProfessionalNetworkCRM.Infrastructure;
 
 /// <summary>
@@ -15,6 +15,12 @@ namespace ProfessionalNetworkCRM.Infrastructure;
 /// </summary>
 public static class SeedData
 {
+    private static readonly Guid DevTenantId = Constants.DefaultTenantId;
+    private static readonly Guid DevUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private const string DevUserName = "dev";
+    private const string DevUserEmail = "dev@professionalnetworkcrm.local";
+    private const string DevUserPassword = "DevPassword123!";
+
     /// <summary>
     /// Seeds the database with initial data.
     /// </summary>
@@ -31,15 +37,29 @@ public static class SeedData
         {
             await context.Database.MigrateAsync();
 
-            if (!await context.Contacts.AnyAsync())
+            var seededAnything = false;
+
+            if (!await context.Users.IgnoreQueryFilters().AnyAsync(u => u.UserId == DevUserId || u.Email == DevUserEmail))
             {
-                logger.LogInformation("Seeding initial data...");
-                await SeedNetworkDataAsync(context);
-                logger.LogInformation("Initial data seeded successfully.");
+                logger.LogInformation("Seeding development user...");
+                await SeedDevelopmentUserAsync(context, passwordHasher);
+                seededAnything = true;
+            }
+
+            if (!await context.Contacts.IgnoreQueryFilters().AnyAsync(c => c.UserId == DevUserId))
+            {
+                logger.LogInformation("Seeding development mock network data...");
+                await SeedNetworkDataAsync(context, DevTenantId, DevUserId);
+                seededAnything = true;
+            }
+
+            if (seededAnything)
+            {
+                logger.LogInformation("Development seed completed successfully.");
             }
             else
             {
-                logger.LogInformation("Database already contains data. Skipping seed.");
+                logger.LogInformation("Database already contains development seed data. Skipping seed.");
             }
         }
         catch (Exception ex)
@@ -49,9 +69,37 @@ public static class SeedData
         }
     }
 
-    private static async Task SeedNetworkDataAsync(ProfessionalNetworkCRMContext context)
+    private static async Task SeedDevelopmentUserAsync(ProfessionalNetworkCRMContext context, IPasswordHasher passwordHasher)
     {
-        var sampleUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var (hashedPassword, salt) = passwordHasher.HashPassword(DevUserPassword);
+
+        var user = new User(DevTenantId, DevUserName, DevUserEmail, hashedPassword, salt);
+        context.Users.Add(user);
+        context.Entry(user).Property(nameof(User.UserId)).CurrentValue = DevUserId;
+
+        // Basic role setup for local development
+        var role = await context.Roles.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r => r.TenantId == DevTenantId && r.Name == "Admin");
+
+        if (role == null)
+        {
+            role = new Role(DevTenantId, "Admin");
+            context.Roles.Add(role);
+        }
+
+        var hasUserRole = await context.UserRoles.IgnoreQueryFilters()
+            .AnyAsync(ur => ur.UserId == DevUserId && ur.RoleId == role.RoleId);
+
+        if (!hasUserRole)
+        {
+            context.UserRoles.Add(new UserRole(DevTenantId, DevUserId, role.RoleId));
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedNetworkDataAsync(ProfessionalNetworkCRMContext context, Guid tenantId, Guid userId)
+    {
 
         // Seed Contacts
         var contacts = new List<Contact>
@@ -59,7 +107,8 @@ public static class SeedData
             new Contact
             {
                 ContactId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 FirstName = "Sarah",
                 LastName = "Johnson",
                 ContactType = ContactType.Mentor,
@@ -79,7 +128,8 @@ public static class SeedData
             new Contact
             {
                 ContactId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 FirstName = "Michael",
                 LastName = "Chen",
                 ContactType = ContactType.Colleague,
@@ -99,7 +149,8 @@ public static class SeedData
             new Contact
             {
                 ContactId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 FirstName = "Emily",
                 LastName = "Rodriguez",
                 ContactType = ContactType.Client,
@@ -119,7 +170,8 @@ public static class SeedData
             new Contact
             {
                 ContactId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 FirstName = "David",
                 LastName = "Park",
                 ContactType = ContactType.IndustryPeer,
@@ -145,7 +197,8 @@ public static class SeedData
             new Interaction
             {
                 InteractionId = Guid.Parse("11111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[0].ContactId,
                 InteractionType = "Coffee Meeting",
                 InteractionDate = new DateTime(2024, 5, 20),
@@ -158,7 +211,8 @@ public static class SeedData
             new Interaction
             {
                 InteractionId = Guid.Parse("22222222-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[1].ContactId,
                 InteractionType = "Email",
                 InteractionDate = new DateTime(2024, 6, 5),
@@ -170,7 +224,8 @@ public static class SeedData
             new Interaction
             {
                 InteractionId = Guid.Parse("33333333-cccc-cccc-cccc-cccccccccccc"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[2].ContactId,
                 InteractionType = "Video Call",
                 InteractionDate = new DateTime(2024, 7, 1),
@@ -183,7 +238,8 @@ public static class SeedData
             new Interaction
             {
                 InteractionId = Guid.Parse("44444444-dddd-dddd-dddd-dddddddddddd"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[3].ContactId,
                 InteractionType = "Conference Meeting",
                 InteractionDate = new DateTime(2024, 6, 15),
@@ -203,7 +259,8 @@ public static class SeedData
             new FollowUp
             {
                 FollowUpId = Guid.Parse("55555555-eeee-eeee-eeee-eeeeeeeeeeee"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[0].ContactId,
                 Description = "Send thank you note and book summary",
                 DueDate = DateTime.UtcNow.AddDays(7),
@@ -215,7 +272,8 @@ public static class SeedData
             new FollowUp
             {
                 FollowUpId = Guid.Parse("66666666-ffff-ffff-ffff-ffffffffffff"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[2].ContactId,
                 Description = "Prepare Q3 proposal",
                 DueDate = DateTime.UtcNow.AddDays(14),
@@ -227,7 +285,8 @@ public static class SeedData
             new FollowUp
             {
                 FollowUpId = Guid.Parse("77777777-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                UserId = sampleUserId,
+                UserId = userId,
+                TenantId = tenantId,
                 ContactId = contacts[3].ContactId,
                 Description = "Schedule technical deep-dive",
                 DueDate = DateTime.UtcNow.AddDays(21),

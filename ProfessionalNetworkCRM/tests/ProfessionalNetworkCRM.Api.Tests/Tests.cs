@@ -1,15 +1,3 @@
 namespace ProfessionalNetworkCRM.Api.Tests;
 
-public class Tests
-{
-    [SetUp]
-    public void Setup()
-    {
-    }
-
-    [Test]
-    public void Test1()
-    {
-        Assert.Pass();
-    }
-}
+// Placeholder test removed in favor of real API integration tests.

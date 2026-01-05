@@ -1,0 +1,72 @@
+<ng-container *ngIf="viewModel$ | async as vm">
+  <div class="follow-ups-list">
+    <div class="follow-ups-list__header">
+      <h1 class="follow-ups-list__title">Follow-ups</h1>
+      <button mat-raised-button color="primary" routerLink="/follow-ups/new" class="follow-ups-list__add-btn">
+        <mat-icon>add</mat-icon>
+        Add Follow-up
+      </button>
+    </div>
+
+    <mat-card class="follow-ups-list__card">
+      <table mat-table [dataSource]="vm.followUps" class="follow-ups-list__table">
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let followUp">{{ followUp.description }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="contactId">
+          <th mat-header-cell *matHeaderCellDef>Contact</th>
+          <td mat-cell *matCellDef="let followUp">{{ vm.contactsMap.get(followUp.contactId) || 'Unknown' }}</td>
+        </ng-container>
+
+      <ng-container matColumnDef="dueDate">
+        <th mat-header-cell *matHeaderCellDef>Due Date</th>
+        <td mat-cell *matCellDef="let followUp">{{ followUp.dueDate | date:'short' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef>Priority</th>
+        <td mat-cell *matCellDef="let followUp">
+          <mat-chip [class]="'follow-ups-list__priority-chip--' + followUp.priority.toLowerCase()">
+            {{ followUp.priority }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let followUp">
+          <mat-chip *ngIf="followUp.isCompleted" class="follow-ups-list__status-chip--completed">
+            Completed
+          </mat-chip>
+          <mat-chip *ngIf="!followUp.isCompleted && followUp.isOverdue" class="follow-ups-list__status-chip--overdue">
+            Overdue
+          </mat-chip>
+          <mat-chip *ngIf="!followUp.isCompleted && !followUp.isOverdue" class="follow-ups-list__status-chip--pending">
+            Pending
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let followUp">
+          <button mat-icon-button color="accent" *ngIf="!followUp.isCompleted" (click)="completeFollowUp(followUp.followUpId)" matTooltip="Mark as complete">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" (click)="editFollowUp(followUp.followUpId)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteFollowUp(followUp.followUpId)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="follow-ups-list__row"></tr>
+      </table>
+    </mat-card>
+  </div>
+</ng-container>

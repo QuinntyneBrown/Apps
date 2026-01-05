@@ -3,7 +3,7 @@
 
 using ProfessionalNetworkCRM.Core;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+using Microsoft.Extensions.Hosting;
 
 namespace ProfessionalNetworkCRM.Infrastructure;
 
@@ -12,15 +12,19 @@ namespace ProfessionalNetworkCRM.Infrastructure;
 /// </summary>
 public class TenantContext : ITenantContext
 {
+    private static readonly Guid DefaultDevelopmentTenantId = Constants.DefaultTenantId;
+
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHostEnvironment _environment;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TenantContext"/> class.
     /// </summary>
     /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-    public TenantContext(IHttpContextAccessor httpContextAccessor)
+    public TenantContext(IHttpContextAccessor httpContextAccessor, IHostEnvironment environment)
     {
         _httpContextAccessor = httpContextAccessor;
+        _environment = environment;
     }
 
     /// <inheritdoc/>
@@ -39,6 +43,11 @@ public class TenantContext : ITenantContext
             if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var headerTenantId))
             {
                 return headerTenantId;
+            }
+
+            if (_environment.IsDevelopment())
+            {
+                return DefaultDevelopmentTenantId;
             }
 
             return Guid.Empty;

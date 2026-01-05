@@ -56,7 +56,7 @@ builder.Services.AddSwaggerGen(options =>
 
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "ProfessionalNetworkCRM API",
+        Title = "ProfessionalNetworkCrm API",
         Version = "v1",
         Description = "API for managing professional contacts, interactions, and follow-ups",
     });
@@ -139,7 +139,9 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ProfessionalNetworkCRMContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await SeedData.SeedAsync(context, logger);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<ProfessionalNetworkCRM.Core.Services.IPasswordHasher>();
+
+    await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 
 app.Run();
