@@ -38,6 +38,10 @@ export const routes: Routes = [
       {
         path: 'interactions/:id',
         loadComponent: () => import('./pages').then(m => m.InteractionForm)
+      },
+      {
+        path: 'opportunities',
+        loadComponent: () => import('./pages').then(m => m.Opportunities)
       }
     ]
   }
