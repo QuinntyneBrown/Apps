@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using GiftIdeaTracker.Core.Services;
 using GiftIdeaTracker.Infrastructure;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -139,7 +140,8 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<GiftIdeaTrackerContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await SeedData.SeedAsync(context, logger);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    await SeedData.SeedAsync(context, logger, passwordHasher);
 }
 
 app.Run();
