@@ -44,13 +44,7 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
         opportunity.Description = request.Description;
         opportunity.UpdateStatus(request.Status);
         opportunity.Notes = request.Notes;
-
-        decimal? value = null;
-        if (!string.IsNullOrEmpty(request.PotentialValue) && decimal.TryParse(request.PotentialValue, out var parsedValue))
-        {
-            value = parsedValue;
-        }
-        opportunity.UpdateValue(value);
+        opportunity.UpdateValue(OpportunityHelpers.ParseValue(request.PotentialValue));
 
         await _context.SaveChangesAsync(cancellationToken);
 

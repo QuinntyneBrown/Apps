@@ -43,16 +43,24 @@ public class UpdateReferralCommandHandler : IRequestHandler<UpdateReferralComman
         {
             referral.UpdateOutcome(request.Outcome);
         }
-
-        if (!string.IsNullOrEmpty(request.Notes))
+        else if (!string.IsNullOrEmpty(request.Notes))
         {
+            // Only update notes if outcome is not being updated
             referral.Notes = request.Notes;
             referral.UpdatedAt = DateTime.UtcNow;
         }
 
-        if (request.ThankYouSent.HasValue && request.ThankYouSent.Value)
+        if (request.ThankYouSent.HasValue)
         {
-            referral.MarkThankYouSent();
+            if (request.ThankYouSent.Value)
+            {
+                referral.MarkThankYouSent();
+            }
+            else
+            {
+                referral.ThankYouSent = false;
+                referral.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);

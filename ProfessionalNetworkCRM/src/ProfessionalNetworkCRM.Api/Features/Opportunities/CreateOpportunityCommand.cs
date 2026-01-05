@@ -39,12 +39,6 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
             request.ContactId,
             request.OpportunityType);
 
-        decimal? value = null;
-        if (!string.IsNullOrEmpty(request.PotentialValue) && decimal.TryParse(request.PotentialValue, out var parsedValue))
-        {
-            value = parsedValue;
-        }
-
         var opportunity = new Opportunity
         {
             OpportunityId = Guid.NewGuid(),
@@ -53,7 +47,7 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
             Type = request.OpportunityType,
             Description = request.Description,
             Status = request.Status,
-            Value = value,
+            Value = OpportunityHelpers.ParseValue(request.PotentialValue),
             Notes = request.Notes,
             CreatedAt = DateTime.UtcNow,
         };

@@ -257,7 +257,7 @@ public class OpportunityTrackingIntegrationTests
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/referrals", createCommand);
-        var created = await createResponse.Content.ReadFromJsonAsync<ReferralDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<ReferralDto>(GetJsonOptions());
 
         // Update the referral
         var updateCommand = new UpdateReferralCommand
