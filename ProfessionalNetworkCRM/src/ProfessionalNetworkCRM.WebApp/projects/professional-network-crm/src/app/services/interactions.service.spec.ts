@@ -93,6 +93,42 @@ describe('InteractionsService', () => {
     req.flush(createdInteraction);
   });
 
+  it('should update interaction', () => {
+    const updateRequest = {
+      interactionId: '1',
+      contactId: '1',
+      type: 'call',
+      notes: 'Updated notes',
+      date: new Date().toISOString()
+    };
+
+    const updatedInteraction: Interaction = {
+      ...updateRequest,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    service['interactionsSubject'].next([
+      {
+        interactionId: '1',
+        contactId: '1',
+        type: 'meeting',
+        notes: 'Test meeting',
+        date: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ]);
+
+    service.updateInteraction(updateRequest).subscribe(interaction => {
+      expect(interaction).toEqual(updatedInteraction);
+    });
+
+    const req = httpMock.expectOne(`${environment.baseUrl}/api/interactions/1`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(updatedInteraction);
+  });
+
   it('should delete interaction', () => {
     service['interactionsSubject'].next([
       {

@@ -152,4 +152,58 @@ describe('AuthService', () => {
       expect(service.hasAnyRole(['admin', 'moderator'])).toBe(false);
     });
   });
+
+  describe('getUserFromStorage', () => {
+    it('should return null if user info is invalid JSON', () => {
+      localStorage.setItem('user_info', 'invalid-json');
+      const service2 = TestBed.inject(AuthService);
+      expect(service2.currentUser()).toBeNull();
+    });
+  });
+
+  describe('hasValidToken', () => {
+    it('should return false for expired token', () => {
+      // Create an expired JWT token
+      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 
+        btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 3600 })) + 
+        '.signature';
+      localStorage.setItem('auth_token', expiredToken);
+      
+      const service2 = TestBed.inject(AuthService);
+      expect(service2.isAuthenticated()).toBe(false);
+    });
+
+    it('should return false for invalid token format', () => {
+      localStorage.setItem('auth_token', 'invalid-token');
+      const service2 = TestBed.inject(AuthService);
+      expect(service2.isAuthenticated()).toBe(false);
+    });
+
+    it('should return true for valid token', () => {
+      // Create a valid JWT token that expires in the future
+      const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 
+        btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) + 
+        '.signature';
+      
+      // Clear any existing service instance
+      TestBed.resetTestingModule();
+      
+      // Set up storage before creating service
+      localStorage.setItem('auth_token', validToken);
+      localStorage.setItem('user_info', JSON.stringify({ userId: '1', username: 'test' }));
+      
+      TestBed.configureTestingModule({
+        imports: [HttpClientTestingModule],
+        providers: [
+          AuthService,
+          { provide: Router, useValue: router }
+        ]
+      });
+      
+      const service2 = TestBed.inject(AuthService);
+      expect(service2.isAuthenticated()).toBe(true);
+      
+      TestBed.resetTestingModule();
+    });
+  });
 });

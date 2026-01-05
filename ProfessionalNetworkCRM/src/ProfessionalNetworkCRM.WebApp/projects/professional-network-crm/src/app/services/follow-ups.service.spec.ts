@@ -93,6 +93,42 @@ describe('FollowUpsService', () => {
     req.flush(createdFollowUp);
   });
 
+  it('should update follow-up', () => {
+    const updateRequest = {
+      followUpId: '1',
+      contactId: '1',
+      dueDate: new Date().toISOString(),
+      notes: 'Updated notes'
+    };
+
+    const updatedFollowUp: FollowUp = {
+      ...updateRequest,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    service['followUpsSubject'].next([
+      {
+        followUpId: '1',
+        contactId: '1',
+        dueDate: new Date().toISOString(),
+        notes: 'Test follow-up',
+        isCompleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ]);
+
+    service.updateFollowUp(updateRequest).subscribe(followUp => {
+      expect(followUp).toEqual(updatedFollowUp);
+    });
+
+    const req = httpMock.expectOne(`${environment.baseUrl}/api/followups/1`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(updatedFollowUp);
+  });
+
   it('should complete follow-up', () => {
     const completedFollowUp: FollowUp = {
       followUpId: '1',
