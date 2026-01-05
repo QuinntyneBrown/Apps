@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 using ProfessionalNetworkCRM.Core.Model.UserAggregate;
 using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate;
+using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate;
+using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
 namespace ProfessionalNetworkCRM.Core;
 
 /// <summary>
@@ -26,6 +29,21 @@ public interface IProfessionalNetworkCRMContext
     /// Gets or sets the DbSet of follow-ups.
     /// </summary>
     DbSet<FollowUp> FollowUps { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of opportunities.
+    /// </summary>
+    DbSet<Opportunity> Opportunities { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of introductions.
+    /// </summary>
+    DbSet<Introduction> Introductions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet of referrals.
+    /// </summary>
+    DbSet<Referral> Referrals { get; set; }
 
     /// <summary>
     /// Saves all changes made in this context to the database.

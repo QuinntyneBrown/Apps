@@ -6,6 +6,9 @@ using ProfessionalNetworkCRM.Core;
 
 using ProfessionalNetworkCRM.Core.Model.UserAggregate;
 using ProfessionalNetworkCRM.Core.Model.UserAggregate.Entities;
+using ProfessionalNetworkCRM.Core.Model.OpportunityAggregate;
+using ProfessionalNetworkCRM.Core.Model.IntroductionAggregate;
+using ProfessionalNetworkCRM.Core.Model.ReferralAggregate;
 namespace ProfessionalNetworkCRM.Infrastructure;
 
 /// <summary>
@@ -33,6 +36,15 @@ public class ProfessionalNetworkCRMContext : DbContext, IProfessionalNetworkCRMC
 
     /// <inheritdoc/>
     public DbSet<FollowUp> FollowUps { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<Opportunity> Opportunities { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<Introduction> Introductions { get; set; } = null!;
+
+    /// <inheritdoc/>
+    public DbSet<Referral> Referrals { get; set; } = null!;
 
 
     /// <summary>
@@ -62,6 +74,9 @@ public class ProfessionalNetworkCRMContext : DbContext, IProfessionalNetworkCRMC
             modelBuilder.Entity<Contact>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<Interaction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
             modelBuilder.Entity<FollowUp>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Introduction>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
+            modelBuilder.Entity<Referral>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
         }
 
 
