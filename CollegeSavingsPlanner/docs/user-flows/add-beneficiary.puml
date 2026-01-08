@@ -1,0 +1,68 @@
+@startuml AddBeneficiaryFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Beneficiaries Page" as BeneficiaryPage
+participant "Add Beneficiary Modal" as Modal
+participant "API Gateway" as API
+participant "Beneficiary Controller" as Controller
+participant "Create Beneficiary Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== Navigate to Beneficiaries ==
+User -> BeneficiaryPage: Navigate to /beneficiaries
+BeneficiaryPage -> API: GET /api/beneficiaries
+API -> DB: Query beneficiaries for tenant
+DB -> Database: SELECT * FROM Beneficiaries WHERE TenantId = ?
+Database --> DB: Beneficiary list
+DB --> API: Beneficiaries
+API --> BeneficiaryPage: List of beneficiaries
+BeneficiaryPage -> User: Display beneficiary cards with stats
+
+== Add New Beneficiary ==
+User -> BeneficiaryPage: Click "Add Beneficiary"
+BeneficiaryPage -> Modal: Open add beneficiary modal
+Modal -> User: Display beneficiary form
+
+== Enter Beneficiary Details ==
+User -> Modal: Enter name
+User -> Modal: Enter birth date
+User -> Modal: Enter relationship (child, grandchild, niece, nephew, other)
+User -> Modal: Enter expected enrollment year
+Modal -> Modal: Calculate current age and years until college
+Modal -> User: Show calculated values
+
+== Submit Beneficiary ==
+User -> Modal: Click "Save"
+Modal -> Modal: Validate form data
+alt Validation Successful
+    Modal -> API: POST /api/beneficiaries {name, birthDate, relationship, expectedEnrollmentYear}
+    API -> Controller: CreateBeneficiary request
+    Controller -> Handler: Handle CreateBeneficiaryCommand
+    Handler -> TenantCtx: Get current TenantId
+    TenantCtx --> Handler: TenantId
+    Handler -> Handler: Create Beneficiary entity
+    Handler -> Handler: Calculate currentAge and yearsUntilCollege
+    Handler -> DB: Add Beneficiary with TenantId
+    DB -> Database: INSERT INTO Beneficiaries (TenantId, Name, BirthDate, ...)
+    Database --> DB: Beneficiary created
+    DB --> Handler: Beneficiary entity
+    Handler -> Handler: Raise BeneficiaryAdded event
+    Handler --> Controller: BeneficiaryDto
+    Controller --> API: 201 Created
+    API --> Modal: Beneficiary created successfully
+    Modal -> Modal: Close modal
+    Modal -> BeneficiaryPage: Refresh beneficiary list
+    BeneficiaryPage -> API: GET /api/beneficiaries
+    API -> DB: Query updated beneficiary list
+    DB --> API: Beneficiaries
+    API --> BeneficiaryPage: Updated list
+    BeneficiaryPage -> User: Display updated beneficiaries with new entry
+else Validation Failed
+    Modal -> User: Display validation errors
+end
+
+@enduml
