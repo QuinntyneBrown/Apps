@@ -1,0 +1,105 @@
+@startuml
+title Record One-Time Donation - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Donation Form\nModal" as form
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "RecordDonation\nCommand Handler" as handler
+participant "Donation\nAggregate" as aggregate
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: Click "Record Donation"
+activate dashboard
+
+dashboard -> form: Open donation form modal
+activate form
+
+form --> user: Display form fields\n(Organization, Amount, Date,\nPayment Method, Category)
+
+user -> form: Fill in donation details\n(Organization, Amount, Date)
+user -> form: Select payment method
+user -> form: Optional: Upload receipt
+user -> form: Click "Submit"
+
+form -> validator: Validate form data
+activate validator
+
+validator -> validator: Check required fields
+validator -> validator: Validate amount > 0
+validator -> validator: Check date not in future
+validator -> validator: Validate file size < 5MB
+
+alt Validation Fails
+    validator --> form: Return validation errors
+    form --> user: Display error messages\n(inline field errors)
+else Validation Succeeds
+    validator --> form: Validation passed
+    deactivate validator
+
+    form -> api: POST /api/donations\n{organizationId, amount,\ndonationDate, paymentMethod,\ncategory, notes}
+    activate api
+
+    form --> user: Show loading spinner
+
+    api -> handler: Execute RecordDonationCommand
+    activate handler
+
+    handler -> handler: Validate OrganizationId exists
+    handler -> handler: Verify organization is 501(c)(3)
+    handler -> handler: Check amount > 0
+    handler -> handler: Ensure date not in future
+
+    handler -> aggregate: Create Donation aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Set DonationId (GUID)
+    aggregate -> aggregate: Set UserId from context
+    aggregate -> aggregate: Calculate tax deductible status
+    aggregate -> aggregate: Set timestamps
+
+    aggregate -> db: INSERT INTO Donations
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate -> events: Publish DonationMade event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> handler: Return DonationId
+    deactivate aggregate
+
+    handler --> api: 201 Created\n{donationId, message}
+    deactivate handler
+
+    alt Receipt Uploaded
+        api -> api: POST /api/donations/{id}/receipt
+        api -> db: Store receipt document
+        db --> api: Receipt URL
+    end
+
+    api --> form: Success response
+    deactivate api
+
+    form --> user: Display success message\n"Donation recorded successfully!\nThank you for your generosity."
+    form -> form: Close modal
+    deactivate form
+
+    dashboard -> api: GET /api/donations/summary
+    activate api
+    api -> db: Query updated summary
+    db --> api: Summary data
+    api --> dashboard: Return summary
+    deactivate api
+
+    dashboard -> dashboard: Update summary cards
+    dashboard -> dashboard: Add to recent donations
+    dashboard --> user: Show updated dashboard
+    deactivate dashboard
+end
+
+@enduml
