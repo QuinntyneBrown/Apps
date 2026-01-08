@@ -1,0 +1,90 @@
+@startuml SavingsPlanCreationFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Plans Dashboard" as Dashboard
+participant "Create Plan Wizard" as Wizard
+participant "API Gateway" as API
+participant "Savings Plan Controller" as Controller
+participant "Create Plan Handler" as Handler
+participant "ICollegeSavingsPlannerContext" as DB
+participant "ITenantContext" as TenantCtx
+database "SQL Server" as Database
+
+== Navigate to Create Plan ==
+User -> Dashboard: Click "Create New Plan"
+Dashboard -> Wizard: Navigate to /plans/create
+Wizard -> User: Display wizard (Step 1: Plan Type)
+
+== Step 1: Select Plan Type ==
+User -> Wizard: Select plan type (529, ESA, UTMA, UGMA, Other)
+Wizard -> Wizard: Validate selection
+Wizard -> User: Display Step 2: Beneficiary
+
+== Step 2: Select or Create Beneficiary ==
+Wizard -> API: GET /api/beneficiaries
+API -> DB: Query beneficiaries for current tenant
+DB -> Database: SELECT * FROM Beneficiaries WHERE TenantId = ?
+Database --> DB: Beneficiary list
+DB --> API: Beneficiaries
+API --> Wizard: List of beneficiaries
+Wizard -> User: Display beneficiary selection
+
+alt Select Existing Beneficiary
+    User -> Wizard: Select existing beneficiary
+else Create New Beneficiary
+    User -> Wizard: Click "Add New Beneficiary"
+    Wizard -> User: Display beneficiary form
+    User -> Wizard: Enter name, birth date, expected enrollment year
+    Wizard -> API: POST /api/beneficiaries
+    API -> Handler: Create beneficiary
+    Handler -> TenantCtx: Get current TenantId
+    TenantCtx --> Handler: TenantId
+    Handler -> DB: Add Beneficiary with TenantId
+    DB -> Database: INSERT INTO Beneficiaries
+    Database --> DB: Beneficiary created
+    DB --> Handler: Beneficiary entity
+    Handler --> API: BeneficiaryDto
+    API --> Wizard: Beneficiary created
+end
+
+Wizard -> Wizard: Calculate years until college
+Wizard -> User: Display Step 3: Plan Details
+
+== Step 3: Enter Plan Details ==
+User -> Wizard: Enter state plan, institution, account number
+Wizard -> Wizard: Validate plan details
+Wizard -> User: Display Step 4: Initial Balance
+
+== Step 4: Enter Initial Balance ==
+User -> Wizard: Enter starting amount (optional)
+Wizard -> User: Display summary and confirm
+
+== Create Savings Plan ==
+User -> Wizard: Click "Create Plan"
+Wizard -> API: POST /api/savings-plans
+API -> Controller: CreateSavingsPlan request
+Controller -> Handler: Handle CreateSavingsPlanCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+Handler -> Handler: Create SavingsPlan entity with TenantId
+Handler -> DB: Add SavingsPlan
+DB -> Database: INSERT INTO SavingsPlans
+Database --> DB: Plan created
+DB --> Handler: SavingsPlan entity
+Handler -> Handler: Raise SavingsPlanCreated event
+Handler --> Controller: SavingsPlanDto
+Controller --> API: 201 Created
+API --> Wizard: Plan created successfully
+Wizard -> Dashboard: Redirect to /plans/{planId}
+Dashboard -> User: Display plan details with success message
+
+== Prompt for Recurring Contributions ==
+Dashboard -> User: Show "Set up recurring contributions?" prompt
+alt User Sets Up Contributions
+    User -> Dashboard: Click "Set Up Contributions"
+    Dashboard -> User: Display contribution setup form
+end
+
+@enduml
