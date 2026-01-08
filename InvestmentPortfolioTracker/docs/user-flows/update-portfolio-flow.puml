@@ -1,0 +1,103 @@
+@startuml update-portfolio-flow
+title Update Portfolio Flow
+
+actor User
+participant "Portfolio Details View" as DetailsView
+participant "Edit Portfolio Modal" as EditModal
+participant "Allocation Builder" as AllocationBuilder
+participant "Portfolio Service" as PortfolioService
+participant "API Controller\n/api/portfolios" as PortfolioController
+participant "UpdatePortfolio\nCommand Handler" as Handler
+participant "Portfolio Aggregate" as Portfolio
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+database "SQL Server" as Database
+
+User -> DetailsView: View portfolio details
+DetailsView --> User: Display portfolio information
+
+User -> DetailsView: Click "Edit Portfolio"
+DetailsView -> EditModal: Open edit modal
+EditModal -> PortfolioService: getPortfolio(portfolioId)
+PortfolioService -> PortfolioController: GET /api/portfolios/{portfolioId}
+
+PortfolioController -> DbContext: Query Portfolios DbSet
+DbContext -> Database: SELECT * FROM Portfolios\nWHERE PortfolioId = @portfolioId
+Database --> DbContext: Portfolio record
+DbContext --> PortfolioController: Portfolio entity
+
+PortfolioController --> PortfolioService: 200 OK + PortfolioDto
+PortfolioService --> EditModal: Portfolio data
+
+EditModal -> EditModal: Pre-fill form with current values
+EditModal --> User: Display edit form with current data
+
+alt Update Basic Information
+    User -> EditModal: Modify portfolio name
+    User -> EditModal: Modify description
+    User -> EditModal: Change strategy type
+    User -> EditModal: Change risk tolerance
+end
+
+alt Update Target Allocation
+    User -> AllocationBuilder: Adjust asset class percentages
+    AllocationBuilder -> AllocationBuilder: Update sliders
+    AllocationBuilder -> AllocationBuilder: Recalculate totals
+    AllocationBuilder -> AllocationBuilder: Validate total = 100%
+    AllocationBuilder -> AllocationBuilder: Update pie chart preview
+    AllocationBuilder --> User: Show updated allocation
+end
+
+User -> EditModal: Click "Save Changes"
+EditModal -> EditModal: Validate all fields
+EditModal -> PortfolioService: updatePortfolio(portfolioId, updates)
+PortfolioService -> PortfolioController: PUT /api/portfolios/{portfolioId}\n{name, description, strategyType,\nriskTolerance, targetAllocation}
+
+PortfolioController -> Handler: Handle UpdatePortfolioCommand
+Handler -> DbContext: Query Portfolios DbSet
+DbContext -> Database: SELECT * FROM Portfolios\nWHERE PortfolioId = @portfolioId
+Database --> DbContext: Portfolio record
+DbContext --> Handler: Portfolio aggregate
+
+Handler -> Handler: Validate new allocation sums to 100%
+
+alt Validation Passed
+    Handler -> Portfolio: UpdateBasicInfo(\nname, description,\nstrategyType, riskTolerance)
+    Portfolio -> Portfolio: Update properties
+    Portfolio --> Handler: Updated
+
+    Handler -> Portfolio: UpdateTargetAllocation(\ntargetAllocation)
+    Portfolio -> Portfolio: Store previous allocation
+    Portfolio -> Portfolio: Set new target allocation
+    Portfolio -> Portfolio: Calculate new drift
+    Portfolio -> Portfolio: Raise PortfolioValueUpdated event
+    Portfolio --> Handler: Updated portfolio
+
+    Handler -> DbContext: SaveChangesAsync()
+    DbContext -> Database: UPDATE Portfolios SET\nName = @name,\nDescription = @description,\nStrategyType = @strategyType,\nRiskTolerance = @riskTolerance,\nTargetAllocation = @targetAllocation,\nUpdatedAt = @timestamp\nWHERE PortfolioId = @portfolioId
+    Database --> DbContext: Success
+    DbContext --> Handler: Changes saved
+
+    Handler --> PortfolioController: 200 OK + UpdatedPortfolioDto
+    PortfolioController --> PortfolioService: Portfolio updated
+    PortfolioService --> EditModal: Success response
+
+    EditModal -> EditModal: Close modal
+    EditModal -> EditModal: Show success notification
+    EditModal -> DetailsView: Trigger refresh
+    DetailsView -> PortfolioService: getPortfolio(portfolioId)
+    PortfolioService --> DetailsView: Updated portfolio data
+    DetailsView --> User: Display updated portfolio\nwith new values
+
+    alt Target Allocation Changed
+        DetailsView -> DetailsView: Recalculate drift indicators
+        DetailsView -> DetailsView: Update allocation charts
+        DetailsView --> User: Highlight changes in allocation
+    end
+else Validation Failed
+    Handler --> PortfolioController: 400 Bad Request\n{error: "Allocation must sum to 100%"}
+    PortfolioController --> PortfolioService: Validation error
+    PortfolioService --> EditModal: Error response
+    EditModal --> User: Display validation error message
+end
+
+@enduml
