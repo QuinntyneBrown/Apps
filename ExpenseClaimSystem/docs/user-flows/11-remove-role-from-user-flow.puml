@@ -1,0 +1,36 @@
+@startuml
+
+actor Administrator
+participant "User Details\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to user details
+UI -> UserService: getUser(userId)
+UserService -> API: GET /api/users/{userId}
+API -> DB: SELECT User with Roles
+DB --> API: User data with\ncurrent roles
+API --> UserService: 200 OK\n{user, roles[]}
+UserService --> UI: Display user data
+UI --> Administrator: Show current roles
+
+Administrator -> UI: Click Remove button\nnext to role
+
+UI -> UI: Show confirmation dialog
+
+alt Confirmed
+    UI -> UserService: removeRoleFromUser(userId, roleId)
+    UserService -> API: DELETE /api/users/{userId}/roles/{roleId}
+
+    API -> DB: DELETE FROM UserRole\nWHERE UserId AND RoleId
+    DB --> API: Role removed\n(or no action if\nnot assigned)
+
+    API --> RoleService: 204 No Content
+    UserService --> UI: Role removed successfully
+    UI --> Administrator: Update roles display\n(remove from list)
+else Cancelled
+    UI --> Administrator: No changes\n(cancel operation)
+end
+
+@enduml
