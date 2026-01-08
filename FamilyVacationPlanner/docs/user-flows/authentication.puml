@@ -1,0 +1,55 @@
+@startuml authentication
+title User Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthSvc
+participant "Auth Controller" as AuthCtrl
+participant "Auth Command" as AuthCmd
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Enter username & password
+activate UI
+
+UI -> UI: Validate form inputs
+UI -> AuthSvc: login(credentials)
+activate AuthSvc
+
+AuthSvc -> AuthCtrl: POST /api/auth/login
+activate AuthCtrl
+
+AuthCtrl -> AuthCmd: Handle LoginCommand
+activate AuthCmd
+
+AuthCmd -> DbContext: Users.FirstOrDefault(u => u.UserName == username)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users WHERE UserName = ?
+activate DB
+DB --> DbContext: User record
+deactivate DB
+DbContext --> AuthCmd: User entity
+deactivate DbContext
+
+AuthCmd -> AuthCmd: Validate password hash\n(PBKDF2 with salt)
+
+alt Password Valid
+    AuthCmd -> AuthCmd: Generate JWT token\n(claims: sub, name, email, roles)
+    AuthCmd --> AuthCtrl: LoginResponse\n(token, expiresAt, user)
+    deactivate AuthCmd
+    AuthCtrl --> AuthSvc: 200 OK\n(token, user info)
+    deactivate AuthCtrl
+    AuthSvc -> AuthSvc: Store token in localStorage
+    AuthSvc --> UI: Success
+    deactivate AuthSvc
+    UI -> UI: Navigate to Dashboard
+    UI --> User: Display Dashboard
+    deactivate UI
+else Password Invalid
+    AuthCmd --> AuthCtrl: UnauthorizedException
+    AuthCtrl --> AuthSvc: 401 Unauthorized\n(error message)
+    AuthSvc --> UI: Login failed
+    UI --> User: Display error message
+end
+
+@enduml
