@@ -1,0 +1,65 @@
+@startuml Record Marriage Flow
+title Record Marriage Between Spouses Flow
+
+actor User
+participant "Marriage\nForm" as UI
+participant "Relationship\nService" as RelSvc
+participant "Relationships\nController" as RelCtrl
+participant "RecordMarriage\nCommandHandler" as Handler
+participant "IFamilyTreeBuilder\nContext" as DbContext
+participant "ITenantContext" as TenantCtx
+database "Database" as DB
+
+User -> UI: Navigate to relationship\nmanagement
+UI -> UI: Display "Record Marriage"\noption
+
+User -> UI: Click "Record Marriage"
+UI -> UI: Display marriage form
+UI -> DbContext: Load persons list\nfor spouse selection
+DbContext -> DB: SELECT Persons\nWHERE TenantId = @tenantId
+DB --> DbContext: List of persons
+DbContext --> UI: PersonDto list
+
+User -> UI: Select Spouse 1\nfrom dropdown
+User -> UI: Select Spouse 2\nfrom dropdown
+User -> UI: Enter Marriage Date*
+User -> UI: Enter Marriage Place
+User -> UI: Click "Save"
+
+UI -> UI: Validate required fields
+UI -> RelSvc: recordMarriage(marriageData)
+RelSvc -> RelCtrl: POST /api/relationships/marriage\n{spouse1Id, spouse2Id,\nmarriageDate, marriagePlace}
+RelCtrl -> RelCtrl: Validate spouses exist
+RelCtrl -> Handler: Handle RecordMarriageCommand
+
+Handler -> TenantCtx: GetCurrentTenantId()
+TenantCtx --> Handler: TenantId (Guid)
+
+Handler -> Handler: Create Marriage entity\nwith TenantId
+Handler -> Handler: Set Spouse1Id, Spouse2Id
+Handler -> Handler: Set MarriageDate
+Handler -> Handler: Set MarriagePlace
+Handler -> Handler: Set Status = Current
+Handler -> DbContext: Marriages.Add(marriage)
+
+note right of Handler
+  Also creates or updates\n  Spouse relationship
+end note
+
+Handler -> Handler: Create/Update Spouse\nrelationship between persons
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: BEGIN TRANSACTION
+DbContext -> DB: INSERT INTO Marriages\n(MarriageId, TenantId,\nSpouse1Id, Spouse2Id, ...)
+DbContext -> DB: INSERT/UPDATE Relationships\n(Type = Spouse, ...)
+DB --> DbContext: Success
+DbContext -> DB: COMMIT TRANSACTION
+Handler -> Handler: Raise MarriageRecorded\ndomain event
+
+Handler --> RelCtrl: MarriageId (Guid)
+RelCtrl --> RelSvc: 201 Created\n{marriageId}
+RelSvc --> UI: Marriage recorded
+UI -> UI: Close form
+UI -> UI: Refresh relationships view
+UI --> User: Show success message\nand updated relationships
+
+@enduml
