@@ -1,0 +1,87 @@
+@startuml
+title Add Intake/Drink Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "Add Drink\nModal" as Modal
+participant "IntakeService" as Service
+participant "IntakesController\n/api/intakes" as API
+participant "CreateIntakeCommand\nHandler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Click "Add Drink" button
+activate Dashboard
+Dashboard -> Modal: Open modal
+activate Modal
+Modal -> User: Display drink input form\n(beverage type, amount, time)
+deactivate Modal
+deactivate Dashboard
+
+User -> Modal: Select beverage type\n(Water, Coffee, Tea, etc.)
+activate Modal
+Modal -> Modal: Update selected beverage
+deactivate Modal
+
+User -> Modal: Enter amount (ml/oz)
+activate Modal
+Modal -> Modal: Validate amount > 0
+deactivate Modal
+
+User -> Modal: Select/confirm time\n(defaults to current time)
+activate Modal
+deactivate Modal
+
+User -> Modal: Click "Save" button
+activate Modal
+Modal -> Modal: Validate all fields
+
+Modal -> Service: createIntake(intakeData)
+activate Service
+
+Service -> API: POST /api/intakes\n{beverageType, amount, timestamp}
+activate API
+
+API -> Handler: Execute(CreateIntakeCommand)
+activate Handler
+
+Handler -> TenantCtx: Get current TenantId
+activate TenantCtx
+TenantCtx --> Handler: TenantId (from JWT)
+deactivate TenantCtx
+
+Handler -> Handler: Create Intake entity\n(with TenantId)
+
+Handler -> DB: Intakes.Add(intake)
+activate DB
+DB -> Database: INSERT INTO Intakes\n(IntakeId, TenantId, Amount, BeverageType, Timestamp, UserId)
+activate Database
+Database --> DB: Success
+deactivate Database
+DB -> DB: SaveChangesAsync()
+DB --> Handler: Intake entity saved
+deactivate DB
+
+Handler --> API: CreateIntakeResponse\n{intakeId, amount, timestamp}
+deactivate Handler
+
+API --> Service: 201 Created\n{intake data}
+deactivate API
+
+Service --> Modal: Success response
+deactivate Service
+
+Modal -> Modal: Close modal
+Modal -> Dashboard: Notify intake added
+activate Dashboard
+Dashboard -> Dashboard: Refresh dashboard data\n(update progress, list)
+Dashboard -> User: Display updated progress\n& success message
+deactivate Dashboard
+deactivate Modal
+
+@enduml
