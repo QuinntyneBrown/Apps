@@ -1,0 +1,85 @@
+@startuml goal-update
+title Goal Update Flow
+
+actor User
+participant "Goal Detail Page" as UI
+participant "Goal Service" as GoalSvc
+participant "Goals Controller" as Controller
+participant "UpdateGoalCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to Goal Detail
+activate UI
+
+UI -> GoalSvc: getGoal(goalId)
+activate GoalSvc
+GoalSvc -> Controller: GET /api/goals/{id}
+Controller --> GoalSvc: Goal data
+GoalSvc --> UI: Goal details
+deactivate GoalSvc
+
+UI --> User: Display goal details
+
+User -> UI: Click "Edit" button
+UI -> UI: Enable edit mode
+
+User -> UI: Update fields:\n- Title\n- Category\n- Target Date\n- Success Criteria
+
+User -> UI: Click "Save"
+
+UI -> UI: Validate form inputs
+UI -> GoalSvc: updateGoal(goalId, updates)
+activate GoalSvc
+
+GoalSvc -> Controller: PUT /api/goals/{id}
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: UpdateGoalCommand
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @id\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Update Goal properties\n(Title, Category, TargetDate,\nSuccessCriteria, UpdatedAt)
+
+Command -> Command: Raise GoalUpdated event
+
+Command -> DbContext: Update(goal)
+activate DbContext
+DbContext -> DB: UPDATE Goals SET\nTitle = @title,\nCategory = @category,\nTargetDate = @targetDate,\nSuccessCriteria = @criteria,\nUpdatedAt = @updatedAt\nWHERE GoalId = @id
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType, AggregateId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: UpdateGoalResponse
+deactivate Command
+
+Controller --> GoalSvc: 200 OK
+deactivate Controller
+
+GoalSvc --> UI: Goal updated successfully
+deactivate GoalSvc
+
+UI -> UI: Refresh goal details
+UI -> UI: Disable edit mode
+UI --> User: Show success message\n"Goal updated successfully"
+deactivate UI
+
+@enduml
