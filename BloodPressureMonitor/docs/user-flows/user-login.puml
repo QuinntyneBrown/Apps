@@ -1,0 +1,74 @@
+@startuml
+title User Login Flow
+
+actor User as user
+participant "Login Page\n(UI)" as ui
+participant "Auth Service\n(Frontend)" as authService
+participant "API Gateway" as api
+participant "Auth Controller\n(Backend)" as authController
+participant "JWT Service" as jwtService
+database "User Database" as db
+
+user -> ui : Navigate to login page
+activate ui
+ui -> user : Display login form
+deactivate ui
+
+user -> ui : Enter username and password
+activate ui
+ui -> ui : Validate input format
+ui -> authService : Submit credentials
+deactivate ui
+
+activate authService
+authService -> api : POST /api/auth/login\n{username, password}
+deactivate authService
+
+activate api
+api -> authController : Forward login request
+deactivate api
+
+activate authController
+authController -> db : Query user by username
+activate db
+db --> authController : Return user record
+deactivate db
+
+authController -> authController : Validate password hash\n(PBKDF2-SHA256)
+
+alt Password Valid
+    authController -> jwtService : Generate JWT token
+    activate jwtService
+    jwtService -> jwtService : Create claims\n(userId, roles, email)
+    jwtService --> authController : Return JWT token
+    deactivate jwtService
+
+    authController -> api : 200 OK\n{token, expiresAt, user}
+    activate api
+    api -> authService : Return auth response
+    deactivate api
+
+    activate authService
+    authService -> authService : Store token in localStorage
+    authService -> ui : Login successful
+    deactivate authService
+
+    activate ui
+    ui -> user : Redirect to dashboard
+    deactivate ui
+else Password Invalid
+    authController -> api : 401 Unauthorized\n{error: "Invalid credentials"}
+    activate api
+    api -> authService : Return error
+    deactivate api
+
+    activate authService
+    authService -> ui : Display error
+    deactivate authService
+
+    activate ui
+    ui -> user : Show error message
+    deactivate ui
+end
+
+@enduml
