@@ -1,0 +1,69 @@
+@startuml portfolio-creation-flow
+title Portfolio Creation Flow
+
+actor User
+participant "Portfolios Dashboard" as Dashboard
+participant "Create Portfolio Form" as Form
+participant "Allocation Builder" as AllocationBuilder
+participant "Portfolio Service" as PortfolioService
+participant "API Controller\n/api/portfolios" as PortfolioController
+participant "CreatePortfolio\nCommand Handler" as Handler
+participant "Portfolio Aggregate" as Portfolio
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as Database
+
+User -> Dashboard: Click "Create Portfolio"
+Dashboard -> Form: Navigate to create form
+Form --> User: Display form fields
+
+User -> Form: Enter portfolio name
+User -> Form: Enter description
+User -> Form: Select strategy type\n(Growth, Income, Balanced, etc.)
+User -> Form: Select risk tolerance\n(Low, Medium, High)
+
+User -> AllocationBuilder: Build target allocation
+AllocationBuilder -> AllocationBuilder: Add asset classes\n(Stocks, Bonds, Cash, etc.)
+AllocationBuilder -> AllocationBuilder: Set percentages with sliders
+AllocationBuilder -> AllocationBuilder: Validate total = 100%
+AllocationBuilder --> User: Display pie chart preview
+
+User -> Form: Enter initial funding amount
+User -> Form: Click "Create Portfolio"
+
+Form -> Form: Validate all fields
+Form -> PortfolioService: createPortfolio(formData)
+PortfolioService -> PortfolioController: POST /api/portfolios\n{name, description, strategyType,\nriskTolerance, targetAllocation,\ninitialFunding}
+
+PortfolioController -> Handler: Handle CreatePortfolioCommand
+Handler -> Handler: Validate allocation sums to 100%
+
+alt Validation Passed
+    Handler -> TenantContext: GetCurrentTenantId()
+    TenantContext --> Handler: TenantId (Guid)
+
+    Handler -> Portfolio: Create new Portfolio(\ntenantId, userId, name,\ndescription, strategyType,\nriskTolerance, targetAllocation,\ninitialFunding)
+
+    Portfolio -> Portfolio: Raise PortfolioCreated event
+    Portfolio --> Handler: Portfolio aggregate
+
+    Handler -> DbContext: Portfolios.Add(portfolio)
+    Handler -> DbContext: SaveChangesAsync()
+    DbContext -> Database: INSERT INTO Portfolios\n(PortfolioId, TenantId, UserId,\nName, Description, StrategyType,\nRiskTolerance, TargetAllocation,\nCurrentValue, CashBalance,\nCreatedAt, UpdatedAt)
+    Database --> DbContext: Success
+    DbContext --> Handler: Changes saved
+
+    Handler --> PortfolioController: 201 Created + PortfolioDto
+    PortfolioController --> PortfolioService: Portfolio created
+    PortfolioService --> Form: Success response
+    Form -> Form: Show success message
+    Form -> Dashboard: Navigate to portfolio details
+    Dashboard --> User: Display new portfolio
+else Validation Failed
+    Handler --> PortfolioController: 400 Bad Request\n{error: "Allocation must sum to 100%"}
+    PortfolioController --> PortfolioService: Validation error
+    PortfolioService --> Form: Error response
+    Form --> User: Display validation error
+end
+
+@enduml
