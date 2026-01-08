@@ -1,0 +1,130 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Users Controller" as Controller
+participant "Update User\nCommand Handler" as Handler
+participant "Password Hash\nService" as HashService
+participant "User Repository" as UserRepo
+database "Database" as DB
+
+title Update User Flow
+
+Admin -> UI: Select user\nto edit
+activate UI
+
+UI -> UserService: getUser(userId)
+activate UserService
+
+UserService -> API: GET /api/users/{userId}
+activate API
+
+API -> Controller: GetUser request
+activate Controller
+
+Controller -> UserRepo: FindById(userId)
+activate UserRepo
+
+UserRepo -> DB: SELECT * FROM Users\nWHERE UserId = ?
+activate DB
+DB --> UserRepo: User record
+deactivate DB
+
+UserRepo --> Controller: User entity
+deactivate UserRepo
+
+Controller --> API: 200 OK\n{userId, userName, email, roles}
+deactivate Controller
+
+API --> UserService: User data
+deactivate API
+
+UserService --> UI: User loaded
+deactivate UserService
+
+UI -> UI: Populate form with\nuser data
+
+UI --> Admin: Show edit form
+
+Admin -> UI: Modify email or\nchange password
+Admin -> UI: Click "Update"
+
+UI -> UI: Validate form
+
+UI -> UserService: updateUser(userId, userData)
+activate UserService
+
+UserService -> Interceptor: PUT /api/users/{userId}\n{email, password (optional)}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: PUT /api/users/{userId}\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: UpdateUser request
+activate Controller
+
+Controller -> Handler: Handle UpdateUserCommand
+activate Handler
+
+Handler -> Handler: Validate email\nuniqueness (if changed)
+
+alt Email Already Taken
+    Handler --> Controller: Validation error
+    Controller --> API: 400 Bad Request\n{error: "Email already exists"}
+    API --> UserService: Error response
+    UserService --> UI: Update failed
+    UI --> Admin: Display error\nmessage
+else Valid Update
+    alt Password Changed
+        Handler -> HashService: GenerateSalt()
+        activate HashService
+        HashService --> Handler: New 32-byte salt
+        deactivate HashService
+
+        Handler -> HashService: HashPassword(newPassword, salt)
+        activate HashService
+        HashService -> HashService: PBKDF2 with\nSHA-256 (100k iterations)
+        HashService --> Handler: New hashed password
+        deactivate HashService
+    end
+
+    Handler -> UserRepo: Update(user)
+    activate UserRepo
+
+    UserRepo -> DB: UPDATE Users SET\nEmail = ?, Password = ?,\nSalt = ? WHERE UserId = ?
+    activate DB
+    DB --> UserRepo: Success
+    deactivate DB
+
+    UserRepo --> Handler: User updated
+    deactivate UserRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 200 OK\n{userId, userName, email}
+    deactivate Controller
+
+    API --> UserService: Success response
+    deactivate API
+
+    UserService --> UI: User updated
+    deactivate UserService
+
+    UI -> UI: Refresh user list
+
+    UI --> Admin: Show success\nmessage
+    deactivate UI
+end
+
+@enduml
