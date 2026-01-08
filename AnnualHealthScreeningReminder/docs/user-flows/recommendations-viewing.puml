@@ -1,0 +1,167 @@
+@startuml RecommendationsViewing
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "RecommendationsList\n(UI Component)" as RecommendationsList
+participant "RecommendationCard\n(UI Component)" as RecommendationCard
+participant "ScreeningEducation\n(UI Component)" as Education
+participant "Recommendations API\n(Controller)" as API
+participant "Recommendations Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== View Personalized Recommendations ==
+User -> RecommendationsList: Navigate to recommendations
+activate RecommendationsList
+RecommendationsList -> API: GET /api/recommendations
+activate API
+API -> Service: GetRecommendations(userId)
+activate Service
+Service -> DB: QUERY health_profiles\nWHERE user_id = {userId}
+activate DB
+DB --> Service: User health profile
+deactivate DB
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}
+activate DB
+DB --> Service: User screening history
+deactivate DB
+Service -> Service: Apply clinical guidelines\n(age, gender, risk factors)
+Service -> Service: Calculate due dates\nbased on intervals
+Service -> Service: Identify overdue,\ndue soon, and upcoming
+Service -> Service: Prioritize by urgency\nand importance
+Service -> DB: QUERY screening_guidelines
+activate DB
+DB --> Service: Clinical guidelines
+deactivate DB
+Service -> Service: Generate personalized\nrecommendations list
+Service --> API: Prioritized recommendations
+deactivate Service
+API --> RecommendationsList: 200 OK\n{recommendations}
+deactivate API
+RecommendationsList -> RecommendationsList: Display recommendations\nwith priority badges
+RecommendationsList --> User: Show prioritized list\nof recommended screenings
+deactivate RecommendationsList
+
+== View Recommendation Details ==
+User -> RecommendationsList: Click on recommendation
+activate RecommendationsList
+RecommendationsList -> RecommendationCard: Expand recommendation
+activate RecommendationCard
+RecommendationCard -> API: GET /api/recommendations/{id}/details
+activate API
+API -> Service: GetRecommendationDetails(id)
+activate Service
+Service -> DB: QUERY recommendations\nWHERE id = {id}
+activate DB
+DB --> Service: Recommendation data
+deactivate DB
+Service -> DB: QUERY screening_types\nWHERE type = {type}
+activate DB
+DB --> Service: Screening information
+deactivate DB
+Service -> Service: Generate explanation\nof why recommended
+Service -> Service: Calculate urgency\nand due date
+Service --> API: Detailed recommendation
+deactivate Service
+API --> RecommendationCard: 200 OK\n{details, explanation}
+deactivate API
+RecommendationCard -> RecommendationCard: Display screening details\nwith urgency indicator
+RecommendationCard --> User: Show why recommended\nand due date
+deactivate RecommendationsList
+
+User -> RecommendationCard: Click "Learn More"
+RecommendationCard -> Education: Open education panel
+activate Education
+Education -> API: GET /api/screenings/{type}/education
+activate API
+API -> Service: GetScreeningEducation(type)
+activate Service
+Service -> DB: QUERY screening_education\nWHERE screening_type = {type}
+activate DB
+DB --> Service: Educational content
+deactivate DB
+Service -> DB: QUERY clinical_guidelines\nWHERE screening_type = {type}
+activate DB
+DB --> Service: Guidelines
+deactivate DB
+Service --> API: Education materials
+deactivate Service
+API --> Education: 200 OK\n{description, preparation, guidelines}
+deactivate API
+Education -> Education: Display educational content
+Education --> User: Show screening description,\npreparation, what to expect
+deactivate Education
+deactivate RecommendationCard
+
+== Schedule from Recommendation ==
+User -> RecommendationCard: Click "Schedule"
+activate RecommendationCard
+RecommendationCard -> API: POST /api/recommendations/{id}/initiate-scheduling
+activate API
+API -> Service: InitiateScheduling(recommendationId, userId)
+activate Service
+Service -> DB: QUERY recommendations\nWHERE id = {id}
+activate DB
+DB --> Service: Recommendation details
+deactivate DB
+Service -> Service: Prepare screening data\nfor scheduling form
+Service --> API: Scheduling data
+deactivate Service
+API --> RecommendationCard: 200 OK\n{screeningType, suggestedProviders}
+deactivate API
+RecommendationCard -> RecommendationCard: Navigate to\nscreening schedule form\nwith pre-filled data
+RecommendationCard --> User: Open scheduling form\nwith recommendation details
+deactivate RecommendationCard
+
+== Filter and Sort Recommendations ==
+User -> RecommendationsList: Apply filters\n(status, priority, category)
+activate RecommendationsList
+RecommendationsList -> RecommendationsList: Filter recommendations\nclient-side
+RecommendationsList --> User: Show filtered results
+
+User -> RecommendationsList: Sort by\n(urgency, date, type)
+RecommendationsList -> RecommendationsList: Re-order recommendations
+RecommendationsList --> User: Show sorted list
+deactivate RecommendationsList
+
+== View Guidelines and Resources ==
+User -> Education: Click "View Guidelines"
+activate Education
+Education -> API: GET /api/screenings/{type}/guidelines
+activate API
+API -> Service: GetClinicalGuidelines(type)
+activate Service
+Service -> DB: QUERY clinical_guidelines\nWHERE screening_type = {type}
+activate DB
+DB --> Service: Guidelines and references
+deactivate DB
+Service -> Service: Format guidelines\nwith sources
+Service --> API: Clinical guidelines
+deactivate Service
+API --> Education: 200 OK\n{guidelines, sources}
+deactivate API
+Education -> Education: Display guidelines\nwith citations
+Education --> User: Show clinical guidelines\nand authoritative sources
+deactivate Education
+
+== Dismiss or Postpone Recommendation ==
+User -> RecommendationCard: Click "Not Now"
+activate RecommendationCard
+RecommendationCard -> RecommendationCard: Show postpone options
+User -> RecommendationCard: Select postpone duration\nor dismiss reason
+RecommendationCard -> API: PUT /api/recommendations/{id}/postpone\n{duration, reason}
+activate API
+API -> Service: PostponeRecommendation(id, data)
+activate Service
+Service -> DB: UPDATE recommendations\nSET status='Postponed',\nreview_date={futureDate}
+activate DB
+DB --> Service: Recommendation postponed
+deactivate DB
+Service --> API: Postponed
+deactivate Service
+API --> RecommendationCard: 200 OK
+deactivate API
+RecommendationCard -> RecommendationCard: Remove from active list
+RecommendationCard --> User: Recommendation postponed
+deactivate RecommendationCard
+
+@enduml
