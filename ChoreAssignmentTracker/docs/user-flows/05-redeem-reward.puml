@@ -1,0 +1,154 @@
+@startuml Redeem Reward Flow
+
+title Redeem Reward Flow
+
+actor Child
+actor Parent
+participant "Rewards Page" as RewardsUI
+participant "Reward Details" as DetailUI
+participant "Redeem Dialog" as RedeemDialog
+participant "Parent App" as ParentUI
+participant "Rewards Controller" as RewardAPI
+participant "RedeemRewardCommand" as RedeemCommand
+participant "Reward Repository" as RewardRepo
+participant "Points Repository" as PointsRepo
+participant "Member Repository" as MemberRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== Browse Rewards Catalog ==
+Child -> RewardsUI: Navigate to Rewards page
+RewardsUI -> RewardAPI: GET /api/rewards?householdId={id}
+RewardAPI -> RewardRepo: GetRewardsByHousehold(householdId)
+RewardRepo -> DB: SELECT * FROM Rewards\nWHERE HouseholdId = @householdId\nAND IsActive = 1
+DB --> RewardRepo: List of rewards
+RewardRepo --> RewardAPI: Rewards list
+RewardAPI --> RewardsUI: 200 OK {rewards}
+
+RewardsUI -> PointsRepo: GetMemberPoints(childId)
+PointsRepo -> DB: SELECT TotalPoints FROM HouseholdMembers\nWHERE MemberId = @childId
+DB --> PointsRepo: Current points balance
+PointsRepo --> RewardsUI: Points balance
+
+RewardsUI -> RewardsUI: For each reward:\n- Show if affordable\n- Show if locked/unlocked\n- Display points cost
+
+RewardsUI --> Child: Display rewards catalog with:\n- Current balance: [Points]\n- Available rewards\n- Locked rewards (insufficient points)
+
+== Select Reward ==
+Child -> RewardsUI: Click on reward
+RewardsUI -> DetailUI: Show reward details
+
+DetailUI --> Child: Display:\n- Reward name\n- Description\n- Points cost\n- Current balance\n- Can afford indicator
+
+alt Child Can Afford Reward
+    Child -> DetailUI: Click "Redeem"
+    DetailUI -> RedeemDialog: Open confirmation dialog
+
+    RedeemDialog --> Child: Confirm redemption:\n"Redeem [RewardName] for [Points] points?\nNew balance: [CurrentPoints - Cost]"
+
+    Child -> RedeemDialog: Confirm "Yes, Redeem"
+
+    RedeemDialog -> RewardAPI: POST /api/rewards/{rewardId}/redeem\n{\n  memberId,\n  rewardId\n}
+
+    RewardAPI -> RedeemCommand: Handle RedeemRewardCommand
+
+    RedeemCommand -> MemberRepo: GetMember(memberId)
+    MemberRepo -> DB: SELECT * FROM HouseholdMembers\nWHERE MemberId = @memberId
+    DB --> MemberRepo: Member data
+    MemberRepo --> RedeemCommand: Member entity
+
+    RedeemCommand -> RewardRepo: GetReward(rewardId)
+    RewardRepo -> DB: SELECT * FROM Rewards\nWHERE RewardId = @rewardId
+    DB --> RewardRepo: Reward data
+    RewardRepo --> RedeemCommand: Reward entity
+
+    RedeemCommand -> RedeemCommand: Validate:\n- Member has sufficient points\n- Reward is active and available\n- Reward belongs to same household\n- Member hasn't exceeded redemption limit
+
+    alt Validation Passes
+        RedeemCommand -> RedeemCommand: Calculate new balance:\nnewBalance = currentPoints - rewardCost
+
+        RedeemCommand -> PointsRepo: DeductPoints(\n  memberId,\n  points: rewardCost,\n  reason: "Redeemed [RewardName]"\n)
+        PointsRepo -> DB: INSERT INTO PointsTransactions\nSET Amount = -@cost,\nType = 'Deduction'
+        PointsRepo -> DB: UPDATE HouseholdMembers\nSET TotalPoints = @newBalance
+        DB --> PointsRepo: Success
+
+        RedeemCommand -> RewardRepo: CreateRedemption(\n  redemptionId,\n  rewardId,\n  memberId,\n  pointsSpent,\n  status: PendingFulfillment,\n  redeemedAt\n)
+        RewardRepo -> DB: INSERT INTO RewardRedemptions
+        DB --> RewardRepo: RedemptionId
+
+        RedeemCommand -> Events: Publish RewardRedeemed event\n{\n  redemptionId,\n  rewardId,\n  rewardName,\n  memberId,\n  memberName,\n  pointsSpent,\n  newBalance\n}
+
+        Events -> NotifyService: Notify parent of redemption
+
+        NotifyService -> NotifyService: Create notification for parent:\n"[ChildName] redeemed [RewardName]\nfor [Points] points"
+        NotifyService -> DB: INSERT INTO Notifications\nFOR parent users
+        NotifyService -> NotifyService: Send push notification
+
+        alt Reward Unlocks Achievement
+            RedeemCommand -> Events: Publish RewardThresholdReached event
+        end
+
+        RedeemCommand --> RewardAPI: Success with RedemptionId
+        RewardAPI --> RedeemDialog: 200 OK\n{\n  redemptionId,\n  newBalance,\n  status\n}
+
+        RedeemDialog -> RedeemDialog: Show success animation\nand celebration message
+
+        RedeemDialog --> Child: "Congratulations!\n[RewardName] redeemed!\nNew balance: [Points] points"
+
+        RedeemDialog -> RewardsUI: Close dialog and refresh
+        RewardsUI -> RewardsUI: Update points balance
+        RewardsUI -> RewardsUI: Update reward affordability
+        RewardsUI --> Child: Display updated catalog
+
+        NotifyService --> Parent: Notification received
+
+    else Validation Fails (Insufficient Points)
+        RedeemCommand --> RewardAPI: Insufficient points error
+        RewardAPI --> RedeemDialog: 400 Bad Request\n{error: "Insufficient points"}
+        RedeemDialog --> Child: "Not enough points!\nYou need [PointsNeeded] more points.\nComplete more chores to earn points!"
+
+    else Validation Fails (Other)
+        RedeemCommand --> RewardAPI: Validation error
+        RewardAPI --> RedeemDialog: 400 Bad Request {errors}
+        RedeemDialog --> Child: Display error message
+    end
+
+else Child Cannot Afford Reward
+    DetailUI --> Child: Show locked state:\n"Need [PointsNeeded] more points"
+    DetailUI --> Child: Suggest chores to complete
+end
+
+== Parent Fulfills Reward ==
+Parent -> ParentUI: Open notifications
+ParentUI --> Parent: Show redemption request
+Parent -> ParentUI: View redemption details
+
+ParentUI -> RewardAPI: GET /api/redemptions/{redemptionId}
+RewardAPI -> RewardRepo: GetRedemption(redemptionId)
+RewardRepo -> DB: SELECT * FROM RewardRedemptions
+DB --> RewardRepo: Redemption details
+RewardRepo --> RewardAPI: Redemption
+RewardAPI --> ParentUI: 200 OK {redemption}
+
+ParentUI --> Parent: Display:\n- Reward details\n- Child name\n- Points spent\n- Redemption date
+
+Parent -> ParentUI: Click "Mark as Fulfilled"
+ParentUI -> RewardAPI: POST /api/redemptions/{redemptionId}/fulfill
+
+RewardAPI -> RewardRepo: UpdateRedemption(\n  status: Fulfilled,\n  fulfilledAt,\n  fulfilledBy: parentId\n)
+RewardRepo -> DB: UPDATE RewardRedemptions\nSET Status = 'Fulfilled'
+
+RewardAPI -> Events: Publish RewardFulfilled event
+
+Events -> NotifyService: Notify child
+
+NotifyService -> NotifyService: Send notification:\n"Your [RewardName] is ready!"
+NotifyService -> DB: INSERT INTO Notifications
+
+RewardAPI --> ParentUI: 200 OK
+ParentUI --> Parent: Show success message
+
+NotifyService --> Child: Notification:\nReward fulfilled!
+
+@enduml
