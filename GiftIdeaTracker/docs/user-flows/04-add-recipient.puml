@@ -1,0 +1,62 @@
+@startuml Add Recipient Flow
+autonumber
+title Add Recipient Flow
+
+actor User
+participant "Recipient List\nPage" as UI
+participant "Recipient Form\nComponent" as Form
+participant "Recipient Service" as Service
+participant "API Controller\n/api/recipients" as API
+participant "Recipient Handler" as Handler
+database "Database" as DB
+
+User -> UI: Click "Add Recipient"
+UI -> Form: Display add recipient form
+
+User -> Form: Enter recipient details\n(name, birthday, relationship,\nphoto, preferences)
+Form -> Form: Validate form inputs\n(required fields)
+
+alt Validation Successful
+    Form -> Service: createRecipient(recipientData)
+    Service -> API: POST /api/recipients\n{name, birthday, relationship,\nphoto, preferences}
+
+    API -> API: Verify authentication\nfrom JWT token
+    API -> API: Extract tenant ID\nfrom JWT claims
+
+    alt User Authenticated
+        API -> Handler: Handle CreateRecipientCommand
+        Handler -> Handler: Validate recipient data
+
+        alt Data Valid
+            Handler -> DB: INSERT Recipient\n(RecipientId, TenantId, Name,\nBirthday, Relationship, Photo)
+            DB --> Handler: Recipient created
+
+            alt Preferences Provided
+                Handler -> DB: INSERT Preferences\n(tags, interests)
+                DB --> Handler: Preferences saved
+            end
+
+            Handler -> DB: Query complete recipient\nwith preferences
+            DB --> Handler: Recipient with preferences
+
+            Handler --> API: RecipientDto
+            API --> Service: 201 Created\n{recipientId, name, birthday,\nrelationship, preferences}
+            Service --> UI: Recipient created successfully
+            UI -> UI: Add recipient to list
+            UI --> User: Display success message\nand show new recipient card
+        else Data Invalid
+            Handler --> API: Validation error
+            API --> Service: 400 Bad Request\n{error: "Invalid data"}
+            Service --> Form: Validation failed
+            Form --> User: Display validation errors
+        end
+    else Not Authenticated
+        API --> Service: 401 Unauthorized\n{error: "Authentication required"}
+        Service --> Form: Unauthorized
+        Form --> User: Redirect to login
+    end
+else Form Validation Failed
+    Form --> User: Display validation errors\n(highlight required fields)
+end
+
+@enduml
