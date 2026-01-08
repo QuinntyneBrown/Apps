@@ -1,0 +1,64 @@
+@startuml Create Goal Flow
+title Create Goal User Flow
+
+actor User
+participant "Goals Dashboard\n(/goals)" as Dashboard
+participant "Create Goal Modal" as Modal
+participant "GoalsService" as Service
+participant "API\n(/api/goals)" as API
+participant "GoalController" as Controller
+participant "CreateGoalHandler" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+User -> Dashboard: Click "Create Goal" button
+activate Dashboard
+Dashboard -> Modal: Open Create Goal Modal
+activate Modal
+
+Modal -> User: Display form\n(name, target amount, deadline,\ncategory, priority)
+User -> Modal: Fill form fields
+Modal -> Modal: Calculate impact preview\n(monthly contribution needed)
+Modal -> User: Show impact preview
+
+User -> Modal: Click "Save"
+Modal -> Modal: Validate form\n(target > 0, deadline > today)
+
+alt Validation Success
+    Modal -> Service: createGoal(goalData)
+    activate Service
+    Service -> API: POST /api/goals\n{ name, targetAmount, deadline,\ncategory, priority }
+    activate API
+    API -> Controller: POST goals
+    activate Controller
+    Controller -> Handler: Send CreateGoalCommand
+    activate Handler
+    Handler -> Handler: Create Goal entity
+    Handler -> Context: goals.Add(goal)
+    activate Context
+    Context -> DB: INSERT INTO Goals
+    activate DB
+    DB --> Context: Success
+    deactivate DB
+    Context -> DB: Emit GoalCreated event
+    DB --> Context: Event saved
+    Context --> Handler: Goal saved
+    deactivate Context
+    Handler --> Controller: GoalDto
+    deactivate Handler
+    Controller --> API: 201 Created\n{ goalId, name, ... }
+    deactivate Controller
+    API --> Service: GoalDto
+    deactivate API
+    Service --> Modal: Goal created
+    deactivate Service
+    Modal -> Dashboard: Close modal
+    deactivate Modal
+    Dashboard -> Dashboard: Refresh goals list
+    Dashboard -> User: Show success message\n"Goal created successfully"
+    deactivate Dashboard
+else Validation Failed
+    Modal -> User: Show validation errors
+end
+
+@enduml
