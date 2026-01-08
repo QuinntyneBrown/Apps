@@ -1,0 +1,257 @@
+@startuml
+title Compare Prices and Receive Alerts User Flow
+
+actor User
+participant "ListDetail\nComponent" as ListUI
+participant "StorePriceComparison\nComponent" as Comparison
+participant "DealsWidget\nComponent" as Deals
+participant "Redux Store" as Redux
+participant "API\n/api/price-tracking" as API
+database "Database" as DB
+participant "Price Alert\nBackground Job" as AlertJob
+participant "Notification\nService" as NotifService
+participant "External\nPrice Scraper" as Scraper
+
+== Compare Prices Before Shopping ==
+
+User -> ListUI: View shopping list with\nmultiple items
+activate ListUI
+
+ListUI --> User: Show list with\n"Compare Prices" button
+
+User -> ListUI: Click "Compare Prices"
+
+ListUI -> Redux: Dispatch fetchPriceComparison(\n  listId,\n  items: [...]\n)
+activate Redux
+
+Redux --> ListUI: Loading state
+
+Redux -> API: POST /api/price-tracking/compare\n{\n  items: [\n    { name: "Apples", quantity: 2 },\n    { name: "Milk", quantity: 1 },\n    { name: "Bread", quantity: 1 }\n  ],\n  location: { lat, lng, radius: 10 }\n}
+activate API
+
+API -> DB: Get user's recent price data:\nSELECT item_name, store,\n       AVG(price) as avg_price,\n       MAX(purchased_at) as last_purchase\nFROM price_history\nWHERE user_id = {userId}\nAND item_name IN ('Apples', 'Milk', 'Bread')\nAND purchased_at >= NOW() - INTERVAL '90 days'\nGROUP BY item_name, store
+activate DB
+DB --> API: Historical prices
+deactivate DB
+
+API -> Scraper: Fetch current prices\nfrom nearby stores
+activate Scraper
+note right of Scraper
+  Optional: Integration with
+  store APIs or web scraping
+  for real-time prices
+end note
+Scraper --> API: Current market prices
+deactivate Scraper
+
+API -> DB: Get community avg prices:\nSELECT item_name, store,\n       AVG(price) as community_avg\nFROM price_history\nWHERE item_name IN (...)\nAND ST_DWithin(location,\n    ST_Point({lat}, {lng}), 10000)\nAND purchased_at >= NOW() - INTERVAL '30 days'\nGROUP BY item_name, store
+activate DB
+DB --> API: Community averages
+deactivate DB
+
+API -> API: Calculate best store per item\nand total cost per store
+
+API --> Redux: 200 OK\n{\n  itemComparisons: [\n    {\n      itemName: "Apples",\n      storePrices: [\n        { store: "Walmart", price: 3.89,\n          lastUpdated: "2 days ago",\n          source: "your_purchase" },\n        { store: "Target", price: 4.25,\n          source: "community" },\n        { store: "Kroger", price: 3.99,\n          source: "your_purchase" }\n      ],\n      bestPrice: { store: "Walmart", price: 3.89 }\n    },\n    ...\n  ],\n  storeRecommendations: [\n    {\n      store: "Walmart",\n      totalCost: 45.67,\n      items: 8,\n      savings: 5.23,\n      travelTime: "5 min"\n    },\n    {\n      store: "Kroger",\n      totalCost: 47.89,\n      items: 8,\n      savings: 3.01,\n      travelTime: "8 min"\n    }\n  ]\n}
+deactivate API
+
+Redux -> Redux: Update store:\npriceTracking.comparisons.byList[listId]
+
+Redux --> ListUI: Data ready
+deactivate Redux
+
+ListUI -> Comparison: Show comparison view
+activate Comparison
+
+Comparison --> User: Display comparison:\n┌─────────────────────────────────┐\n│ Price Comparison (8 items)      │\n├─────────────────────────────────┤\n│ Recommended Store: Walmart      │\n│ Total: $45.67                   │\n│ You save: $5.23 (10%)           │\n│ Travel time: 5 min              │\n│ [Navigate] [Use This Store]     │\n├─────────────────────────────────┤\n│ Item-by-Item Breakdown:         │\n│                                 │\n│ Apples (2 lbs)                  │\n│ ✓ Walmart    $3.89  Best price  │\n│   Target     $4.25  +9%         │\n│   Kroger     $3.99  +3%         │\n│                                 │\n│ Milk (1 gallon)                 │\n│   Walmart    $3.99  +8%         │\n│ ✓ Kroger     $3.69  Best price  │\n│   Target     $4.25  +15%        │\n│                                 │\n│ Bread (1 loaf)                  │\n│ ✓ Walmart    $2.49  Best price  │\n│   Kroger     $2.79  +12%        │\n│   Target     $2.99  +20%        │\n├─────────────────────────────────┤\n│ Alternative: Shop at 2 stores   │\n│ Walmart + Kroger = $44.89       │\n│ Extra savings: $0.78            │\n│ Extra travel: 8 min             │\n└─────────────────────────────────┘
+
+User -> Comparison: Examine price trends
+
+Comparison --> User: Show trend indicators:\n↓ Price dropping (good time to buy)\n↑ Price increasing (buy soon)\n→ Stable price
+
+deactivate Comparison
+deactivate ListUI
+
+== Discover Current Deals ==
+
+User -> ListUI: Navigate to "Deals" tab
+activate ListUI
+
+ListUI -> Deals: Show deals widget
+activate Deals
+
+Deals -> Redux: Dispatch fetchDeals({\n  location,\n  categories: user.preferences,\n  minSavings: 10\n})
+activate Redux
+
+Redux -> API: GET /api/price-tracking/deals\n?location={lat,lng}\n&categories=groceries\n&minSavings=10
+activate API
+
+API -> DB: SELECT ph.item_name,\n       ph.store,\n       ph.price as current_price,\n       avg_prices.avg as avg_price,\n       ((avg_price - current_price) / avg_price)\n         * 100 as savings_percent,\n       deals.expiration_date\nFROM price_history ph\nJOIN (\n  SELECT item_name,\n         AVG(price) as avg\n  FROM price_history\n  WHERE purchased_at >= NOW() - INTERVAL '90 days'\n  GROUP BY item_name\n) avg_prices ON ph.item_name = avg_prices.item_name\nLEFT JOIN store_deals deals\n  ON ph.store = deals.store\n  AND ph.item_name = deals.item_name\nWHERE ((avg_price - current_price) / avg_price) * 100 >= 10\nAND ph.purchased_at >= NOW() - INTERVAL '7 days'\nORDER BY savings_percent DESC\nLIMIT 20
+activate DB
+DB --> API: Current deals
+deactivate DB
+
+API --> Redux: 200 OK\n[{\n  itemName: "Chicken Breast",\n  store: "Kroger",\n  currentPrice: 2.99,\n  regularPrice: 4.99,\n  savingsPercent: 40,\n  expiresAt: "2026-01-15"\n}, ...]
+deactivate API
+
+Redux --> Deals: Deals loaded
+deactivate Redux
+
+Deals --> User: Display deal cards:\n┌─────────────────────────────────┐\n│ Current Deals Near You          │\n├─────────────────────────────────┤\n│ [Filter: All] [Sort: Savings ▼] │\n├─────────────────────────────────┤\n│ ┌─────────────────────────────┐ │\n│ │ 🥩 Chicken Breast            │ │\n│ │ Kroger • Save 40%            │ │\n│ │ $2.99 (was $4.99)            │ │\n│ │ Expires in 7 days            │ │\n│ │ [Add to List] [Details]      │ │\n│ └─────────────────────────────┘ │\n│                                 │\n│ ┌─────────────────────────────┐ │\n│ │ 🧀 Cheese (8oz)               │ │\n│ │ Walmart • Save 25%           │ │\n│ │ $3.74 (was $4.99)            │ │\n│ │ Expires in 3 days            │ │\n│ │ [Add to List] [Details]      │ │\n│ └─────────────────────────────┘ │\n└─────────────────────────────────┘
+
+User -> Deals: Click "Add to List" on\nChicken Breast deal
+
+Deals -> Redux: Dispatch addItem(currentListId, {\n  name: "Chicken Breast",\n  estimatedPrice: 2.99,\n  store: "Kroger",\n  deal: true\n})
+activate Redux
+
+Redux -> API: POST /api/lists/{id}/items\nwith deal flag
+activate API
+API -> DB: Insert item with deal info
+activate DB
+DB --> API: Added
+deactivate DB
+API --> Redux: Success
+deactivate API
+
+Redux --> Deals: Item added
+deactivate Redux
+
+Deals --> User: Show confirmation:\n"✓ Chicken Breast added\nto your list (Deal: -40%)"
+
+deactivate Deals
+deactivate ListUI
+
+== Background: Price Alert Triggered ==
+
+note over AlertJob, DB
+  Background job runs every hour
+  to check price alerts
+end note
+
+AlertJob -> DB: Check active alerts:\nSELECT pa.alert_id,\n       pa.user_id,\n       pa.item_name,\n       pa.threshold_price,\n       pa.alert_type,\n       ph.store,\n       ph.price as current_price\nFROM price_alerts pa\nJOIN price_history ph\n  ON pa.item_name = ph.item_name\n  AND pa.stores @> ARRAY[ph.store]\nWHERE pa.status = 'active'\nAND ph.purchased_at >= NOW() - INTERVAL '7 days'\nAND (\n  (pa.alert_type = 'price_drop'\n   AND ph.price <= pa.threshold_price)\n  OR\n  (pa.alert_type = 'price_increase'\n   AND ph.price >= pa.threshold_price)\n)\nAND NOT EXISTS (\n  SELECT 1 FROM alert_notifications an\n  WHERE an.alert_id = pa.alert_id\n  AND an.created_at >= NOW() - INTERVAL '24 hours'\n)
+activate AlertJob
+activate DB
+
+DB --> AlertJob: Triggered alerts:\n[{\n  alertId: "alert-123",\n  userId: "user-456",\n  itemName: "Apples",\n  thresholdPrice: 3.50,\n  currentPrice: 3.45,\n  store: "Target"\n}]
+deactivate DB
+
+AlertJob -> NotifService: Send notifications\nfor triggered alerts
+activate NotifService
+
+NotifService -> DB: INSERT INTO alert_notifications\n(alert_id, user_id, notification_type,\ntriggered_at, sent_at)\nVALUES ({alertId}, {userId},\n'price_drop', NOW(), NOW())
+activate DB
+DB --> NotifService: Recorded
+deactivate DB
+
+NotifService --> User: Push notification:\n"🎉 Price Alert!\nApples dropped to $3.45 at Target\n(Your target: $3.50)"
+
+NotifService --> User: Email notification:\n"Price Drop Alert\nApples is now $3.45/lb at Target\n\nThis is 5¢ below your target price!\nAverage price: $3.95\nYou save: 13%\n\n[View Price History]\n[Add to Shopping List]"
+
+deactivate NotifService
+
+AlertJob -> DB: Check if alert should\nbe marked as completed
+activate DB
+DB -> DB: If one-time alert,\nmark as completed:\nUPDATE price_alerts\nSET status = 'triggered'\nWHERE alert_id = {alertId}
+DB --> AlertJob: Updated
+deactivate DB
+
+deactivate AlertJob
+
+== User Responds to Alert ==
+
+User -> ListUI: Open notification
+activate ListUI
+
+ListUI -> Redux: Load price details\nfor alerted item
+activate Redux
+
+Redux -> API: GET /api/price-tracking/alert/{alertId}
+activate API
+
+API -> DB: Get full alert details
+activate DB
+DB --> API: Alert & price data
+deactivate DB
+
+API --> Redux: Alert details
+deactivate API
+
+Redux --> ListUI: Data ready
+deactivate Redux
+
+ListUI --> User: Show alert details:\n┌─────────────────────────────────┐\n│ Price Alert Triggered!          │\n├─────────────────────────────────┤\n│ Apples                          │\n│ Target • $3.45/lb               │\n│                                 │\n│ Your target: $3.50              │\n│ Savings: 13% below average      │\n│ Last purchased: $3.89 (Walmart) │\n│                                 │\n│ [Add to Current List]           │\n│ [View Price History]            │\n│ [Dismiss Alert]                 │\n└─────────────────────────────────┘
+
+User -> ListUI: Click "Add to Current List"
+
+ListUI -> Redux: Dispatch addItem(listId, {\n  name: "Apples",\n  quantity: 2,\n  estimatedPrice: 3.45,\n  recommendedStore: "Target"\n})
+activate Redux
+
+Redux -> API: POST /api/lists/{id}/items
+activate API
+API -> DB: Add item
+activate DB
+DB --> API: Success
+deactivate DB
+API --> Redux: Item added
+deactivate API
+
+Redux --> ListUI: Success
+deactivate Redux
+
+ListUI --> User: "✓ Apples added to your list\nRemember to shop at Target!"
+
+User -> ListUI: [Optional] Click "Dismiss Alert"
+
+ListUI -> Redux: Dispatch dismissAlert(alertId)
+activate Redux
+
+Redux -> API: PUT /api/alerts/{alertId}/dismiss
+activate API
+API -> DB: UPDATE alert_notifications\nSET dismissed_at = NOW()
+activate DB
+DB --> API: Dismissed
+deactivate DB
+API --> Redux: Success
+deactivate API
+
+Redux --> ListUI: Alert dismissed
+deactivate Redux
+
+deactivate ListUI
+
+== View Savings Dashboard ==
+
+User -> ListUI: Navigate to\n"Savings Dashboard"
+activate ListUI
+
+ListUI -> Redux: Dispatch fetchSavingsStats()
+activate Redux
+
+Redux -> API: GET /api/price-tracking/savings
+activate API
+
+API -> DB: Calculate total savings:\nSELECT\n  SUM(estimated_price - actual_price)\n    as total_savings,\n  COUNT(DISTINCT list_id)\n    as trips_count,\n  AVG(estimated_price - actual_price)\n    as avg_savings_per_trip\nFROM list_items\nWHERE user_id = {userId}\nAND status = 'purchased'\nAND actual_price IS NOT NULL\nAND estimated_price > actual_price
+activate DB
+DB --> API: Savings data
+deactivate DB
+
+API -> DB: Get monthly trend:\nSELECT DATE_TRUNC('month', purchased_at)\n         as month,\n       SUM(estimated_price - actual_price)\n         as savings\nFROM list_items\nWHERE user_id = {userId}\nAND status = 'purchased'\nGROUP BY month\nORDER BY month DESC\nLIMIT 12
+activate DB
+DB --> API: Monthly savings
+deactivate DB
+
+API -> DB: Get best deals found:\nSELECT name, store,\n       estimated_price,\n       actual_price,\n       ((estimated_price - actual_price)\n        / estimated_price * 100)\n         as savings_percent,\n       purchased_at\nFROM list_items\nWHERE user_id = {userId}\nAND status = 'purchased'\nORDER BY savings_percent DESC\nLIMIT 10
+activate DB
+DB --> API: Best deals
+deactivate DB
+
+API --> Redux: 200 OK\n{\n  totalSavings: 342.50,\n  tripsCount: 12,\n  avgPerTrip: 28.50,\n  monthlySavings: [...],\n  bestDeals: [...]\n}
+deactivate API
+
+Redux --> ListUI: Savings data loaded
+deactivate Redux
+
+ListUI --> User: Display dashboard:\n┌─────────────────────────────────┐\n│ Savings Dashboard               │\n├─────────────────────────────────┤\n│ ┌─────────────┐ ┌─────────────┐ │\n│ │ Total       │ │ Avg/Trip    │ │\n│ │ $342.50     │ │ $28.50      │ │\n│ │ ↑ 12% from  │ │ 12 trips    │ │\n│ │ last month  │ │             │ │\n│ └─────────────┘ └─────────────┘ │\n│                                 │\n│ Monthly Savings Trend           │\n│ ┌─────────────────────────────┐ │\n│ │ Bar Chart (12 months)        │ │\n│ │ $50 ┌──┬──┬──┬──┬──┬──┐    │ │\n│ │ $40 │  │  │  │██│  │██│    │ │\n│ │ $30 │██│██│██│██│██│██│    │ │\n│ │ $20 │██│██│██│██│██│██│    │ │\n│ └─────────────────────────────┘ │\n│                                 │\n│ Best Deals This Month           │\n│ • Chicken Breast -40% ($8.00)   │\n│ • Milk -25% ($1.25)             │\n│ • Apples -20% ($0.99)           │\n│                                 │\n│ 🏆 Achievement Unlocked!        │\n│ "Smart Shopper" - Saved $500    │\n└─────────────────────────────────┘
+
+deactivate ListUI
+
+@enduml
