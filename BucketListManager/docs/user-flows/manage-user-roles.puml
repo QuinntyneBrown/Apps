@@ -1,0 +1,101 @@
+@startuml manage-user-roles
+title Manage User Roles Flow
+
+actor Admin
+participant "User Detail Page" as UserDetail
+participant "Roles Component" as RolesUI
+participant "User Service" as Service
+participant "API Controller" as API
+participant "AddRoleCommand Handler" as AddHandler
+participant "RemoveRoleCommand Handler" as RemoveHandler
+participant "IBucketListManagerContext" as DB
+
+Admin -> UserDetail: Select user from list
+UserDetail -> Service: getUser(userId)
+Service -> API: GET /api/users/{userId}
+note right: Authorization: Bearer {token}\nRequires Admin role
+API -> DB: Query user by Id with roles
+DB --> API: User entity with assigned roles
+API --> Service: User DTO with roles
+Service --> UserDetail: User data
+UserDetail -> RolesUI: Display user info and roles
+RolesUI --> Admin: Show assigned roles
+RolesUI --> Admin: Show available roles
+
+== Add Role to User ==
+
+Admin -> RolesUI: Select role from available roles
+Admin -> RolesUI: Click "Add Role"
+RolesUI -> Service: addRoleToUser(userId, roleId)
+Service -> Service: Prepare request with admin token
+Service -> API: POST /api/users/{userId}/roles
+note right: Authorization: Bearer {token}\nBody: { roleId }
+
+API -> AddHandler: AddRoleToUserCommand
+AddHandler -> DB: Query user by Id
+DB --> AddHandler: User entity
+AddHandler -> DB: Query role by Id
+DB --> AddHandler: Role entity
+
+alt User and role exist
+    AddHandler -> DB: Check if user already has role
+    DB --> AddHandler: Role association check
+
+    alt Role not already assigned
+        AddHandler -> DB: Add UserRole association
+        AddHandler -> DB: SaveChangesAsync()
+        DB --> AddHandler: Success
+        AddHandler --> API: RoleAddedResponse
+        API --> Service: 200 OK
+        Service --> RolesUI: Role added successfully
+        RolesUI -> RolesUI: Move role to assigned list
+        RolesUI --> Admin: Display updated roles
+        RolesUI --> Admin: Show success notification
+    else Role already assigned
+        AddHandler --> API: 200 OK (idempotent)
+        API --> Service: Already assigned
+        Service --> RolesUI: No change needed
+        RolesUI --> Admin: Show info message
+    end
+else User or role not found
+    AddHandler --> API: 404 Not Found
+    API --> Service: Error response
+    Service --> RolesUI: Operation failed
+    RolesUI --> Admin: Display error message
+end
+
+== Remove Role from User ==
+
+Admin -> RolesUI: Select assigned role
+Admin -> RolesUI: Click "Remove Role"
+RolesUI -> RolesUI: Show confirmation dialog
+Admin -> RolesUI: Confirm removal
+RolesUI -> Service: removeRoleFromUser(userId, roleId)
+Service -> Service: Prepare request with admin token
+Service -> API: DELETE /api/users/{userId}/roles/{roleId}
+note right: Authorization: Bearer {token}
+
+API -> RemoveHandler: RemoveRoleFromUserCommand
+RemoveHandler -> DB: Query user by Id
+DB --> RemoveHandler: User entity
+RemoveHandler -> DB: Query UserRole association
+DB --> RemoveHandler: UserRole entity
+
+alt User and role association exist
+    RemoveHandler -> DB: Remove UserRole association
+    RemoveHandler -> DB: SaveChangesAsync()
+    DB --> RemoveHandler: Success
+    RemoveHandler --> API: RoleRemovedResponse
+    API --> Service: 200 OK
+    Service --> RolesUI: Role removed successfully
+    RolesUI -> RolesUI: Move role to available list
+    RolesUI --> Admin: Display updated roles
+    RolesUI --> Admin: Show success notification
+else Association not found
+    RemoveHandler --> API: 200 OK (idempotent)
+    API --> Service: Already removed
+    Service --> RolesUI: No change needed
+    RolesUI --> Admin: Show info message
+end
+
+@enduml
