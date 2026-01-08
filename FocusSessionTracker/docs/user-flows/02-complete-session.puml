@@ -1,0 +1,54 @@
+@startuml Complete Session Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Complete Session Flow
+
+actor User
+participant "Session Timer\nPage" as UI
+participant "Completion\nModal" as Modal
+participant "Session Store" as Store
+participant "API" as API
+database Database
+
+UI -> UI: Timer reaches zero
+activate UI
+UI -> UI: Play notification/sound
+UI -> Modal: Open completion modal
+activate Modal
+Modal --> UI: Show rating form
+
+User -> Modal: Rate quality (1-5 stars)
+Modal --> User: Stars selected
+
+User -> Modal: Add progress notes\n(optional)
+Modal --> User: Notes entered
+
+User -> Modal: Click "Complete" button
+Modal -> Store: completeSession(rating, notes)
+activate Store
+Store -> API: PATCH /api/sessions/{id}/complete
+activate API
+API -> Database: UPDATE session\nSET status='completed',\nrating, progress_notes
+activate Database
+Database --> API: Session updated
+deactivate Database
+API --> Store: Updated session
+deactivate API
+
+Store --> Modal: Session completed
+deactivate Store
+Modal -> UI: Close modal
+deactivate Modal
+
+UI -> UI: Display success message
+UI -> UI: Show break prompt
+UI --> User: Break recommendation shown
+deactivate UI
+
+@enduml
