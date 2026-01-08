@@ -1,0 +1,154 @@
+@startuml
+title View Trends and Analytics Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "Trends/Analytics\nPage" as TrendsPage
+participant "AnalyticsService" as Service
+participant "AnalyticsController\n/api/analytics" as API
+participant "GetTrendsQuery\nHandler" as TrendsHandler
+participant "GetStatisticsQuery\nHandler" as StatsHandler
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Click "Trends" or\n"Analytics" link
+activate Dashboard
+Dashboard -> TrendsPage: Navigate to trends page
+activate TrendsPage
+deactivate Dashboard
+
+TrendsPage -> TrendsPage: Set default period\n(Last 30 days)
+
+== Load Daily Trends Data ==
+
+TrendsPage -> Service: getTrends(dateRange)
+activate Service
+Service -> API: GET /api/analytics/trends?\nstartDate=xxx&endDate=xxx
+activate API
+API -> TrendsHandler: Execute(GetTrendsQuery)
+activate TrendsHandler
+TrendsHandler -> DB: Intakes.Where(i => i.Timestamp >= start\n&& i.Timestamp <= end)\n.GroupBy(i => i.Timestamp.Date)\n.Select(g => new {\n  Date = g.Key,\n  TotalAmount = g.Sum(i => i.Amount),\n  Count = g.Count()\n})
+activate DB
+DB -> Database: Query and aggregate intakes\n(filtered by TenantId and date)
+activate Database
+Database --> DB: Daily aggregated data
+deactivate Database
+DB --> TrendsHandler: List of daily totals
+deactivate DB
+TrendsHandler -> DB: Goals.Where(g => g.IsActive)\n.FirstOrDefaultAsync()
+activate DB
+DB -> Database: Query active goal
+activate Database
+Database --> DB: Goal record
+deactivate Database
+DB --> TrendsHandler: Goal entity (daily target)
+deactivate DB
+TrendsHandler -> TrendsHandler: Calculate goal achievement %\nfor each day
+TrendsHandler --> API: TrendsDTO with daily data
+deactivate TrendsHandler
+API --> Service: 200 OK with trends
+deactivate API
+Service --> TrendsPage: Daily trends data
+deactivate Service
+
+== Load Statistics Summary ==
+
+TrendsPage -> Service: getStatistics(dateRange)
+activate Service
+Service -> API: GET /api/analytics/statistics?\nstartDate=xxx&endDate=xxx
+activate API
+API -> StatsHandler: Execute(GetStatisticsQuery)
+activate StatsHandler
+StatsHandler -> DB: Complex queries for statistics
+activate DB
+DB -> Database: Query multiple aggregations:\n- Total consumption\n- Average daily intake\n- Goal achievement rate\n- Beverage type distribution\n- Best/worst days\n- Current streak
+activate Database
+Database --> DB: Aggregated statistics
+deactivate Database
+DB --> StatsHandler: Raw statistics data
+deactivate DB
+StatsHandler -> StatsHandler: Calculate derived metrics:\n- Achievement percentage\n- Streak count\n- Trending direction\n- Beverage preferences
+StatsHandler --> API: StatisticsDTO
+deactivate StatsHandler
+API --> Service: 200 OK with statistics
+deactivate API
+Service --> TrendsPage: Statistics data
+deactivate Service
+
+== Render Visualizations ==
+
+TrendsPage -> TrendsPage: Render line chart\n(daily intake over time)
+TrendsPage -> TrendsPage: Render bar chart\n(goal achievement by day)
+TrendsPage -> TrendsPage: Render pie chart\n(beverage type distribution)
+TrendsPage -> TrendsPage: Display key metrics:\n- Average daily intake\n- Total period consumption\n- Goal achievement rate\n- Current streak\n- Best day record
+
+TrendsPage -> User: Display trends page with:
+note right
+- Line chart showing daily intake
+- Bar chart for goal achievement
+- Pie chart for beverage types
+- Key statistics cards
+- Period selector (7/30/90 days)
+- Comparison to goals
+- Insights and recommendations
+end note
+deactivate TrendsPage
+
+== Change Time Period ==
+
+User -> TrendsPage: Select different period\n(e.g., Last 90 days)
+activate TrendsPage
+TrendsPage -> TrendsPage: Update date range
+
+TrendsPage -> Service: getTrends(newDateRange)
+activate Service
+Service -> API: GET /api/analytics/trends?...
+activate API
+API -> TrendsHandler: Execute(GetTrendsQuery)
+activate TrendsHandler
+TrendsHandler -> DB: Query with new date range
+activate DB
+DB -> Database: Query aggregated data
+activate Database
+Database --> DB: Updated trends
+deactivate Database
+DB --> TrendsHandler: New trend data
+deactivate DB
+TrendsHandler --> API: Updated TrendsDTO
+deactivate TrendsHandler
+API --> Service: 200 OK
+deactivate API
+Service --> TrendsPage: Updated trends
+deactivate Service
+
+TrendsPage -> Service: getStatistics(newDateRange)
+activate Service
+Service -> API: GET /api/analytics/statistics?...
+activate API
+API -> StatsHandler: Execute(GetStatisticsQuery)
+activate StatsHandler
+StatsHandler -> DB: Query statistics
+activate DB
+DB -> Database: Query with new range
+activate Database
+Database --> DB: Updated stats
+deactivate Database
+DB --> StatsHandler: New statistics
+deactivate DB
+StatsHandler --> API: Updated StatisticsDTO
+deactivate StatsHandler
+API --> Service: 200 OK
+deactivate API
+Service --> TrendsPage: Updated statistics
+deactivate Service
+
+TrendsPage -> TrendsPage: Re-render charts and metrics
+
+TrendsPage -> User: Display updated analytics
+deactivate TrendsPage
+
+@enduml
