@@ -1,0 +1,220 @@
+@startuml Favorites Management Flow
+title Favorites Management Flow
+
+actor User
+participant "Dashboard/Home\nPage (Angular)" as UI
+participant "Favorites Service\n(Angular)" as FavoritesService
+participant "Prompts Controller\n/api/prompts" as API
+participant "AddToFavorites\nCommand Handler" as AddHandler
+participant "RemoveFromFavorites\nCommand Handler" as RemoveHandler
+participant "GetFavorites\nQuery Handler" as GetHandler
+participant "ITenantContext" as TenantContext
+participant "ConversationStarter\nAppContext" as DB
+database "SQL Server\nDatabase" as Database
+
+== Add Prompt to Favorites ==
+User -> UI: View generated\nprompt
+activate UI
+
+User -> UI: Click "Favorite"\nbutton
+
+UI -> FavoritesService: addToFavorites(promptId)
+activate FavoritesService
+
+FavoritesService -> API: POST /api/prompts/favorites\n{promptId}
+activate API
+note right: JWT token in\nAuthorization header\ncontains userId and tenantId
+
+API -> AddHandler: Handle AddToFavoritesCommand
+activate AddHandler
+
+AddHandler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext -> TenantContext: Extract tenant_id\nfrom JWT claims
+TenantContext --> AddHandler: TenantId (Guid)
+deactivate TenantContext
+
+AddHandler -> AddHandler: Extract UserId\nfrom JWT claims
+
+AddHandler -> DB: ConversationPrompts\n.FindAsync(promptId)
+activate DB
+DB -> Database: SELECT * FROM ConversationPrompts\nWHERE PromptId = @promptId\nAND TenantId = @tenantId
+activate Database
+Database --> DB: Prompt entity
+deactivate Database
+DB --> AddHandler: Prompt
+deactivate DB
+
+alt Prompt Not Found
+    AddHandler --> API: 404 Not Found\n{error: "Prompt not found"}
+    API --> FavoritesService: Error response
+    FavoritesService --> UI: Error
+    UI --> User: Display error message
+    deactivate AddHandler
+    deactivate API
+    deactivate FavoritesService
+else Prompt Exists
+    AddHandler -> DB: UserFavorites.Any(\nf => f.UserId == userId\n&& f.PromptId == promptId)
+    activate DB
+    DB -> Database: SELECT COUNT(*) FROM UserFavorites\nWHERE UserId = @userId\nAND PromptId = @promptId\nAND TenantId = @tenantId
+    activate Database
+    Database --> DB: Count
+    deactivate Database
+    DB --> AddHandler: alreadyFavorited
+    deactivate DB
+
+    alt Already Favorited
+        AddHandler --> API: 200 OK\n{message: "Already favorited"}
+        note right: Idempotent operation
+    else Not Yet Favorited
+        AddHandler -> AddHandler: Create UserFavorite:\n- UserId\n- PromptId\n- TenantId\n- FavoritedAt (now)
+
+        AddHandler -> DB: UserFavorites.Add(favorite)
+        activate DB
+        DB -> Database: INSERT INTO UserFavorites\n(UserId, PromptId, TenantId,\nFavoritedAt)
+        activate Database
+        Database --> DB: Success
+        deactivate Database
+        deactivate DB
+
+        AddHandler -> DB: SaveChanges()
+        activate DB
+        DB -> Database: COMMIT
+        activate Database
+        Database --> DB: Success
+        deactivate Database
+        DB --> AddHandler: Success
+        deactivate DB
+
+        AddHandler -> AddHandler: Emit PromptFavorited\ndomain event
+
+        AddHandler --> API: 201 Created\n{favoriteId, promptId,\nfavoritedAt}
+    end
+    deactivate AddHandler
+
+    API --> FavoritesService: Success response
+    deactivate API
+
+    FavoritesService --> UI: Favorite added
+    deactivate FavoritesService
+
+    UI -> UI: Update UI:\n- Change heart icon\nto filled\n- Show success toast
+
+    UI --> User: Display "Added\nto favorites"
+    deactivate UI
+end
+
+== View Favorites List ==
+User -> UI: Navigate to\nFavorites page
+activate UI
+
+UI -> FavoritesService: getFavorites()
+activate FavoritesService
+
+FavoritesService -> API: GET /api/prompts/favorites
+activate API
+
+API -> GetHandler: Handle GetFavoritesQuery
+activate GetHandler
+
+GetHandler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> GetHandler: TenantId
+deactivate TenantContext
+
+GetHandler -> GetHandler: Extract UserId\nfrom JWT claims
+
+GetHandler -> DB: UserFavorites\n.Where(f => f.UserId == userId)\n.Include(f => f.Prompt)\n.OrderByDescending(\nf => f.FavoritedAt)
+activate DB
+DB -> Database: SELECT uf.*, p.*\nFROM UserFavorites uf\nJOIN ConversationPrompts p\nON uf.PromptId = p.PromptId\nWHERE uf.UserId = @userId\nAND uf.TenantId = @tenantId\nORDER BY uf.FavoritedAt DESC
+activate Database
+Database --> DB: Favorite records\nwith prompts
+deactivate Database
+DB --> GetHandler: List<UserFavorite>
+deactivate DB
+
+GetHandler --> API: 200 OK\nList<FavoriteDto>
+deactivate GetHandler
+
+API --> FavoritesService: Favorites list
+deactivate API
+
+FavoritesService --> UI: Favorites data
+deactivate FavoritesService
+
+UI -> UI: Render favorites:\n- Prompt cards\n- Favorited date\n- Remove button\n- Share button
+
+UI --> User: Display favorites list
+deactivate UI
+
+== Remove from Favorites ==
+User -> UI: Click "Remove"\nbutton on favorite
+activate UI
+
+UI -> FavoritesService: removeFromFavorites(favoriteId)
+activate FavoritesService
+
+FavoritesService -> API: DELETE /api/prompts/favorites/{favoriteId}
+activate API
+
+API -> RemoveHandler: Handle RemoveFromFavoritesCommand
+activate RemoveHandler
+
+RemoveHandler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> RemoveHandler: TenantId
+deactivate TenantContext
+
+RemoveHandler -> RemoveHandler: Extract UserId\nfrom JWT claims
+
+RemoveHandler -> DB: UserFavorites.FirstOrDefault(\nf => f.FavoriteId == favoriteId\n&& f.UserId == userId)
+activate DB
+DB -> Database: SELECT * FROM UserFavorites\nWHERE FavoriteId = @favoriteId\nAND UserId = @userId\nAND TenantId = @tenantId
+activate Database
+Database --> DB: Favorite entity
+deactivate Database
+DB --> RemoveHandler: UserFavorite or null
+deactivate DB
+
+alt Favorite Not Found
+    RemoveHandler --> API: 404 Not Found
+    API --> FavoritesService: Error
+    FavoritesService --> UI: Error
+    UI --> User: Display error
+    deactivate RemoveHandler
+    deactivate API
+    deactivate FavoritesService
+else Favorite Found
+    RemoveHandler -> DB: UserFavorites.Remove(favorite)
+    activate DB
+    DB -> Database: DELETE FROM UserFavorites\nWHERE FavoriteId = @favoriteId\nAND TenantId = @tenantId
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    deactivate DB
+
+    RemoveHandler -> DB: SaveChanges()
+    activate DB
+    DB -> Database: COMMIT
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> RemoveHandler: Success
+    deactivate DB
+
+    RemoveHandler --> API: 204 No Content
+    deactivate RemoveHandler
+
+    API --> FavoritesService: Success
+    deactivate API
+
+    FavoritesService --> UI: Removed successfully
+    deactivate FavoritesService
+
+    UI -> UI: Remove card from UI
+
+    UI --> User: Display "Removed\nfrom favorites"
+    deactivate UI
+end
+
+@enduml
