@@ -1,0 +1,42 @@
+@startuml Add Person Flow
+title Add Person to Family Tree Flow
+
+actor User
+participant "Add Person\nModal" as UI
+participant "Person Service" as PersonSvc
+participant "Persons\nController" as PersonCtrl
+participant "AddPerson\nCommandHandler" as Handler
+participant "IFamilyTreeBuilder\nContext" as DbContext
+participant "ITenantContext" as TenantCtx
+database "Database" as DB
+
+User -> UI: Click "Add Person"
+UI -> UI: Display modal form
+User -> UI: Fill in person details:\n- Full Name*\n- Given Name*\n- Surname*\n- Gender*\n- Birth Date\n- Birth Place\n- Occupation\n- Biography
+
+User -> UI: Click "Save"
+UI -> UI: Validate required fields
+UI -> PersonSvc: addPerson(personData)
+PersonSvc -> PersonCtrl: POST /api/persons\n{personData}
+PersonCtrl -> PersonCtrl: Validate request
+PersonCtrl -> Handler: Handle AddPersonCommand
+
+Handler -> TenantCtx: GetCurrentTenantId()
+TenantCtx --> Handler: TenantId (Guid)
+
+Handler -> Handler: Create Person aggregate\nwith TenantId
+Handler -> Handler: Calculate generation level
+Handler -> DbContext: Persons.Add(person)
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: INSERT INTO Persons\n(PersonId, TenantId, ...)
+DB --> DbContext: Success
+Handler -> Handler: Raise PersonAdded\ndomain event
+
+Handler --> PersonCtrl: PersonId (Guid)
+PersonCtrl --> PersonSvc: 201 Created\n{personId}
+PersonSvc --> UI: Person created successfully
+UI -> UI: Close modal
+UI -> UI: Refresh person list
+UI --> User: Show success message\nand updated list
+
+@enduml
