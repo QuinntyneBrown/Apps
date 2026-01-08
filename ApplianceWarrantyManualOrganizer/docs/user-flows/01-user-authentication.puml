@@ -1,0 +1,75 @@
+@startuml
+title User Authentication Flow
+
+actor User as user
+participant "Login Page" as loginPage
+participant "Auth Service\n(Angular)" as authService
+participant "HTTP Interceptor" as interceptor
+participant "API Controller" as apiController
+participant "Backend Auth\nService" as backendAuthService
+participant "DB Context" as dbContext
+participant "Users Table" as database
+
+user -> loginPage: Enter username and password
+activate loginPage
+loginPage -> loginPage: Validate form inputs
+loginPage -> authService: login(username, password)
+activate authService
+
+authService -> interceptor: POST /api/auth/login
+activate interceptor
+interceptor -> apiController: { username, password }
+activate apiController
+
+apiController -> backendAuthService: AuthenticateAsync(username, password)
+activate backendAuthService
+
+backendAuthService -> dbContext: Users.FirstOrDefaultAsync(u => u.Username == username)
+activate dbContext
+dbContext -> database: SELECT * FROM Users WHERE Username = ?
+activate database
+database --> dbContext: User record
+deactivate database
+dbContext --> backendAuthService: User entity
+deactivate dbContext
+
+backendAuthService -> backendAuthService: Verify password hash\n(PBKDF2-SHA256)
+
+alt Valid Credentials
+    backendAuthService -> backendAuthService: Generate JWT Token\n(HS256, 24h expiry)
+    backendAuthService --> apiController: { token, expiresAt, user }
+    deactivate backendAuthService
+
+    apiController --> interceptor: 200 OK\n{ token, expiresAt, user }
+    deactivate apiController
+
+    interceptor --> authService: Success response
+    deactivate interceptor
+
+    authService -> authService: Store token in localStorage
+    authService --> loginPage: Authentication successful
+    deactivate authService
+
+    loginPage -> loginPage: Redirect to Dashboard
+    loginPage --> user: Show Dashboard
+    deactivate loginPage
+
+else Invalid Credentials
+    backendAuthService --> apiController: null
+    deactivate backendAuthService
+
+    apiController --> interceptor: 401 Unauthorized\n{ error: "Invalid username or password" }
+    deactivate apiController
+
+    interceptor --> authService: Error response
+    deactivate interceptor
+
+    authService --> loginPage: Authentication failed
+    deactivate authService
+
+    loginPage -> loginPage: Display error message
+    loginPage --> user: Show error: "Invalid credentials"
+    deactivate loginPage
+end
+
+@enduml
