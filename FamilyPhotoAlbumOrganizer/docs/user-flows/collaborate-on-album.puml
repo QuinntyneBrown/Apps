@@ -1,0 +1,154 @@
+@startuml collaborate-on-album
+actor "Album Owner" as Owner
+actor "Collaborator" as Collaborator
+participant "Album View" as AlbumView
+participant "Collaborator Management" as CollabManagement
+participant "Collaboration Service" as CollabService
+participant "API Gateway" as API
+participant "Collaboration Controller" as CollabController
+participant "Notification Service" as NotificationService
+database "Collaboration Database" as CollabDB
+participant "Email Service" as EmailService
+
+== Invite Collaborator Flow ==
+
+Owner -> AlbumView: Open album
+Owner -> AlbumView: Click "Manage Collaborators"
+AlbumView -> CollabManagement: Open collaborator panel
+CollabManagement --> Owner: Show current collaborators\n(if any)
+
+Owner -> CollabManagement: Click "Invite Collaborator"
+CollabManagement --> Owner: Show invite form
+
+Owner -> CollabManagement: Enter collaborator details:\n- Email address\n- Permission level (Viewer/Contributor)
+
+CollabManagement -> CollabManagement: Validate email format
+
+alt Valid invitation
+    Owner -> CollabManagement: Click "Send Invitation"
+    CollabManagement -> CollabService: inviteCollaborator(albumId, email, permission)
+    CollabService -> API: POST /api/albums/{id}/collaborators/invite
+    API -> CollabController: inviteCollaborator(albumId, email, permission)
+
+    CollabController -> CollabController: Generate invitation token
+    CollabController -> CollabDB: INSERT INTO collaborations\n(albumId, inviteeEmail,\npermission, token, status='pending')
+    CollabDB --> CollabController: Invitation record
+
+    CollabController -> NotificationService: sendCollaborationInvite(invitation)
+    NotificationService -> EmailService: Send invitation email\nwith acceptance link
+    EmailService --> Collaborator: Email: "You're invited to\ncollaborate on album '{name}'"
+
+    CollabController --> API: 201 Created\n{invitation: Invitation}
+    API --> CollabService: Invitation sent
+    CollabService --> CollabManagement: Display invitation
+    CollabManagement --> Owner: Show notification:\n"Invitation sent to {email}"
+
+else Invalid email
+    CollabManagement --> Owner: Show error:\n"Invalid email address"
+end
+
+== Accept Invitation Flow ==
+
+Collaborator -> EmailService: Click invitation link\nin email
+EmailService -> AlbumView: Navigate to invitation page\n(/invitations/{token})
+AlbumView -> CollabService: getInvitation(token)
+CollabService -> API: GET /api/invitations/{token}
+API -> CollabController: getInvitationByToken(token)
+CollabController -> CollabDB: SELECT * FROM collaborations\nWHERE token = token
+CollabDB --> CollabController: Invitation details
+CollabController --> API: 200 OK {invitation}
+API --> CollabService: Invitation data
+CollabService --> AlbumView: Display invitation details
+AlbumView --> Collaborator: Show album preview:\n"Accept invitation to '{album}'?"
+
+alt Collaborator accepts
+    Collaborator -> AlbumView: Click "Accept Invitation"
+    AlbumView -> CollabService: acceptInvitation(token)
+    CollabService -> API: POST /api/invitations/{token}/accept
+    API -> CollabController: acceptInvitation(token)
+
+    CollabController -> CollabDB: UPDATE collaborations\nSET status = 'accepted',\nacceptedAt = NOW(),\nuserIdCollaborator = currentUserId\nWHERE token = token
+    CollabDB --> CollabController: Success
+
+    CollabController -> NotificationService: notifyOwner(albumOwner, collaborator)
+    NotificationService --> Owner: Notification:\n"{user} accepted collaboration"
+
+    CollabController --> API: 200 OK
+    API --> CollabService: Invitation accepted
+    CollabService -> AlbumView: Redirect to shared album
+    AlbumView --> Collaborator: Show album with\nappropriate permissions
+
+    note right of AlbumView
+        Viewer: Can only view photos
+        Contributor: Can add photos
+    end note
+
+else Collaborator declines
+    Collaborator -> AlbumView: Click "Decline Invitation"
+    AlbumView -> CollabService: declineInvitation(token)
+    CollabService -> API: POST /api/invitations/{token}/decline
+    API -> CollabController: declineInvitation(token)
+    CollabController -> CollabDB: UPDATE collaborations\nSET status = 'declined'\nWHERE token = token
+    CollabDB --> CollabController: Success
+    CollabController --> API: 200 OK
+    API --> CollabService: Invitation declined
+    CollabService --> AlbumView: Show message
+    AlbumView --> Collaborator: "Invitation declined"
+end
+
+== Contributor Adds Photos ==
+
+Collaborator -> AlbumView: Navigate to shared album
+AlbumView -> CollabService: checkPermission(albumId, userId)
+CollabService -> API: GET /api/albums/{id}/permissions
+API -> CollabController: getUserPermission(albumId, userId)
+CollabController -> CollabDB: SELECT permission FROM collaborations\nWHERE albumId = albumId\nAND userId = userId
+CollabDB --> CollabController: Permission level
+CollabController --> API: 200 OK {permission: 'Contributor'}
+API --> CollabService: Permission data
+CollabService --> AlbumView: Display album with\nadd photos button
+
+alt Contributor permission
+    Collaborator -> AlbumView: Click "Add Photos"
+    AlbumView --> Collaborator: Open photo selector
+    Collaborator -> AlbumView: Select and add photos
+    note right: Same flow as\n"Add Photos to Album"
+    AlbumView -> NotificationService: Notify album owner
+    NotificationService --> Owner: "{user} added\nX photos to your album"
+else Viewer permission only
+    AlbumView --> Collaborator: Show album without\nadd photos button
+end
+
+== View Shared Albums ==
+
+Collaborator -> AlbumView: Navigate to "Shared With Me"
+AlbumView -> CollabService: getSharedAlbums()
+CollabService -> API: GET /api/albums/shared-with-me
+API -> CollabController: getSharedAlbums(userId)
+CollabController -> CollabDB: SELECT albums, collaborations\nWHERE userId = currentUserId\nAND status = 'accepted'
+CollabDB --> CollabController: Shared albums list
+CollabController --> API: 200 OK {sharedAlbums[]}
+API --> CollabService: Shared albums data
+CollabService --> AlbumView: Display shared albums
+AlbumView --> Collaborator: Show list with:\n- Album name\n- Owner name\n- Permission level\n- Contributor status
+
+== Remove Collaborator ==
+
+Owner -> CollabManagement: View collaborators list
+Owner -> CollabManagement: Click "Remove" on collaborator
+CollabManagement -> CollabManagement: Show confirmation:\n"Remove {user} from album?"
+Owner -> CollabManagement: Confirm removal
+
+CollabManagement -> CollabService: removeCollaborator(albumId, userId)
+CollabService -> API: DELETE /api/albums/{id}/collaborators/{userId}
+API -> CollabController: removeCollaborator(albumId, userId)
+CollabController -> CollabDB: DELETE FROM collaborations\nWHERE albumId = albumId\nAND userId = userId
+CollabDB --> CollabController: Success
+CollabController -> NotificationService: notifyCollaborator(user)
+NotificationService --> Collaborator: "You were removed from\nalbum '{name}'"
+CollabController --> API: 200 OK
+API --> CollabService: Collaborator removed
+CollabService --> CollabManagement: Update list
+CollabManagement --> Owner: Show notification:\n"Collaborator removed"
+
+@enduml
