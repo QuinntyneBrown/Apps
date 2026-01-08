@@ -1,0 +1,100 @@
+@startuml progress-logging
+title Progress Logging Flow
+
+actor User
+participant "Progress Log Page" as UI
+participant "Progress Service" as ProgressSvc
+participant "Goals Controller" as Controller
+participant "LogProgressCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to Goal Detail
+activate UI
+
+UI -> UI: Display current progress\nand log history
+
+User -> UI: Click "Log Progress"
+
+UI -> UI: Show progress log form
+
+User -> UI: Enter progress details:\n- Amount (numeric)\n- Type (percentage/units/currency)\n- Notes/Comments\n- Date (default: today)
+
+User -> UI: Click "Submit"
+
+UI -> UI: Validate form inputs
+UI -> ProgressSvc: logProgress(goalId, progressData)
+activate ProgressSvc
+
+ProgressSvc -> Controller: POST /api/goals/{id}/progress
+note right: Authorization: Bearer {token}\nUser ID from JWT claims
+activate Controller
+
+Controller -> Command: LogProgressCommand\n(goalId, amount, type,\nnotes, partnerId)
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @goalId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Validate goal exists\nand is active
+
+Command -> Command: Extract PartnerId\nfrom JWT claims
+
+Command -> Command: Create Progress entity\n- ProgressId\n- GoalId\n- Amount\n- Type\n- Notes\n- PartnerId\n- Timestamp = Now
+
+Command -> Command: Calculate updated\ngoal progress percentage
+
+Command -> Command: Raise ProgressUpdated event
+
+Command -> DbContext: Progress.Add(progressEntry)
+activate DbContext
+DbContext -> DB: INSERT INTO Progress\n(ProgressId, GoalId,\nAmount, Type, Notes,\nPartnerId, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: UPDATE Goals SET\nCurrentProgress = @newProgress,\nLastUpdatedAt = @timestamp\nWHERE GoalId = @goalId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'ProgressUpdated',\nAggregateId: GoalId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: LogProgressResponse\n(ProgressId, NewTotalProgress,\nTimestamp)
+deactivate Command
+
+Controller --> ProgressSvc: 201 Created
+deactivate Controller
+
+ProgressSvc --> UI: Progress logged successfully
+deactivate ProgressSvc
+
+UI -> UI: Add entry to progress log
+UI -> UI: Update progress chart
+UI -> UI: Update progress indicator
+UI --> User: Show success message\n"Progress logged successfully"
+deactivate UI
+
+note over User, DB
+The ProgressUpdated event may trigger:
+- Progress chart refresh
+- Partner notifications
+- Trend analysis updates
+- Achievement checks
+- Encouragement messages
+end note
+
+@enduml
