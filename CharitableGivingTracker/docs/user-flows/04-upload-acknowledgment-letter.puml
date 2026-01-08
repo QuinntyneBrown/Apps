@@ -1,0 +1,131 @@
+@startuml
+title Upload Acknowledgment Letter - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Missing\nAcknowledgments\nAlert" as alert
+participant "Upload Modal" as modal
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "UploadAcknowledgment\nCommand Handler" as handler
+participant "Donation\nAggregate" as aggregate
+participant "Document Storage" as storage
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: View dashboard
+activate dashboard
+
+dashboard -> api: GET /api/donations/missing-acknowledgments
+activate api
+api -> db: Query donations >= $250\nwithout acknowledgment letters
+activate db
+db --> api: List of donations\nneeding acknowledgments
+deactivate db
+api --> dashboard: Return donations list
+deactivate api
+
+alt Has Missing Acknowledgments
+    dashboard -> alert: Display alert banner\n"You have X donations\nneeding acknowledgment letters"
+    activate alert
+
+    alert --> user: Show alert with\ndonations list:\n- Organization\n- Amount\n- Date\n- Days since donation
+
+    user -> alert: Click "Upload" for a donation
+
+    alert -> modal: Open upload modal\nfor specific donation
+    activate modal
+
+    modal --> user: Display donation details:\n- Organization: [Name]\n- Amount: $[XXX]\n- Date: [Date]\n- Required: Written acknowledgment\nfor donations >= $250
+
+    modal --> user: Show file upload area\n(drag-and-drop or click)
+
+    user -> modal: Select or drag PDF/image file
+
+    modal -> validator: Validate file
+    activate validator
+
+    validator -> validator: Check file type\n(PDF, PNG, JPG)
+    validator -> validator: Verify file size < 5MB
+    validator -> validator: Ensure file not corrupted
+
+    alt Validation Fails
+        validator --> modal: Return error
+        modal --> user: Display error:\n"Invalid file type or\nfile too large"
+    else Validation Succeeds
+        validator --> modal: File valid
+        deactivate validator
+
+        user -> modal: Click "Upload"
+
+        modal -> api: POST /api/donations/{id}/acknowledgment\nMultipart form data with file
+        activate api
+
+        modal --> user: Show upload progress bar
+
+        api -> handler: Execute UploadAcknowledgmentLetterCommand
+        activate handler
+
+        handler -> handler: Validate DonationId exists
+        handler -> handler: Verify user owns donation
+        handler -> handler: Check donation amount >= $250
+
+        handler -> storage: Upload document to cloud storage
+        activate storage
+        storage -> storage: Store file securely
+        storage --> handler: Return document URL
+        deactivate storage
+
+        handler -> aggregate: Update Donation aggregate
+        activate aggregate
+
+        aggregate -> aggregate: Set AcknowledgmentLetterUrl
+        aggregate -> aggregate: Set AcknowledgmentReceived = true
+        aggregate -> aggregate: Update timestamp
+
+        aggregate -> db: UPDATE Donations\nSET AcknowledgmentLetterUrl,\nAcknowledgmentReceived = true
+        activate db
+        db --> aggregate: Success
+        deactivate db
+
+        aggregate -> events: Publish AcknowledgmentLetterReceived event
+        activate events
+        events --> aggregate: Event published
+        deactivate events
+
+        aggregate --> handler: Success
+        deactivate aggregate
+
+        handler --> api: 200 OK\n{documentUrl, message}
+        deactivate handler
+
+        api --> modal: Upload successful
+        deactivate api
+
+        modal --> user: Display success:\n"Acknowledgment letter\nuploaded successfully!"
+
+        modal -> modal: Close modal
+        deactivate modal
+
+        alert -> api: GET /api/donations/missing-acknowledgments
+        activate api
+        api -> db: Query updated list
+        db --> api: Updated donations list
+        api --> alert: Return updated list
+        deactivate api
+
+        alert -> alert: Remove uploaded\ndonation from list
+
+        alt No More Missing Acknowledgments
+            alert -> alert: Hide alert banner
+        end
+
+        alert --> user: Show updated list\nor hide banner
+        deactivate alert
+    end
+end
+
+dashboard --> user: Dashboard reflects\nupdated acknowledgment status
+deactivate dashboard
+
+@enduml
