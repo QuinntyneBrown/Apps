@@ -1,0 +1,51 @@
+@startuml record-celebration
+title Record Celebration User Flow
+
+actor User
+participant "Date Detail" as Detail
+participant "Celebration Form" as Form
+participant "Photo Upload" as Upload
+participant "API" as API
+participant "Database" as DB
+participant "Storage" as Storage
+
+User -> Detail: View date detail
+User -> Detail: Click "Record Celebration"
+Detail -> Form: Open celebration form
+
+Form -> User: Display celebration form\n(Date, Notes, Rating)
+
+User -> Form: Enter celebration date
+User -> Form: Add celebration notes
+User -> Form: Select rating (1-5 stars)
+
+alt Add photos
+    User -> Form: Click "Add Photos"
+    Form -> Upload: Open photo upload
+    User -> Upload: Select photos
+    Upload -> Storage: Upload images
+    Storage --> Upload: Return image URLs
+    Upload -> Form: Attach photo references
+    Form -> User: Show photo thumbnails
+end
+
+User -> Form: Click "Save Celebration"
+Form -> API: POST /api/celebrations
+API -> DB: Insert celebration record
+DB --> API: Confirm insert
+API --> Form: Return success
+
+Form -> User: Show success notification
+Form -> Detail: Close form & refresh
+Detail -> User: Show celebration in timeline
+
+alt View celebration history
+    User -> Detail: Click "History" tab
+    Detail -> API: GET /api/dates/{dateId}/celebrations
+    API -> DB: Fetch celebration history
+    DB --> API: Return celebrations
+    API --> Detail: Return history data
+    Detail -> User: Display timeline of\npast celebrations
+end
+
+@enduml
