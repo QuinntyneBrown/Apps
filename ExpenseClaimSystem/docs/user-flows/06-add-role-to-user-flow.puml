@@ -1,0 +1,40 @@
+@startuml
+
+actor Administrator
+participant "User Details\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to user details
+UI -> UserService: getUser(userId)
+UserService -> API: GET /api/users/{userId}
+API -> DB: SELECT User with Roles
+DB --> API: User data with\ncurrent roles
+API --> UserService: 200 OK\n{user, roles[]}
+UserService --> UI: Display user data
+UI --> Administrator: Show current roles\nand available roles
+
+Administrator -> UI: Select role from\navailable roles list
+Administrator -> UI: Click Add Role
+
+UI -> UserService: addRoleToUser(userId, roleId)
+UserService -> API: POST /api/users/{userId}/roles\n{roleId}
+
+API -> DB: Check if role already\nassigned to user
+DB --> API: Role assignment status
+
+alt Role Not Already Assigned
+    API -> DB: INSERT INTO UserRole\n(userId, roleId)
+    DB --> API: Role assigned
+
+    API --> UserService: 200 OK\n{updated roles list}
+    UserService --> UI: Role added successfully
+    UI --> Administrator: Update roles display\nwith new role
+else Role Already Assigned
+    API --> UserService: 200 OK (idempotent)\n{existing roles list}
+    UserService --> UI: Role already exists
+    UI --> Administrator: No change in display
+end
+
+@enduml
