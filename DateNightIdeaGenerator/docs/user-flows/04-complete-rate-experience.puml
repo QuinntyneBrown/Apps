@@ -1,0 +1,164 @@
+@startuml Complete and Rate Experience
+title Complete and Rate Experience Flow
+
+actor User
+participant "Memory Gallery\nUI" as GalleryUI
+participant "Rate Experience\nUI" as RatingUI
+participant "API Gateway" as API
+participant "Experience\nService" as ExpService
+participant "Preferences\nService" as PrefService
+participant "ML Engine" as ML
+participant "Photo Storage\n(Azure Blob)" as BlobStorage
+database "SQL Server" as DB
+
+== Mark Date Complete ==
+User -> GalleryUI: View Scheduled Dates
+GalleryUI -> API: GET /api/planning/upcoming
+API -> ExpService: Get Upcoming Dates
+ExpService -> DB: SELECT DatePlans\nWHERE TenantId = @TenantId\nAND DateTime <= @Now\nAND Status = 'Scheduled'
+DB --> ExpService: Upcoming Dates
+ExpService --> API: DatePlans List
+API --> GalleryUI: Display Dates
+GalleryUI --> User: Show Dates to Complete
+
+User -> GalleryUI: Select Date to Complete
+User -> GalleryUI: Click "Mark Complete"
+GalleryUI -> API: POST /api/experiences/{planId}/complete
+note right
+Request Body:
+{
+  "planId": "...",
+  "completionDate": "2026-01-15T22:30:00"
+}
+end note
+API -> ExpService: Complete Date Command
+ExpService -> DB: INSERT Experience\nSET PlanId = @PlanId,\nCompletionDate = @Date
+DB --> ExpService: ExperienceId
+ExpService --> ExpService: Publish DateNightCompleted Event
+ExpService --> API: Experience Created
+API --> GalleryUI: Redirect to Rating
+GalleryUI -> RatingUI: Open Rating Form
+
+== Rate Experience ==
+RatingUI -> RatingUI: Display Rating Form
+RatingUI --> User: Show Rating Options
+
+User -> RatingUI: Select Overall Rating (1-5)
+User -> RatingUI: Rate Specific Aspects
+note right
+Rating aspects:
+- Venue/Location
+- Activity/Experience
+- Value for Money
+- Atmosphere
+- Would Recommend
+end note
+
+User -> RatingUI: Write Review/Notes
+User -> RatingUI: Record Actual Cost
+note right
+Cost tracking updates
+budget preferences
+end note
+
+User -> RatingUI: Click Submit Rating
+RatingUI -> API: POST /api/experiences/{id}/rate
+note right
+Request Body:
+{
+  "overallRating": 5,
+  "aspects": {...},
+  "review": "Amazing evening!",
+  "actualCost": 125
+}
+end note
+API -> ExpService: Rate Experience Command
+ExpService -> DB: UPDATE Experience\nSET Rating = @Rating,\nReview = @Review,\nActualCost = @Cost
+DB --> ExpService: Success
+
+ExpService --> ExpService: Publish DateExperienceRated Event
+
+ExpService -> PrefService: Record Spending
+PrefService -> DB: INSERT ActualSpending
+DB --> PrefService: Recorded
+
+ExpService -> ML: Update Recommendation Model
+note right
+ML learns from:
+- Rating scores
+- Category preferences
+- Cost satisfaction
+- Venue preferences
+end note
+ML --> ML: Train Model with New Data
+
+ExpService --> API: Rating Saved
+API --> RatingUI: Confirmation
+RatingUI --> User: Show Success Message
+
+== Upload Photos ==
+User -> GalleryUI: Click "Add Photos"
+GalleryUI -> RatingUI: Open Photo Upload
+RatingUI --> User: Show Upload Interface
+
+User -> RatingUI: Select Photos (Multiple)
+RatingUI -> RatingUI: Preview Photos
+
+User -> RatingUI: Add Captions (Optional)
+User -> RatingUI: Click Upload
+
+loop For Each Photo
+    RatingUI -> API: POST /api/experiences/{id}/photos
+    note right
+    Multipart form data with:
+    - Photo file
+    - Caption
+    - Metadata
+    end note
+    API -> ExpService: Add Photo Command
+    ExpService -> BlobStorage: Upload Photo
+    BlobStorage --> ExpService: Photo URL
+    ExpService -> DB: INSERT ExperiencePhoto\nSET Url = @PhotoUrl,\nCaption = @Caption
+    DB --> ExpService: Success
+    ExpService --> ExpService: Publish DatePhotoAdded Event
+    ExpService --> API: Photo Added
+    API --> RatingUI: Photo Uploaded
+end
+
+RatingUI --> User: Show Upload Success
+RatingUI -> RatingUI: Display All Photos
+
+== View Memory Gallery ==
+User -> GalleryUI: View Past Dates
+GalleryUI -> API: GET /api/experiences
+API -> ExpService: Get Experiences Query
+ExpService -> DB: SELECT Experiences\nWHERE TenantId = @TenantId\nORDER BY CompletionDate DESC
+DB --> ExpService: Experiences List
+ExpService --> API: Experiences with Photos
+API --> GalleryUI: Display Gallery
+GalleryUI --> User: Show Memory Timeline
+
+User -> GalleryUI: Filter by Rating/Category
+GalleryUI -> GalleryUI: Apply Filters Locally
+
+User -> GalleryUI: View Experience Details
+GalleryUI -> API: GET /api/experiences/{id}
+API -> ExpService: Get Experience Details
+ExpService -> DB: SELECT Experience, Photos\nWHERE Id = @Id
+DB --> ExpService: Full Details
+ExpService --> API: Experience with All Data
+API --> GalleryUI: Display Details
+GalleryUI --> User: Show Photos, Rating, Review
+
+alt View Favorite Dates
+    User -> GalleryUI: Filter "5-Star Dates"
+    GalleryUI -> API: GET /api/experiences?rating=5
+    API -> ExpService: Get Top Rated Query
+    ExpService -> DB: SELECT WHERE Rating = 5
+    DB --> ExpService: Favorite Dates
+    ExpService --> API: Top Experiences
+    API --> GalleryUI: Display Favorites
+    GalleryUI --> User: Show Best Memories
+end
+
+@enduml
