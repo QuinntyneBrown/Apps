@@ -1,0 +1,64 @@
+@startuml view-portfolio-dashboard-flow
+title View Portfolio Dashboard Flow
+
+actor User
+participant "Portfolios Dashboard" as Dashboard
+participant "Portfolio Service" as PortfolioService
+participant "Portfolio Card" as PortfolioCard
+participant "API Controller\n/api/portfolios" as PortfolioController
+participant "GetPortfoliosByUserId\nQuery Handler" as Handler
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as Database
+
+User -> Dashboard: Navigate to /portfolios
+Dashboard -> Dashboard: Component initialization
+
+Dashboard -> PortfolioService: getPortfolios()
+note right: Using RxJS Observable\nwith async pipe pattern
+
+PortfolioService -> PortfolioService: Get JWT token from localStorage
+PortfolioService -> PortfolioController: GET /api/portfolios\nAuthorization: Bearer <token>
+
+PortfolioController -> TenantContext: GetCurrentTenantId()
+TenantContext --> PortfolioController: TenantId from JWT claims
+
+PortfolioController -> Handler: Handle GetPortfoliosByUserIdQuery
+Handler -> DbContext: Query Portfolios DbSet\n(filtered by TenantId via global filter)
+DbContext -> Database: SELECT * FROM Portfolios\nWHERE UserId = @userId\nAND TenantId = @tenantId
+
+Database --> DbContext: Portfolio records
+DbContext --> Handler: List<Portfolio>
+
+Handler -> Handler: Calculate current allocation\nfor each portfolio
+Handler -> Handler: Calculate drift from targets
+Handler -> Handler: Calculate performance metrics\n(Today, 1W, 1M, YTD)
+
+Handler --> PortfolioController: List<PortfolioDto>
+PortfolioController --> PortfolioService: 200 OK + Portfolio list
+
+PortfolioService --> Dashboard: Observable<Portfolio[]>
+Dashboard -> Dashboard: async pipe subscribes\nto observable
+
+alt Portfolios Exist
+    loop For each portfolio
+        Dashboard -> PortfolioCard: Render portfolio card
+        PortfolioCard -> PortfolioCard: Display portfolio name
+        PortfolioCard -> PortfolioCard: Display current value
+        PortfolioCard -> PortfolioCard: Display daily change indicator
+        PortfolioCard -> PortfolioCard: Render allocation pie chart
+        PortfolioCard -> PortfolioCard: Display quick actions menu
+        PortfolioCard --> Dashboard: Card rendered
+    end
+
+    Dashboard --> User: Display portfolio cards\nwith summaries
+
+    User -> PortfolioCard: Click on portfolio card
+    PortfolioCard -> Dashboard: Navigate to /portfolios/:id
+    Dashboard --> User: Display portfolio details
+else No Portfolios
+    Dashboard -> Dashboard: Display empty state
+    Dashboard --> User: Show "Create your first portfolio"\nwith create button
+end
+
+@enduml
