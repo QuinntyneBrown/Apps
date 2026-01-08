@@ -1,0 +1,67 @@
+@startuml Log Distraction During Session Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Log Distraction During Session Flow
+
+actor User
+participant "Session Timer\nPage" as UI
+participant "Quick\nDistraction\nLogger" as Logger
+participant "Distraction\nStore" as Store
+participant "API" as API
+database Database
+
+User -> UI: Distraction occurs
+activate UI
+User -> UI: Click "Log Distraction" button
+UI -> Logger: Open modal
+activate Logger
+Logger -> Logger: Start duration timer
+Logger --> User: Show logger form
+
+User -> Logger: Select type\n(Internal/External)
+Logger --> User: Type selected
+
+User -> Logger: Click source quick button\nor type custom
+Logger --> User: Source selected
+
+User -> Logger: Adjust impact slider (1-5)
+Logger --> User: Impact set
+
+User -> Logger: Add description (optional)
+Logger --> User: Description entered
+
+User -> Logger: Click "Log" button
+Logger -> Logger: Stop duration timer
+Logger -> Store: logDistraction(sessionId, data)
+activate Store
+Store -> API: POST /api/distractions
+activate API
+API -> Database: INSERT distraction record
+activate Database
+Database --> API: Distraction logged
+deactivate Database
+
+API -> Database: UPDATE session\nSET distraction_count++,\nRECALCULATE focus_score
+activate Database
+Database --> API: Session updated
+deactivate Database
+
+API --> Store: Distraction data
+deactivate API
+Store --> Logger: Logged successfully
+deactivate Store
+
+Logger -> UI: Close modal
+deactivate Logger
+UI -> UI: Update distraction count
+UI -> UI: Recalculate focus score
+UI --> User: Count updated
+deactivate UI
+
+@enduml
