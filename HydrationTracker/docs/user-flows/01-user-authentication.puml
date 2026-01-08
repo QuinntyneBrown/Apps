@@ -1,0 +1,67 @@
+@startuml
+title User Authentication Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Login Page" as UI
+participant "AuthService" as Auth
+participant "AuthController\n/api/auth/login" as API
+participant "LoginCommand\nHandler" as Handler
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> UI: Navigate to login page
+activate UI
+UI -> User: Display login form
+deactivate UI
+
+User -> UI: Enter username & password
+activate UI
+UI -> UI: Validate form inputs
+UI -> Auth: login(credentials)
+activate Auth
+
+Auth -> API: POST /api/auth/login\n{username, password}
+activate API
+
+API -> Handler: Execute(LoginCommand)
+activate Handler
+
+Handler -> DB: Users.FirstOrDefaultAsync(\nuser => user.Username == username)
+activate DB
+DB -> Database: Query users table
+activate Database
+Database --> DB: User record
+deactivate Database
+DB --> Handler: User entity
+deactivate DB
+
+Handler -> Handler: Verify password hash\nusing PBKDF2 with salt
+
+alt Password Valid
+    Handler -> Handler: Generate JWT token\n(claims: sub, name, email, roles)
+    Handler --> API: LoginResponse\n{token, expiresAt, user}
+    deactivate Handler
+    API --> Auth: 200 OK\n{token, user}
+    deactivate API
+    Auth -> Auth: Store token in localStorage
+    Auth --> UI: Success response
+    deactivate Auth
+    UI -> User: Display success message
+    UI -> UI: Redirect to dashboard
+    deactivate UI
+else Password Invalid
+    Handler --> API: 401 Unauthorized
+    deactivate Handler
+    API --> Auth: Error response
+    deactivate API
+    Auth --> UI: Authentication failed
+    deactivate Auth
+    UI -> User: Display error message\n"Invalid username or password"
+    deactivate UI
+end
+
+@enduml
