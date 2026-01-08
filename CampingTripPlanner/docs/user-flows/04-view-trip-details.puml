@@ -1,0 +1,92 @@
+@startuml
+title View Trip Details Flow - Camping Trip Planner
+
+actor User as user
+participant "Trip List Page" as tripList
+participant "Trip Detail Page" as tripDetail
+participant "Trip Service" as tripService
+participant "Itinerary Service" as itineraryService
+participant "Weather Service" as weatherService
+participant "Trip Controller" as tripController
+participant "Get Trip\nQuery Handler" as getTripHandler
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+participant "Weather API" as weatherAPI
+
+user -> tripList: Click on trip card
+activate tripList
+tripList -> tripDetail: Navigate to\n/trips/{tripId}
+activate tripDetail
+
+tripDetail -> tripService: getTripById(tripId)
+activate tripService
+tripService -> tripController: GET /api/trips/{tripId}
+activate tripController
+tripController -> getTripHandler: Handle GetTripByIdQuery
+activate getTripHandler
+getTripHandler -> dbContext: Query trip with relations
+activate dbContext
+dbContext -> db: SELECT t.*, c.*, p.*\nFROM Trips t\nJOIN Campsites c ON t.CampsiteId = c.CampsiteId\nJOIN TripParticipants p ON t.TripId = p.TripId\nWHERE t.TripId = @tripId\nAND t.TenantId = @tenantId
+activate db
+db --> dbContext: Trip with campsite\nand participants
+deactivate db
+deactivate dbContext
+getTripHandler --> tripController: Trip DTO
+deactivate getTripHandler
+tripController --> tripService: 200 OK {trip}
+deactivate tripController
+tripService --> tripDetail: Observable<Trip>
+deactivate tripService
+
+tripDetail -> itineraryService: getItinerary(tripId)
+activate itineraryService
+itineraryService -> tripController: GET /api/trips/{tripId}/itinerary
+activate tripController
+tripController -> getTripHandler: Handle GetItineraryQuery
+activate getTripHandler
+getTripHandler -> dbContext: Query itinerary
+activate dbContext
+dbContext -> db: SELECT * FROM Itineraries\nWHERE TripId = @tripId\nAND TenantId = @tenantId\nORDER BY Day
+activate db
+db --> dbContext: Itinerary records
+deactivate db
+deactivate dbContext
+getTripHandler --> tripController: Itinerary DTOs
+deactivate getTripHandler
+tripController --> itineraryService: 200 OK {itinerary[]}
+deactivate tripController
+itineraryService --> tripDetail: Observable<Itinerary[]>
+deactivate itineraryService
+
+tripDetail -> weatherService: getWeatherForecast(location, dates)
+activate weatherService
+weatherService -> weatherAPI: GET /forecast?location={location}
+activate weatherAPI
+weatherAPI --> weatherService: Weather data
+deactivate weatherAPI
+weatherService --> tripDetail: Observable<Weather>
+deactivate weatherService
+
+tripDetail -> tripDetail: Calculate gear\nprogress percentage
+
+tripDetail -> tripDetail: Render trip details:\n- Trip header with status\n- Itinerary timeline\n- Participants list\n- Gear progress\n- Weather forecast\n- Quick actions
+
+tripDetail -> user: Display complete\ntrip details page
+deactivate tripDetail
+deactivate tripList
+
+note right of tripDetail
+  Trip details include:
+  - Trip name and location
+  - Start/End dates
+  - Participant count
+  - Difficulty level
+  - Gear packing progress
+  - Day-by-day itinerary
+  - Planned activities
+  - Trip notes
+  - Weather forecast
+  - Quick action buttons
+end note
+
+@enduml
