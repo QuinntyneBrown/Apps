@@ -1,0 +1,125 @@
+@startuml Reading Goals and Challenges Flow
+title Reading Goals and Challenges Flow
+
+actor User
+participant "Goals Dashboard" as Dashboard
+participant "Create Goal Modal" as GoalModal
+participant "Challenges Page" as ChallengesUI
+participant "Achievements Page" as AchievementsUI
+participant "API Gateway" as API
+participant "Goals Controller" as Controller
+participant "Goals Manager" as Manager
+database "Database" as DB
+
+== View Goals Dashboard ==
+User -> Dashboard: Navigate to /goals
+Dashboard -> API: GET /api/goals?\nstatus=Active&userId={userId}
+API -> Controller: GetActiveGoals(userId)
+Controller -> Manager: GetActiveGoalsAsync(userId)
+Manager -> DB: SELECT reading_goals\nWHERE userId={userId}\nAND status='Active'
+DB --> Manager: Active goals
+Manager -> Manager: Calculate progress\n(current vs target)
+Manager -> Manager: Calculate required pace\n(remaining / days left)
+Manager -> Manager: Determine on-track status
+Manager --> Controller: GoalsWithProgress
+Controller --> API: 200 OK\n{goals, progress}
+API --> Dashboard: Goals data
+Dashboard --> User: Display goal progress cards\n(progress bars, stats, pace)
+
+== Create Reading Goal ==
+User -> Dashboard: Click "Create Goal" button
+Dashboard -> GoalModal: Open CreateGoalModal
+GoalModal --> User: Display goal creation form
+
+User -> GoalModal: Select goal type\n(Books / Pages / Genre-specific)
+GoalModal -> GoalModal: Adjust form fields\nbased on type
+
+alt Books Goal
+    User -> GoalModal: Enter target number\n(e.g., 52 books)
+else Pages Goal
+    User -> GoalModal: Enter target pages\n(e.g., 10,000 pages)
+else Genre Goal
+    User -> GoalModal: Select genre constraint
+    User -> GoalModal: Enter target number
+end
+
+User -> GoalModal: Select timeframe\n(Month / Quarter / Year)
+GoalModal -> GoalModal: Calculate date range\nfrom timeframe
+
+User -> GoalModal: Optionally adjust\nstart and end dates
+User -> GoalModal: Click "Create Goal"
+
+GoalModal -> GoalModal: Validate form\n(target > 0, end date > start date)
+
+alt Valid Form
+    GoalModal -> API: POST /api/goals\n{type, target, timeframe,\ngenreConstraints, dateRange}
+    API -> Controller: CreateGoal(request)
+    Controller -> Manager: CreateGoalAsync(goal)
+    Manager -> DB: SELECT existing goals\nfor same period
+    DB --> Manager: Conflicting goals check
+
+    alt No Conflicts
+        Manager -> DB: INSERT reading_goal\n{userId, type, target,\nstartDate, endDate, status}
+        DB --> Manager: Goal ID
+        Manager --> Controller: GoalCreated\n{goalId, goal}
+        Controller --> API: 201 Created\n{goal}
+        API --> GoalModal: Success
+        GoalModal -> GoalModal: Close modal
+        GoalModal -> Dashboard: Refresh goals list
+        Dashboard --> User: Show new goal card\nwith 0% progress
+    else Duplicate Goal
+        Manager --> Controller: Conflict\n"Similar goal already exists"
+        Controller --> API: 409 Conflict
+        API --> GoalModal: Error
+        GoalModal --> User: "You already have a\nsimilar goal for this period"
+    end
+else Invalid Form
+    GoalModal --> User: Display validation errors
+end
+
+== Join Challenge ==
+User -> ChallengesUI: Navigate to /challenges
+ChallengesUI -> API: GET /api/challenges/available
+API -> Controller: GetAvailableChallenges()
+Controller -> Manager: GetChallengesAsync()
+Manager -> DB: SELECT challenges\nWHERE active=true
+DB --> Manager: Available challenges
+Manager --> Controller: Challenges list
+Controller --> API: 200 OK\n{challenges}
+API --> ChallengesUI: Challenge data
+ChallengesUI --> User: Display challenges\n(descriptions, requirements,\nleaderboards)
+
+User -> ChallengesUI: Click "Join Challenge"
+ChallengesUI -> API: POST /api/challenges/{id}/join\n{userId}
+API -> Controller: JoinChallenge(challengeId, userId)
+Controller -> Manager: JoinChallengeAsync(challengeId, userId)
+Manager -> DB: INSERT challenge_participation\n{challengeId, userId,\njoinDate, progress: 0}
+DB --> Manager: Participation ID
+Manager -> DB: UPDATE challenge\nSET participantCount++
+DB --> Manager: Updated
+Manager --> Controller: ChallengeJoined
+Controller --> API: 200 OK\n{participation}
+API --> ChallengesUI: Success
+ChallengesUI -> ChallengesUI: Move to "Joined" tab
+ChallengesUI --> User: Show success notification\n"Challenge joined!"
+
+== View Achievements ==
+User -> AchievementsUI: Navigate to /achievements
+AchievementsUI -> API: GET /api/achievements?\nuserId={userId}
+API -> Controller: GetAchievements(userId)
+Controller -> Manager: GetUserAchievementsAsync(userId)
+Manager -> DB: SELECT milestones\nWHERE userId={userId}
+DB --> Manager: User milestones
+Manager -> DB: SELECT reading_statistics\nWHERE userId={userId}
+DB --> Manager: Reading stats
+Manager -> Manager: Calculate achievement\ncompletion percentage
+Manager --> Controller: AchievementsWithStats
+Controller --> API: 200 OK\n{achievements, stats}
+API --> AchievementsUI: Achievement data
+AchievementsUI --> User: Display milestone badges\n(unlocked and locked),\ntimeline, statistics
+
+User -> AchievementsUI: Click "Share" on badge
+AchievementsUI -> AchievementsUI: Generate share image
+AchievementsUI --> User: Open share dialog\n(social media options)
+
+@enduml
