@@ -1,0 +1,61 @@
+@startuml Manage User Roles Flow
+autonumber
+title Add Role to User Flow (Admin)
+
+actor Admin
+participant "User Management\nUI" as UI
+participant "User Service" as Service
+participant "API Controller\n/api/users/{userId}/roles" as API
+participant "User Handler" as Handler
+database "Database" as DB
+
+Admin -> UI: Select user from list
+UI -> UI: Display user details\nwith current roles
+
+Admin -> UI: Click "Add Role"
+UI -> UI: Display available roles\n(fetch from /api/roles)
+
+Admin -> UI: Select role to assign
+UI -> Service: addRoleToUser(userId, roleId)
+Service -> API: POST /api/users/{userId}/roles\n{roleId}
+
+API -> API: Verify Admin role\nfrom JWT token
+
+alt Admin Authorized
+    API -> Handler: Handle AddRoleToUserCommand
+    Handler -> DB: Check user exists
+    Handler -> DB: Check role exists
+
+    alt User and Role Exist
+        Handler -> DB: Check if role already assigned\n(UserRole join table)
+
+        alt Role Not Already Assigned
+            Handler -> DB: INSERT UserRole\n(UserId, RoleId)
+            DB --> Handler: Role assigned
+
+            Handler -> DB: Query updated user with roles
+            DB --> Handler: User with all roles
+
+            Handler --> API: UserDto with updated roles
+            API --> Service: 200 OK\n{userId, username, email, roles}
+            Service --> UI: Role added successfully
+            UI --> Admin: Display success message\nand refresh user details
+        else Role Already Assigned (Idempotent)
+            Handler --> API: User already has role
+            API --> Service: 200 OK\n{message: "Role already assigned"}
+            Service --> UI: Role already assigned
+            UI --> Admin: Display info message
+        end
+    else User or Role Not Found
+        Handler --> API: Not found error
+        API --> Service: 404 Not Found\n{error: "User or Role not found"}
+        Service --> UI: Error occurred
+        UI --> Admin: Display error message
+    end
+else Not Admin
+    API --> Service: 403 Forbidden\n{error: "Admin access required"}
+    Service --> UI: Unauthorized
+    UI --> Admin: Display authorization error
+end
+
+@enduml
