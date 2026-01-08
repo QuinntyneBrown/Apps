@@ -1,0 +1,249 @@
+@startuml
+title Contact Management & Networking Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Contacts List\nPage" as ContactsPage
+participant "Add Contact\nModal" as AddModal
+participant "Scan Business Card\nModal" as ScanModal
+participant "Contact Detail\nPage" as DetailPage
+participant "ContactService" as Svc
+participant "ContactsController\n/api/contacts" as API
+participant "Azure AI Vision\nOCR Service" as OCR
+participant "Command Handlers" as Handlers
+participant "IConferenceEventManagerContext" as DbContext
+database "Database" as DB
+
+User -> ContactsPage: Navigate to Contacts
+activate ContactsPage
+
+ContactsPage -> Svc: getContacts$()
+activate Svc
+
+Svc -> API: GET /api/contacts
+activate API
+API -> DbContext: Query contacts\nFiltered by TenantId
+activate DbContext
+DbContext -> DB: SELECT Contacts
+activate DB
+DB --> DbContext: Contact records
+deactivate DB
+deactivate DbContext
+API --> Svc: ContactDto[]
+deactivate API
+
+Svc --> ContactsPage: Observable<ContactDto[]>
+deactivate Svc
+
+ContactsPage -> User: Display contacts list\n- Search by name\n- Filter by conference\n- Filter by tags
+
+== Add Contact Manually ==
+
+User -> ContactsPage: Click "Add Contact"
+
+ContactsPage -> AddModal: Open add contact modal
+activate AddModal
+
+AddModal -> User: Display contact form\n- Name, email, phone\n- Company, title\n- Conference met at\n- Tags, notes
+
+User -> AddModal: Fill in contact details
+
+User -> AddModal: Click "Save"
+
+AddModal -> AddModal: Validate form inputs
+
+alt Validation fails
+    AddModal -> User: Show validation errors
+else Validation succeeds
+    AddModal -> Svc: createContact(contactData)
+    activate Svc
+
+    Svc -> API: POST /api/contacts\nContactDto
+    activate API
+
+    API -> Handlers: CreateContactCommand
+    activate Handlers
+
+    Handlers -> Handlers: Create Contact entity\n- Generate ContactId\n- Set TenantId
+
+    Handlers -> DbContext: Add(contact)
+    activate DbContext
+    DbContext -> DB: INSERT Contact
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    deactivate DbContext
+
+    Handlers -> Handlers: Raise ContactMet\ndomain event
+
+    Handlers --> API: ContactDto
+    deactivate Handlers
+
+    API --> Svc: 201 Created
+    deactivate API
+
+    Svc --> AddModal: Contact created
+    deactivate Svc
+
+    AddModal -> ContactsPage: Refresh contacts list
+    deactivate AddModal
+end
+
+== Scan Business Card ==
+
+User -> ContactsPage: Click "Scan Business Card"
+
+ContactsPage -> ScanModal: Open scan modal
+activate ScanModal
+
+ScanModal -> User: Display camera/upload interface
+
+User -> ScanModal: Upload business card image\nor take photo
+
+ScanModal -> Svc: scanBusinessCard(imageFile)
+activate Svc
+
+Svc -> API: POST /api/contacts/scan-card\nMultipart form with image
+activate API
+
+API -> OCR: Analyze business card image\nAzure AI Vision Read API
+activate OCR
+note right of OCR
+OCR extracts:
+- Name
+- Email
+- Phone
+- Company
+- Title
+- Address
+end note
+
+OCR -> OCR: Process image\n- Text detection\n- Field classification\n- Data extraction
+
+OCR --> API: Extracted text data
+deactivate OCR
+
+API -> Handlers: CreateContactFromCardCommand
+activate Handlers
+
+Handlers -> Handlers: Parse OCR results\n- Map to Contact fields\n- Clean & format data
+
+Handlers -> DbContext: Add(contact)
+activate DbContext
+DbContext -> DB: INSERT Contact
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise BusinessCardExchanged\ndomain event
+
+Handlers --> API: ContactDto
+deactivate Handlers
+
+API --> Svc: 201 Created\nContactDto with extracted data
+deactivate API
+
+Svc --> ScanModal: Contact created from card
+deactivate Svc
+
+ScanModal -> User: Display extracted data\n"Review and confirm contact details"
+
+User -> ScanModal: Edit/Confirm details
+
+ScanModal -> ContactsPage: Refresh contacts list
+deactivate ScanModal
+
+== View Contact Details ==
+
+User -> ContactsPage: Click on contact
+
+ContactsPage -> DetailPage: Navigate to contact detail
+activate DetailPage
+
+DetailPage -> Svc: getContact$(contactId)
+activate Svc
+
+Svc -> API: GET /api/contacts/{id}
+activate API
+API -> DbContext: Query contact by id
+activate DbContext
+DbContext -> DB: SELECT Contact
+activate DB
+DB --> DbContext: Contact data
+deactivate DB
+deactivate DbContext
+API --> Svc: ContactDto
+deactivate API
+
+Svc --> DetailPage: Contact details
+deactivate Svc
+
+DetailPage -> User: Display contact info\n- Personal details\n- Tags & notes\n- Follow-up history\n- Interaction timeline
+
+== Schedule Follow-up ==
+
+User -> DetailPage: Click "Schedule Follow-up"
+
+DetailPage -> User: Show follow-up dialog\n- Date picker\n- Follow-up type\n- Notes/purpose
+
+User -> DetailPage: Enter follow-up details
+
+User -> DetailPage: Click "Schedule"
+
+DetailPage -> Svc: scheduleFollowUp(contactId, followUpData)
+activate Svc
+
+Svc -> API: POST /api/follow-ups\n{contactId, date, type, notes}
+activate API
+
+API -> Handlers: ScheduleFollowUpCommand
+activate Handlers
+
+Handlers -> DbContext: Create follow-up task
+activate DbContext
+DbContext -> DB: INSERT FollowUpTask
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise FollowUpScheduled\ndomain event
+
+Handlers --> API: FollowUpDto
+deactivate Handlers
+
+API --> Svc: 201 Created
+deactivate API
+
+Svc --> DetailPage: Follow-up scheduled
+deactivate Svc
+
+DetailPage -> User: Show success notification\nAdd to calendar option
+
+== Export to CRM ==
+
+User -> DetailPage: Click "Export to CRM"
+
+DetailPage -> Svc: exportToCRM(contactIds[])
+activate Svc
+
+Svc -> API: POST /api/contacts/export-crm\n{contactIds, crmSystem}
+activate API
+
+API -> API: Format data for CRM\n(Salesforce, HubSpot, etc.)
+
+API --> Svc: Export successful
+deactivate API
+
+Svc --> DetailPage: CRM export complete
+deactivate Svc
+
+DetailPage -> User: Show success notification
+
+deactivate DetailPage
+deactivate ContactsPage
+
+@enduml
