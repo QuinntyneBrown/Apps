@@ -1,0 +1,69 @@
+@startuml User Login Flow
+title User Login Flow - FamilyCalendarEventPlanner
+
+actor "User" as User
+participant "Login Page" as LoginPage
+participant "Auth Service" as AuthService
+participant "Auth Controller" as AuthController
+participant "JWT Service" as JWTService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> LoginPage: Navigate to login page
+activate LoginPage
+
+User -> LoginPage: Enter username and password
+LoginPage -> LoginPage: Validate form inputs
+LoginPage -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> AuthController: POST /api/auth/login
+activate AuthController
+note right
+  Request Body:
+  {
+    "username": "string",
+    "password": "string"
+  }
+end note
+
+AuthController -> DbContext: Query User by username
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nWHERE UserName = @username
+activate DB
+DB --> DbContext: User record with hashed password
+deactivate DB
+deactivate DbContext
+
+AuthController -> AuthController: Hash password with user's salt\nusing PBKDF2-SHA256
+
+alt Password matches
+    AuthController -> JWTService: GenerateToken(user)
+    activate JWTService
+    JWTService -> JWTService: Create JWT with claims:\n- sub (userId)\n- name (username)\n- email\n- roles\n- iat, exp, iss, aud
+    JWTService --> AuthController: JWT token
+    deactivate JWTService
+
+    AuthController --> AuthService: 200 OK\n{token, expiresAt, user}
+    deactivate AuthController
+
+    AuthService --> LoginPage: Login successful
+    deactivate AuthService
+
+    LoginPage -> LoginPage: Store token in localStorage
+    LoginPage -> LoginPage: Set HTTP interceptor\nfor Bearer token
+    LoginPage --> User: Redirect to dashboard
+    deactivate LoginPage
+
+else Password does not match
+    AuthController --> AuthService: 401 Unauthorized\n{error: "Invalid username or password"}
+    deactivate AuthController
+
+    AuthService --> LoginPage: Login failed
+    deactivate AuthService
+
+    LoginPage --> User: Display error message
+    deactivate LoginPage
+end
+
+@enduml
