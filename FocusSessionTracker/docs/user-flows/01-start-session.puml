@@ -1,0 +1,54 @@
+@startuml Start Session Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Start Session Flow
+
+actor User
+participant "Session Timer\nPage" as UI
+participant "Session Setup\nModal" as Modal
+participant "Session Store" as Store
+participant "API" as API
+database Database
+
+User -> UI: Click "Start Session" button
+activate UI
+UI -> Modal: Open modal
+activate Modal
+Modal --> UI: Display setup form
+
+User -> Modal: Select session type\n(Pomodoro/Short/Long/Custom)
+Modal --> User: Show type selected
+
+User -> Modal: Select task/project\n(optional)
+Modal --> User: Update selection
+
+User -> Modal: Click "Start" button
+Modal -> Store: startSession(config)
+activate Store
+Store -> API: POST /api/sessions
+activate API
+API -> Database: INSERT session record
+activate Database
+Database --> API: Session created
+deactivate Database
+API --> Store: Session data
+deactivate API
+
+Store --> Modal: Session started
+deactivate Store
+Modal -> UI: Close modal
+deactivate Modal
+
+UI -> UI: Display timer countdown
+UI -> UI: Show task name (if assigned)
+UI -> UI: Activate focus mode\n(if configured)
+UI --> User: Timer begins
+deactivate UI
+
+@enduml
