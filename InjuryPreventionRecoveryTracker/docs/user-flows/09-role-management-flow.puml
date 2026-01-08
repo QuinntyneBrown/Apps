@@ -1,0 +1,197 @@
+@startuml Role Management Flow
+title Role Management Flow (Admin)
+
+actor Admin
+participant "Role Management Page" as UI
+participant "Role Form Modal" as Modal
+participant "Role Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+== View Roles ==
+Admin -> UI: Navigate to Role Management
+UI -> Service: Observable: roles$\n= getRoles()
+Service -> API: GET /api/roles\nAuthorization: Bearer {token}\n(requires Admin role)
+
+API -> API: Verify Admin role\nfrom JWT claims
+
+alt Not authorized
+    API --> Service: 403 Forbidden
+    Service --> UI: Show error
+    UI --> Admin: "Access denied"
+else Authorized
+    API -> Handler: Handle GetRolesQuery
+    Handler -> DB: Query all roles
+    DB --> Handler: List<Role>
+
+    Handler -> Handler: Map to RoleDto[]
+    Handler --> API: RoleDto[]
+
+    API --> Service: Success response
+    Service --> UI: Display roles list
+    UI --> Admin: Show roles table\nwith user counts & actions
+end
+
+== Create Role ==
+Admin -> UI: Click "Add Role"
+UI -> Modal: Open role form modal
+Modal --> Admin: Display form\n(role name, description)
+
+Admin -> Modal: Enter role name\nand description
+Admin -> Modal: Submit form
+
+Modal -> Modal: Validate:\n- Non-empty name\n- Unique name
+Modal -> Service: createRole(roleDto)
+Service -> API: POST /api/roles
+
+API -> Handler: Handle CreateRoleCommand
+Handler -> Handler: Validate role name\nuniqueness
+
+alt Role name exists
+    Handler --> API: 409 Conflict
+    API --> Service: Error response
+    Service --> Modal: Show error
+    Modal --> Admin: "Role name already exists"
+else Valid role name
+    Handler -> Handler: Create Role entity
+    Handler -> DB: Save role
+    DB --> Handler: Role created
+
+    Handler -> Events: Publish RoleCreated event
+    Handler --> API: 201 Created (RoleDto)
+
+    API --> Service: Success response
+    Service --> Modal: Role created
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh role list
+
+    UI -> Service: getRoles()
+    Service -> API: GET /api/roles
+    API -> DB: Query roles
+    DB --> API: Role list
+    API --> Service: RoleDto[]
+    Service --> UI: Update display
+    UI --> Admin: Show updated list\nwith new role
+end
+
+== Update Role ==
+Admin -> UI: Click "Edit" on role
+UI -> Modal: Open form with role data
+Modal --> Admin: Display populated form
+
+Admin -> Modal: Modify role name\nor description
+Admin -> Modal: Submit changes
+
+Modal -> Service: updateRole(roleId, roleDto)
+Service -> API: PUT /api/roles/{roleId}
+
+API -> Handler: Handle UpdateRoleCommand
+Handler -> DB: Query role by ID
+DB --> Handler: Role entity
+
+alt Role not found
+    Handler --> API: 404 Not Found
+    API --> Service: Error response
+    Service --> Modal: Show error
+    Modal --> Admin: "Role not found"
+else Role found
+    Handler -> Handler: Validate new name\nuniqueness (if changed)
+
+    alt Name conflict
+        Handler --> API: 409 Conflict
+        API --> Service: Error response
+        Service --> Modal: Show error
+        Modal --> Admin: "Role name already exists"
+    else Valid update
+        Handler -> Handler: Update role properties
+        Handler -> DB: Save changes
+        DB --> Handler: Role updated
+
+        Handler -> Events: Publish RoleUpdated event
+        Handler --> API: 200 OK (RoleDto)
+
+        API --> Service: Success response
+        Service --> Modal: Role updated
+        Modal -> Modal: Close modal
+        Modal -> UI: Refresh list
+        UI --> Admin: Show updated role
+    end
+end
+
+== Delete Role ==
+Admin -> UI: Click "Delete" on role
+UI -> UI: Show confirmation dialog\n"This will remove role from all users"
+
+Admin -> UI: Confirm deletion
+
+UI -> Service: deleteRole(roleId)
+Service -> API: DELETE /api/roles/{roleId}
+
+API -> Handler: Handle DeleteRoleCommand
+Handler -> DB: Query role
+DB --> Handler: Role entity
+
+Handler -> DB: Remove role from\nall user associations
+DB --> Handler: Associations removed
+
+Handler -> DB: Delete role
+DB --> Handler: Role deleted
+
+Handler -> Events: Publish RoleDeleted event
+Handler --> API: 204 No Content
+
+API --> Service: Success response
+Service -> UI: Refresh role list
+
+UI -> Service: getRoles()
+Service -> API: GET /api/roles
+API -> DB: Query roles
+DB --> API: Updated list
+API --> Service: RoleDto[]
+Service --> UI: Update display
+UI --> Admin: Show updated list\n(role removed)
+
+== View Role Users ==
+Admin -> UI: Click "View Users"\nfor a role
+UI -> Service: getUsersByRole(roleId)
+Service -> API: GET /api/roles/{roleId}/users
+
+API -> Handler: Handle GetUsersByRoleQuery
+Handler -> DB: Query users with role
+DB --> Handler: List<User> with role
+
+Handler -> Handler: Map to UserDto[]
+Handler --> API: UserDto[]
+
+API --> Service: Success response
+Service -> UI: Display users modal
+UI --> Admin: Show list of users\nwith this role
+
+Admin -> UI: Close modal
+UI --> Admin: Return to roles list
+
+note right of Handler
+  Role entity:
+  - RoleId (Guid)
+  - Name (unique)
+  - Description
+  - CreatedAt
+  - UpdatedAt
+
+  Default roles:
+  - Admin
+  - User
+end note
+
+note left of UI
+  UI Features:
+  - Role list with user counts
+  - Search/filter roles
+  - View users per role
+  - Prevent deletion of\n  system roles (optional)
+  - Audit trail display
+end note
+
+@enduml
