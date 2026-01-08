@@ -1,0 +1,147 @@
+@startuml Schedule Date Night
+title Schedule Date Night Flow
+
+actor User
+participant "Schedule\nCalendar UI" as CalendarUI
+participant "Reservation\nTracker UI" as ReservationUI
+participant "Checklist UI" as ChecklistUI
+participant "API Gateway" as API
+participant "Planning\nService" as PlanService
+participant "Notification\nService" as NotifyService
+database "SQL Server" as DB
+
+== View and Select Date ==
+User -> CalendarUI: Open Calendar
+CalendarUI -> API: GET /api/planning/calendar
+API -> PlanService: Get Calendar Query
+PlanService -> DB: SELECT DatePlans\nWHERE TenantId = @TenantId
+DB --> PlanService: Scheduled Dates
+PlanService --> API: Calendar Data
+API --> CalendarUI: Display Calendar
+CalendarUI --> User: Show Available Dates
+
+User -> CalendarUI: View Saved Ideas
+CalendarUI -> API: GET /api/ideas/saved
+API -> PlanService: Get Saved Ideas
+PlanService -> DB: SELECT SavedIdeas\nWHERE TenantId = @TenantId
+DB --> PlanService: Ideas List
+PlanService --> API: Saved Ideas
+API --> CalendarUI: Display Ideas
+CalendarUI --> User: Show Ideas to Schedule
+
+== Schedule Date ==
+User -> CalendarUI: Select Idea
+User -> CalendarUI: Choose Date & Time
+User -> CalendarUI: Set Budget
+note right
+Date plan includes:
+- Idea/Activity
+- Date & Time
+- Budget allocation
+- Location
+end note
+
+User -> CalendarUI: Click Schedule
+CalendarUI -> API: POST /api/planning
+note right
+Request Body:
+{
+  "ideaId": "...",
+  "dateTime": "2026-01-15T19:00:00",
+  "budget": 120,
+  "location": "..."
+}
+end note
+API -> PlanService: Schedule Date Command
+PlanService -> DB: INSERT DatePlan
+DB --> PlanService: PlanId
+PlanService --> PlanService: Publish DateNightScheduled Event
+PlanService -> NotifyService: Send Notification
+NotifyService --> NotifyService: Schedule Reminder
+PlanService --> API: DatePlan Created
+API --> CalendarUI: Confirmation with PlanId
+CalendarUI --> User: Show Success & Plan Details
+
+== Make Reservation ==
+User -> ReservationUI: Open Plan Details
+ReservationUI -> API: GET /api/planning/{planId}
+API -> PlanService: Get Plan Query
+PlanService -> DB: SELECT DatePlan\nWHERE Id = @PlanId\nAND TenantId = @TenantId
+DB --> PlanService: Plan Details
+PlanService --> API: DatePlan
+API --> ReservationUI: Display Plan
+ReservationUI --> User: Show Plan Info
+
+User -> ReservationUI: Add Reservation Details
+note right
+Reservation info:
+- Venue name
+- Confirmation number
+- Time
+- Contact info
+end note
+
+User -> ReservationUI: Click Save
+ReservationUI -> API: PUT /api/planning/{planId}/reservation
+API -> PlanService: Add Reservation Command
+PlanService -> DB: UPDATE DatePlan\nSET Reservation = @Details
+DB --> PlanService: Success
+PlanService --> PlanService: Publish DateNightReservationMade Event
+PlanService --> API: Reservation Confirmed
+API --> ReservationUI: Confirmation
+ReservationUI --> User: Show Success Message
+
+== Create Checklist ==
+User -> ChecklistUI: Open Checklist
+ChecklistUI -> API: GET /api/planning/{planId}/checklist
+API -> PlanService: Get Checklist Query
+PlanService -> DB: SELECT Checklist Items\nWHERE PlanId = @PlanId
+DB --> PlanService: Checklist
+PlanService --> API: Checklist Items
+API --> ChecklistUI: Display Checklist
+ChecklistUI --> User: Show Checklist
+
+User -> ChecklistUI: Add Item
+User -> ChecklistUI: Enter Description
+note right
+Checklist items:
+- Make reservation
+- Buy tickets
+- Plan outfit
+- Arrange transportation
+- Book babysitter
+end note
+
+User -> ChecklistUI: Save Item
+ChecklistUI -> API: POST /api/planning/{planId}/checklist
+API -> PlanService: Add Checklist Item Command
+PlanService -> DB: INSERT ChecklistItem
+DB --> PlanService: Success
+PlanService --> API: Item Added
+API --> ChecklistUI: Update Display
+ChecklistUI --> User: Show Updated List
+
+User -> ChecklistUI: Mark Item Complete
+ChecklistUI -> API: PUT /api/planning/{planId}/checklist/{itemId}
+API -> PlanService: Update Checklist Item
+PlanService -> DB: UPDATE ChecklistItem\nSET IsCompleted = true
+DB --> PlanService: Success
+PlanService --> API: Item Updated
+API --> ChecklistUI: Update Display
+ChecklistUI --> User: Show Checked Item
+
+== Cancel Date (Optional) ==
+alt User Cancels Date
+    User -> CalendarUI: Cancel Date
+    CalendarUI -> API: DELETE /api/planning/{planId}
+    API -> PlanService: Cancel Date Command
+    PlanService -> DB: UPDATE DatePlan\nSET IsCancelled = true
+    DB --> PlanService: Success
+    PlanService --> PlanService: Publish DateNightCancelled Event
+    PlanService -> NotifyService: Cancel Reminders
+    PlanService --> API: Cancelled
+    API --> CalendarUI: Confirmation
+    CalendarUI --> User: Show Cancellation Message
+end
+
+@enduml
