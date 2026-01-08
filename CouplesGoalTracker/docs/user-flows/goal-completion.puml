@@ -1,0 +1,86 @@
+@startuml goal-completion
+title Goal Completion Flow
+
+actor User
+participant "Goal Detail Page" as UI
+participant "Goal Service" as GoalSvc
+participant "Goals Controller" as Controller
+participant "CompleteGoalCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to Goal Detail
+activate UI
+
+UI -> UI: Display goal with\n"Mark Complete" button
+
+User -> UI: Click "Mark as Complete"
+
+UI -> UI: Show confirmation dialog\n"Mark this goal as complete?"
+
+User -> UI: Confirm completion
+
+UI -> GoalSvc: completeGoal(goalId)
+activate GoalSvc
+
+GoalSvc -> Controller: PUT /api/goals/{id}/complete
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: CompleteGoalCommand(goalId)
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @id\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Validate goal can be completed\n(not already completed)
+
+Command -> Command: Update Goal status\n- Status = Completed\n- CompletedAt = Now\n- UpdatedAt = Now
+
+Command -> Command: Raise GoalCompleted event
+
+Command -> DbContext: Update(goal)
+activate DbContext
+DbContext -> DB: UPDATE Goals SET\nStatus = 'Completed',\nCompletedAt = @completedAt,\nUpdatedAt = @updatedAt\nWHERE GoalId = @id
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'GoalCompleted',\nAggregateId, Data, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: CompleteGoalResponse\n(GoalId, CompletedAt)
+deactivate Command
+
+Controller --> GoalSvc: 200 OK
+deactivate Controller
+
+GoalSvc --> UI: Goal completed successfully
+deactivate GoalSvc
+
+UI -> UI: Update UI to show\ncompleted status
+UI -> UI: Display celebration animation
+UI --> User: Show success message\n"Congratulations! Goal completed!"
+deactivate UI
+
+note over User, DB
+The GoalCompleted event may trigger:
+- Achievement notifications
+- Celebration animations
+- Partner notifications
+- Progress statistics updates
+end note
+
+@enduml
