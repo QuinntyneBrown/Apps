@@ -1,0 +1,387 @@
+@startuml
+title Project Management Flow
+
+actor "Freelancer" as User
+participant "Projects Page\n(Angular)" as UI
+participant "Project Service\n(Angular)" as Service
+participant "Projects Controller\n(/api/projects)" as Controller
+participant "Command Handler\n(MediatR)" as Handler
+participant "IFreelanceProjectManagerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as DB
+
+== View Projects List ==
+User -> UI: Navigate to\nProjects page
+activate UI
+
+UI -> Service: getProjects()
+activate Service
+
+Service -> Controller: GET /api/projects
+activate Controller
+
+Controller -> Handler: Handle(GetProjectsQuery)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> DbContext: Projects.Include(p => p.Client)\n.Where(p => p.TenantId == tenantId)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT p.*, c.*\nFROM Projects p\nJOIN Clients c ON p.ClientId = c.ClientId\nWHERE p.TenantId = @tenantId
+activate DB
+DB --> DbContext: Project records with clients
+deactivate DB
+
+DbContext --> Handler: List<Project>
+deactivate DbContext
+
+Handler --> Controller: List<ProjectDto>
+deactivate Handler
+
+Controller --> Service: 200 OK\nList<ProjectDto>
+deactivate Controller
+
+Service --> UI: Project data
+deactivate Service
+
+UI --> User: Display projects list\nwith status filters
+deactivate UI
+
+== Create Project Proposal ==
+User -> UI: Click "New Proposal"\nbutton
+activate UI
+
+UI -> UI: Open proposal\nform modal
+
+User -> UI: Fill in proposal details:\n- Client selection\n- Project name\n- Description\n- Scope of work\n- Timeline/deadline\n- Estimated hours\n- Pricing/budget
+
+UI -> UI: Validate form inputs
+
+User -> UI: Click "Create Proposal"
+
+UI -> Service: createProposal(proposalData)
+activate Service
+
+Service -> Controller: POST /api/projects/proposals\n{proposalData}
+activate Controller
+
+Controller -> Handler: Handle(CreateProposalCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> Handler: Create Proposal entity:\n- Status = "Draft"\n- TenantId\n- CreatedDate
+
+Handler -> DbContext: Proposals.Add(proposal)
+activate DbContext
+
+DbContext -> DB: INSERT INTO Proposals\n(ProposalId, ClientId, Title,\nDescription, Budget, Status,\nTenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+Handler -> DbContext: SaveChangesAsync()
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: ProposalDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nProposalDto
+deactivate Controller
+
+Service --> UI: Proposal created
+deactivate Service
+
+UI -> UI: Close modal
+UI -> UI: Refresh proposals list
+UI --> User: Show success message\n"Proposal created"
+deactivate UI
+
+== Submit Proposal to Client ==
+User -> UI: Select proposal\nand click "Submit"
+activate UI
+
+UI -> UI: Show confirmation\ndialog
+
+User -> UI: Confirm submission
+
+UI -> Service: submitProposal(proposalId)
+activate Service
+
+Service -> Controller: PATCH /api/projects/proposals/{proposalId}/submit
+activate Controller
+
+Controller -> Handler: Handle(SubmitProposalCommand)
+activate Handler
+
+Handler -> DbContext: Proposals.FindAsync(proposalId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Proposals\nWHERE ProposalId = @proposalId
+activate DB
+DB --> DbContext: Proposal record
+deactivate DB
+DbContext --> Handler: Proposal entity
+deactivate DbContext
+
+Handler -> Handler: proposal.Submit()\n- Status = "Submitted"\n- SubmittedDate = Now
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Proposals\nSET Status = 'Submitted',\nSubmittedDate = @date\nWHERE ProposalId = @proposalId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+note right of Handler
+  Email notification to client
+  could be triggered here
+  via domain event
+end note
+
+Handler --> Controller: ProposalDto
+deactivate Handler
+
+Controller --> Service: 200 OK\nProposalDto
+deactivate Controller
+
+Service --> UI: Proposal submitted
+deactivate Service
+
+UI -> UI: Update proposal status
+UI --> User: Show success message\n"Proposal submitted to client"
+deactivate UI
+
+== Accept Proposal and Create Project ==
+User -> UI: Mark proposal\nas "Accepted"
+activate UI
+
+UI -> Service: acceptProposal(proposalId)
+activate Service
+
+Service -> Controller: POST /api/projects/proposals/{proposalId}/accept
+activate Controller
+
+Controller -> Handler: Handle(AcceptProposalCommand)
+activate Handler
+
+Handler -> DbContext: Proposals.FindAsync(proposalId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Proposals\nWHERE ProposalId = @proposalId
+activate DB
+DB --> DbContext: Proposal record
+deactivate DB
+DbContext --> Handler: Proposal entity
+deactivate DbContext
+
+Handler -> Handler: proposal.Accept()\n- Status = "Accepted"
+
+Handler -> Handler: Create Project from proposal:\n- Name = proposal.Title\n- Budget = proposal.Budget\n- ClientId = proposal.ClientId\n- Status = "Active"\n- StartDate = Now
+
+Handler -> DbContext: Projects.Add(project)
+activate DbContext
+DbContext -> DB: INSERT INTO Projects\n(ProjectId, Name, ClientId,\nBudget, Status, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Project created
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: ProjectDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nProjectDto
+deactivate Controller
+
+Service --> UI: Project created
+deactivate Service
+
+UI -> UI: Navigate to\nproject detail page
+UI --> User: Show project details
+deactivate UI
+
+== Add Project Milestones ==
+User -> UI: On project detail page,\nclick "Add Milestone"
+activate UI
+
+UI -> UI: Open milestone\nform modal
+
+User -> UI: Fill in milestone:\n- Name\n- Description\n- Due date\n- Payment amount
+
+User -> UI: Click "Save"
+
+UI -> Service: addMilestone(projectId, milestoneData)
+activate Service
+
+Service -> Controller: POST /api/projects/{projectId}/milestones\n{milestoneData}
+activate Controller
+
+Controller -> Handler: Handle(AddMilestoneCommand)
+activate Handler
+
+Handler -> DbContext: Projects.FindAsync(projectId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Projects\nWHERE ProjectId = @projectId
+activate DB
+DB --> DbContext: Project record
+deactivate DB
+DbContext --> Handler: Project entity
+deactivate DbContext
+
+Handler -> Handler: Create Milestone:\n- Status = "Pending"\n- ProjectId
+
+Handler -> DbContext: Milestones.Add(milestone)
+activate DbContext
+DbContext -> DB: INSERT INTO Milestones\n(MilestoneId, ProjectId,\nName, DueDate, Amount, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Milestone created
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: MilestoneDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nMilestoneDto
+deactivate Controller
+
+Service --> UI: Milestone added
+deactivate Service
+
+UI -> UI: Close modal
+UI -> UI: Refresh milestones list
+UI --> User: Show milestone\nin project timeline
+deactivate UI
+
+== Complete Milestone ==
+User -> UI: Mark milestone\nas "Completed"
+activate UI
+
+UI -> Service: completeMilestone(milestoneId)
+activate Service
+
+Service -> Controller: PATCH /api/projects/milestones/{milestoneId}/complete
+activate Controller
+
+Controller -> Handler: Handle(CompleteMilestoneCommand)
+activate Handler
+
+Handler -> DbContext: Milestones.FindAsync(milestoneId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Milestones\nWHERE MilestoneId = @milestoneId
+activate DB
+DB --> DbContext: Milestone record
+deactivate DB
+DbContext --> Handler: Milestone entity
+deactivate DbContext
+
+Handler -> Handler: milestone.Complete()\n- Status = "Completed"\n- CompletedDate = Now
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Milestones\nSET Status = 'Completed',\nCompletedDate = @date\nWHERE MilestoneId = @milestoneId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+note right of Handler
+  Trigger invoice generation
+  for milestone payment
+  via domain event
+end note
+
+Handler --> Controller: MilestoneDto
+deactivate Handler
+
+Controller --> Service: 200 OK\nMilestoneDto
+deactivate Controller
+
+Service --> UI: Milestone completed
+deactivate Service
+
+UI -> UI: Update milestone status
+UI --> User: Show completion message\nand suggest invoice creation
+deactivate UI
+
+== Complete Project ==
+User -> UI: On project detail,\nclick "Complete Project"
+activate UI
+
+UI -> UI: Show confirmation\nwith project summary
+
+User -> UI: Confirm completion
+
+UI -> Service: completeProject(projectId)
+activate Service
+
+Service -> Controller: PATCH /api/projects/{projectId}/complete
+activate Controller
+
+Controller -> Handler: Handle(CompleteProjectCommand)
+activate Handler
+
+Handler -> DbContext: Projects.Include(p => p.Milestones)\n.FindAsync(projectId)
+activate DbContext
+DbContext -> DB: SELECT p.*, m.*\nFROM Projects p\nLEFT JOIN Milestones m ON p.ProjectId = m.ProjectId\nWHERE p.ProjectId = @projectId
+activate DB
+DB --> DbContext: Project with milestones
+deactivate DB
+DbContext --> Handler: Project entity
+deactivate DbContext
+
+Handler -> Handler: Validate all milestones\nare completed
+
+alt All Milestones Completed
+    Handler -> Handler: project.Complete()\n- Status = "Completed"\n- EndDate = Now
+
+    Handler -> DbContext: SaveChangesAsync()
+    activate DbContext
+    DbContext -> DB: UPDATE Projects\nSET Status = 'Completed',\nEndDate = @date\nWHERE ProjectId = @projectId
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Changes saved
+    deactivate DbContext
+
+    Handler --> Controller: ProjectDto
+    deactivate Handler
+
+    Controller --> Service: 200 OK\nProjectDto
+    deactivate Controller
+
+    Service --> UI: Project completed
+    deactivate Service
+
+    UI -> UI: Update project status
+    UI --> User: Show success message\n"Project completed successfully"
+    deactivate UI
+
+else Pending Milestones
+    Handler --> Controller: 400 Bad Request\n"Cannot complete project\nwith pending milestones"
+    Controller --> Service: Error response
+    Service --> UI: Validation error
+    UI --> User: Show error message
+end
+
+@enduml
