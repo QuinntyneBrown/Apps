@@ -1,0 +1,109 @@
+@startuml Create User Flow
+title Create User Flow
+
+actor "Administrator" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "Users Controller\n(/api/users)" as UsersAPI
+participant "CreateUserCommand" as Command
+participant "Password Hasher" as PasswordHasher
+database "SQL Database" as DB
+
+Admin -> UI: Click "Add User" button
+activate UI
+
+UI -> UI: Show user creation form
+Admin -> UI: Enter user details\n(username, email, password)
+
+Admin -> UI: Click "Create" button
+UI -> UI: Validate form inputs\n(required fields, email format,\npassword minimum 8 chars)
+
+alt Validation Failed
+    UI --> Admin: Display validation errors
+    deactivate UI
+else Validation Passed
+    UI -> UserService: createUser(userData)
+    activate UserService
+
+    UserService -> Interceptor: POST /api/users\n{username, email, password}
+    activate Interceptor
+
+    Interceptor -> Interceptor: Inject JWT token from localStorage
+    Interceptor -> UsersAPI: Forward request with Authorization header
+    deactivate Interceptor
+    activate UsersAPI
+
+    UsersAPI -> UsersAPI: Verify Admin role in JWT token
+
+    alt Not Admin Role
+        UsersAPI --> UserService: 403 Forbidden
+        deactivate UsersAPI
+        UserService --> UI: Creation failed - insufficient permissions
+        deactivate UserService
+        UI --> Admin: Display error: "Admin access required"
+        deactivate UI
+    else Admin Role Verified
+        UsersAPI -> Command: Execute CreateUserCommand
+        activate Command
+
+        Command -> DB: Check username uniqueness
+        activate DB
+        DB --> Command: Return existing user or null
+        deactivate DB
+
+        alt Username Already Exists
+            Command --> UsersAPI: Validation error
+            deactivate Command
+            UsersAPI --> UserService: 400 Bad Request\n{error: "Username already exists"}
+            deactivate UsersAPI
+            UserService --> UI: Creation failed
+            deactivate UserService
+            UI --> Admin: Display error message
+            deactivate UI
+        else Username Available
+            Command -> DB: Check email uniqueness
+            activate DB
+            DB --> Command: Return existing user or null
+            deactivate DB
+
+            alt Email Already Exists
+                Command --> UsersAPI: Validation error
+                deactivate Command
+                UsersAPI --> UserService: 400 Bad Request\n{error: "Email already exists"}
+                deactivate UsersAPI
+                UserService --> UI: Creation failed
+                deactivate UserService
+                UI --> Admin: Display error message
+                deactivate UI
+            else Email Available
+                Command -> PasswordHasher: HashPassword(password)
+                activate PasswordHasher
+                PasswordHasher -> PasswordHasher: Generate unique 32-byte salt
+                PasswordHasher -> PasswordHasher: Hash with PBKDF2-SHA256\n(100,000 iterations)
+                PasswordHasher --> Command: Return (hash, salt)
+                deactivate PasswordHasher
+
+                Command -> DB: INSERT new user\n(userId, username, email, hash, salt)
+                activate DB
+                DB --> Command: User created successfully
+                deactivate DB
+
+                Command --> UsersAPI: Return UserDto
+                deactivate Command
+
+                UsersAPI --> UserService: 201 Created\n{userId, username, email, roles: []}
+                deactivate UsersAPI
+
+                UserService --> UI: User created successfully
+                deactivate UserService
+
+                UI -> UI: Close form and refresh user list
+                UI --> Admin: Show success notification
+                deactivate UI
+            end
+        end
+    end
+end
+
+@enduml
