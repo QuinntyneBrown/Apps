@@ -1,0 +1,76 @@
+@startuml
+title View Conferences List Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Conferences List\nPage" as Page
+participant "ConferenceService" as Svc
+participant "ConferencesController\n/api/conferences" as API
+participant "GetConferencesQuery\nHandler" as Handler
+participant "IConferenceEventManagerContext" as DbContext
+database "Database\n(Conferences)" as DB
+
+User -> Page: Navigate to Conferences page
+activate Page
+
+Page -> Page: Component initialization\n(async pipe pattern)
+
+Page -> Svc: getConferences$()
+activate Svc
+note right of Svc: Observable exposed\nfor async pipe
+
+Svc -> API: GET /api/conferences\nAuthorization: Bearer {token}
+activate API
+
+API -> Handler: Send GetConferencesQuery\nvia MediatR
+activate Handler
+
+Handler -> DbContext: Query Conferences\n- Filtered by TenantId (global filter)\n- Include related data
+activate DbContext
+
+DbContext -> DB: SELECT * FROM Conferences\nWHERE TenantId = @tenantId
+activate DB
+DB --> DbContext: Conference records
+deactivate DB
+
+deactivate DbContext
+
+Handler -> Handler: Map to ConferenceDto[]\n- Use ToDto() extensions\n- Calculate derived properties
+
+Handler --> API: ConferenceDto[]
+deactivate Handler
+
+API --> Svc: 200 OK\nConferenceDto[]
+deactivate API
+
+Svc --> Page: Observable<ConferenceDto[]>
+deactivate Svc
+
+Page -> Page: Async pipe subscribes\nand updates view
+
+Page -> User: Display conferences\n- Conference cards in grid/list\n- Filter by status (All/Upcoming/Past)\n- Sort options\n- Search functionality
+
+User -> Page: Filter by "Upcoming"
+
+Page -> Page: Apply client-side filter\nto displayed conferences
+
+Page -> User: Show only upcoming conferences
+
+User -> Page: Click on conference card
+
+Page -> Page: Navigate to conference detail\nRoute: /conferences/{id}
+
+deactivate Page
+
+note over User, DB
+The conferences list supports:
+- Grid/List view toggle
+- Status filters (All, Upcoming, Past, Cancelled)
+- Search by name or location
+- Sort by date, name, cost
+- Action buttons (Edit, Delete, Mark Attended)
+end note
+
+@enduml
