@@ -1,0 +1,129 @@
+@startuml
+title Add Item to List User Flow
+
+actor User
+participant "QuickAddItem\nComponent" as QuickAdd
+participant "ItemSuggestions\nComponent" as Suggestions
+participant "Redux Store" as Redux
+participant "API\n/api/lists/{id}/items" as API
+database "Database" as DB
+
+User -> QuickAdd: Type item name\n(e.g., "Appl")
+activate QuickAdd
+
+QuickAdd -> Redux: Dispatch fetchSuggestions("Appl")
+activate Redux
+
+note right of Redux
+  Debounced 300ms to avoid
+  excessive API calls
+end note
+
+Redux -> API: GET /api/items/suggestions?query=Appl
+activate API
+
+API -> DB: SELECT name, category,\navg_price, frequency\nFROM purchase_history\nWHERE user_id = {userId}\nAND name LIKE '%Appl%'\nORDER BY frequency DESC\nLIMIT 10
+activate DB
+DB --> API: Suggestion results
+deactivate DB
+
+API --> Redux: 200 OK\n[{\n  name: "Apples",\n  category: "Produce",\n  avgPrice: 3.99,\n  unit: "lbs"\n}]
+deactivate API
+
+Redux -> Redux: Update suggestions state
+
+Redux --> QuickAdd: Suggestions ready
+deactivate Redux
+
+QuickAdd -> Suggestions: Display suggestions
+activate Suggestions
+
+Suggestions --> User: Show dropdown:\n• Apples (Produce) ~$3.99/lbs\n• Apple Juice (Beverages) ~$4.50\n• Apple Sauce (Canned) ~$2.99
+
+User -> Suggestions: Click "Apples" suggestion
+
+Suggestions -> QuickAdd: Auto-fill:\n- Name: "Apples"\n- Category: "Produce"\n- Unit: "lbs"\n- Est. Price: $3.99
+deactivate Suggestions
+
+User -> QuickAdd: Adjust quantity to "2"
+User -> QuickAdd: [Optional] Add notes
+User -> QuickAdd: Click "Add" button
+
+QuickAdd -> Redux: Dispatch addItem(listId, itemData)
+activate Redux
+
+Redux --> QuickAdd: Optimistic update\n(show item immediately)
+
+QuickAdd --> User: Show new item in list\n(with loading indicator)
+
+Redux -> API: POST /api/lists/{listId}/items\n{\n  name: "Apples",\n  quantity: 2,\n  unit: "lbs",\n  category: "Produce",\n  estimatedPrice: 3.99,\n  notes: ""\n}
+activate API
+
+API -> DB: Check for duplicate
+activate DB
+DB --> API: No duplicate found
+deactivate DB
+
+API -> DB: INSERT INTO list_items\n(item_id, list_id, name,\nquantity, unit, category,\nestimated_price, status,\nadded_at, added_by)
+activate DB
+DB --> API: Item created
+deactivate DB
+
+API -> DB: UPDATE shopping_lists\nSET updated_at = NOW()\nWHERE list_id = {listId}
+activate DB
+DB --> API: List updated
+deactivate DB
+
+API --> Redux: 201 Created\n{\n  itemId, name, quantity,\n  category, status: 'pending',\n  addedAt\n}
+deactivate API
+
+Redux -> Redux: Update store:\n- Add item to items.byId\n- Add itemId to byList[listId]\n- Confirm optimistic update
+
+Redux --> QuickAdd: Success
+deactivate Redux
+
+QuickAdd -> QuickAdd: Clear input fields
+QuickAdd --> User: Show success feedback\n"Item added to list"
+
+== Alternative: Duplicate Item Detected ==
+
+alt Duplicate item exists
+    API -> DB: Check for duplicate
+    activate DB
+    DB --> API: Found: "Apples"\nalready in list
+    deactivate DB
+
+    API --> Redux: 409 Conflict\n{\n  message: "Item already in list",\n  existingItem: { itemId, quantity }\n}
+    deactivate API
+
+    Redux --> QuickAdd: Duplicate detected
+    QuickAdd --> User: Show dialog:\n"Apples is already in the list.\nIncrease quantity by 2?"
+
+    User -> QuickAdd: Click "Yes, increase"
+
+    QuickAdd -> Redux: Dispatch updateQuantity(\n  existingItemId,\n  currentQty + 2\n)
+    activate Redux
+
+    Redux -> API: PUT /api/items/{itemId}\n{ quantity: currentQty + 2 }
+    activate API
+    API -> DB: UPDATE list_items\nSET quantity = quantity + 2
+    activate DB
+    DB --> API: Updated
+    deactivate DB
+    API --> Redux: 200 OK
+    deactivate API
+
+    Redux --> QuickAdd: Success
+    deactivate Redux
+    QuickAdd --> User: Show success:\n"Quantity updated to 4 lbs"
+end
+
+deactivate QuickAdd
+
+note right of User
+  Item is now visible in the list,
+  grouped under "Produce" category,
+  with estimated total: $7.98
+end note
+
+@enduml

@@ -1,0 +1,100 @@
+@startuml View Round Summary User Flow
+title View Round Summary and Complete Round
+
+actor User
+participant "Active Round\nPage" as ActiveUI
+participant "Round Summary\nPage" as SummaryUI
+participant "API Gateway" as API
+participant "Round\nService" as RoundService
+participant "Statistics\nService" as StatsService
+participant "Handicap\nService" as HandicapService
+database "Database" as DB
+
+== Complete Round ==
+User -> ActiveUI: Complete all 18 holes
+activate ActiveUI
+ActiveUI --> User: Display "Finish Round" button
+deactivate ActiveUI
+
+User -> ActiveUI: Click "Finish Round"
+activate ActiveUI
+ActiveUI -> API: POST /api/rounds/{id}/complete
+activate API
+API -> RoundService: CompleteRound(roundId)
+activate RoundService
+RoundService -> DB: UPDATE Rounds\nSET status = 'completed',\ncompletedAt = NOW()
+activate DB
+DB --> RoundService: Success
+deactivate DB
+
+RoundService -> StatsService: UpdateStatistics(roundId)
+activate StatsService
+StatsService -> DB: Calculate and update\nuser statistics
+activate DB
+DB --> StatsService: Success
+deactivate DB
+StatsService --> RoundService: Statistics updated
+deactivate StatsService
+
+RoundService -> HandicapService: RecalculateHandicap(userId)
+activate HandicapService
+HandicapService -> DB: Get last 20 rounds,\ncalculate handicap index
+activate DB
+DB --> HandicapService: Return calculation data
+deactivate DB
+HandicapService -> DB: UPDATE UserHandicaps
+activate DB
+DB --> HandicapService: Success
+deactivate DB
+HandicapService --> RoundService: Handicap updated
+deactivate HandicapService
+
+RoundService --> API: Round completed
+deactivate RoundService
+API --> ActiveUI: Return success
+deactivate API
+ActiveUI --> User: Redirect to /rounds/{id}
+deactivate ActiveUI
+
+== View Round Summary ==
+User -> SummaryUI: Navigate to /rounds/{id}
+activate SummaryUI
+SummaryUI -> API: GET /api/rounds/{id}/summary
+activate API
+API -> RoundService: GetRoundSummary(roundId)
+activate RoundService
+RoundService -> DB: Query round with all scores
+activate DB
+DB --> RoundService: Return complete round data
+deactivate DB
+RoundService -> DB: Query statistics for round\n(fairways, GIR, putts)
+activate DB
+DB --> RoundService: Return statistics
+deactivate DB
+RoundService --> API: Return round summary
+deactivate RoundService
+API --> SummaryUI: Return summary data
+deactivate API
+
+SummaryUI --> User: Display summary:\n- Total score (large)\n- Score to par badge\n- Hole-by-hole breakdown\n- Statistics (fairways, GIR, putts)\n- Personal best badge (if applicable)
+deactivate SummaryUI
+
+== Optional: Share Round ==
+User -> SummaryUI: Click "Share Round"
+activate SummaryUI
+SummaryUI -> API: POST /api/rounds/{id}/share
+activate API
+API -> RoundService: GenerateShareableLink(roundId)
+activate RoundService
+RoundService -> DB: INSERT INTO SharedRounds
+activate DB
+DB --> RoundService: Return share token
+deactivate DB
+RoundService --> API: Return shareable link
+deactivate RoundService
+API --> SummaryUI: Return link
+deactivate API
+SummaryUI --> User: Show share dialog with link/QR code
+deactivate SummaryUI
+
+@enduml
