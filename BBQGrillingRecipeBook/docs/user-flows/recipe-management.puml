@@ -1,0 +1,144 @@
+@startuml
+
+title BBQ Grilling Recipe Book - Recipe Management Flow
+
+actor User
+participant "Dashboard" as Dashboard
+participant "Recipe List" as RecipeList
+participant "Recipe Detail" as RecipeDetail
+participant "Add/Edit Modal" as Modal
+participant "Recipe Service" as RecipeService
+participant "Recipe Controller" as RecipeAPI
+participant "Database" as DB
+
+== View Recipes ==
+User -> Dashboard: Navigate to recipes section
+activate Dashboard
+Dashboard -> RecipeList: Load recipe list component
+activate RecipeList
+RecipeList -> RecipeService: getRecipes()
+activate RecipeService
+RecipeService -> RecipeAPI: GET /api/recipes
+activate RecipeAPI
+RecipeAPI -> DB: Query recipes for tenant
+activate DB
+DB --> RecipeAPI: Return recipe list
+deactivate DB
+RecipeAPI --> RecipeService: 200 OK with recipes
+deactivate RecipeAPI
+RecipeService --> RecipeList: Recipe list data
+deactivate RecipeService
+RecipeList --> User: Display recipes with search and filters
+deactivate RecipeList
+deactivate Dashboard
+
+== View Recipe Details ==
+User -> RecipeList: Click on recipe
+activate RecipeList
+RecipeList -> RecipeDetail: Navigate to recipe detail
+activate RecipeDetail
+RecipeDetail -> RecipeService: getRecipeById(recipeId)
+activate RecipeService
+RecipeService -> RecipeAPI: GET /api/recipes/{recipeId}
+activate RecipeAPI
+RecipeAPI -> DB: Query recipe by ID
+activate DB
+DB --> RecipeAPI: Return recipe details
+deactivate DB
+RecipeAPI --> RecipeService: 200 OK with recipe
+deactivate RecipeAPI
+RecipeService --> RecipeDetail: Recipe detail data
+deactivate RecipeService
+RecipeDetail --> User: Display complete recipe details
+deactivate RecipeDetail
+deactivate RecipeList
+
+== Create New Recipe ==
+User -> Dashboard: Click "Add Recipe" button
+activate Dashboard
+Dashboard -> Modal: Open add recipe modal
+activate Modal
+Modal --> User: Display empty recipe form
+deactivate Dashboard
+
+User -> Modal: Fill in recipe details
+User -> Modal: Add ingredients and steps
+User -> Modal: Click "Save"
+Modal -> Modal: Validate form data
+Modal -> RecipeService: createRecipe(recipeData)
+activate RecipeService
+RecipeService -> RecipeAPI: POST /api/recipes
+activate RecipeAPI
+RecipeAPI -> RecipeAPI: Validate recipe data
+RecipeAPI -> DB: Insert new recipe record
+activate DB
+DB --> RecipeAPI: Return created recipe
+deactivate DB
+RecipeAPI --> RecipeService: 201 Created with recipe
+deactivate RecipeAPI
+RecipeService --> Modal: Recipe created successfully
+deactivate RecipeService
+Modal -> Modal: Close modal
+Modal -> RecipeList: Refresh recipe list
+activate RecipeList
+RecipeList --> User: Show updated list with new recipe
+deactivate RecipeList
+deactivate Modal
+
+== Update Recipe ==
+User -> RecipeDetail: Click "Edit" button
+activate RecipeDetail
+RecipeDetail -> Modal: Open edit modal with recipe data
+activate Modal
+Modal --> User: Display pre-filled recipe form
+deactivate RecipeDetail
+
+User -> Modal: Modify recipe details
+User -> Modal: Click "Update"
+Modal -> Modal: Validate form data
+Modal -> RecipeService: updateRecipe(recipeId, recipeData)
+activate RecipeService
+RecipeService -> RecipeAPI: PUT /api/recipes/{recipeId}
+activate RecipeAPI
+RecipeAPI -> RecipeAPI: Validate recipe data
+RecipeAPI -> DB: Update recipe record
+activate DB
+DB --> RecipeAPI: Return updated recipe
+deactivate DB
+RecipeAPI --> RecipeService: 200 OK with recipe
+deactivate RecipeAPI
+RecipeService --> Modal: Recipe updated successfully
+deactivate RecipeService
+Modal -> Modal: Close modal
+Modal -> RecipeDetail: Refresh recipe details
+activate RecipeDetail
+RecipeDetail --> User: Show updated recipe
+deactivate RecipeDetail
+deactivate Modal
+
+== Delete Recipe ==
+User -> RecipeDetail: Click "Delete" button
+activate RecipeDetail
+RecipeDetail -> RecipeDetail: Show confirmation dialog
+RecipeDetail --> User: Confirm deletion
+User -> RecipeDetail: Confirm delete
+RecipeDetail -> RecipeService: deleteRecipe(recipeId)
+activate RecipeService
+RecipeService -> RecipeAPI: DELETE /api/recipes/{recipeId}
+activate RecipeAPI
+RecipeAPI -> DB: Delete recipe record
+activate DB
+DB --> RecipeAPI: Deletion confirmed
+deactivate DB
+RecipeAPI --> RecipeService: 204 No Content
+deactivate RecipeAPI
+RecipeService --> RecipeDetail: Recipe deleted successfully
+deactivate RecipeService
+RecipeDetail -> RecipeList: Navigate back to list
+activate RecipeList
+RecipeList -> RecipeList: Refresh recipe list
+RecipeList --> User: Show updated list without deleted recipe
+deactivate RecipeList
+deactivate RecipeDetail
+
+@enduml
