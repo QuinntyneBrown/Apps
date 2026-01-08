@@ -1,0 +1,87 @@
+@startuml
+
+title BBQ Grilling Recipe Book - User Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthService
+participant "Auth Controller" as AuthAPI
+participant "JWT Service" as JWT
+participant "Database" as DB
+
+== Login Flow ==
+User -> UI: Navigate to login page
+activate UI
+UI --> User: Display login form
+
+User -> UI: Enter username & password
+UI -> UI: Validate form inputs
+UI -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> AuthAPI: POST /api/auth/login
+activate AuthAPI
+
+AuthAPI -> AuthAPI: Validate credentials format
+AuthAPI -> DB: Query user by username
+activate DB
+DB --> AuthAPI: Return user record
+deactivate DB
+
+alt Valid Credentials
+    AuthAPI -> AuthAPI: Hash input password with salt
+    AuthAPI -> JWT: Generate JWT token
+    activate JWT
+    JWT --> AuthAPI: JWT token (expires in 24h)
+    deactivate JWT
+
+    AuthAPI --> AuthService: 200 OK with token and user data
+    deactivate AuthAPI
+
+    AuthService -> AuthService: Store token in localStorage
+    AuthService --> UI: Login successful with user data
+    deactivate AuthService
+
+    UI -> UI: Update authentication state
+    UI -> UI: Redirect to dashboard
+    UI --> User: Show dashboard
+    deactivate UI
+
+else Invalid Credentials
+    AuthAPI --> AuthService: 401 Unauthorized
+    deactivate AuthAPI
+
+    AuthService --> UI: Login failed
+    deactivate AuthService
+
+    UI --> User: Display error message
+    deactivate UI
+end
+
+== Authenticated Request Flow ==
+User -> UI: Navigate to protected page
+activate UI
+UI -> AuthService: Check authentication status
+activate AuthService
+AuthService -> AuthService: Validate token expiration
+AuthService --> UI: Token valid
+deactivate AuthService
+
+UI -> AuthService: Make authenticated request GET /api/recipes
+activate AuthService
+AuthService -> AuthService: Add Authorization header
+AuthService -> AuthAPI: GET /api/recipes with Bearer token
+activate AuthAPI
+AuthAPI -> AuthAPI: Validate JWT token and extract claims
+AuthAPI -> DB: Query recipes for user
+activate DB
+DB --> AuthAPI: Return recipe data
+deactivate DB
+AuthAPI --> AuthService: 200 OK with recipes data
+deactivate AuthAPI
+AuthService --> UI: Recipe data
+deactivate AuthService
+UI --> User: Display recipes
+deactivate UI
+
+@enduml
