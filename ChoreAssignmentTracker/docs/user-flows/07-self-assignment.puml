@@ -1,0 +1,167 @@
+@startuml Self Assignment Flow
+
+title Self-Assignment (Volunteer) Flow
+
+actor Child
+participant "Available Chores" as AvailableUI
+participant "Chore Details" as DetailUI
+participant "Self-Assign Dialog" as AssignDialog
+participant "Chore Controller" as ChoreAPI
+participant "SelfAssignCommand" as SelfAssignCmd
+participant "Chore Repository" as ChoreRepo
+participant "Member Repository" as MemberRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== Browse Available Chores ==
+Child -> AvailableUI: Navigate to Available Chores
+AvailableUI -> ChoreAPI: GET /api/chores/available\n?householdId={id}
+ChoreAPI -> ChoreRepo: GetAvailableChores(householdId)
+ChoreRepo -> DB: SELECT * FROM Chores c\nLEFT JOIN ChoreAssignments ca\n  ON c.ChoreId = ca.ChoreId\n  AND ca.Status IN ('Pending', 'InProgress')\nWHERE c.HouseholdId = @householdId\n  AND c.IsActive = 1\n  AND ca.AssignmentId IS NULL
+
+note right
+  Returns chores that:
+  - Belong to household
+  - Are active
+  - Have no pending/in-progress assignments
+  - Are available for volunteering
+end note
+
+DB --> ChoreRepo: List of unassigned chores
+ChoreRepo --> ChoreAPI: Available chores
+ChoreAPI --> AvailableUI: 200 OK {chores}
+
+AvailableUI -> AvailableUI: Display chores with:\n- Chore name and description\n- Category icon\n- Difficulty stars\n- Point value badge\n- Estimated duration\n- "Volunteer" button
+
+AvailableUI --> Child: Show available chores list
+
+== Select Chore to Volunteer ==
+Child -> AvailableUI: Click on chore
+AvailableUI -> DetailUI: Show chore details
+
+DetailUI -> ChoreAPI: GET /api/chores/{choreId}
+ChoreAPI -> ChoreRepo: GetChoreById(choreId)
+ChoreRepo -> DB: SELECT * FROM Chores\nWHERE ChoreId = @choreId
+DB --> ChoreRepo: Chore details
+ChoreRepo --> ChoreAPI: Chore
+ChoreAPI --> DetailUI: 200 OK {chore}
+
+DetailUI --> Child: Display full details:\n- Name and description\n- Instructions\n- Reference photo\n- Category\n- Difficulty level\n- Point value\n- Estimated duration\n- Frequency
+
+Child -> DetailUI: Click "Volunteer for this Chore"
+DetailUI -> AssignDialog: Open self-assignment dialog
+
+AssignDialog --> Child: Show confirmation:\n"Volunteer for [ChoreName]?\nYou'll earn [Points] points!"
+
+alt Child Has Active Chores Check
+    AssignDialog -> ChoreAPI: GET /api/assignments\n?assignedTo={childId}&status=Pending
+    ChoreAPI -> DB: SELECT COUNT(*) FROM ChoreAssignments
+    DB --> ChoreAPI: Active chore count
+    ChoreAPI --> AssignDialog: Current workload
+
+    alt High Workload Warning
+        AssignDialog --> Child: "You have [N] pending chores.\nAre you sure you can handle\none more?"
+    end
+end
+
+opt Set Target Completion Date
+    Child -> AssignDialog: Choose when to complete\n(Today, Tomorrow, This Week)
+    AssignDialog -> AssignDialog: Calculate due date
+end
+
+Child -> AssignDialog: Confirm "Yes, Volunteer!"
+
+== Process Self-Assignment ==
+AssignDialog -> ChoreAPI: POST /api/chores/{choreId}/self-assign\n{\n  memberId: childId,\n  targetDate (optional)\n}
+
+ChoreAPI -> SelfAssignCmd: Handle SelfAssignCommand
+
+SelfAssignCmd -> ChoreRepo: GetChoreById(choreId)
+ChoreRepo -> DB: SELECT * FROM Chores
+DB --> ChoreRepo: Chore data
+ChoreRepo --> SelfAssignCmd: Chore entity
+
+SelfAssignCmd -> MemberRepo: GetMemberById(memberId)
+MemberRepo -> DB: SELECT * FROM HouseholdMembers
+DB --> MemberRepo: Member data
+MemberRepo --> SelfAssignCmd: Member entity
+
+SelfAssignCmd -> ChoreRepo: CheckActiveAssignment(choreId)
+ChoreRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE ChoreId = @choreId\nAND Status IN ('Pending', 'InProgress')
+DB --> ChoreRepo: Existing assignment check
+ChoreRepo --> SelfAssignCmd: No active assignment
+
+SelfAssignCmd -> SelfAssignCmd: Validate:\n- Chore exists and is active\n- Member belongs to household\n- No active assignment exists\n- Chore allows self-assignment
+
+alt Validation Passes
+    SelfAssignCmd -> SelfAssignCmd: Calculate due date:\n- Use target date if provided\n- Or use frequency default\n- Or 3 days from now
+
+    SelfAssignCmd -> SelfAssignCmd: Create Assignment:\n- AssignmentId (Guid)\n- ChoreId\n- AssignedTo: childId\n- AssignedBy: childId (self)\n- AssignmentMethod: SelfAssigned\n- DueDate\n- Status: Pending\n- IsVolunteer: true
+
+    SelfAssignCmd -> ChoreRepo: SaveAssignment(assignment)
+    ChoreRepo -> DB: INSERT INTO ChoreAssignments
+    DB --> ChoreRepo: AssignmentId
+
+    SelfAssignCmd -> Events: Publish SelfAssignmentMade event\n{\n  assignmentId,\n  choreId,\n  choreName,\n  memberId,\n  memberName,\n  dueDate,\n  pointValue,\n  isVolunteer: true\n}
+
+    alt Award Initiative Bonus
+        SelfAssignCmd -> SelfAssignCmd: Check if eligible for\ninitiative bonus points
+
+        SelfAssignCmd -> Events: Publish BonusPointsEarned event\n{\n  memberId,\n  bonusPoints,\n  reason: "Taking initiative"\n}
+        note right
+          Some households reward
+          children for volunteering
+          with bonus points
+        end note
+    end
+
+    Events -> NotifyService: Notify parent of volunteer
+
+    NotifyService -> NotifyService: Create notification for parent:\n"[ChildName] volunteered for [ChoreName]!\n+[Points] points potential"
+    NotifyService -> DB: INSERT INTO Notifications\nFOR parent users
+    NotifyService -> NotifyService: Send push notification
+
+    SelfAssignCmd --> ChoreAPI: Success with AssignmentId
+    ChoreAPI --> AssignDialog: 201 Created {assignmentId, assignment}
+
+    AssignDialog -> AssignDialog: Show celebration animation
+    AssignDialog -> AssignDialog: Display success message:\n"Awesome initiative!\n[ChoreName] added to your chores.\nDue: [DueDate]\nEarn [Points] points!"
+
+    opt Initiative Badge Check
+        AssignDialog -> AssignDialog: Check for achievement:\n"First Volunteer"\n"Super Helper" (10 volunteers)\netc.
+
+        alt Achievement Unlocked
+            AssignDialog --> Child: Show badge earned animation
+        end
+    end
+
+    AssignDialog -> AvailableUI: Close dialog and refresh
+    AvailableUI -> AvailableUI: Remove chore from available list
+    AvailableUI --> Child: Display updated list
+
+    AssignDialog -> AvailableUI: Navigate to My Chores
+    AvailableUI --> Child: Show new assignment\nin pending chores
+
+    NotifyService --> Child: Confirmation notification
+
+else Validation Fails (Already Assigned)
+    SelfAssignCmd --> ChoreAPI: Chore already assigned
+    ChoreAPI --> AssignDialog: 409 Conflict\n{error: "Someone already took this chore"}
+    AssignDialog --> Child: "Oops! Someone just\nvolunteered for this chore.\nTry another one!"
+
+else Validation Fails (Other)
+    SelfAssignCmd --> ChoreAPI: Validation error
+    ChoreAPI --> AssignDialog: 400 Bad Request {errors}
+    AssignDialog --> Child: Display error message
+end
+
+== Parent Receives Notification ==
+NotifyService --> Child: "Great initiative! +2 bonus points"
+note right
+  Parents can see volunteer
+  activity in their dashboard
+  and recognize proactive behavior
+end note
+
+@enduml
