@@ -1,0 +1,103 @@
+@startuml manage-user-roles
+title Manage User Roles Flow
+
+actor Admin
+participant "User Management\nPage" as UI
+participant "User Service\n(Angular)" as UserService
+participant "Users Controller\n(/api/users)" as UsersController
+participant "Add/Remove Role\nCommand Handler" as CommandHandler
+database "CarModificationPartsDatabase\nContext" as DB
+
+== Load User with Roles ==
+Admin -> UI: Click "Manage Roles" on user row
+UI -> UserService: getUser(userId)
+UserService -> UsersController: GET /api/users/{userId}
+
+UsersController -> DB: Query User by userId\nwith roles (Include navigation)
+DB --> UsersController: Return User with Roles
+
+UsersController -> UsersController: Map User to DTO with roles
+UsersController --> UserService: 200 OK\n{userId, username, email, roles}
+UserService --> UI: User data received
+UI -> UI: Open manage roles dialog\nShow current roles
+
+== Add Role to User ==
+Admin -> UI: Select role from dropdown
+Admin -> UI: Click "Add Role" button
+
+UI -> UserService: addRoleToUser(userId, roleId)
+UserService -> UsersController: POST /api/users/{userId}/roles\n{roleId}
+
+UsersController -> CommandHandler: Handle AddRoleToUserCommand
+
+CommandHandler -> DB: Query User by userId\nwith TenantId filter
+DB --> CommandHandler: Return User entity
+
+alt User not found
+    CommandHandler --> UsersController: 404 Not Found
+    UsersController --> UserService: Operation failed
+    UserService --> UI: Show error message
+    UI -> Admin: Display "User not found"
+else User exists
+    CommandHandler -> DB: Query Role by roleId
+    DB --> CommandHandler: Return Role entity
+
+    alt Role not found
+        CommandHandler --> UsersController: 404 Not Found\n{"error": "Role not found"}
+        UsersController --> UserService: Operation failed
+        UserService --> UI: Show error message
+        UI -> Admin: Display "Role not found"
+    else Role exists
+        CommandHandler -> DB: Check if user already has role\n(Query UserRole table)
+        DB --> CommandHandler: Role association status
+
+        alt User already has role
+            CommandHandler --> UsersController: 200 OK (idempotent)\n{userId, roles}
+            note right: Idempotent - no error if already assigned
+        else Role not assigned yet
+            CommandHandler -> DB: Add UserRole association
+            DB --> CommandHandler: Role added successfully
+            CommandHandler --> UsersController: 200 OK\n{userId, roles}
+        end
+
+        UsersController --> UserService: Role added successfully
+        UserService --> UI: Role addition successful
+        UI -> UI: Refresh role list
+        UI -> Admin: Display success message\n"Role added successfully"
+    end
+end
+
+== Remove Role from User ==
+Admin -> UI: Click "Remove" on role chip
+UI -> UI: Show confirmation dialog\n"Remove this role?"
+
+alt Admin confirms
+    Admin -> UI: Click Confirm
+
+    UI -> UserService: removeRoleFromUser(userId, roleId)
+    UserService -> UsersController: DELETE /api/users/{userId}/roles/{roleId}
+
+    UsersController -> CommandHandler: Handle RemoveRoleFromUserCommand
+
+    CommandHandler -> DB: Query User by userId\nwith TenantId filter
+    DB --> CommandHandler: Return User entity
+
+    alt User not found
+        CommandHandler --> UsersController: 404 Not Found
+        UsersController --> UserService: Operation failed
+        UserService --> UI: Show error message
+        UI -> Admin: Display "User not found"
+    else User exists
+        CommandHandler -> DB: Remove UserRole association\n(idempotent)
+        DB --> CommandHandler: Role removed
+
+        CommandHandler --> UsersController: 204 No Content
+
+        UsersController --> UserService: Role removed successfully
+        UserService --> UI: Role removal successful
+        UI -> UI: Refresh role list
+        UI -> Admin: Display success message\n"Role removed successfully"
+    end
+end
+
+@enduml
