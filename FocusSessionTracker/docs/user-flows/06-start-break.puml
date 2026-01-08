@@ -1,0 +1,58 @@
+@startuml Start Break Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Start Break Flow
+
+actor User
+participant "Break\nRecommendation\nBanner" as Banner
+participant "Break Timer\nPage" as UI
+participant "Break Store" as Store
+participant "API" as API
+database Database
+
+UI -> Banner: Session completes
+activate Banner
+Banner -> Store: loadRecommendation()
+activate Store
+Store -> API: GET /api/breaks/recommendation
+activate API
+API -> Database: Calculate recommendation\nbased on session history
+activate Database
+Database --> API: Recommended break type\nand duration
+deactivate Database
+API --> Store: Recommendation data
+deactivate API
+Store --> Banner: Show recommendation
+deactivate Store
+
+Banner --> User: Display recommendation\n(type, duration, reason)
+
+User -> Banner: Click "Start Break"
+Banner -> Store: startBreak(config)
+activate Store
+Store -> API: POST /api/breaks
+activate API
+API -> Database: INSERT break record
+activate Database
+Database --> API: Break created
+deactivate Database
+API --> Store: Break data
+deactivate API
+Store --> Banner: Break started
+deactivate Store
+
+Banner -> UI: Navigate to break timer
+deactivate Banner
+activate UI
+UI -> UI: Display countdown timer
+UI -> UI: Show activity suggestions
+UI --> User: Break timer active
+deactivate UI
+
+@enduml
