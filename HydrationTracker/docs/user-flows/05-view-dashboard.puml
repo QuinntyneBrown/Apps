@@ -1,0 +1,104 @@
+@startuml
+title View Dashboard Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "IntakeService" as IntakeService
+participant "GoalService" as GoalService
+participant "IntakesController\n/api/intakes" as IntakesAPI
+participant "GoalsController\n/api/goals" as GoalsAPI
+participant "GetTodayIntakesQuery\nHandler" as GetIntakesHandler
+participant "GetActiveGoalQuery\nHandler" as GetGoalHandler
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Navigate to dashboard\n(after login or from menu)
+activate Dashboard
+
+== Load Active Goal ==
+
+Dashboard -> GoalService: getActiveGoal()
+activate GoalService
+GoalService -> GoalsAPI: GET /api/goals/active
+activate GoalsAPI
+GoalsAPI -> GetGoalHandler: Execute(GetActiveGoalQuery)
+activate GetGoalHandler
+GetGoalHandler -> DB: Goals.Where(g => g.IsActive)\n.FirstOrDefaultAsync()
+activate DB
+DB -> Database: Query active goal\n(filtered by TenantId)
+activate Database
+Database --> DB: Goal record
+deactivate Database
+DB --> GetGoalHandler: Goal entity
+deactivate DB
+GetGoalHandler --> GoalsAPI: GoalDTO
+deactivate GetGoalHandler
+GoalsAPI --> GoalService: 200 OK with goal data
+deactivate GoalsAPI
+GoalService --> Dashboard: Active goal\n(dailyTarget, unit)
+deactivate GoalService
+
+== Load Today's Intakes ==
+
+Dashboard -> IntakeService: getTodayIntakes()
+activate IntakeService
+IntakeService -> IntakesAPI: GET /api/intakes/today
+activate IntakesAPI
+IntakesAPI -> GetIntakesHandler: Execute(GetTodayIntakesQuery)
+activate GetIntakesHandler
+GetIntakesHandler -> DB: Intakes.Where(i => i.Timestamp.Date == today)\n.OrderByDescending(i => i.Timestamp)\n.ToListAsync()
+activate DB
+DB -> Database: Query today's intakes\n(filtered by TenantId and date)
+activate Database
+Database --> DB: List of Intake records
+deactivate Database
+DB --> GetIntakesHandler: List<Intake> entities
+deactivate DB
+GetIntakesHandler --> IntakesAPI: List<IntakeDTO>
+deactivate GetIntakesHandler
+IntakesAPI --> IntakeService: 200 OK with intakes list
+deactivate IntakesAPI
+IntakeService --> Dashboard: Today's intake records
+deactivate IntakeService
+
+== Calculate and Display Progress ==
+
+Dashboard -> Dashboard: Calculate total consumed\n(sum of all intake amounts)
+Dashboard -> Dashboard: Calculate progress percentage\n(consumed / dailyTarget * 100)
+Dashboard -> Dashboard: Determine streak status\n(consecutive days with goal met)
+
+Dashboard -> User: Display dashboard with:
+note right
+- Water glass visual (filled to progress %)
+- Progress percentage display
+- Daily goal target
+- Today's total consumption
+- Recent intakes list
+- Quick "Add Drink" button
+- Streak badge (if applicable)
+end note
+
+deactivate Dashboard
+
+== Optional: Auto-refresh ==
+
+loop Every 30 seconds (if configured)
+    Dashboard -> IntakeService: getTodayIntakes()
+    activate IntakeService
+    activate Dashboard
+    IntakeService -> IntakesAPI: GET /api/intakes/today
+    activate IntakesAPI
+    IntakesAPI --> IntakeService: Updated intakes
+    deactivate IntakesAPI
+    IntakeService --> Dashboard: Fresh data
+    deactivate IntakeService
+    Dashboard -> Dashboard: Update progress display
+    Dashboard -> User: Show updated progress
+    deactivate Dashboard
+end
+
+@enduml
