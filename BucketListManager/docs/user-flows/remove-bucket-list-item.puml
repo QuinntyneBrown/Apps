@@ -1,0 +1,61 @@
+@startuml remove-bucket-list-item
+title Remove Bucket List Item Flow
+
+actor User
+participant "Item Detail Panel" as DetailPanel
+participant "Confirmation Modal" as Modal
+participant "Bucket List Service" as Service
+participant "API Controller" as API
+participant "RemoveItemCommand Handler" as Handler
+participant "IBucketListManagerContext" as DB
+
+User -> DetailPanel: Select item
+User -> DetailPanel: Click "Remove" button
+DetailPanel -> Modal: Open removal confirmation
+Modal --> User: Display reason form
+
+User -> Modal: Select/Enter removal reason
+note left: Reasons: Changed Mind,\nNo Longer Relevant,\nCompleted Elsewhere, etc.
+User -> Modal: Optionally add notes
+User -> Modal: Click "Confirm Remove"
+
+Modal -> Modal: Validate reason provided
+Modal -> Service: removeItem(itemId, reason, notes)
+Service -> Service: Prepare request with auth token
+Service -> API: PUT /api/bucket-list-items/{id}/remove
+note right: Authorization: Bearer {token}\nBody: { reason, notes }
+
+API -> Handler: RemoveBucketListItemCommand
+Handler -> DB: Query item by Id (filtered by TenantId)
+DB --> Handler: BucketListItem entity
+
+alt Item exists and belongs to user's tenant
+    Handler -> Handler: Validate item ownership
+    Handler -> Handler: Update item status to Removed
+    Handler -> Handler: Set removal date
+    Handler -> Handler: Store removal reason
+    Handler -> Handler: Store removal notes
+    Handler -> DB: Update(bucketListItem)
+    Handler -> DB: SaveChangesAsync()
+    DB --> Handler: Success
+    Handler --> API: ItemRemovedResponse
+    API --> Service: 200 OK + archived item
+    Service --> Modal: Removal successful
+    Modal -> Modal: Close modal
+    Modal -> DetailPanel: Navigate away
+    DetailPanel -> Service: getItems()
+    Service -> API: GET /api/bucket-list-items\n(excludes removed)
+    API -> DB: Query active items by TenantId
+    DB --> API: Active items list
+    API --> Service: Items list
+    Service --> DetailPanel: Updated items
+    DetailPanel --> User: Display items without removed one
+    DetailPanel --> User: Show success toast notification
+else Item not found or unauthorized
+    Handler --> API: 404 Not Found / 403 Forbidden
+    API --> Service: Error response
+    Service --> Modal: Removal failed
+    Modal --> User: Display error message
+end
+
+@enduml
