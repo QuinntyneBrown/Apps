@@ -1,0 +1,112 @@
+@startuml
+title Appliance List and Search Flow
+
+actor User as user
+participant "Appliance Inventory\nPage" as inventoryPage
+participant "Appliance Service\n(Angular)" as applianceService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Appliances\nController" as controller
+participant "Get Appliances\nQuery Handler" as queryHandler
+participant "DB Context" as dbContext
+participant "Appliances Table" as database
+
+== Initial Page Load ==
+
+user -> inventoryPage: Navigate to\nAppliance Inventory
+activate inventoryPage
+
+inventoryPage -> applianceService: getAppliances()
+activate applianceService
+
+applianceService -> interceptor: GET /api/appliances\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> queryHandler: GetAppliancesQuery
+activate queryHandler
+
+queryHandler -> queryHandler: Extract TenantId from JWT
+
+queryHandler -> dbContext: Appliances.Where(a => a.TenantId == tenantId)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Appliances\nWHERE TenantId = ?
+activate database
+database --> dbContext: Appliance records
+deactivate database
+deactivate dbContext
+
+queryHandler --> controller: List<ApplianceDto>
+deactivate queryHandler
+
+controller --> interceptor: 200 OK\n[{ applianceId, name,\nbrand, location, ... }]
+deactivate controller
+
+interceptor --> applianceService: Success response
+deactivate interceptor
+
+applianceService --> inventoryPage: appliances$
+deactivate applianceService
+
+inventoryPage -> inventoryPage: Render grid/list view\nusing async pipe
+inventoryPage --> user: Display appliances
+deactivate inventoryPage
+
+== Search and Filter ==
+
+user -> inventoryPage: Enter search term\nor select filter
+activate inventoryPage
+
+inventoryPage -> inventoryPage: Update local filter criteria
+
+inventoryPage -> applianceService: getAppliances(searchTerm, location)
+activate applianceService
+
+applianceService -> interceptor: GET /api/appliances\n?search=term&location=Kitchen\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request with params
+activate controller
+
+controller -> queryHandler: GetAppliancesQuery\n(searchTerm, location)
+activate queryHandler
+
+queryHandler -> queryHandler: Extract TenantId from JWT
+
+queryHandler -> dbContext: Appliances\n.Where(a => a.TenantId == tenantId)\n.Where(a => a.Name.Contains(search))\n.Where(a => a.Location == location)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Appliances\nWHERE TenantId = ?\nAND Name LIKE ?\nAND Location = ?
+activate database
+database --> dbContext: Filtered records
+deactivate database
+deactivate dbContext
+
+queryHandler --> controller: Filtered List<ApplianceDto>
+deactivate queryHandler
+
+controller --> interceptor: 200 OK\n[filtered appliances]
+deactivate controller
+
+interceptor --> applianceService: Success response
+deactivate interceptor
+
+applianceService --> inventoryPage: filtered appliances$
+deactivate applianceService
+
+inventoryPage -> inventoryPage: Update view with\nfiltered results
+inventoryPage --> user: Display filtered\nappliances
+deactivate inventoryPage
+
+== View Appliance Details ==
+
+user -> inventoryPage: Click on appliance card
+activate inventoryPage
+
+inventoryPage -> inventoryPage: Navigate to\nAppliance Detail page
+inventoryPage --> user: Show detailed view
+deactivate inventoryPage
+
+@enduml
