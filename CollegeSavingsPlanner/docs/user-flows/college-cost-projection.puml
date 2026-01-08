@@ -1,0 +1,113 @@
+@startuml CollegeCostProjectionFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Cost Projections Page" as ProjectionPage
+participant "Projection Settings Modal" as Modal
+participant "API Gateway" as API
+participant "Projection Controller" as Controller
+participant "Calculate Projection Handler" as Handler
+participant "Projection Service" as ProjService
+participant "ITenantContext" as TenantCtx
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== View Current Projections ==
+User -> ProjectionPage: Navigate to /projections
+ProjectionPage -> API: GET /api/projections
+API -> DB: Query projections for all plans
+DB -> Database: SELECT * FROM Projections WHERE TenantId = ?
+Database --> DB: Projection data
+DB --> API: List of projections
+API --> ProjectionPage: Projections by beneficiary
+ProjectionPage -> User: Display cost projections and savings gap analysis
+
+== Configure New Projection ==
+User -> ProjectionPage: Click "Create New Projection" or "Edit Projection"
+ProjectionPage -> Modal: Open projection settings modal
+Modal -> User: Display projection configuration form
+
+== Enter Projection Parameters ==
+User -> Modal: Select beneficiary
+User -> Modal: Select school type (public, private, in-state, out-of-state)
+User -> Modal: Enter expected enrollment year
+User -> Modal: Select duration (2-year, 4-year, graduate)
+Modal -> API: GET /api/cost-data/current?schoolType={type}
+API -> ProjService: Get current tuition data
+ProjService --> API: Current cost averages
+API --> Modal: Base cost data
+Modal -> User: Display current costs (tuition, room & board, books, fees)
+
+== Adjust Inflation and Growth Rates ==
+User -> Modal: Adjust tuition inflation rate (default 5%)
+User -> Modal: Adjust investment growth rate (default 7%)
+User -> Modal: Review total projected cost
+Modal -> Modal: Calculate real-time preview of future costs
+
+== Save Projection ==
+User -> Modal: Click "Calculate Projection"
+Modal -> API: POST /api/projections
+API -> Controller: CreateProjection request
+Controller -> Handler: Handle CalculateProjectionCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+Handler -> ProjService: Calculate future college costs
+ProjService -> ProjService: Apply inflation to base costs
+note right
+  Formula:
+  Future Cost = Current Cost * (1 + inflation)^years
+
+  Example:
+  $30,000 * (1.05)^10 = $48,867
+end note
+ProjService -> ProjService: Calculate year-by-year breakdown
+ProjService -> ProjService: Separate costs (tuition, room, books, fees)
+ProjService --> Handler: Projected costs
+Handler -> DB: Get current savings plan balance
+DB -> Database: SELECT CurrentBalance FROM SavingsPlans WHERE BeneficiaryId = ? AND TenantId = ?
+Database --> DB: Current balance
+DB --> Handler: Plan balance
+Handler -> ProjService: Calculate projected savings at enrollment
+ProjService -> ProjService: Apply growth rate to current balance
+note right
+  Formula:
+  Future Balance = Current Balance * (1 + growth)^years
+  + Monthly Contribution * ((1 + growth/12)^(years*12) - 1) / (growth/12)
+end note
+ProjService --> Handler: Projected balance
+Handler -> Handler: Calculate savings gap
+note right
+  Savings Gap = Projected Cost - Projected Balance
+end note
+Handler -> Handler: Generate recommendations
+alt Savings Gap Exists
+    Handler -> Handler: Calculate required monthly contribution
+    Handler -> Handler: Raise SavingsGapIdentified event
+else On Track or Surplus
+    Handler -> Handler: Raise SavingsGoalAchieved event (if surplus)
+end
+Handler -> Handler: Create Projection entity
+Handler -> DB: Save Projection
+DB -> Database: INSERT INTO Projections
+Database --> DB: Projection saved
+DB --> Handler: Projection entity
+Handler -> Handler: Raise CollegeCostProjected event
+Handler --> Controller: ProjectionDto with gap analysis
+Controller --> API: 201 Created
+API --> Modal: Projection created
+Modal -> Modal: Close modal
+Modal -> ProjectionPage: Refresh projections
+ProjectionPage -> API: GET /api/projections
+API -> DB: Query updated projections
+DB --> API: Updated projections
+API --> ProjectionPage: Updated projection data
+ProjectionPage -> User: Display updated projections with gap analysis and recommendations
+
+== View Detailed Breakdown ==
+User -> ProjectionPage: Click "View Details" on projection
+ProjectionPage -> User: Display year-by-year cost breakdown
+ProjectionPage -> User: Show interactive charts (costs vs savings over time)
+ProjectionPage -> User: Display contribution recommendations
+
+@enduml
