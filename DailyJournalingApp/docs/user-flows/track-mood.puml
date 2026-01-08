@@ -1,0 +1,96 @@
+@startuml Track Mood Flow
+
+actor User
+participant "Mood Tracking\nPage" as MoodUI
+participant "Mood Selector\nComponent" as MoodSelector
+participant "Intensity Slider\nComponent" as IntensitySlider
+participant "Mood Service" as MoodService
+participant "Mood Controller" as MoodAPI
+participant "Create Mood\nCommand Handler" as CommandHandler
+participant "Database" as DB
+
+User -> MoodUI: Navigate to /mood
+activate MoodUI
+
+MoodUI -> MoodSelector: Initialize mood selector
+activate MoodSelector
+
+MoodSelector --> User: Display emoji mood options
+deactivate MoodSelector
+
+MoodUI -> IntensitySlider: Initialize intensity slider
+activate IntensitySlider
+
+IntensitySlider --> User: Display intensity slider (1-10)
+deactivate IntensitySlider
+deactivate MoodUI
+
+User -> MoodSelector: Select mood emoji
+activate MoodSelector
+
+MoodSelector -> MoodSelector: Highlight selected mood
+MoodSelector --> User: Show selected mood
+deactivate MoodSelector
+
+User -> IntensitySlider: Adjust intensity slider
+activate IntensitySlider
+
+IntensitySlider -> IntensitySlider: Update intensity value
+IntensitySlider --> User: Display intensity level
+deactivate IntensitySlider
+
+User -> MoodUI: Click "Save Mood"
+activate MoodUI
+
+MoodUI -> MoodService: saveMood(moodType, intensity, timestamp)
+activate MoodService
+
+MoodService -> MoodAPI: POST /api/moods
+activate MoodAPI
+
+MoodAPI -> CommandHandler: CreateMoodCommand
+activate CommandHandler
+
+CommandHandler -> CommandHandler: Validate mood data\n(TenantId, moodType, intensity)
+
+CommandHandler -> DB: Insert mood entry with TenantId
+activate DB
+DB --> CommandHandler: Mood entry created
+deactivate DB
+
+CommandHandler --> MoodAPI: MoodDto
+deactivate CommandHandler
+
+MoodAPI --> MoodService: 201 Created with mood data
+deactivate MoodAPI
+
+MoodService --> MoodUI: Mood saved successfully
+deactivate MoodService
+
+MoodUI --> User: Show success message and reset form
+deactivate MoodUI
+
+User -> MoodUI: View today's mood history
+activate MoodUI
+
+MoodUI -> MoodService: getTodaysMoods()
+activate MoodService
+
+MoodService -> MoodAPI: GET /api/moods?date={today}
+activate MoodAPI
+
+MoodAPI -> DB: Query moods for today by TenantId
+activate DB
+DB --> MoodAPI: List of mood entries
+deactivate DB
+
+MoodAPI --> MoodService: 200 OK with mood entries
+deactivate MoodAPI
+
+MoodService --> MoodUI: Observable of today's moods
+deactivate MoodService
+
+MoodUI --> User: Display mood history for today
+deactivate MoodUI
+
+@enduml
