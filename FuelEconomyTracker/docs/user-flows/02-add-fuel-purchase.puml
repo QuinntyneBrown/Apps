@@ -1,0 +1,141 @@
+@startuml Add Fuel Purchase Flow
+
+title Add Fuel Purchase Flow
+
+actor User
+participant "Add Fuel Purchase Page" as AddPage
+participant "Fuel Purchase Controller" as FuelAPI
+participant "Fuel Purchase Service" as FuelService
+participant "Economy Calculator" as EconCalc
+participant "Station Service" as StationService
+database "Database" as DB
+
+== Navigate to Add Fuel Purchase Page ==
+User -> AddPage: Navigate to /vehicles/{vehicleId}/fuel-purchases/new
+activate AddPage
+AddPage -> FuelAPI: GET /api/vehicles/{vehicleId}/last-purchase
+activate FuelAPI
+FuelAPI -> DB: Query last fuel purchase
+activate DB
+DB --> FuelAPI: Last purchase data
+deactivate DB
+FuelAPI --> AddPage: Last odometer reading and date
+deactivate FuelAPI
+AddPage --> User: Display form with pre-filled defaults
+
+== Enter Basic Information ==
+User -> AddPage: Enter date, odometer, gallons, total cost
+AddPage -> AddPage: Auto-calculate cost per gallon
+AddPage -> AddPage: Validate odometer >= previous reading
+AddPage --> User: Show validation status
+
+== Select Fuel Details ==
+User -> AddPage: Select fuel grade and fill type
+alt Partial Fill Selected
+    AddPage --> User: Show tank level sliders
+    User -> AddPage: Adjust before/after tank levels
+end
+
+== Station Selection ==
+User -> AddPage: Start typing station name
+AddPage -> StationService: GET /api/fuel-stations/search?query={name}
+activate StationService
+StationService -> DB: Search stations by name and location
+activate DB
+DB --> StationService: Matching stations
+deactivate DB
+StationService --> AddPage: Station suggestions with recent flag
+deactivate StationService
+AddPage --> User: Display autocomplete suggestions
+
+alt Use Current Location
+    User -> AddPage: Click "Use current location"
+    AddPage -> AddPage: Request GPS location
+    AddPage -> StationService: GET /api/fuel-stations/nearby?lat={lat}&lng={lng}
+    activate StationService
+    StationService -> DB: Query nearby stations
+    activate DB
+    DB --> StationService: Nearby stations list
+    deactivate DB
+    StationService --> AddPage: Nearby stations with distance
+    deactivate StationService
+    AddPage --> User: Show nearby stations
+end
+
+User -> AddPage: Select station from suggestions
+
+== Calculate Economy ==
+AddPage -> EconCalc: Calculate MPG
+activate EconCalc
+EconCalc -> EconCalc: miles = current odometer - last odometer
+EconCalc -> EconCalc: mpg = miles / gallons
+EconCalc --> AddPage: Calculated MPG
+deactivate EconCalc
+AddPage --> User: Display real-time MPG and miles since last fill
+
+alt New Personal Best
+    AddPage --> User: Show celebration indicator
+end
+
+== Save Fuel Purchase ==
+User -> AddPage: Click "Save Fill-Up"
+AddPage -> AddPage: Final validation
+
+alt Validation Fails
+    AddPage --> User: Show error messages
+else Validation Passes
+    AddPage -> FuelAPI: POST /api/fuel-purchases
+    activate FuelAPI
+
+    FuelAPI -> FuelService: CreateFuelPurchase(purchaseData)
+    activate FuelService
+
+    FuelService -> DB: BEGIN TRANSACTION
+    activate DB
+
+    FuelService -> DB: INSERT fuel_purchase record
+    FuelService -> DB: UPDATE vehicle last_odometer_reading
+    FuelService -> DB: INSERT economy_calculation record
+
+    alt Station Doesn't Exist
+        FuelService -> DB: INSERT fuel_station record
+    end
+
+    FuelService -> DB: COMMIT TRANSACTION
+    DB --> FuelService: Transaction successful
+    deactivate DB
+
+    FuelService -> EconCalc: RecalculateVehicleAverages(vehicleId)
+    activate EconCalc
+    EconCalc -> DB: Query all purchases for vehicle
+    activate DB
+    DB --> EconCalc: Purchase history
+    deactivate DB
+    EconCalc -> EconCalc: Calculate lifetime, 30-day, 7-day averages
+    EconCalc -> DB: UPDATE vehicle statistics
+    activate DB
+    deactivate DB
+    deactivate EconCalc
+
+    FuelService --> FuelAPI: Created purchase with calculated stats
+    deactivate FuelService
+
+    FuelAPI --> AddPage: 201 Created + purchase details
+    deactivate FuelAPI
+
+    AddPage --> User: Show success message with MPG
+    AddPage --> User: Display quick stats comparison
+    deactivate AddPage
+
+    alt User Clicks "Add Another"
+        User -> AddPage: Click "Add Another"
+        activate AddPage
+        AddPage --> User: Reset form with new defaults
+        deactivate AddPage
+    else User Clicks "View History"
+        User -> AddPage: Click "View History"
+        AddPage -> "History Page": Navigate to fuel history
+    end
+end
+
+@enduml
