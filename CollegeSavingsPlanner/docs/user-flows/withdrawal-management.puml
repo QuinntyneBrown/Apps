@@ -1,0 +1,138 @@
+@startuml WithdrawalManagementFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Plan Details Page" as PlanPage
+participant "Withdrawal Modal" as Modal
+participant "API Gateway" as API
+participant "Withdrawal Controller" as Controller
+participant "Process Withdrawal Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== View Plan for Withdrawal ==
+User -> PlanPage: Navigate to /plans/{planId}
+PlanPage -> API: GET /api/savings-plans/{planId}
+API -> DB: Query savings plan
+DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+Database --> DB: Plan details
+DB --> API: SavingsPlan
+API --> PlanPage: Plan with current balance
+PlanPage -> User: Display plan overview
+
+== Initiate Withdrawal ==
+User -> PlanPage: Click "Make Withdrawal"
+PlanPage -> Modal: Open withdrawal modal
+Modal -> User: Display withdrawal form
+
+== Enter Withdrawal Details ==
+User -> Modal: Enter withdrawal amount
+User -> Modal: Enter withdrawal date
+User -> Modal: Select withdrawal type
+note right
+  Withdrawal Types:
+  - Qualified (education expenses)
+  - Non-qualified (penalties apply)
+  - Scholarship-related (penalty-free)
+end note
+
+alt Qualified Withdrawal
+    User -> Modal: Select expense category (tuition, fees, books, room & board)
+    User -> Modal: Upload expense documentation (optional but recommended)
+    User -> Modal: Enter institution name
+    User -> Modal: Enter academic year
+else Scholarship Withdrawal
+    User -> Modal: Enter scholarship name
+    User -> Modal: Enter scholarship amount
+    User -> Modal: Upload scholarship award letter
+else Non-Qualified Withdrawal
+    User -> Modal: Enter reason for withdrawal
+    Modal -> User: Display penalty warning (10% penalty + taxes on earnings)
+end
+
+== Validate Withdrawal ==
+Modal -> Modal: Validate amount does not exceed balance
+Modal -> API: GET /api/savings-plans/{planId}/withdrawal-eligibility?amount={amount}
+API -> DB: Check current balance
+DB -> Database: SELECT CurrentBalance FROM SavingsPlans WHERE PlanId = ?
+Database --> DB: Current balance
+DB --> API: Balance info
+API --> Modal: Eligibility status
+
+alt Insufficient Balance
+    Modal -> User: Display error: "Insufficient funds"
+else Withdrawal Allowed
+    alt Non-Qualified Withdrawal
+        Modal -> API: POST /api/withdrawals/calculate-penalty?amount={amount}&planId={planId}
+        API -> Handler: Calculate penalty and tax
+        Handler -> DB: Get plan earnings vs contributions
+        DB -> Database: Calculate earnings portion
+        Database --> DB: Earnings calculation
+        DB --> Handler: Earnings amount
+        Handler -> Handler: Calculate 10% penalty on earnings
+        Handler -> Handler: Estimate tax on earnings
+        Handler --> API: Penalty and tax estimates
+        API --> Modal: Financial impact
+        Modal -> User: Display penalty and tax warning with amounts
+    end
+end
+
+== Confirm Withdrawal ==
+User -> Modal: Click "Confirm Withdrawal"
+Modal -> API: POST /api/withdrawals
+API -> Controller: ProcessWithdrawal request
+Controller -> Handler: Handle ProcessWithdrawalCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+Handler -> DB: Get SavingsPlan
+DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+Database --> DB: Current plan
+DB --> Handler: SavingsPlan
+Handler -> Handler: Verify sufficient balance
+Handler -> Handler: Create Withdrawal entity
+Handler -> DB: Add Withdrawal
+DB -> Database: INSERT INTO Withdrawals (Type, Amount, Date, Reason, Documentation)
+Database --> DB: Withdrawal recorded
+DB --> Handler: Withdrawal entity
+Handler -> Handler: Update plan balance
+Handler -> DB: Update SavingsPlan.CurrentBalance
+DB -> Database: UPDATE SavingsPlans SET CurrentBalance = CurrentBalance - ?
+Database --> DB: Balance updated
+DB --> Handler: Updated plan
+Handler -> Handler: Raise appropriate domain event
+alt Qualified Withdrawal
+    Handler -> Handler: Raise QualifiedWithdrawalMade event
+else Non-Qualified Withdrawal
+    Handler -> Handler: Raise NonQualifiedWithdrawalMade event
+    Handler -> Handler: Create tax document record
+else Scholarship Withdrawal
+    Handler -> Handler: Raise ScholarshipWithdrawalProcessed event
+end
+Handler --> Controller: WithdrawalDto
+Controller --> API: 201 Created
+API --> Modal: Withdrawal processed successfully
+Modal -> Modal: Close modal
+Modal -> PlanPage: Refresh plan details
+PlanPage -> API: GET /api/savings-plans/{planId}
+API -> DB: Query updated plan
+DB --> API: Updated plan with new balance
+API --> PlanPage: Updated plan data
+PlanPage -> User: Display updated balance and withdrawal history
+
+== Generate Tax Documentation ==
+alt Non-Qualified or Qualified Withdrawal
+    PlanPage -> User: Offer to download 1099-Q form
+    User -> PlanPage: Click "Download 1099-Q"
+    PlanPage -> API: GET /api/withdrawals/{withdrawalId}/tax-form
+    API -> Handler: Generate 1099-Q
+    Handler -> DB: Get withdrawal and plan details
+    DB --> Handler: Withdrawal data
+    Handler -> Handler: Generate PDF tax form
+    Handler --> API: 1099-Q PDF
+    API --> PlanPage: PDF document
+    PlanPage -> User: Download 1099-Q form
+end
+
+@enduml
