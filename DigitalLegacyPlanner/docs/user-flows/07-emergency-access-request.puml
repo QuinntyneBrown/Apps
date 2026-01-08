@@ -1,0 +1,192 @@
+@startuml
+title Emergency Access Request Flow (Executor View)
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor Executor
+participant "Executor Portal" as UI
+participant "Access Request Form" as Form
+participant "Verification Service" as VerifyService
+participant "API Gateway" as API
+participant "Emergency Controller" as Controller
+participant "Emergency Repository" as Repository
+participant "Notification Service" as NotifyService
+participant "Decryption Service" as DecryptService
+database "Database" as DB
+
+== Executor Initiates Request ==
+Executor -> UI: Navigate to /executor/request-access
+activate UI
+
+UI -> API: GET /api/executor/status\n{executorToken}
+API -> Controller: GetExecutorStatus(token)
+activate Controller
+Controller -> Repository: ValidateExecutorToken(token)
+activate Repository
+Repository -> DB: SELECT * FROM Executors\nWHERE InvitationToken = ?
+activate DB
+DB --> Repository: Executor record
+deactivate DB
+Repository --> Controller: Executor validated
+deactivate Repository
+Controller --> API: Executor status
+deactivate Controller
+API --> UI: Status and permissions
+
+UI --> Executor: Display request access portal
+deactivate UI
+
+Executor -> UI: Click "Request Emergency Access"
+UI -> Form: Open AccessRequestForm
+activate Form
+Form --> Executor: Display request form
+
+Executor -> Form: Fill request details:\n- Reason for request\n- Urgency level (Emergency/Standard)\n- Contact information
+
+Executor -> Form: Upload supporting documentation:\n- Death certificate\n- Power of attorney\n- Other legal docs
+
+Executor -> Form: Select verification method:\n- Manual review\n- Automated (if configured)
+
+Executor -> Form: Click "Submit Request"
+
+Form -> Form: Validate:\n- Required fields\n- Document formats\n- Reason length
+
+Form -> VerifyService: submitAccessRequest(requestData)
+activate VerifyService
+
+VerifyService -> API: POST /api/emergency/access-request\n{executorId, reason, urgency, documents}
+activate API
+API -> API: Validate executor token
+
+API -> Controller: SubmitAccessRequest(command)
+activate Controller
+
+Controller -> Repository: BeginTransaction()
+activate Repository
+
+Repository -> DB: INSERT INTO AccessRequests\nVALUES (executorId, reason, status='Pending', ...)
+activate DB
+DB --> Repository: Request created (ID)
+deactivate DB
+
+Repository -> DB: SELECT EmergencyConfig\nWHERE UserId = (owner of executor)
+activate DB
+DB --> Repository: Emergency config with waiting period
+deactivate DB
+
+Repository -> Repository: Calculate access grant date:\nRequestDate + WaitingPeriod
+
+Repository -> DB: INSERT INTO AccessRequestTimeline\nVALUES (requestId, 'Submitted', timestamp)
+activate DB
+DB --> Repository: Timeline entry created
+deactivate DB
+
+Repository -> Repository: CommitTransaction()
+Repository --> Controller: Access request entity
+deactivate Repository
+
+Controller --> API: 201 Created\n{requestId, status, grantDate}
+deactivate Controller
+
+API --> VerifyService: Request submitted
+deactivate API
+
+VerifyService --> Form: Request created
+deactivate VerifyService
+
+Form -> Form: Close form
+Form -> UI: Navigate to request status page
+deactivate Form
+
+UI -> NotifyService: notifyAccountOwner(requestId)
+activate NotifyService
+NotifyService -> API: POST /api/notifications/access-request-submitted
+API -> NotifyService: Notification sent to owner
+deactivate NotifyService
+
+activate UI
+UI --> Executor: Display request status:\n- Request ID\n- Verification status: Pending\n- Waiting period countdown\n- Estimated access date
+deactivate UI
+
+== Waiting Period & Verification ==
+loop During Waiting Period
+    Executor -> UI: Check request status
+    activate UI
+    UI -> API: GET /api/emergency/request/{requestId}
+    API --> UI: Current status and timeline
+    UI --> Executor: Display:\n- Days remaining\n- Verification progress\n- Support contact info
+    deactivate UI
+end
+
+== Access Granted ==
+Controller -> Controller: Waiting period complete
+Controller -> Controller: Verification approved
+
+Controller -> Repository: UpdateAccessRequest(requestId, 'Granted')
+activate Repository
+Repository -> DB: UPDATE AccessRequests\nSET Status = 'Granted',\nGrantedDate = NOW()
+activate DB
+DB --> Repository: Request updated
+deactivate DB
+
+Repository -> DB: INSERT INTO AccessRequestTimeline\nVALUES (requestId, 'Granted', timestamp)
+activate DB
+DB --> Repository: Timeline updated
+deactivate DB
+Repository --> Controller: Request granted
+deactivate Repository
+
+Controller -> NotifyService: notifyExecutor(requestId)
+activate NotifyService
+NotifyService -> Executor: Email/SMS:\n"Access request approved"
+deactivate NotifyService
+
+== Executor Accesses Materials ==
+Executor -> UI: Login to executor portal
+activate UI
+UI --> Executor: "Access Granted" notification
+
+Executor -> UI: Click "View Access Materials"
+UI -> API: GET /api/emergency/access-package\n{requestId, executorToken}
+activate API
+
+API -> Controller: GetAccessPackage(requestId)
+activate Controller
+
+Controller -> Repository: GetAccessPackageContents(requestId)
+activate Repository
+Repository -> DB: SELECT * FROM EmergencyPackageContents\nWHERE RequestId = ?
+activate DB
+DB --> Repository: Package contents (accountIds, instructions)
+deactivate DB
+
+Repository -> DB: SELECT Accounts, Instructions, Credentials\nWHERE Id IN (packageAccountIds)
+activate DB
+DB --> Repository: Encrypted account data
+deactivate DB
+
+Repository --> Controller: Package data (encrypted)
+deactivate Repository
+
+Controller -> DecryptService: decryptPackageData(data, executorPermissions)
+activate DecryptService
+DecryptService -> DecryptService: Decrypt with executor keys
+DecryptService --> Controller: Decrypted package
+deactivate DecryptService
+
+Controller -> Repository: LogAccessEvent(requestId, 'PackageAccessed')
+Repository -> DB: INSERT INTO AccessLog
+DB --> Repository: Access logged
+deactivate Repository
+
+Controller --> API: Package data
+deactivate Controller
+
+API --> UI: Access package
+deactivate API
+
+UI --> Executor: Display:\n- Account inventory\n- Legacy instructions\n- Credentials (if authorized)\n- Distribution plans
+UI --> Executor: Download options available
+deactivate UI
+
+@enduml
