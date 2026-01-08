@@ -1,0 +1,250 @@
+@startuml Chore Trade Flow
+
+title Chore Trade Flow
+
+actor "Child A\n(Proposer)" as ChildA
+actor "Child B\n(Recipient)" as ChildB
+actor Parent
+participant "My Chores Page" as UIChildA
+participant "Trade Dialog" as TradeDialog
+participant "Chore List Page" as UIChildB
+participant "Trade Details" as TradeDetailUI
+participant "Parent Dashboard" as ParentUI
+participant "Trade Controller" as TradeAPI
+participant "ProposeTradeCommand" as ProposeCmd
+participant "AcceptTradeCommand" as AcceptCmd
+participant "ApproveTradeCommand" as ApproveCmd
+participant "Trade Repository" as TradeRepo
+participant "Assignment Repository" as AssignRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== Child A Proposes Trade ==
+ChildA -> UIChildA: View assigned chores
+UIChildA --> ChildA: Display chores list
+ChildA -> UIChildA: Select chore to trade away
+UIChildA -> TradeDialog: Open trade proposal dialog
+
+TradeDialog -> TradeAPI: GET /api/households/{householdId}/members
+TradeAPI -> DB: SELECT * FROM HouseholdMembers
+DB --> TradeAPI: Family members
+TradeAPI --> TradeDialog: 200 OK {members}
+
+TradeDialog --> ChildA: Show family members\n(excluding self)
+
+ChildA -> TradeDialog: Select Child B
+TradeDialog -> TradeAPI: GET /api/assignments\n?assignedTo={ChildB}&status=Pending
+TradeAPI -> DB: SELECT * FROM ChoreAssignments
+DB --> TradeAPI: Child B's pending chores
+TradeAPI --> TradeDialog: 200 OK {chores}
+
+TradeDialog --> ChildA: Show Child B's chores
+
+opt Select Chore to Trade For
+    ChildA -> TradeDialog: Select Child B's chore\n(optional - can propose one-way trade)
+end
+
+ChildA -> TradeDialog: Add trade reason/message\n(optional)
+
+ChildA -> TradeDialog: Click "Propose Trade"
+
+TradeDialog -> TradeAPI: POST /api/trades\n{\n  proposedBy: ChildA.id,\n  proposedTo: ChildB.id,\n  offeringAssignmentId,\n  requestingAssignmentId (optional),\n  proposalMessage\n}
+
+TradeAPI -> ProposeCmd: Handle ProposeTradeCommand
+
+ProposeCmd -> AssignRepo: ValidateAssignment(offeringAssignmentId)
+AssignRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE AssignmentId = @id\nAND AssignedTo = @ChildA
+DB --> AssignRepo: Assignment data
+AssignRepo --> ProposeCmd: Validated
+
+alt Requesting Assignment Specified
+    ProposeCmd -> AssignRepo: ValidateAssignment(requestingAssignmentId)
+    AssignRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE AssignmentId = @id\nAND AssignedTo = @ChildB
+    DB --> AssignRepo: Assignment data
+    AssignRepo --> ProposeCmd: Validated
+end
+
+ProposeCmd -> ProposeCmd: Validate:\n- Both children in same household\n- Assignments are pending\n- No active trade for these assignments
+
+alt Validation Passes
+    ProposeCmd -> TradeRepo: CreateTrade(\n  tradeId,\n  proposedBy,\n  proposedTo,\n  offeringAssignment,\n  requestingAssignment,\n  status: PendingAcceptance,\n  proposedAt\n)
+    TradeRepo -> DB: INSERT INTO ChoreTrades
+    DB --> TradeRepo: TradeId
+
+    ProposeCmd -> Events: Publish ChoreTradeProposed event\n{\n  tradeId,\n  proposedBy,\n  proposedTo,\n  choreOffered,\n  choreRequested\n}
+
+    Events -> NotifyService: Notify Child B and Parent
+
+    NotifyService -> NotifyService: Create notifications:\n- Child B: "[ChildA] wants to trade chores!"\n- Parent: "Trade proposed between [ChildA] and [ChildB]"
+    NotifyService -> DB: INSERT INTO Notifications
+    NotifyService -> NotifyService: Send push notifications
+
+    ProposeCmd --> TradeAPI: Success with TradeId
+    TradeAPI --> TradeDialog: 201 Created {tradeId, trade}
+
+    TradeDialog -> TradeDialog: Show success message:\n"Trade proposal sent to [ChildB]!"
+    TradeDialog -> UIChildA: Close dialog
+    UIChildA --> ChildA: Show pending trade indicator
+
+else Validation Fails
+    ProposeCmd --> TradeAPI: Validation error
+    TradeAPI --> TradeDialog: 400 Bad Request {errors}
+    TradeDialog --> ChildA: Display error message
+end
+
+== Child B Reviews and Accepts ==
+NotifyService --> ChildB: Trade proposal notification
+ChildB -> UIChildB: Open notifications
+UIChildB --> ChildB: Show trade proposal
+ChildB -> UIChildB: View trade details
+UIChildB -> TradeDetailUI: Show trade details view
+
+TradeDetailUI -> TradeAPI: GET /api/trades/{tradeId}
+TradeAPI -> TradeRepo: GetTrade(tradeId)
+TradeRepo -> DB: SELECT * FROM ChoreTrades
+DB --> TradeRepo: Trade details with assignments
+TradeRepo --> TradeAPI: Trade
+TradeAPI --> TradeDetailUI: 200 OK {trade}
+
+TradeDetailUI --> ChildB: Display:\n- What [ChildA] is offering\n- What [ChildA] wants (if any)\n- Proposal message\n- Chore details comparison
+
+alt Child B Accepts
+    ChildB -> TradeDetailUI: Click "Accept Trade"
+
+    TradeDetailUI -> TradeAPI: POST /api/trades/{tradeId}/accept
+
+    TradeAPI -> AcceptCmd: Handle AcceptTradeCommand
+
+    AcceptCmd -> TradeRepo: GetTrade(tradeId)
+    TradeRepo -> DB: SELECT * FROM ChoreTrades
+    DB --> TradeRepo: Trade data
+    TradeRepo --> AcceptCmd: Trade
+
+    AcceptCmd -> AcceptCmd: Validate:\n- Trade status is PendingAcceptance\n- Recipient is Child B\n- Assignments still pending
+
+    alt Validation Passes
+        AcceptCmd -> TradeRepo: UpdateTrade(\n  status: PendingParentApproval,\n  acceptedAt,\n  acceptedBy: ChildB.id\n)
+        TradeRepo -> DB: UPDATE ChoreTrades\nSET Status = 'PendingParentApproval'
+
+        AcceptCmd -> Events: Publish ChoreTradeAccepted event\n{\n  tradeId,\n  acceptedBy: ChildB,\n  acceptedAt\n}
+
+        Events -> NotifyService: Notify Parent and Child A
+
+        NotifyService -> NotifyService: Create notifications:\n- Parent: "Trade accepted. Please review."\n- Child A: "[ChildB] accepted your trade!"
+        NotifyService -> DB: INSERT INTO Notifications
+        NotifyService -> NotifyService: Send push notifications
+
+        AcceptCmd --> TradeAPI: Success
+        TradeAPI --> TradeDetailUI: 200 OK
+
+        TradeDetailUI --> ChildB: "Trade accepted!\nWaiting for parent approval."
+
+        NotifyService --> Parent: Trade approval needed
+        NotifyService --> ChildA: Trade accepted notification
+
+    else Validation Fails
+        AcceptCmd --> TradeAPI: Validation error
+        TradeAPI --> TradeDetailUI: 400 Bad Request {errors}
+        TradeDetailUI --> ChildB: Display error message
+    end
+
+else Child B Declines
+    ChildB -> TradeDetailUI: Click "Decline Trade"
+    TradeDetailUI -> TradeAPI: POST /api/trades/{tradeId}/decline
+
+    TradeAPI -> TradeRepo: UpdateTrade(\n  status: Declined,\n  declinedAt,\n  declinedBy: ChildB.id\n)
+    TradeRepo -> DB: UPDATE ChoreTrades
+
+    TradeAPI -> Events: Publish ChoreTradeDeclined event
+
+    Events -> NotifyService: Notify Child A
+    NotifyService --> ChildA: "Trade declined by [ChildB]"
+
+    TradeAPI --> TradeDetailUI: 200 OK
+    TradeDetailUI --> ChildB: "Trade declined"
+end
+
+== Parent Approves Trade ==
+Parent -> ParentUI: Open trade approvals
+ParentUI -> TradeAPI: GET /api/trades\n?status=PendingParentApproval
+TradeAPI -> TradeRepo: GetTradesByStatus(PendingParentApproval)
+TradeRepo -> DB: SELECT * FROM ChoreTrades
+DB --> TradeRepo: Pending trades
+TradeRepo --> TradeAPI: Trades list
+TradeAPI --> ParentUI: 200 OK {trades}
+
+ParentUI --> Parent: Show pending trades
+Parent -> ParentUI: Select trade to review
+ParentUI --> Parent: Display trade details:\n- Both children\n- Chores being swapped\n- Fairness assessment
+
+alt Parent Approves
+    Parent -> ParentUI: Click "Approve Trade"
+
+    ParentUI -> TradeAPI: POST /api/trades/{tradeId}/approve\n{\n  approvedBy: parentId\n}
+
+    TradeAPI -> ApproveCmd: Handle ApproveTradeCommand
+
+    ApproveCmd -> TradeRepo: GetTrade(tradeId)
+    TradeRepo -> DB: SELECT * FROM ChoreTrades
+    DB --> TradeRepo: Trade data
+    TradeRepo --> ApproveCmd: Trade
+
+    ApproveCmd -> ApproveCmd: Validate trade status
+
+    alt Validation Passes
+        ApproveCmd -> AssignRepo: SwapAssignments(\n  assignment1,\n  assignment2\n)
+        AssignRepo -> DB: UPDATE ChoreAssignments\nSET AssignedTo = ... (swap)
+        DB --> AssignRepo: Success
+
+        ApproveCmd -> TradeRepo: UpdateTrade(\n  status: Completed,\n  approvedAt,\n  approvedBy: parentId\n)
+        TradeRepo -> DB: UPDATE ChoreTrades\nSET Status = 'Completed'
+
+        ApproveCmd -> Events: Publish ChoreTradeCompleted event\n{\n  tradeId,\n  approvedBy: Parent,\n  completedAt\n}
+
+        Events -> NotifyService: Notify both children
+
+        NotifyService -> NotifyService: Create notifications:\n- Child A: "Trade approved! Check your chores."\n- Child B: "Trade approved! Check your chores."
+        NotifyService -> DB: INSERT INTO Notifications
+        NotifyService -> NotifyService: Send push notifications
+
+        ApproveCmd --> TradeAPI: Success
+        TradeAPI --> ParentUI: 200 OK
+
+        ParentUI --> Parent: "Trade approved successfully"
+
+        NotifyService --> ChildA: Trade completed notification
+        NotifyService --> ChildB: Trade completed notification
+
+        ChildA -> UIChildA: Refresh chores list
+        UIChildA --> ChildA: Display updated assignments
+
+        ChildB -> UIChildB: Refresh chores list
+        UIChildB --> ChildB: Display updated assignments
+
+    else Validation Fails
+        ApproveCmd --> TradeAPI: Validation error
+        TradeAPI --> ParentUI: 400 Bad Request {errors}
+        ParentUI --> Parent: Display error
+    end
+
+else Parent Rejects
+    Parent -> ParentUI: Add rejection reason
+    Parent -> ParentUI: Click "Reject Trade"
+
+    ParentUI -> TradeAPI: POST /api/trades/{tradeId}/reject\n{\n  rejectedBy: parentId,\n  rejectionReason\n}
+
+    TradeAPI -> TradeRepo: UpdateTrade(\n  status: Rejected,\n  rejectedAt,\n  rejectedBy: parentId,\n  rejectionReason\n)
+    TradeRepo -> DB: UPDATE ChoreTrades
+
+    TradeAPI -> Events: Publish ChoreTradeRejected event
+
+    Events -> NotifyService: Notify both children
+    NotifyService --> ChildA: "Trade rejected: [reason]"
+    NotifyService --> ChildB: "Trade rejected: [reason]"
+
+    TradeAPI --> ParentUI: 200 OK
+    ParentUI --> Parent: "Trade rejected"
+end
+
+@enduml
