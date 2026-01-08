@@ -1,0 +1,272 @@
+@startuml Multi-Tenant Data Access Flow
+title Multi-Tenant Data Access Flow
+
+actor "User (Tenant A)" as UserA
+actor "User (Tenant B)" as UserB
+participant "Angular\nApplication" as UI
+participant "HTTP Interceptor" as Interceptor
+participant "API Controller" as API
+participant "JWT Middleware" as JWTMiddleware
+participant "TenantContext\nService" as TenantContext
+participant "Command/Query\nHandler" as Handler
+participant "Conversation\nStarterAppContext\n(DbContext)" as DbContext
+database "SQL Server\nDatabase" as Database
+
+== Tenant Resolution via JWT Token ==
+
+UserA -> UI: Make API request\n(e.g., get prompts)
+activate UI
+
+UI -> Interceptor: HTTP Request
+activate Interceptor
+
+Interceptor -> Interceptor: Get JWT token\nfrom localStorage
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT
+
+Interceptor -> API: HTTP Request\nAuthorization: Bearer <JWT>
+deactivate Interceptor
+activate API
+
+API -> JWTMiddleware: Validate JWT
+activate JWTMiddleware
+
+JWTMiddleware -> JWTMiddleware: Verify signature\nwith secret key
+
+JWTMiddleware -> JWTMiddleware: Check expiration
+
+JWTMiddleware -> JWTMiddleware: Extract claims:\n- sub (userId)\n- tenant_id\n- roles
+
+JWTMiddleware -> JWTMiddleware: Set HttpContext.User\nwith claims
+
+JWTMiddleware --> API: Authentication successful
+deactivate JWTMiddleware
+
+API -> TenantContext: Initialize for request
+activate TenantContext
+
+TenantContext -> TenantContext: Read tenant_id claim\nfrom HttpContext.User
+
+note right: tenant_id =\n"aaaaaaaa-aaaa-aaaa-\naaaa-aaaaaaaaaaaa"
+
+TenantContext -> TenantContext: Store TenantId\nfor request scope
+
+TenantContext --> API: TenantId available
+deactivate TenantContext
+
+API -> Handler: Execute command/query
+activate Handler
+
+Handler -> Handler: Inject ITenantContext
+
+Handler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> Handler: TenantId = Tenant A
+deactivate TenantContext
+
+== Query with Global Filter ==
+
+Handler -> DbContext: Query data\n(e.g., Prompts.ToList())
+activate DbContext
+
+DbContext -> DbContext: Apply global query filter\nfrom OnModelCreating:\nWHERE TenantId == _tenantContext.TenantId
+
+DbContext -> Database: SELECT * FROM ConversationPrompts\nWHERE TenantId = 'aaaaaaaa-aaaa-aaaa-\naaaa-aaaaaaaaaaaa'\nAND IsActive = 1
+activate Database
+
+note right: Query automatically\nfiltered to Tenant A
+
+Database --> DbContext: Tenant A's data only
+deactivate Database
+
+DbContext --> Handler: Filtered results\n(Tenant A only)
+deactivate DbContext
+
+Handler --> API: Response data
+deactivate Handler
+
+API --> UI: HTTP 200 OK\n{Tenant A data}
+deactivate API
+
+UI --> UserA: Display data\n(Tenant A only)
+deactivate UI
+
+== Separate Request from Different Tenant ==
+
+UserB -> UI: Make same API request\n(e.g., get prompts)
+activate UI
+
+UI -> Interceptor: HTTP Request
+activate Interceptor
+
+Interceptor -> Interceptor: Get JWT token\nfor User B\nfrom localStorage
+
+Interceptor -> API: HTTP Request\nAuthorization: Bearer <JWT-UserB>
+deactivate Interceptor
+activate API
+
+API -> JWTMiddleware: Validate JWT
+activate JWTMiddleware
+
+JWTMiddleware -> JWTMiddleware: Extract claims:\n- sub (userId)\n- tenant_id (Tenant B)
+
+JWTMiddleware --> API: Authentication successful
+deactivate JWTMiddleware
+
+API -> TenantContext: Initialize for request
+activate TenantContext
+
+TenantContext -> TenantContext: Read tenant_id claim
+
+note right: tenant_id =\n"bbbbbbbb-bbbb-bbbb-\nbbbb-bbbbbbbbbbbb"
+
+TenantContext --> API: TenantId = Tenant B
+deactivate TenantContext
+
+API -> Handler: Execute same query
+activate Handler
+
+Handler -> DbContext: Query data\n(e.g., Prompts.ToList())
+activate DbContext
+
+DbContext -> DbContext: Apply global query filter\nWHERE TenantId == _tenantContext.TenantId\n(now Tenant B)
+
+DbContext -> Database: SELECT * FROM ConversationPrompts\nWHERE TenantId = 'bbbbbbbb-bbbb-bbbb-\nbbbb-bbbbbbbbbbbb'\nAND IsActive = 1
+activate Database
+
+note right: Same query,\ndifferent TenantId\nautomatically applied
+
+Database --> DbContext: Tenant B's data only
+deactivate Database
+
+note left: Tenant A's data\nis completely isolated\nand invisible to Tenant B
+
+DbContext --> Handler: Filtered results\n(Tenant B only)
+deactivate DbContext
+
+Handler --> API: Response data
+deactivate Handler
+
+API --> UI: HTTP 200 OK\n{Tenant B data}
+deactivate API
+
+UI --> UserB: Display data\n(Tenant B only)
+deactivate UI
+
+== Fallback: Header-Based Tenant Resolution ==
+
+note over UserA, Database: For scenarios without JWT (e.g., public APIs)
+
+UserA -> UI: Make request without JWT
+activate UI
+
+UI -> Interceptor: HTTP Request
+activate Interceptor
+
+Interceptor -> Interceptor: Add X-Tenant-Id header\nif available
+
+Interceptor -> API: HTTP Request\nX-Tenant-Id: <tenant-guid>
+deactivate Interceptor
+activate API
+
+API -> TenantContext: Initialize for request
+activate TenantContext
+
+TenantContext -> TenantContext: No JWT tenant_id claim\nfound
+
+TenantContext -> TenantContext: Fallback to\nX-Tenant-Id header
+
+TenantContext -> TenantContext: Read X-Tenant-Id:\n"aaaaaaaa-aaaa-aaaa-\naaaa-aaaaaaaaaaaa"
+
+TenantContext --> API: TenantId from header
+deactivate TenantContext
+
+API -> Handler: Execute query
+activate Handler
+
+Handler -> DbContext: Query with tenant filter
+activate DbContext
+
+DbContext -> Database: SELECT with TenantId\nfrom header
+activate Database
+Database --> DbContext: Filtered data
+deactivate Database
+
+DbContext --> Handler: Results
+deactivate DbContext
+
+Handler --> API: Response
+deactivate Handler
+
+API --> UI: HTTP 200 OK
+deactivate API
+
+UI --> UserA: Display data
+deactivate UI
+
+== Write Operations with Tenant Assignment ==
+
+note over UserA, Database: Creating new entities automatically assigns TenantId
+
+UserA -> UI: Create new prompt
+activate UI
+
+UI -> API: POST /api/prompts/custom
+activate API
+
+API -> Handler: Handle CreatePromptCommand
+activate Handler
+
+Handler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> Handler: TenantId = Tenant A
+deactivate TenantContext
+
+Handler -> Handler: Create new Prompt:\nprompt.TenantId = TenantId\n(from TenantContext)
+
+note right: TenantId is set\nautomatically from\ncurrent tenant context
+
+Handler -> DbContext: Prompts.Add(prompt)
+activate DbContext
+
+DbContext -> Database: INSERT INTO ConversationPrompts\n(..., TenantId)\nVALUES (..., 'aaaaaaaa-...')
+activate Database
+
+note right: TenantId is\nimmutable after\ncreation
+
+Database --> DbContext: Success
+deactivate Database
+
+DbContext --> Handler: Success
+deactivate DbContext
+
+Handler --> API: 201 Created
+deactivate Handler
+
+API --> UI: Success
+deactivate API
+
+UI --> UserA: Prompt created
+deactivate UI
+
+== Security: Tenant Isolation Guarantees ==
+
+note over Database
+**Data Isolation Guarantees:**
+
+1. **Read Isolation**: Global query filters
+   automatically filter all queries by TenantId
+
+2. **Write Protection**: TenantId set during
+   creation and cannot be modified
+
+3. **No Cross-Tenant Access**: Even with
+   direct ID knowledge, users from Tenant A
+   cannot access Tenant B's data
+
+4. **Database Level**: TenantId column
+   indexed for performance and included
+   in all tenant-scoped tables
+end note
+
+@enduml
