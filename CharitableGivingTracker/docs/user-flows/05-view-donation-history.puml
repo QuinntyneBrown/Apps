@@ -1,0 +1,149 @@
+@startuml
+title View Donation History - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Donation History\nPage" as history
+participant "Filters Panel" as filters
+participant "API Gateway" as api
+participant "GetDonationsByUserId\nQuery Handler" as handler
+participant "Database" as db
+
+user -> dashboard: Click "View History" or\n"View All" donations
+activate dashboard
+
+dashboard -> history: Navigate to\nDonation History page
+activate history
+
+history -> api: GET /api/donations\n?page=1&pageSize=20
+activate api
+
+history --> user: Show loading spinner
+
+api -> handler: Execute GetDonationsByUserIdQuery
+activate handler
+
+handler -> handler: Get UserId from context
+handler -> handler: Apply default sorting\n(Date descending)
+
+handler -> db: SELECT * FROM Donations\nWHERE UserId = @userId\nORDER BY DonationDate DESC\nOFFSET 0 ROWS FETCH 20 ROWS
+activate db
+db --> handler: Return donations page 1
+deactivate db
+
+handler --> api: Return paginated donations\n{items, totalCount, page, pageSize}
+deactivate handler
+
+api --> history: 200 OK with donations list
+deactivate api
+
+history -> history: Render donation cards:\n- Organization name & logo\n- Amount (highlighted if large)\n- Date\n- Payment method icon\n- Tax deductible badge\n- Acknowledgment status icon
+
+history --> user: Display donation list\nwith filters panel
+
+user -> filters: Apply filters:\n- Date range: Last 6 months\n- Organization: [Select]\n- Tax deductible only\n- Payment method
+activate filters
+
+filters -> history: Update filter state
+deactivate filters
+
+history -> api: GET /api/donations\n?startDate=2025-07-01\n&endDate=2026-01-08\n&taxDeductible=true\n&page=1&pageSize=20
+activate api
+
+history --> user: Show loading state
+
+api -> handler: Execute GetDonationsByUserIdQuery\nwith filters
+activate handler
+
+handler -> handler: Build dynamic WHERE clause\nwith filter parameters
+
+handler -> db: SELECT * FROM Donations\nWHERE UserId = @userId\nAND DonationDate >= @startDate\nAND DonationDate <= @endDate\nAND IsTaxDeductible = 1\nORDER BY DonationDate DESC\nOFFSET 0 ROWS FETCH 20 ROWS
+activate db
+db --> handler: Return filtered donations
+deactivate db
+
+handler --> api: Return filtered results
+deactivate handler
+
+api --> history: 200 OK with filtered list
+deactivate api
+
+history -> history: Update donation list display
+
+history --> user: Show filtered donations\nwith result count
+
+user -> history: Search: "Red Cross"
+
+history -> api: GET /api/donations\n?search=Red+Cross\n&filters...\n&page=1&pageSize=20
+activate api
+api -> handler: Execute query with search
+activate handler
+handler -> db: SELECT with LIKE '%Red Cross%'\non organization name and notes
+db --> handler: Return search results
+deactivate db
+handler --> api: Return results
+deactivate handler
+api --> history: 200 OK with search results
+deactivate api
+
+history -> history: Display search results
+
+history --> user: Show donations\nmatching "Red Cross"
+
+user -> history: Click on a donation card
+
+history -> api: GET /api/donations/{donationId}
+activate api
+api -> db: SELECT donation details\nwith organization info
+db --> api: Donation details
+api --> history: Return donation details
+deactivate api
+
+history -> history: Navigate to\nDonation Details page
+
+history --> user: Show complete\ndonation details:\n- Full information\n- Documents\n- Action buttons
+
+user -> history: Click "Back" to history
+
+history --> user: Return to filtered\ndonation list
+
+user -> history: Click "Export" button
+
+history -> api: GET /api/donations/export\n?format=csv&filters...
+activate api
+api -> handler: Execute export query
+activate handler
+handler -> db: Query all matching donations\n(no pagination)
+db --> handler: Full dataset
+handler -> handler: Format as CSV
+handler --> api: Return CSV file
+deactivate handler
+api --> history: 200 OK with CSV download
+deactivate api
+
+history --> user: Download CSV file:\n"donations_export_2026-01-08.csv"
+
+user -> history: Scroll to bottom
+
+history -> history: Detect scroll near bottom
+
+history -> api: GET /api/donations\n?filters...\n&page=2&pageSize=20
+activate api
+api -> handler: Execute query for page 2
+activate handler
+handler -> db: SELECT with OFFSET 20
+db --> handler: Next 20 donations
+handler --> api: Return page 2
+deactivate handler
+deactivate db
+api --> history: 200 OK with page 2
+deactivate api
+
+history -> history: Append donations to list\n(infinite scroll)
+
+history --> user: Load more donations\nautomatically
+
+deactivate history
+deactivate dashboard
+
+@enduml
