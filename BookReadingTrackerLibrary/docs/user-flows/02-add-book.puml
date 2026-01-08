@@ -1,0 +1,67 @@
+@startuml Add Book Flow
+title Add Book to Library Flow
+
+actor User
+participant "Library Page" as UI
+participant "Add Book Modal" as Modal
+participant "ISBN Lookup Service" as ISBNService
+participant "API Gateway" as API
+participant "Library Controller" as Controller
+participant "Book Manager" as Manager
+database "Database" as DB
+
+User -> UI: Click "Add Book" button
+UI -> Modal: Open AddBookModal
+Modal --> User: Display empty form
+
+alt ISBN Lookup Path
+    User -> Modal: Enter ISBN
+    User -> Modal: Click "Lookup" button
+    Modal -> ISBNService: lookupByISBN(isbn)
+    ISBNService -> API: GET /api/books/lookup/{isbn}
+    API -> Controller: LookupBookByISBN(isbn)
+    Controller -> Manager: LookupBookAsync(isbn)
+    Manager -> Manager: Call external book API\n(Google Books, Open Library)
+
+    alt ISBN Found
+        Manager --> Controller: BookDetails\n{title, authors, publisher, year, cover}
+        Controller --> API: 200 OK\n{bookDetails}
+        API --> ISBNService: Book data
+        ISBNService --> Modal: Auto-fill form fields
+        Modal --> User: Show pre-filled form
+        User -> Modal: Review and adjust details
+    else ISBN Not Found
+        Manager --> Controller: Not found
+        Controller --> API: 404 Not Found
+        API --> ISBNService: Error response
+        ISBNService --> Modal: Show error message
+        Modal --> User: "Book not found, enter manually"
+        User -> Modal: Enter details manually
+    end
+else Manual Entry Path
+    User -> Modal: Fill form manually\n{title, authors, format, etc.}
+end
+
+User -> Modal: Upload/link cover image
+User -> Modal: Click "Save"
+Modal -> Modal: Validate form\n(title required, authors required)
+
+alt Valid Form
+    Modal -> API: POST /api/library/books\n{book details}
+    API -> Controller: CreateBook(request)
+    Controller -> Manager: AddBookAsync(book)
+    Manager -> DB: INSERT book record
+    DB --> Manager: Book ID
+    Manager -> Manager: Upload cover image (if provided)
+    Manager --> Controller: BookCreated\n{bookId, book}
+    Controller --> API: 201 Created\n{book}
+    API --> Modal: Success
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh book list
+    UI -> UI: Show new book in library
+    UI --> User: Display success notification\n"Book added successfully"
+else Invalid Form
+    Modal --> User: Display validation errors
+end
+
+@enduml
