@@ -1,0 +1,61 @@
+@startuml Add Injury Flow
+title Add Injury Flow
+
+actor User
+participant "Dashboard/Injury List" as UI
+participant "Add Injury Modal" as Modal
+participant "Injury Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+User -> UI: Click "Add Injury" button
+UI -> Modal: Open add injury modal
+Modal --> User: Display form
+
+User -> Modal: Fill in injury details\n(name, location, date, severity, description)
+Modal -> Modal: Validate form inputs
+
+User -> Modal: Submit form
+Modal -> Service: createInjury(injuryDto)
+Service -> API: POST /api/injuries
+
+API -> Handler: Handle CreateInjuryCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId (from JWT token)
+
+Handler -> Handler: Create Injury entity\n(with TenantId)
+
+Handler -> DB: Save injury to database\n(auto-filtered by TenantId)
+DB --> Handler: Injury created
+
+Handler -> Events: Publish InjuryCreated event
+Handler --> API: 201 Created (InjuryDto)
+
+API --> Service: Success response
+Service --> Modal: Injury created
+Modal -> Modal: Close modal
+Modal -> UI: Refresh injury list
+UI -> Service: getInjuries()
+Service -> API: GET /api/injuries
+API -> DB: Query injuries\n(auto-filtered by TenantId)
+DB --> API: Injury list
+API --> Service: InjuryDto[]
+Service --> UI: Display updated list
+UI --> User: Show success message\n& updated injury list
+
+note right of Handler
+  Injury entity includes:
+  - InjuryId (Guid)
+  - TenantId (Guid)
+  - Name
+  - Location/Body part
+  - Date occurred
+  - Severity level
+  - Description
+  - Status (Active/Recovered)
+end note
+
+@enduml
