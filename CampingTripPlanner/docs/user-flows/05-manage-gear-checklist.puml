@@ -1,0 +1,121 @@
+@startuml
+title Manage Gear Checklist Flow - Camping Trip Planner
+
+actor User as user
+participant "Trip Detail Page" as tripDetail
+participant "Gear Checklist Page" as gearPage
+participant "Gear Service" as gearService
+participant "Gear Controller" as gearController
+participant "Get Checklist\nQuery Handler" as getChecklistHandler
+participant "Update Checklist\nCommand Handler" as updateHandler
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+
+user -> tripDetail: Click "View Checklist"
+activate tripDetail
+tripDetail -> gearPage: Navigate to\n/trips/{tripId}/checklist
+activate gearPage
+
+gearPage -> gearService: getChecklist(tripId)
+activate gearService
+gearService -> gearController: GET /api/trips/{tripId}/checklist
+activate gearController
+gearController -> getChecklistHandler: Handle GetChecklistQuery
+activate getChecklistHandler
+getChecklistHandler -> dbContext: Query checklist items
+activate dbContext
+dbContext -> db: SELECT * FROM ChecklistItems\nWHERE TripId = @tripId\nAND TenantId = @tenantId\nORDER BY Category, ItemName
+activate db
+db --> dbContext: Checklist items
+deactivate db
+deactivate dbContext
+getChecklistHandler -> getChecklistHandler: Calculate:\n- Total items\n- Packed items\n- Progress %\n- Total weight
+getChecklistHandler --> gearController: Checklist DTO
+deactivate getChecklistHandler
+gearController --> gearService: 200 OK {checklist}
+deactivate gearController
+gearService --> gearPage: Observable<Checklist>
+deactivate gearService
+
+gearPage -> gearPage: Render checklist by category:\n- Shelter & Sleep\n- Cooking & Food\n- Clothing\n- Safety & Navigation
+
+gearPage -> user: Display checklist with\nprogress indicators
+deactivate gearPage
+
+== User Marks Item as Packed ==
+
+user -> gearPage: Check item checkbox
+activate gearPage
+gearPage -> gearService: updateChecklistItem(tripId, itemId, {packed: true})
+activate gearService
+gearService -> gearController: PUT /api/trips/{tripId}/checklist/{itemId}
+activate gearController
+gearController -> updateHandler: Handle UpdateChecklistItemCommand
+activate updateHandler
+updateHandler -> dbContext: Update item status
+activate dbContext
+dbContext -> db: UPDATE ChecklistItems\nSET IsPacked = @packed,\nPackedDate = @date\nWHERE ItemId = @itemId\nAND TripId = @tripId\nAND TenantId = @tenantId
+activate db
+db --> dbContext: Item updated
+deactivate db
+
+updateHandler -> dbContext: SaveChangesAsync()
+dbContext -> db: COMMIT transaction
+db --> dbContext: Success
+deactivate db
+deactivate dbContext
+updateHandler --> gearController: Success
+deactivate updateHandler
+gearController --> gearService: 200 OK
+deactivate gearController
+gearService --> gearPage: Item updated
+deactivate gearService
+
+gearPage -> gearPage: Update UI:\n- Mark item as packed\n- Recalculate progress\n- Update weight total
+gearPage -> user: Show updated checklist
+deactivate gearPage
+
+== User Adds New Item ==
+
+user -> gearPage: Click "Add More Items"
+activate gearPage
+gearPage -> user: Display add item form
+deactivate gearPage
+
+user -> gearPage: Enter item details
+activate gearPage
+gearPage -> gearService: addChecklistItem(tripId, itemData)
+activate gearService
+gearService -> gearController: POST /api/trips/{tripId}/checklist
+activate gearController
+gearController -> updateHandler: Handle AddChecklistItemCommand
+activate updateHandler
+updateHandler -> dbContext: Add new item
+activate dbContext
+dbContext -> db: INSERT INTO ChecklistItems\n(ItemId, TripId, Name, Category,\nWeight, TenantId, ...)
+activate db
+db --> dbContext: Item created
+deactivate db
+deactivate dbContext
+updateHandler --> gearController: Item created
+deactivate updateHandler
+gearController --> gearService: 201 Created {item}
+deactivate gearController
+gearService --> gearPage: New item added
+deactivate gearService
+gearPage -> gearPage: Refresh checklist
+gearPage -> user: Show updated checklist
+deactivate gearPage
+
+note right of gearPage
+  Checklist features:
+  - Items grouped by category
+  - Progress tracking (% packed)
+  - Weight calculation
+  - Add/remove items
+  - Mark items as packed
+  - View gear inventory
+  - Export/share checklist
+end note
+
+@enduml
