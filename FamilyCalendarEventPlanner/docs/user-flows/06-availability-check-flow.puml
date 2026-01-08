@@ -1,0 +1,207 @@
+@startuml Availability Check Flow
+title Availability Check Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Calendar Page" as CalendarPage
+participant "Availability Service" as AvailabilityService
+participant "Availability Controller" as AvailabilityController
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+== Find Common Free Time ==
+User -> CalendarPage: Click "Find Common Free Time"
+activate CalendarPage
+
+CalendarPage --> User: Display member selection\nand date range picker
+
+User -> CalendarPage: Select family members\nand date range
+
+CalendarPage -> CalendarPage: Validate:\n- At least 2 members selected\n- Valid date range
+
+CalendarPage -> AvailabilityService: findCommonFreeTime(members, dateRange)
+activate AvailabilityService
+
+AvailabilityService -> AvailabilityController: POST /api/availability/find-free-time
+activate AvailabilityController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "familyMemberIds": ["guid", ...],
+    "startDate": "datetime",
+    "endDate": "datetime",
+    "minimumDuration": "minutes",
+    "preferredTimeOfDay": "Morning|Afternoon|Evening"
+  }
+end note
+
+AvailabilityController -> DbContext: Query all events for selected members
+activate DbContext
+DbContext -> DB: SELECT e.StartTime, e.EndTime\nFROM Events e\nJOIN EventAttendees ea\nON e.EventId = ea.EventId\nWHERE ea.FamilyMemberId IN (@memberIds)\nAND e.StartTime <= @endDate\nAND e.EndTime >= @startDate\nAND e.TenantId = @tenantId\nORDER BY e.StartTime
+activate DB
+DB --> DbContext: Scheduled events
+deactivate DB
+deactivate DbContext
+
+AvailabilityController -> DbContext: Query availability blocks
+activate DbContext
+DbContext -> DB: SELECT ab.StartTime, ab.EndTime,\nab.BlockType, ab.FamilyMemberId\nFROM AvailabilityBlocks ab\nWHERE ab.FamilyMemberId IN (@memberIds)\nAND ab.StartTime <= @endDate\nAND ab.EndTime >= @startDate\nAND ab.TenantId = @tenantId
+activate DB
+note right
+  Availability blocks represent:
+  - Busy/Out-of-Office periods
+  - Work hours
+  - School hours
+  - Personal time blocks
+end note
+DB --> DbContext: Availability blocks
+deactivate DB
+deactivate DbContext
+
+AvailabilityController -> AvailabilityController: Calculate free time slots:\n1. Create timeline from start to end date\n2. Mark all busy periods (events + blocks)\n3. Find gaps where ALL members are free\n4. Filter by minimum duration\n5. Rank by preferred time of day
+
+AvailabilityController -> DbContext: Log availability check
+activate DbContext
+DbContext -> DB: INSERT INTO AvailabilityChecks\n(CheckId, FamilyMemberIds,\nDateRange, FreeSlotsFound,\nCheckedAt, CheckedBy)
+activate DB
+note right
+  Triggers FamilyAvailabilityChecked
+  domain event
+end note
+DB --> DbContext: Check logged
+deactivate DB
+deactivate DbContext
+
+AvailabilityController --> AvailabilityService: 200 OK\n{freeTimeSlots, suggestions}
+deactivate AvailabilityController
+note right
+  Response:
+  {
+    "freeTimeSlots": [
+      {
+        "startTime": "datetime",
+        "endTime": "datetime",
+        "duration": "minutes",
+        "allMembersAvailable": ["names"]
+      }
+    ],
+    "suggestions": [
+      "Best time: Tomorrow 2-4 PM"
+    ]
+  }
+end note
+
+AvailabilityService --> CalendarPage: Free time slots
+deactivate AvailabilityService
+
+CalendarPage --> User: Display available time slots\nwith suggestions
+deactivate CalendarPage
+
+== Block Time as Unavailable ==
+User -> CalendarPage: Click "Block Time"
+activate CalendarPage
+
+CalendarPage --> User: Display time block form
+
+User -> CalendarPage: Enter:\n- Date/time range\n- Reason\n- Block type (Busy/OOO/Personal)\n- Recurring pattern (optional)
+
+CalendarPage -> AvailabilityService: blockTime(blockData)
+activate AvailabilityService
+
+AvailabilityService -> AvailabilityController: POST /api/availability/block
+activate AvailabilityController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "familyMemberId": "guid",
+    "startTime": "datetime",
+    "endTime": "datetime",
+    "reason": "string",
+    "blockType": "Busy|OutOfOffice|Personal",
+    "isRecurring": false,
+    "recurrencePattern": null
+  }
+end note
+
+AvailabilityController -> DbContext: Create availability block
+activate DbContext
+DbContext -> DB: INSERT INTO AvailabilityBlocks\n(BlockId, FamilyMemberId,\nStartTime, EndTime, Reason,\nBlockType, IsRecurring,\nRecurrencePattern, TenantId,\nCreatedAt)
+activate DB
+note right
+  Triggers AvailabilityBlocked
+  domain event
+end note
+DB --> DbContext: Block created
+deactivate DB
+deactivate DbContext
+
+alt Is recurring block
+    AvailabilityController -> AvailabilityController: Generate recurring instances\n(e.g., every weekday 9-5\nfor work hours)
+
+    AvailabilityController -> DbContext: Create recurring block instances
+    activate DbContext
+    DbContext -> DB: INSERT INTO AvailabilityBlocks\n(multiple rows for pattern)
+    activate DB
+    DB --> DbContext: Recurring blocks created
+    deactivate DB
+    deactivate DbContext
+end
+
+AvailabilityController --> AvailabilityService: 201 Created\n{blockId, affectedDates}
+deactivate AvailabilityController
+
+AvailabilityService --> CalendarPage: Time blocked successfully
+deactivate AvailabilityService
+
+CalendarPage -> CalendarPage: Update calendar view\nwith blocked time
+
+CalendarPage --> User: Display confirmation
+deactivate CalendarPage
+
+== Suggest Optimal Meeting Time ==
+User -> CalendarPage: Click "Suggest Meeting Time"
+activate CalendarPage
+
+CalendarPage --> User: Display meeting parameters
+
+User -> CalendarPage: Enter:\n- Attendees\n- Duration\n- Date range\n- Constraints
+
+CalendarPage -> AvailabilityService: suggestMeetingTime(params)
+activate AvailabilityService
+
+AvailabilityService -> AvailabilityController: POST /api/availability/suggest-meeting
+activate AvailabilityController
+
+AvailabilityController -> AvailabilityController: Use availability algorithm:\n1. Find free time for all attendees\n2. Apply business rules\n3. Prefer normal business hours\n4. Avoid early morning/late evening\n5. Prioritize continuous time blocks\n6. Consider travel time between events
+
+AvailabilityController -> DbContext: Query historical preferences
+activate DbContext
+DbContext -> DB: SELECT AVG(DATEPART(hour, StartTime))\nas PreferredHour\nFROM Events\nWHERE CreatedBy = @userId\nGROUP BY DATEPART(hour, StartTime)
+activate DB
+note right
+  Learn from past behavior
+  to suggest preferred times
+end note
+DB --> DbContext: Historical preferences
+deactivate DB
+deactivate DbContext
+
+AvailabilityController --> AvailabilityService: 200 OK\n{suggestedTimes ranked by score}
+deactivate AvailabilityController
+
+AvailabilityService --> CalendarPage: Meeting suggestions
+deactivate AvailabilityService
+
+CalendarPage --> User: Display ranked suggestions\nwith "Create Event" button
+deactivate CalendarPage
+
+User -> CalendarPage: Select suggested time
+activate CalendarPage
+
+CalendarPage -> CalendarPage: Pre-fill event form\nwith suggested time
+
+CalendarPage --> User: Navigate to event creation
+deactivate CalendarPage
+
+@enduml
