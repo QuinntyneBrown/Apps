@@ -1,0 +1,84 @@
+@startuml View Handicap User Flow
+title View Handicap Dashboard
+
+actor User
+participant "Handicap\nDashboard" as HandicapUI
+participant "Trend Chart\nComponent" as ChartUI
+participant "API Gateway" as API
+participant "Handicap\nService" as HandicapService
+database "Database" as DB
+
+User -> HandicapUI: Navigate to /handicap
+activate HandicapUI
+HandicapUI -> API: GET /api/handicap/current
+activate API
+API -> HandicapService: GetCurrentHandicap(userId)
+activate HandicapService
+HandicapService -> DB: Query current handicap index
+activate DB
+DB --> HandicapService: Return current handicap data
+deactivate DB
+HandicapService --> API: Return handicap details:\n- currentIndex\n- previousIndex\n- trend\n- roundsUsed\n- roundsNeeded
+deactivate HandicapService
+API --> HandicapUI: Return handicap data
+deactivate API
+
+HandicapUI -> API: GET /api/handicap/rounds-used
+activate API
+API -> HandicapService: GetRoundsForHandicap(userId)
+activate HandicapService
+HandicapService -> DB: Query 8 best rounds\nfrom last 20 rounds
+activate DB
+DB --> HandicapService: Return rounds list
+deactivate DB
+HandicapService --> API: Return rounds with differentials
+deactivate HandicapService
+API --> HandicapUI: Return rounds data
+deactivate API
+
+HandicapUI -> API: GET /api/handicap/history
+activate API
+API -> HandicapService: GetHandicapHistory(userId)
+activate HandicapService
+HandicapService -> DB: Query handicap changes\nover time
+activate DB
+DB --> HandicapService: Return history data
+deactivate DB
+HandicapService --> API: Return historical data points
+deactivate HandicapService
+API --> HandicapUI: Return history
+deactivate API
+
+HandicapUI -> ChartUI: Render trend chart
+activate ChartUI
+ChartUI --> HandicapUI: Display line chart
+deactivate ChartUI
+
+HandicapUI --> User: Display complete dashboard:\n- Current handicap (large hero display)\n- Trend indicator (↑/↓ with change)\n- Trend chart (line graph)\n- 8 rounds used in calculation\n- Progress to official (X/20 rounds)\n- Achievement badge (if single-digit)
+deactivate HandicapUI
+
+== Optional: View Handicap History ==
+User -> HandicapUI: Click "View History"
+activate HandicapUI
+HandicapUI --> User: Navigate to /handicap/history
+deactivate HandicapUI
+
+== Optional: Export Certificate ==
+User -> HandicapUI: Click "Export Certificate"
+activate HandicapUI
+HandicapUI -> API: POST /api/handicap/export-certificate
+activate API
+API -> HandicapService: GenerateHandicapCertificate(userId)
+activate HandicapService
+HandicapService -> DB: Get official handicap data
+activate DB
+DB --> HandicapService: Return data
+deactivate DB
+HandicapService --> API: Return PDF certificate
+deactivate HandicapService
+API --> HandicapUI: Return PDF file
+deactivate API
+HandicapUI --> User: Download certificate
+deactivate HandicapUI
+
+@enduml
