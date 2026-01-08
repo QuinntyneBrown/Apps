@@ -1,0 +1,49 @@
+@startuml add-bucket-list-item
+title Add Bucket List Item Flow
+
+actor User
+participant "Dashboard View" as Dashboard
+participant "Add Item Modal" as Modal
+participant "Bucket List Service" as Service
+participant "API Controller" as API
+participant "CreateItemCommand Handler" as Handler
+participant "IBucketListManagerContext" as DB
+participant "ITenantContext" as TenantContext
+
+User -> Dashboard: Click "Add Goal" button
+Dashboard -> Modal: Open item creation wizard
+Modal --> User: Display form (title, description, category, priority)
+
+User -> Modal: Fill in item details
+User -> Modal: Select category
+User -> Modal: Set priority level
+User -> Modal: Click "Save"
+
+Modal -> Modal: Validate form inputs
+Modal -> Service: createItem(itemData)
+Service -> Service: Prepare request with auth token
+Service -> API: POST /api/bucket-list-items
+note right: Authorization: Bearer {token}
+
+API -> Handler: CreateBucketListItemCommand
+Handler -> TenantContext: GetCurrentTenantId()
+TenantContext --> Handler: TenantId (from JWT)
+Handler -> Handler: Create BucketListItem entity
+note right: Sets TenantId, Title, Description,\nCategory, Priority, CreatedDate
+Handler -> DB: Add(bucketListItem)
+Handler -> DB: SaveChangesAsync()
+DB --> Handler: Success
+Handler --> API: ItemCreatedResponse
+API --> Service: 201 Created + item DTO
+Service --> Modal: Item created successfully
+Modal -> Modal: Close modal
+Modal -> Dashboard: Trigger refresh
+Dashboard -> Service: getItems()
+Service -> API: GET /api/bucket-list-items
+API -> DB: Query items filtered by TenantId
+DB --> API: List of items
+API --> Service: Items list
+Service --> Dashboard: Updated items
+Dashboard --> User: Display new item in grid
+
+@enduml
