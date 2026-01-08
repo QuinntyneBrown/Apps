@@ -1,0 +1,187 @@
+@startuml Share Idea with Partner
+title Share Idea with Partner Flow
+
+actor "User\n(Initiator)" as User
+participant "Partner\nCollaboration UI" as CollabUI
+participant "Notification\nUI" as NotifyUI
+participant "API Gateway" as API
+participant "Social\nService" as SocialService
+participant "Notification\nService" as NotifyService
+actor "Partner" as Partner
+database "SQL Server" as DB
+
+== Setup Partner Connection ==
+User -> CollabUI: Open Partner Settings
+CollabUI -> API: GET /api/partner/profile
+API -> SocialService: Get Partner Info
+SocialService -> DB: SELECT PartnerProfile\nWHERE TenantId = @TenantId
+DB --> SocialService: Partner Info
+SocialService --> API: Partner Profile
+API --> CollabUI: Display Partner Info
+CollabUI --> User: Show Partner Status
+
+alt Partner Not Connected
+    User -> CollabUI: Invite Partner
+    CollabUI -> API: POST /api/partner/invite
+    note right
+    Request Body:
+    {
+      "partnerEmail": "partner@example.com",
+      "partnerName": "Jane Doe"
+    }
+    end note
+    API -> SocialService: Create Invitation
+    SocialService -> DB: INSERT PartnerInvitation
+    DB --> SocialService: InvitationId
+    SocialService -> NotifyService: Send Invitation Email
+    NotifyService --> Partner: Email with Link
+    SocialService --> API: Invitation Sent
+    API --> CollabUI: Show Pending Status
+    CollabUI --> User: "Invitation Sent"
+end
+
+== Share Date Idea ==
+User -> CollabUI: View Saved Ideas
+CollabUI -> API: GET /api/ideas/saved
+API -> SocialService: Get Saved Ideas
+SocialService -> DB: SELECT SavedIdeas\nWHERE TenantId = @TenantId
+DB --> SocialService: Ideas List
+SocialService --> API: Ideas
+API --> CollabUI: Display Ideas
+CollabUI --> User: Show Ideas to Share
+
+User -> CollabUI: Select Idea
+User -> CollabUI: Click "Share with Partner"
+User -> CollabUI: Add Message (Optional)
+note right
+Share message:
+"What do you think about
+trying this restaurant?"
+end note
+
+User -> CollabUI: Click Send
+CollabUI -> API: POST /api/ideas/{id}/share
+note right
+Request Body:
+{
+  "ideaId": "...",
+  "partnerId": "...",
+  "message": "...",
+  "requestApproval": true
+}
+end note
+API -> SocialService: Share Idea Command
+SocialService -> DB: INSERT SharedIdea\nSET Status = 'Pending'
+DB --> SocialService: ShareId
+SocialService --> SocialService: Publish IdeaSharedWithPartner Event
+SocialService -> NotifyService: Notify Partner
+NotifyService -> DB: INSERT Notification
+NotifyService --> Partner: Push Notification/Email
+SocialService --> API: Shared Successfully
+API --> CollabUI: Confirmation
+CollabUI --> User: "Shared with Partner"
+
+== Partner Reviews Idea ==
+Partner -> NotifyUI: Receive Notification
+NotifyUI --> Partner: "New Date Idea Shared"
+
+Partner -> CollabUI: Open Shared Ideas
+CollabUI -> API: GET /api/ideas/shared
+API -> SocialService: Get Shared Ideas Query
+SocialService -> DB: SELECT SharedIdeas\nWHERE PartnerId = @PartnerId\nAND Status = 'Pending'
+DB --> SocialService: Pending Ideas
+SocialService --> API: Shared Ideas
+API --> CollabUI: Display Shared Ideas
+CollabUI --> Partner: Show Idea Details
+
+Partner -> CollabUI: View Idea Details
+note right
+Details include:
+- Activity description
+- Cost estimate
+- Duration
+- Location
+- Initiator's message
+end note
+CollabUI --> Partner: Full Idea Information
+
+== Partner Responds ==
+alt Partner Approves
+    Partner -> CollabUI: Click "Love It!"
+    CollabUI -> API: POST /api/partner/respond
+    note right
+    Request Body:
+    {
+      "shareId": "...",
+      "response": "Approved",
+      "comment": "Sounds great!"
+    }
+    end note
+    API -> SocialService: Partner Response Command
+    SocialService -> DB: UPDATE SharedIdea\nSET Status = 'Approved',\nResponse = @Response
+    DB --> SocialService: Success
+    SocialService --> SocialService: Publish PartnerResponseReceived Event
+    SocialService -> NotifyService: Notify Initiator
+    NotifyService -> DB: INSERT Notification
+    NotifyService --> User: Push Notification
+    SocialService --> API: Response Recorded
+    API --> CollabUI: Confirmation
+    CollabUI --> Partner: "Response Sent"
+
+    User -> NotifyUI: Receive Approval
+    NotifyUI --> User: "Partner Approved Your Idea!"
+
+else Partner Suggests Changes
+    Partner -> CollabUI: Click "Suggest Changes"
+    Partner -> CollabUI: Add Comment
+    note right
+    "Great idea, but can we
+    try a different restaurant?
+    Maybe Italian instead?"
+    end note
+    CollabUI -> API: POST /api/partner/respond
+    API -> SocialService: Partner Response with Suggestions
+    SocialService -> DB: UPDATE SharedIdea\nSET Status = 'NeedsDiscussion'
+    DB --> SocialService: Success
+    SocialService -> NotifyService: Notify Initiator
+    NotifyService --> User: Push Notification
+    SocialService --> API: Response Recorded
+    API --> CollabUI: Confirmation
+    CollabUI --> Partner: "Suggestions Sent"
+
+else Partner Declines
+    Partner -> CollabUI: Click "Not Interested"
+    Partner -> CollabUI: Add Reason (Optional)
+    CollabUI -> API: POST /api/partner/respond
+    API -> SocialService: Partner Decline
+    SocialService -> DB: UPDATE SharedIdea\nSET Status = 'Declined'
+    DB --> SocialService: Success
+    SocialService -> NotifyService: Notify Initiator
+    NotifyService --> User: Push Notification
+    SocialService --> API: Response Recorded
+    API --> CollabUI: Confirmation
+    CollabUI --> Partner: "Response Sent"
+end
+
+== View Collaboration History ==
+User -> CollabUI: View Shared History
+CollabUI -> API: GET /api/ideas/shared/history
+API -> SocialService: Get Sharing History
+SocialService -> DB: SELECT SharedIdeas\nWHERE TenantId = @TenantId\nORDER BY Timestamp DESC
+DB --> SocialService: History
+SocialService --> API: Shared Ideas with Responses
+API --> CollabUI: Display History
+CollabUI --> User: Show All Shared Ideas
+
+User -> CollabUI: Filter by Status
+note right
+Filter options:
+- Pending
+- Approved
+- Declined
+- Needs Discussion
+end note
+CollabUI -> CollabUI: Apply Filter Locally
+CollabUI --> User: Show Filtered Results
+
+@enduml
