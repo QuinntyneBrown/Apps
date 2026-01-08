@@ -1,0 +1,60 @@
+@startuml Set Daily Goal Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Set Daily Goal Flow
+
+actor User
+participant "Goal\nDashboard" as UI
+participant "Goal Setup\nModal" as Modal
+participant "Goal Store" as Store
+participant "API" as API
+database Database
+
+User -> UI: Click "Set Daily Goal" button
+activate UI
+UI -> Modal: Open modal with 'daily' type
+activate Modal
+Modal --> User: Show goal setup form
+
+User -> Modal: Select template OR\nset custom values
+Modal --> User: Template selected
+
+User -> Modal: Set target sessions
+Modal --> User: Sessions set
+
+User -> Modal: Set target minutes
+Modal --> User: Minutes set
+
+Modal -> Modal: Validate inputs
+alt Validation passes
+    User -> Modal: Click "Create Goal"
+    Modal -> Store: setDailyGoal(config)
+    activate Store
+    Store -> API: POST /api/goals/daily
+    activate API
+    API -> Database: INSERT daily_goal record\nFOR current date
+    activate Database
+    Database --> API: Goal created
+    deactivate Database
+    API --> Store: Goal data
+    deactivate API
+
+    Store --> Modal: Goal created successfully
+    deactivate Store
+    Modal -> UI: Close modal
+    deactivate Modal
+    UI -> UI: Display goal card\nwith progress ring
+    UI -> UI: Show success message
+    UI --> User: Goal displayed (0% progress)
+else Validation fails
+    Modal --> User: Show validation errors
+end
+deactivate UI
+
+@enduml
