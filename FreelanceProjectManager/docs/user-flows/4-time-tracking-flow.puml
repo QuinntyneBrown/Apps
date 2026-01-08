@@ -1,0 +1,370 @@
+@startuml
+title Time Tracking Flow
+
+actor "Freelancer" as User
+participant "Time Tracking Page\n(Angular)" as UI
+participant "Time Entry Service\n(Angular)" as Service
+participant "Time Entries Controller\n(/api/timeentries)" as Controller
+participant "Command Handler\n(MediatR)" as Handler
+participant "IFreelanceProjectManagerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as DB
+
+== View Time Entries ==
+User -> UI: Navigate to\nTime Tracking page
+activate UI
+
+UI -> Service: getTimeEntries(filters)
+activate Service
+
+Service -> Controller: GET /api/timeentries?\nstartDate={date}&endDate={date}
+activate Controller
+
+Controller -> Handler: Handle(GetTimeEntriesQuery)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> DbContext: TimeEntries.Include(te => te.Project)\n.Where(te => te.TenantId == tenantId &&\nte.Date >= startDate &&\nte.Date <= endDate)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT te.*, p.*\nFROM TimeEntries te\nJOIN Projects p ON te.ProjectId = p.ProjectId\nWHERE te.TenantId = @tenantId\nAND te.Date BETWEEN @start AND @end
+activate DB
+DB --> DbContext: Time entry records
+deactivate DB
+
+DbContext --> Handler: List<TimeEntry>
+deactivate DbContext
+
+Handler -> Handler: Calculate totals:\n- Total hours\n- Billable hours\n- Non-billable hours
+
+Handler --> Controller: TimeEntriesResponseDto\n{entries, totals}
+deactivate Handler
+
+Controller --> Service: 200 OK\nTimeEntriesResponseDto
+deactivate Controller
+
+Service --> UI: Time entry data
+deactivate Service
+
+UI --> User: Display time entries\nwith weekly summary
+deactivate UI
+
+== Start Timer (Real-time Tracking) ==
+User -> UI: Select project\nand click "Start Timer"
+activate UI
+
+UI -> UI: Show active timer:\n- Running clock\n- Task description field\n- Stop button
+
+User -> UI: Enter task description\nwhile working
+
+note right of UI
+  Timer runs in browser
+  Time accumulates locally
+  until user stops
+end note
+
+UI --> User: Display running\ntimer with elapsed time
+deactivate UI
+
+== Stop Timer and Save ==
+User -> UI: Click "Stop Timer"
+activate UI
+
+UI -> UI: Calculate duration\nfrom start to stop time
+
+UI -> UI: Open save dialog:\n- Duration (pre-filled)\n- Task description\n- Billable toggle\n- Project selection
+
+User -> UI: Review/adjust details\nand click "Save"
+
+UI -> Service: createTimeEntry(timeEntryData)
+activate Service
+
+Service -> Controller: POST /api/timeentries\n{projectId, date, duration,\ndescription, isBillable}
+activate Controller
+
+Controller -> Handler: Handle(CreateTimeEntryCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> Handler: Create TimeEntry entity:\n- TenantId\n- ProjectId\n- Date\n- Duration (hours)\n- Description\n- IsBillable\n- CreatedDate
+
+Handler -> DbContext: TimeEntries.Add(timeEntry)
+activate DbContext
+
+DbContext -> DB: INSERT INTO TimeEntries\n(TimeEntryId, ProjectId, Date,\nDuration, Description, IsBillable,\nTenantId, CreatedDate)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+Handler -> DbContext: SaveChangesAsync()
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler -> DbContext: Projects.FindAsync(projectId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Projects\nWHERE ProjectId = @projectId
+activate DB
+DB --> DbContext: Project record
+deactivate DB
+DbContext --> Handler: Project entity
+deactivate DbContext
+
+Handler -> Handler: Update project:\n- TotalHours += duration\n- BillableHours += duration (if billable)
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Projects\nSET TotalHours = TotalHours + @duration,\nBillableHours = BillableHours + @billable\nWHERE ProjectId = @projectId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+note right of Handler
+  Check if project hours trigger
+  invoice threshold
+  Raise domain event if needed
+end note
+
+Handler --> Controller: TimeEntryDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nTimeEntryDto
+deactivate Controller
+
+Service --> UI: Time entry saved
+deactivate Service
+
+UI -> UI: Reset timer
+UI -> UI: Refresh time entries list
+UI --> User: Show success message\n"Time entry saved"
+deactivate UI
+
+== Manual Time Entry ==
+User -> UI: Click "Add Manual Entry"
+activate UI
+
+UI -> UI: Open time entry form:\n- Project selection\n- Date picker\n- Duration input\n- Task description\n- Billable checkbox
+
+User -> UI: Fill in all fields
+
+User -> UI: Click "Save"
+
+UI -> UI: Validate inputs:\n- Project selected\n- Duration > 0\n- Date not in future
+
+UI -> Service: createTimeEntry(timeEntryData)
+activate Service
+
+Service -> Controller: POST /api/timeentries\n{projectId, date, duration,\ndescription, isBillable}
+activate Controller
+
+Controller -> Handler: Handle(CreateTimeEntryCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> Handler: Validate:\n- Project exists\n- Date is valid\n- Duration is positive
+
+Handler -> Handler: Create TimeEntry entity
+
+Handler -> DbContext: TimeEntries.Add(timeEntry)
+activate DbContext
+DbContext -> DB: INSERT INTO TimeEntries
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Entry created
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: TimeEntryDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nTimeEntryDto
+deactivate Controller
+
+Service --> UI: Time entry saved
+deactivate Service
+
+UI -> UI: Close form
+UI -> UI: Refresh time entries list
+UI --> User: Show new entry\nin the list
+deactivate UI
+
+== Edit Time Entry ==
+User -> UI: Click edit icon\non time entry
+activate UI
+
+UI -> UI: Open edit form\nwith existing data
+
+User -> UI: Modify:\n- Duration\n- Description\n- Billable status
+
+User -> UI: Click "Save Changes"
+
+UI -> Service: updateTimeEntry(entryId, data)
+activate Service
+
+Service -> Controller: PUT /api/timeentries/{entryId}\n{updatedData}
+activate Controller
+
+Controller -> Handler: Handle(UpdateTimeEntryCommand)
+activate Handler
+
+Handler -> DbContext: TimeEntries.FindAsync(entryId)
+activate DbContext
+DbContext -> DB: SELECT * FROM TimeEntries\nWHERE TimeEntryId = @entryId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: TimeEntry record
+deactivate DB
+DbContext --> Handler: TimeEntry entity
+deactivate DbContext
+
+Handler -> Handler: Store original values\nfor audit trail
+
+Handler -> Handler: Update time entry:\n- Duration\n- Description\n- IsBillable\n- ModifiedDate = Now
+
+Handler -> Handler: Create audit record:\n- Original values\n- New values\n- ModifiedBy\n- ModificationDate
+
+Handler -> DbContext: TimeEntryAudits.Add(audit)
+activate DbContext
+DbContext -> DB: INSERT INTO TimeEntryAudits\n(AuditId, TimeEntryId,\nOldDuration, NewDuration, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Audit created
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE TimeEntries\nSET Duration = @duration,\nDescription = @desc,\nIsBillable = @billable\nWHERE TimeEntryId = @entryId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: TimeEntryDto
+deactivate Handler
+
+Controller --> Service: 200 OK\nTimeEntryDto
+deactivate Controller
+
+Service --> UI: Time entry updated
+deactivate Service
+
+UI -> UI: Close form
+UI -> UI: Refresh time entries list
+UI --> User: Show updated entry\nwith audit indicator
+deactivate UI
+
+== Delete Time Entry ==
+User -> UI: Click delete icon\non time entry
+activate UI
+
+UI -> UI: Show confirmation dialog
+
+User -> UI: Confirm deletion
+
+UI -> Service: deleteTimeEntry(entryId)
+activate Service
+
+Service -> Controller: DELETE /api/timeentries/{entryId}
+activate Controller
+
+Controller -> Handler: Handle(DeleteTimeEntryCommand)
+activate Handler
+
+Handler -> DbContext: TimeEntries.FindAsync(entryId)
+activate DbContext
+DbContext -> DB: SELECT * FROM TimeEntries\nWHERE TimeEntryId = @entryId
+activate DB
+DB --> DbContext: TimeEntry record
+deactivate DB
+DbContext --> Handler: TimeEntry entity
+deactivate DbContext
+
+Handler -> DbContext: TimeEntries.Remove(timeEntry)
+activate DbContext
+DbContext -> DB: DELETE FROM TimeEntries\nWHERE TimeEntryId = @entryId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Entry deleted
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: Success
+deactivate Handler
+
+Controller --> Service: 204 No Content
+deactivate Controller
+
+Service --> UI: Time entry deleted
+deactivate Service
+
+UI -> UI: Remove entry from list
+UI --> User: Show success message\n"Time entry deleted"
+deactivate UI
+
+== View Time Report ==
+User -> UI: Click "Generate Report"\nbutton
+activate UI
+
+UI -> UI: Open report filters:\n- Date range\n- Project filter\n- Client filter\n- Billable only toggle
+
+User -> UI: Select filters and\nclick "Generate"
+
+UI -> Service: getTimeReport(filters)
+activate Service
+
+Service -> Controller: GET /api/timeentries/report?\nstartDate={date}&endDate={date}\n&projectId={id}&billableOnly={bool}
+activate Controller
+
+Controller -> Handler: Handle(GetTimeReportQuery)
+activate Handler
+
+Handler -> DbContext: Complex query with joins:\nTimeEntries, Projects, Clients
+activate DbContext
+DbContext -> DB: SELECT te.*, p.*, c.*\nFROM TimeEntries te\nJOIN Projects p ON te.ProjectId = p.ProjectId\nJOIN Clients c ON p.ClientId = c.ClientId\nWHERE te.TenantId = @tenantId\nAND [filters]\nGROUP BY Project, Client
+activate DB
+DB --> DbContext: Aggregated data
+deactivate DB
+DbContext --> Handler: Report data
+deactivate DbContext
+
+Handler -> Handler: Calculate:\n- Total hours by project\n- Total hours by client\n- Billable vs non-billable\n- Revenue potential
+
+Handler --> Controller: TimeReportDto
+deactivate Handler
+
+Controller --> Service: 200 OK\nTimeReportDto
+deactivate Controller
+
+Service --> UI: Report data
+deactivate Service
+
+UI -> UI: Display report:\n- Charts/graphs\n- Summary tables\n- Export options
+
+UI --> User: Show time report
+deactivate UI
+
+@enduml
