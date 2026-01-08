@@ -1,0 +1,35 @@
+@startuml User Login Flow
+title User Login Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthSvc
+participant "Auth Controller" as AuthCtrl
+participant "Password\nHashing Service" as PassSvc
+database "Database" as DB
+
+User -> UI: Enter credentials\n(username, password)
+UI -> UI: Validate form
+UI -> AuthSvc: login(credentials)
+AuthSvc -> AuthCtrl: POST /api/auth/login
+AuthCtrl -> DB: Query user by username
+DB --> AuthCtrl: User entity with\nhashed password & salt
+
+alt Valid Credentials
+    AuthCtrl -> PassSvc: Verify password\nwith hash and salt
+    PassSvc --> AuthCtrl: Password valid
+    AuthCtrl -> AuthCtrl: Generate JWT token\nwith claims (userId, roles, email)
+    AuthCtrl --> AuthSvc: 200 OK\n{token, expiresAt, user}
+    AuthSvc -> AuthSvc: Store token in\nlocalStorage
+    AuthSvc --> UI: Login successful
+    UI -> UI: Redirect to dashboard
+    UI --> User: Show dashboard
+else Invalid Credentials
+    AuthCtrl -> PassSvc: Verify password
+    PassSvc --> AuthCtrl: Password invalid
+    AuthCtrl --> AuthSvc: 401 Unauthorized\n{error: "Invalid credentials"}
+    AuthSvc --> UI: Login failed
+    UI --> User: Display error message
+end
+
+@enduml
