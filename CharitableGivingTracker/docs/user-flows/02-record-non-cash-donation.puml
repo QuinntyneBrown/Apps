@@ -1,0 +1,121 @@
+@startuml
+title Record Non-Cash Donation - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Non-Cash\nDonation Form" as form
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "RecordNonCashDonation\nCommand Handler" as handler
+participant "Donation\nAggregate" as aggregate
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: Click "Record Donation"
+activate dashboard
+
+dashboard -> form: Open donation form\nwith non-cash option
+activate form
+
+form --> user: Display non-cash form fields\n(Organization, Item Description,\nQuantity, Fair Market Value,\nValuation Method)
+
+user -> form: Fill in item description
+user -> form: Enter quantity
+user -> form: Enter fair market value
+user -> form: Select valuation method
+
+form -> form: Calculate if appraisal required\n(value > $5,000)
+
+alt Value > $5,000
+    form --> user: Display alert:\n"Appraisal Required!\nIRS requires professional appraisal\nfor donations over $5,000"
+    form --> user: Show appraisal document\nupload field
+end
+
+user -> form: Optional: Upload appraisal\nif required
+user -> form: Click "Submit"
+
+form -> validator: Validate form data
+activate validator
+
+validator -> validator: Check required fields
+validator -> validator: Validate fair market value > 0
+validator -> validator: Validate description not empty
+validator -> validator: Check appraisal uploaded if value > $5,000
+
+alt Validation Fails
+    validator --> form: Return validation errors
+    form --> user: Display error messages
+else Validation Succeeds
+    validator --> form: Validation passed
+    deactivate validator
+
+    form -> api: POST /api/donations/non-cash\n{organizationId, itemDescription,\nquantity, fairMarketValue,\nvaluationMethod, donationDate}
+    activate api
+
+    form --> user: Show loading spinner
+
+    api -> handler: Execute RecordNonCashDonationCommand
+    activate handler
+
+    handler -> handler: Validate OrganizationId exists
+    handler -> handler: Verify fair market value > 0
+    handler -> handler: Check appraisal requirement\n(value > $5,000)
+
+    handler -> aggregate: Create Donation aggregate\nwith non-cash details
+    activate aggregate
+
+    aggregate -> aggregate: Set DonationId (GUID)
+    aggregate -> aggregate: Set DonationType = NonCash
+    aggregate -> aggregate: Set FairMarketValue
+    aggregate -> aggregate: Set ValuationMethod
+    aggregate -> aggregate: Calculate AppraisalRequired flag
+    aggregate -> aggregate: Set tax deductible status
+
+    aggregate -> db: INSERT INTO Donations
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate -> events: Publish NonCashDonationValued event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> handler: Return DonationId
+    deactivate aggregate
+
+    handler --> api: 201 Created\n{donationId, appraisalRequired}
+    deactivate handler
+
+    alt Appraisal Document Uploaded
+        api -> api: POST /api/donations/{id}/appraisal
+        api -> db: Store appraisal document
+        db --> api: Document URL
+    end
+
+    api --> form: Success response
+    deactivate api
+
+    alt Appraisal Required
+        form --> user: Display success with reminder:\n"Non-cash donation recorded!\nRemember to complete Form 8283\nfor your tax filing."
+    else No Appraisal Required
+        form --> user: Display success message:\n"Non-cash donation recorded successfully!"
+    end
+
+    form -> form: Close modal
+    deactivate form
+
+    dashboard -> api: GET /api/donations/summary
+    activate api
+    api -> db: Query updated summary
+    db --> api: Summary data
+    api --> dashboard: Return summary
+    deactivate api
+
+    dashboard -> dashboard: Update summary cards
+    dashboard -> dashboard: Add to recent donations
+    dashboard --> user: Show updated dashboard\nwith new non-cash donation
+    deactivate dashboard
+end
+
+@enduml
