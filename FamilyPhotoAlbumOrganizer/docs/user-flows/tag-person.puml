@@ -1,0 +1,131 @@
+@startuml tag-person
+actor User
+participant "Photo Detail View" as PhotoView
+participant "Person Tagging UI" as TagUI
+participant "Face Detection Overlay" as FaceOverlay
+participant "Person Selector" as PersonSelector
+participant "Tagging Service" as TagService
+participant "API Gateway" as API
+participant "Tagging Controller" as TagController
+participant "Face Detection Service" as FaceDetection
+database "Tag Database" as TagDB
+database "Person Database" as PersonDB
+
+User -> PhotoView: Open photo in detail view
+PhotoView --> User: Display full photo
+
+User -> PhotoView: Click "Tag People" button
+PhotoView -> TagUI: Activate person tagging mode
+TagUI -> FaceDetection: detectFaces(photoId)
+FaceDetection -> API: POST /api/photos/{id}/detect-faces
+API -> TagController: detectFaces(photoId)
+TagController -> FaceDetection: Run face detection AI
+
+FaceDetection --> TagController: Detected face coordinates\n{x, y, width, height}[]
+TagController --> API: 200 OK {faces[]}
+API --> FaceDetection: Face data
+FaceDetection --> TagUI: Display face bounding boxes
+
+TagUI -> FaceOverlay: Overlay face boxes on photo
+FaceOverlay --> User: Show photo with\ndetected face boxes
+
+alt Auto-detected faces exist
+    loop For each detected face
+        FaceOverlay --> User: Show face box\nwith "Tag Person" prompt
+
+        User -> FaceOverlay: Click on face box
+        FaceOverlay -> PersonSelector: Open person selector
+        PersonSelector -> TagService: getPeople()
+        TagService -> API: GET /api/people
+        API -> TagController: getPeople(userId)
+        TagController -> PersonDB: SELECT * FROM people\nWHERE userId = currentUserId
+        PersonDB --> TagController: People list
+        TagController --> API: 200 OK {people[]}
+        API --> TagService: People data
+        TagService --> PersonSelector: Display people list
+        PersonSelector --> User: Show dropdown with\nexisting people + "Add New Person"
+
+        alt Select existing person
+            User -> PersonSelector: Select person from list
+            PersonSelector -> TagService: tagPerson(photoId, personId, faceBox)
+            TagService -> API: POST /api/photos/{photoId}/tags/person
+            API -> TagController: createPersonTag(photoId, personId, faceBox)
+            TagController -> TagDB: INSERT INTO photo_person_tags\n(photoId, personId, x, y, width, height)
+            TagDB --> TagController: Tag created
+            TagController --> API: 201 Created {tag}
+            API --> TagService: Tag saved
+            TagService --> FaceOverlay: Update face box
+            FaceOverlay -> FaceOverlay: Display person name\non face box
+            FaceOverlay --> User: Show tagged face:\n"{person name}"
+        else Add new person
+            User -> PersonSelector: Click "Add New Person"
+            PersonSelector --> User: Show input field
+            User -> PersonSelector: Enter person name
+            PersonSelector -> TagService: createPerson(name)
+            TagService -> API: POST /api/people
+            API -> TagController: createPerson(personDto)
+            TagController -> PersonDB: INSERT INTO people\n(userId, name)
+            PersonDB --> TagController: New person record
+            TagController --> API: 201 Created {person}
+            API --> TagService: Person created
+            TagService -> TagService: tagPerson(photoId, newPersonId, faceBox)
+            note right: Same flow as above
+            TagService --> FaceOverlay: Update face box
+            FaceOverlay --> User: Show tagged face:\n"{new person name}"
+        end
+    end
+else No faces detected or manual tagging
+    User -> FaceOverlay: Click and drag on photo\nto draw bounding box
+    FaceOverlay --> User: Show drawn box\naround face
+    User -> FaceOverlay: Release to confirm box
+    FaceOverlay -> PersonSelector: Open person selector
+    note right: Same person selection\nflow as above
+end
+
+== View Tagged People ==
+
+PhotoView -> TagService: getPhotoTags(photoId)
+TagService -> API: GET /api/photos/{id}/tags
+API -> TagController: getPhotoTags(photoId)
+TagController -> TagDB: SELECT tags, people\nWHERE photoId = photoId
+TagDB --> TagController: Tags with person details
+TagController --> API: 200 OK {tags[]}
+API --> TagService: Tag data
+TagService --> PhotoView: Display tagged people
+PhotoView --> User: Show list of tagged people\nbelow photo
+
+== Remove Person Tag ==
+
+User -> FaceOverlay: Click on tagged face box
+FaceOverlay --> User: Show tag options menu
+User -> FaceOverlay: Click "Remove Tag"
+FaceOverlay -> TagService: removePersonTag(tagId)
+TagService -> API: DELETE /api/photos/tags/{tagId}
+API -> TagController: removePersonTag(tagId)
+TagController -> TagDB: DELETE FROM photo_person_tags\nWHERE id = tagId
+TagDB --> TagController: Success
+TagController --> API: 200 OK
+API --> TagService: Tag removed
+TagService --> FaceOverlay: Update display
+FaceOverlay --> User: Remove face box label
+
+== Search Photos by Person ==
+
+User -> PhotoView: Navigate to People view
+PhotoView -> TagService: getAllPeople()
+TagService -> API: GET /api/people
+API --> TagService: People list with photo counts
+PhotoView --> User: Show people gallery
+
+User -> PhotoView: Click on person
+PhotoView -> TagService: getPhotosByPerson(personId)
+TagService -> API: GET /api/people/{id}/photos
+API -> TagController: getPhotosByPerson(personId)
+TagController -> TagDB: SELECT photos\nWHERE personId = personId
+TagDB --> TagController: Photos list
+TagController --> API: 200 OK {photos[]}
+API --> TagService: Photos data
+TagService --> PhotoView: Display photos
+PhotoView --> User: Show all photos\ncontaining this person
+
+@enduml
