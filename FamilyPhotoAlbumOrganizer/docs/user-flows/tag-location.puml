@@ -1,0 +1,161 @@
+@startuml tag-location
+actor User
+participant "Photo Detail View" as PhotoView
+participant "Location Tagging UI" as LocationUI
+participant "Map Component" as MapComponent
+participant "Location Service" as LocationService
+participant "API Gateway" as API
+participant "Tagging Controller" as TagController
+participant "Geocoding Service" as GeocodingService
+database "Tag Database" as TagDB
+database "Location Database" as LocationDB
+
+User -> PhotoView: Open photo in detail view
+PhotoView -> LocationService: getPhotoMetadata(photoId)
+LocationService -> API: GET /api/photos/{id}/metadata
+API --> LocationService: Photo EXIF data
+
+alt Photo has GPS coordinates in EXIF
+    LocationService -> LocationService: Extract GPS coordinates\n(latitude, longitude)
+    LocationService --> PhotoView: Display GPS data
+    PhotoView --> User: Show location info:\n"Location: {coordinates}"
+
+    note right of PhotoView
+        If GPS data exists in EXIF,
+        pre-populate the map
+    end note
+else No GPS data in EXIF
+    PhotoView --> User: Show "Add Location" button
+end
+
+User -> PhotoView: Click "Tag Location" button
+PhotoView -> LocationUI: Open location tagging interface
+LocationUI -> MapComponent: Load interactive map
+
+alt Pre-existing GPS coordinates
+    MapComponent -> MapComponent: Center map on coordinates
+    MapComponent -> GeocodingService: reverseGeocode(lat, lng)
+    GeocodingService --> MapComponent: Address/place name
+    MapComponent --> User: Show map centered\nat photo location with marker
+else No GPS coordinates
+    MapComponent -> MapComponent: Center map on user's location\nor default location
+    MapComponent --> User: Show map for\nlocation selection
+end
+
+User -> MapComponent: Interact with map:\n- Search for location\n- Pan and zoom\n- Click on map to select location
+
+alt User searches for location
+    User -> MapComponent: Enter location in search box\n(e.g., "Paris, France")
+    MapComponent -> GeocodingService: geocode(searchQuery)
+    GeocodingService -> API: GET /api/geocoding/search?q={query}
+    API -> GeocodingService: Query external API\n(Google Maps, OpenStreetMap)
+    GeocodingService --> API: Search results\n{places[]}
+    API --> GeocodingService: Location suggestions
+    GeocodingService --> MapComponent: Display suggestions
+    MapComponent --> User: Show location options
+
+    User -> MapComponent: Select location from list
+    MapComponent -> MapComponent: Center map on selected location\nand place marker
+    MapComponent --> User: Show selected location\nwith marker
+end
+
+alt User clicks on map
+    User -> MapComponent: Click on map point
+    MapComponent -> MapComponent: Place marker at clicked point\nget coordinates
+    MapComponent -> GeocodingService: reverseGeocode(lat, lng)
+    GeocodingService --> MapComponent: Address/place name
+    MapComponent --> User: Show marker with\nlocation name tooltip
+end
+
+User -> MapComponent: Review selected location
+MapComponent --> User: Display location details:\n- Place name\n- Address (if available)\n- Coordinates
+
+User -> LocationUI: Click "Save Location" button
+LocationUI -> LocationService: tagLocation(photoId, locationData)
+LocationService -> API: POST /api/photos/{photoId}/tags/location
+API -> TagController: createLocationTag(photoId, locationDto)
+
+TagController -> LocationDB: Check if location exists
+LocationDB -> LocationDB: SELECT * FROM locations\nWHERE latitude = lat\nAND longitude = lng
+
+alt Location exists in database
+    LocationDB --> TagController: Existing location ID
+else New location
+    TagController -> LocationDB: INSERT INTO locations\n(name, address, latitude, longitude)
+    LocationDB --> TagController: New location ID
+end
+
+TagController -> TagDB: INSERT INTO photo_location_tags\n(photoId, locationId)
+TagDB --> TagController: Tag created
+
+TagController -> TagDB: UPDATE photo metadata\nSET hasLocation = true
+TagDB --> TagController: Success
+
+TagController --> API: 201 Created\n{tag: LocationTag}
+API --> LocationService: Tag saved
+LocationService --> LocationUI: Save successful
+LocationUI -> LocationUI: Close location interface
+LocationUI -> PhotoView: Refresh photo view
+PhotoView --> User: Show location tag:\n"📍 {location name}"
+
+== Bulk Tag Location ==
+
+User -> PhotoView: Select multiple photos
+PhotoView --> User: Show bulk actions menu
+
+User -> PhotoView: Click "Tag Location (All)"
+PhotoView -> LocationUI: Open location tagging\nfor multiple photos
+LocationUI --> User: Show map interface
+
+User -> MapComponent: Select location (same as above)
+User -> LocationUI: Click "Apply to All Selected"
+
+loop For each selected photo
+    LocationUI -> LocationService: tagLocation(photoId, locationData)
+    note right: Same API flow as above
+end
+
+LocationService --> LocationUI: All photos tagged
+LocationUI --> User: Show notification:\n"Location tagged on X photos"
+
+== View Photos by Location ==
+
+User -> PhotoView: Navigate to Locations view
+PhotoView -> LocationService: getAllLocations()
+LocationService -> API: GET /api/locations
+API -> TagController: getAllLocations(userId)
+TagController -> LocationDB: SELECT locations,\nCOUNT(photo_tags)\nWHERE userId = userId\nGROUP BY locationId
+LocationDB --> TagController: Locations with photo counts
+TagController --> API: 200 OK {locations[]}
+API --> LocationService: Location data
+LocationService -> MapComponent: Display map with markers
+MapComponent --> User: Show map with\nphoto count markers
+
+User -> MapComponent: Click on location marker
+MapComponent -> LocationService: getPhotosByLocation(locationId)
+LocationService -> API: GET /api/locations/{id}/photos
+API -> TagController: getPhotosByLocation(locationId)
+TagController -> TagDB: SELECT photos\nWHERE locationId = locationId
+TagDB --> TagController: Photos list
+TagController --> API: 200 OK {photos[]}
+API --> LocationService: Photos data
+LocationService --> PhotoView: Display photos
+PhotoView --> User: Show all photos\ntaken at this location
+
+== Remove Location Tag ==
+
+User -> PhotoView: View photo with location tag
+User -> PhotoView: Click location tag\nor "Remove Location"
+PhotoView -> LocationService: removeLocationTag(photoId, tagId)
+LocationService -> API: DELETE /api/photos/{photoId}/tags/location/{tagId}
+API -> TagController: removeLocationTag(photoId, tagId)
+TagController -> TagDB: DELETE FROM photo_location_tags\nWHERE id = tagId
+TagDB --> TagController: Success
+TagController -> TagDB: UPDATE photo metadata\nSET hasLocation = false
+TagDB --> TagController: Success
+TagController --> API: 200 OK
+API --> LocationService: Tag removed
+LocationService --> PhotoView: Update display
+PhotoView --> User: Remove location indicator
+
+@enduml
