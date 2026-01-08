@@ -1,0 +1,54 @@
+@startuml user-login
+title User Login Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service\n(Angular)" as AuthService
+participant "Auth Controller\n(/api/auth/login)" as AuthController
+participant "JWT Service" as JWTService
+participant "Password Service" as PasswordService
+database "CarModificationPartsDatabase\nContext" as DB
+
+User -> UI: Enter username & password
+User -> UI: Click Login button
+
+UI -> UI: Validate form inputs
+alt Form invalid
+    UI -> User: Display validation errors
+else Form valid
+    UI -> AuthService: login(username, password)
+    AuthService -> AuthController: POST /api/auth/login\n{username, password}
+
+    AuthController -> DB: Query User by username
+    DB --> AuthController: Return User entity (with salt & hash)
+
+    alt User not found
+        AuthController --> AuthService: 401 Unauthorized\n{"error": "Invalid username or password"}
+        AuthService --> UI: Authentication failed
+        UI -> User: Display error message
+    else User found
+        AuthController -> PasswordService: Verify password\n(password, salt, hash)
+        PasswordService --> AuthController: Verification result
+
+        alt Password invalid
+            AuthController --> AuthService: 401 Unauthorized\n{"error": "Invalid username or password"}
+            AuthService --> UI: Authentication failed
+            UI -> User: Display error message
+        else Password valid
+            AuthController -> DB: Query User roles
+            DB --> AuthController: Return user roles
+
+            AuthController -> JWTService: Generate token\n(userId, username, email, roles)
+            JWTService -> JWTService: Create JWT claims\n(sub, name, email, roles, iat, exp, iss, aud)
+            JWTService -> JWTService: Sign token with HS256
+            JWTService --> AuthController: Return JWT token
+
+            AuthController --> AuthService: 200 OK\n{token, expiresAt, user}
+            AuthService -> AuthService: Store token in localStorage
+            AuthService --> UI: Login successful
+            UI -> User: Redirect to Dashboard
+        end
+    end
+end
+
+@enduml
