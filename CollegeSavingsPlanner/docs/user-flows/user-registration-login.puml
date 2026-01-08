@@ -1,0 +1,57 @@
+@startuml UserRegistrationAndLoginFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "User" as User
+participant "Login Page" as LoginUI
+participant "Registration Page" as RegUI
+participant "API Gateway" as API
+participant "User Controller" as Controller
+participant "Create User Handler" as CreateHandler
+participant "Authentication Service" as AuthService
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== User Registration ==
+User -> RegUI: Navigate to registration
+RegUI -> User: Display registration form
+User -> RegUI: Enter username, email, password
+RegUI -> RegUI: Validate input (client-side)
+RegUI -> API: POST /api/users {username, email, password}
+API -> Controller: CreateUser request
+Controller -> CreateHandler: Handle CreateUserCommand
+CreateHandler -> CreateHandler: Validate uniqueness of username and email
+CreateHandler -> CreateHandler: Hash password with salt
+CreateHandler -> DB: Add new User entity
+DB -> Database: INSERT INTO Users
+Database --> DB: User created
+DB --> CreateHandler: User entity
+CreateHandler --> Controller: UserDto
+Controller --> API: 201 Created
+API --> RegUI: User created successfully
+RegUI --> User: Show success message and redirect to login
+
+== User Login ==
+User -> LoginUI: Navigate to login
+LoginUI -> User: Display login form
+User -> LoginUI: Enter username and password
+LoginUI -> API: POST /api/auth/login {username, password}
+API -> AuthService: Authenticate user
+AuthService -> DB: Get user by username
+DB -> Database: SELECT * FROM Users WHERE Username = ?
+Database --> DB: User data
+DB --> AuthService: User entity
+AuthService -> AuthService: Verify password hash
+alt Authentication successful
+    AuthService -> AuthService: Generate JWT token with TenantId claim
+    AuthService --> API: JWT token
+    API --> LoginUI: 200 OK {token}
+    LoginUI -> LoginUI: Store token in local storage
+    LoginUI --> User: Redirect to dashboard
+else Authentication failed
+    AuthService --> API: 401 Unauthorized
+    API --> LoginUI: Authentication failed
+    LoginUI --> User: Display error message
+end
+
+@enduml
