@@ -1,0 +1,70 @@
+@startuml User Login Flow
+title User Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthSvc
+participant "API Gateway" as API
+participant "Auth Controller" as AuthCtrl
+participant "Identity Service" as IdentityService
+database "User Database" as DB
+
+User -> UI: Navigate to login page
+activate UI
+UI -> User: Display login form
+
+User -> UI: Enter username and password
+UI -> UI: Validate form inputs
+
+alt Invalid Input
+    UI -> User: Show validation errors
+else Valid Input
+    UI -> AuthSvc: login(username, password)
+    activate AuthSvc
+
+    AuthSvc -> API: POST /api/auth/login
+    activate API
+
+    API -> AuthCtrl: Login request
+    activate AuthCtrl
+
+    AuthCtrl -> IdentityService: ValidateCredentials(username, password)
+    activate IdentityService
+
+    IdentityService -> DB: Query user by username
+    activate DB
+    DB -> IdentityService: Return user data with password hash
+    deactivate DB
+
+    IdentityService -> IdentityService: Verify password hash\n(PBKDF2 with SHA-256)
+
+    alt Invalid Credentials
+        IdentityService -> AuthCtrl: Validation failed
+        AuthCtrl -> API: 401 Unauthorized
+        API -> AuthSvc: Login failed
+        AuthSvc -> UI: Display error
+        UI -> User: Show "Invalid username or password"
+    else Valid Credentials
+        IdentityService -> AuthCtrl: User validated
+
+        AuthCtrl -> IdentityService: GenerateJwtToken(user)
+        IdentityService -> IdentityService: Create JWT with claims\n(userId, username, email, roles)
+        IdentityService -> AuthCtrl: Return JWT token
+
+        AuthCtrl -> API: 200 OK with token
+        deactivate AuthCtrl
+
+        API -> AuthSvc: Login successful
+        deactivate API
+
+        AuthSvc -> AuthSvc: Store token in localStorage
+        AuthSvc -> UI: Login complete
+        deactivate AuthSvc
+
+        UI -> User: Redirect to dashboard
+        deactivate UI
+    end
+    deactivate IdentityService
+end
+
+@enduml
