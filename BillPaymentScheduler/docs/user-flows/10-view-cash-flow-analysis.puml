@@ -1,0 +1,241 @@
+@startuml View Cash Flow Analysis Flow
+title View Cash Flow Analysis Flow
+
+actor User
+participant "Dashboard" as MainDash
+participant "Cash Flow\nDashboard" as CashFlowUI
+participant "Cash Flow Service" as CashFlowSvc
+participant "API Gateway" as API
+participant "Cash Flow Controller" as CashFlowCtrl
+participant "Cash Flow Analysis\nService" as CashFlowMgmt
+participant "Budget Service" as BudgetSvc
+database "Analytics Database" as DB
+database "Bill Database" as BillDB
+database "Payment Database" as PaymentDB
+
+User -> MainDash: Click "Cash Flow" menu item
+activate MainDash
+
+MainDash -> CashFlowUI: Navigate to /cash-flow
+deactivate MainDash
+activate CashFlowUI
+
+CashFlowUI -> User: Show loading state
+
+CashFlowUI -> CashFlowSvc: loadCashFlowData(currentMonth)
+activate CashFlowSvc
+
+CashFlowSvc -> API: GET /api/cash-flow/projection?month=2024-01
+activate API
+
+API -> CashFlowCtrl: Get cash flow projection
+activate CashFlowCtrl
+
+CashFlowCtrl -> CashFlowCtrl: Extract userId from JWT token
+
+CashFlowCtrl -> CashFlowMgmt: GetCashFlowProjectionAsync(userId, month)
+activate CashFlowMgmt
+
+CashFlowMgmt -> BillDB: SELECT * FROM Bills WHERE UserId = ?
+activate BillDB
+BillDB -> CashFlowMgmt: Return user's bills
+deactivate BillDB
+
+CashFlowMgmt -> PaymentDB: SELECT * FROM PaymentSchedules\nWHERE UserId = ? AND Month = ?
+activate PaymentDB
+PaymentDB -> CashFlowMgmt: Return scheduled and completed payments
+deactivate PaymentDB
+
+CashFlowMgmt -> CashFlowMgmt: Calculate total income\n(from external sources)
+CashFlowMgmt -> CashFlowMgmt: Calculate total expenses\n(sum of bills + payments)
+CashFlowMgmt -> CashFlowMgmt: Calculate net cash flow\n(income - expenses)
+CashFlowMgmt -> CashFlowMgmt: Group expenses by category
+
+CashFlowMgmt -> DB: SELECT * FROM CashFlowProjections\nWHERE UserId = ? AND Month = ?
+activate DB
+DB -> CashFlowMgmt: Return existing projection (if cached)
+deactivate DB
+
+alt No cached projection
+    CashFlowMgmt -> CashFlowMgmt: Create new projection entity
+    CashFlowMgmt -> DB: INSERT INTO CashFlowProjections
+    activate DB
+    DB -> CashFlowMgmt: Projection saved
+    deactivate DB
+end
+
+CashFlowMgmt -> CashFlowCtrl: Return CashFlowProjection
+deactivate CashFlowMgmt
+
+CashFlowCtrl -> API: 200 OK with projection data
+deactivate CashFlowCtrl
+note right of API
+    Response Body:
+    {
+        "projectionId": "guid",
+        "month": "2024-01",
+        "totalIncome": 5000.00,
+        "totalExpenses": 3500.00,
+        "netCashFlow": 1500.00,
+        "categoryBreakdown": [
+            {"category": "Utilities", "amount": 500.00},
+            {"category": "Housing", "amount": 1500.00},
+            {"category": "Insurance", "amount": 800.00}
+        ]
+    }
+end note
+
+API -> CashFlowSvc: Projection data received
+deactivate API
+
+CashFlowSvc -> CashFlowUI: Projection loaded
+deactivate CashFlowSvc
+
+CashFlowUI -> CashFlowUI: Render cash flow summary cards:\n- Total Income: $5,000\n- Total Expenses: $3,500\n- Net Cash Flow: +$1,500
+
+CashFlowUI -> CashFlowUI: Render income vs expenses chart\n(Bar chart or line chart)
+
+CashFlowUI -> CashFlowUI: Render category breakdown\n(Pie chart)
+
+CashFlowUI -> User: Display cash flow dashboard
+
+== Load Budget Data ==
+
+CashFlowUI -> BudgetSvc: loadBudgets()
+activate BudgetSvc
+
+BudgetSvc -> API: GET /api/budgets
+activate API
+
+API -> CashFlowCtrl: Get budgets
+activate CashFlowCtrl
+
+CashFlowCtrl -> CashFlowMgmt: GetBudgetsAsync(userId)
+activate CashFlowMgmt
+
+CashFlowMgmt -> DB: SELECT * FROM BudgetCategories WHERE UserId = ?
+activate DB
+DB -> CashFlowMgmt: Return budget data
+deactivate DB
+
+CashFlowMgmt -> CashFlowMgmt: Calculate actual spending per category
+CashFlowMgmt -> CashFlowMgmt: Compare budget vs actual
+CashFlowMgmt -> CashFlowMgmt: Calculate percentage used
+CashFlowMgmt -> CashFlowMgmt: Identify over-budget categories
+
+CashFlowMgmt -> CashFlowCtrl: Return budget analysis
+deactivate CashFlowMgmt
+
+CashFlowCtrl -> API: 200 OK with budgets
+deactivate CashFlowCtrl
+note right of API
+    Response Body:
+    {
+        "budgets": [
+            {
+                "category": "Utilities",
+                "budgetAmount": 600.00,
+                "actualAmount": 500.00,
+                "percentageUsed": 83,
+                "isOverBudget": false
+            },
+            {
+                "category": "Housing",
+                "budgetAmount": 1400.00,
+                "actualAmount": 1500.00,
+                "percentageUsed": 107,
+                "isOverBudget": true
+            }
+        ]
+    }
+end note
+
+API -> BudgetSvc: Budget data received
+deactivate API
+
+BudgetSvc -> CashFlowUI: Budgets loaded
+deactivate BudgetSvc
+
+CashFlowUI -> CashFlowUI: Render budget progress bars\nfor each category
+
+alt Any category over budget
+    CashFlowUI -> User: Show alert:\n"You're over budget in Housing by $100"
+end
+
+== Load Financial Health Score ==
+
+CashFlowUI -> CashFlowSvc: loadFinancialHealth()
+activate CashFlowSvc
+
+CashFlowSvc -> API: GET /api/cash-flow/health-score
+activate API
+
+API -> CashFlowCtrl: Get financial health
+activate CashFlowCtrl
+
+CashFlowCtrl -> CashFlowMgmt: CalculateFinancialHealthAsync(userId)
+activate CashFlowMgmt
+
+CashFlowMgmt -> CashFlowMgmt: Calculate savings rate\n((income - expenses) / income)
+CashFlowMgmt -> CashFlowMgmt: Calculate debt-to-income ratio
+CashFlowMgmt -> CashFlowMgmt: Analyze spending trends
+CashFlowMgmt -> CashFlowMgmt: Generate health score (0-100)
+CashFlowMgmt -> CashFlowMgmt: Determine rating\n(Excellent, Good, Fair, Poor)
+CashFlowMgmt -> CashFlowMgmt: Generate recommendations
+
+CashFlowMgmt -> CashFlowCtrl: Return FinancialHealthScore
+deactivate CashFlowMgmt
+
+CashFlowCtrl -> API: 200 OK with health score
+deactivate CashFlowCtrl
+note right of API
+    Response Body:
+    {
+        "score": 78,
+        "rating": "Good",
+        "savingsRate": 30,
+        "debtToIncome": 25,
+        "recommendations": [
+            "Great job! You're saving 30% of income",
+            "Consider reducing Housing expenses",
+            "You could save $50/month on Subscriptions"
+        ]
+    }
+end note
+
+API -> CashFlowSvc: Health score received
+deactivate API
+
+CashFlowSvc -> CashFlowUI: Health score loaded
+deactivate CashFlowSvc
+
+CashFlowUI -> CashFlowUI: Render health score widget:\n- Circular progress (78/100)\n- Rating: "Good"\n- Recommendations list
+
+CashFlowUI -> User: Display complete cash flow analysis
+
+== User Interactions ==
+
+alt User changes month
+    User -> CashFlowUI: Select different month
+    CashFlowUI -> CashFlowSvc: loadCashFlowData(selectedMonth)
+    note right: Repeat data loading process for selected month
+end
+
+alt User clicks category in pie chart
+    User -> CashFlowUI: Click category segment
+    CashFlowUI -> CashFlowUI: Show drill-down view\nwith detailed bills in category
+    CashFlowUI -> User: Display category detail modal
+end
+
+alt User exports report
+    User -> CashFlowUI: Click "Export Report"
+    CashFlowUI -> API: GET /api/cash-flow/export?format=pdf
+    activate API
+    API -> CashFlowUI: Return PDF report
+    deactivate API
+    CashFlowUI -> User: Download PDF report
+end
+
+deactivate CashFlowUI
+
+@enduml
