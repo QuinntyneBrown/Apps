@@ -1,0 +1,161 @@
+@startuml Complete Chore Flow
+
+title Complete Chore with Verification Flow
+
+actor Child
+actor Parent
+participant "My Chores Page" as ChildUI
+participant "Completion Form" as CompForm
+participant "Parent Dashboard" as ParentUI
+participant "Verification View" as VerifyUI
+participant "Completion Controller" as CompAPI
+participant "MarkCompleteCommand" as MarkCommand
+participant "VerifyCompletionCommand" as VerifyCommand
+participant "Assignment Repository" as AssignRepo
+participant "Points Repository" as PointsRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== Child Marks Chore Complete ==
+Child -> ChildUI: View assigned chores
+ChildUI --> Child: Display pending chores list
+Child -> ChildUI: Select chore to complete
+ChildUI -> CompForm: Open completion form
+CompForm --> Child: Show chore details
+
+opt Add Completion Evidence
+    Child -> CompForm: Upload photo of completed work
+    CompForm -> CompForm: Validate image size/format
+    Child -> CompForm: Add notes/comments
+end
+
+Child -> CompForm: Self-rate quality (1-5 stars)
+CompForm -> CompForm: Capture completion timestamp
+
+Child -> CompForm: Click "Mark Complete"
+
+CompForm -> CompAPI: POST /api/assignments/{assignmentId}/complete\n{\n  completedAt,\n  selfRating,\n  notes,\n  photoUrl\n}
+
+CompAPI -> MarkCommand: Handle MarkCompleteCommand
+MarkCommand -> AssignRepo: GetAssignment(assignmentId)
+AssignRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE AssignmentId = @assignmentId
+DB --> AssignRepo: Assignment data
+AssignRepo --> MarkCommand: Assignment entity
+
+MarkCommand -> MarkCommand: Validate:\n- Assignment exists\n- Status is Pending or InProgress\n- Assignee matches authenticated user
+
+alt Validation Passes
+    MarkCommand -> AssignRepo: UpdateAssignment(\n  status: AwaitingVerification,\n  completedAt,\n  selfRating,\n  notes,\n  photoUrl\n)
+    AssignRepo -> DB: UPDATE ChoreAssignments\nSET Status = 'AwaitingVerification'
+    DB --> AssignRepo: Success
+
+    MarkCommand -> Events: Publish ChoreCompleted event\n{\n  assignmentId,\n  choreId,\n  completedBy,\n  completedAt,\n  selfRating\n}
+
+    Events -> NotifyService: Notify parent for verification
+
+    NotifyService -> DB: INSERT INTO Notifications\nFOR parent users
+    NotifyService -> NotifyService: Send push notification:\n"[ChildName] completed [ChoreName].\nPlease verify."
+
+    MarkCommand --> CompAPI: Success
+    CompAPI --> CompForm: 200 OK
+
+    CompForm -> CompForm: Show success message:\n"Great job!\nWaiting for parent approval."
+    CompForm -> ChildUI: Refresh chores list
+    ChildUI -> ChildUI: Move chore to\n"Awaiting Verification" section
+    ChildUI --> Child: Display updated status
+
+else Validation Fails
+    MarkCommand --> CompAPI: Validation error
+    CompAPI --> CompForm: 400 Bad Request {errors}
+    CompForm --> Child: Display error message
+end
+
+== Parent Verifies Completion ==
+NotifyService --> Parent: Push notification received
+Parent -> ParentUI: Open notifications
+ParentUI --> Parent: Show pending verifications
+Parent -> ParentUI: Select chore to verify
+ParentUI -> VerifyUI: Open verification view
+
+VerifyUI -> CompAPI: GET /api/assignments/{assignmentId}
+CompAPI -> AssignRepo: GetAssignment(assignmentId)
+AssignRepo -> DB: SELECT * FROM ChoreAssignments
+DB --> AssignRepo: Assignment with completion details
+AssignRepo --> CompAPI: Assignment
+CompAPI --> VerifyUI: 200 OK {assignment}
+
+VerifyUI --> Parent: Display:\n- Chore details\n- Child's self-rating\n- Completion photo\n- Notes
+
+alt Parent Approves
+    Parent -> VerifyUI: Rate quality (1-5 stars)
+
+    opt Award Bonus Points
+        Parent -> VerifyUI: Add bonus points\n(for exceptional work)
+    end
+
+    Parent -> VerifyUI: Click "Approve"
+
+    VerifyUI -> CompAPI: POST /api/assignments/{assignmentId}/verify\n{\n  verified: true,\n  verifierRating,\n  bonusPoints,\n  verifierNotes\n}
+
+    CompAPI -> VerifyCommand: Handle VerifyCompletionCommand
+    VerifyCommand -> AssignRepo: UpdateAssignment(\n  status: Completed,\n  verifiedAt,\n  verifierRating,\n  verifiedBy: parentId\n)
+    AssignRepo -> DB: UPDATE ChoreAssignments\nSET Status = 'Completed'
+
+    VerifyCommand -> VerifyCommand: Calculate final points:\nbasePoints + bonusPoints
+
+    VerifyCommand -> PointsRepo: AwardPoints(\n  memberId,\n  points,\n  reason: "Completed [ChoreName]"\n)
+    PointsRepo -> DB: INSERT INTO PointsTransactions
+    PointsRepo -> DB: UPDATE HouseholdMembers\nSET TotalPoints = TotalPoints + @points
+
+    VerifyCommand -> Events: Publish CompletionVerified event\n{\n  assignmentId,\n  verifiedBy,\n  pointsAwarded,\n  finalRating\n}
+
+    alt Bonus Points Awarded
+        VerifyCommand -> Events: Publish BonusPointsAwarded event
+    end
+
+    Events -> NotifyService: Notify child of approval
+
+    NotifyService -> NotifyService: Send notification:\n"[ChoreName] approved!\n+[Points] points earned!"
+    NotifyService -> DB: INSERT INTO Notifications
+
+    VerifyCommand --> CompAPI: Success
+    CompAPI --> VerifyUI: 200 OK
+
+    VerifyUI -> VerifyUI: Show success message
+    VerifyUI -> ParentUI: Refresh verification queue
+    ParentUI --> Parent: Remove from pending list
+
+    NotifyService --> Child: Notification received:\nPoints awarded!
+
+else Parent Rejects
+    Parent -> VerifyUI: Select rejection reason
+    Parent -> VerifyUI: Add feedback
+    Parent -> VerifyUI: Click "Request Redo"
+
+    VerifyUI -> CompAPI: POST /api/assignments/{assignmentId}/reject\n{\n  rejectionReason,\n  feedback\n}
+
+    CompAPI -> VerifyCommand: Handle RejectCompletionCommand
+    VerifyCommand -> AssignRepo: UpdateAssignment(\n  status: Pending,\n  rejectionReason,\n  feedback,\n  previousAttempts++\n)
+    AssignRepo -> DB: UPDATE ChoreAssignments\nSET Status = 'Pending'
+
+    VerifyCommand -> Events: Publish CompletionRejected event\n{\n  assignmentId,\n  rejectedBy,\n  reason,\n  feedback\n}
+
+    Events -> NotifyService: Notify child of rejection
+
+    NotifyService -> NotifyService: Send notification:\n"[ChoreName] needs to be redone.\n[Feedback]"
+    NotifyService -> DB: INSERT INTO Notifications
+
+    VerifyCommand --> CompAPI: Success
+    CompAPI --> VerifyUI: 200 OK
+
+    VerifyUI -> ParentUI: Refresh list
+    ParentUI --> Parent: Show rejection sent
+
+    NotifyService --> Child: Notification:\nChore needs redo
+
+    Child -> ChildUI: View feedback
+    ChildUI --> Child: Show rejection reason\nand improvement tips
+end
+
+@enduml
