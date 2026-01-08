@@ -1,0 +1,182 @@
+@startuml Conflict Detection Flow
+title Conflict Detection and Resolution Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Calendar Page" as CalendarPage
+participant "Conflict Service" as ConflictService
+participant "Conflicts Controller" as ConflictsController
+participant "Events Controller" as EventsController
+participant "Notification Service" as NotificationService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+== Automatic Conflict Detection (on Event Create/Modify) ==
+note over ConflictService
+  Triggered when EventCreated
+  or EventModified domain event
+  is published
+end note
+
+ConflictService -> ConflictsController: DetectConflicts(eventId)
+activate ConflictsController
+
+ConflictsController -> DbContext: Get event details
+activate DbContext
+DbContext -> DB: SELECT * FROM Events\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Event details
+deactivate DB
+deactivate DbContext
+
+ConflictsController -> DbContext: Query overlapping events\nfor each attendee
+activate DbContext
+DbContext -> DB: SELECT e.*, ea.FamilyMemberId\nFROM Events e\nJOIN EventAttendees ea\nON e.EventId = ea.EventId\nWHERE ea.FamilyMemberId IN\n  (SELECT FamilyMemberId\n   FROM EventAttendees\n   WHERE EventId = @eventId)\nAND e.EventId != @eventId\nAND e.StartTime < @endTime\nAND e.EndTime > @startTime\nAND e.TenantId = @tenantId
+activate DB
+DB --> DbContext: Overlapping events
+deactivate DB
+deactivate DbContext
+
+alt Conflicts found
+    ConflictsController -> ConflictsController: Calculate:\n- Overlap duration\n- Affected family members\n- Conflict severity
+
+    ConflictsController -> DbContext: Create ScheduleConflict records
+    activate DbContext
+    DbContext -> DB: INSERT INTO ScheduleConflicts\n(ConflictId, EventId1, EventId2,\nAffectedFamilyMembers,\nOverlapDuration, Severity,\nDetectedAt, IsResolved)
+    activate DB
+    DB --> DbContext: Conflicts recorded
+    deactivate DB
+    deactivate DbContext
+
+    ConflictsController -> NotificationService: NotifyConflicts(conflicts)
+    activate NotificationService
+    note right
+      Send notifications to:
+      - Event creator
+      - Affected family members
+    end note
+    NotificationService --> ConflictsController: Notifications sent
+    deactivate NotificationService
+
+    ConflictsController -> ConflictsController: Generate resolution suggestions:\n- Reschedule event\n- Remove conflicting attendee\n- Keep both (double-booking)
+
+else No conflicts
+    note over ConflictsController
+      No action needed
+    end note
+end
+
+deactivate ConflictsController
+
+== View Conflicts ==
+User -> CalendarPage: Navigate to calendar
+activate CalendarPage
+
+CalendarPage -> ConflictService: getActiveConflicts()
+activate ConflictService
+
+ConflictService -> ConflictsController: GET /api/conflicts?status=unresolved
+activate ConflictsController
+
+ConflictsController -> DbContext: Query unresolved conflicts
+activate DbContext
+DbContext -> DB: SELECT sc.*,\ne1.Title as Event1Title,\ne1.StartTime as Event1Start,\ne2.Title as Event2Title,\ne2.StartTime as Event2Start,\nfm.Name as AffectedMember\nFROM ScheduleConflicts sc\nJOIN Events e1 ON sc.EventId1 = e1.EventId\nJOIN Events e2 ON sc.EventId2 = e2.EventId\nJOIN FamilyMembers fm\nON fm.FamilyMemberId IN\n  (sc.AffectedFamilyMembers)\nWHERE sc.IsResolved = 0\nAND sc.TenantId = @tenantId\nORDER BY sc.Severity DESC
+activate DB
+DB --> DbContext: Unresolved conflicts
+deactivate DB
+deactivate DbContext
+
+ConflictsController --> ConflictService: 200 OK\n{conflicts with details}
+deactivate ConflictsController
+
+ConflictService --> CalendarPage: Conflict list
+deactivate ConflictService
+
+CalendarPage -> CalendarPage: Highlight conflicting\nevents in red
+
+CalendarPage --> User: Display conflicts with\nwarning indicators
+deactivate CalendarPage
+
+== Resolve Conflict ==
+User -> CalendarPage: Click on conflict warning
+activate CalendarPage
+
+CalendarPage --> User: Display conflict details\nand resolution options
+
+User -> CalendarPage: Select resolution method
+
+alt Option 1: Reschedule Event
+    User -> CalendarPage: Choose new time slot
+    CalendarPage -> EventsController: PUT /api/events/{eventId}
+    activate EventsController
+    note right
+      Update event time
+    end note
+    EventsController -> DbContext: Update event
+    activate DbContext
+    DbContext -> DB: UPDATE Events SET\nStartTime = @newStart,\nEndTime = @newEnd\nWHERE EventId = @eventId
+    activate DB
+    DB --> DbContext: Event updated
+    deactivate DB
+    deactivate DbContext
+
+    EventsController -> ConflictService: ReCheckConflicts(eventId)
+    activate ConflictService
+    ConflictService --> EventsController: No conflicts after reschedule
+    deactivate ConflictService
+
+    EventsController --> CalendarPage: Event rescheduled
+    deactivate EventsController
+
+else Option 2: Remove Conflicting Attendee
+    User -> CalendarPage: Remove attendee from\none of the events
+    CalendarPage -> EventsController: DELETE /api/events/{eventId}/attendees/{memberId}
+    activate EventsController
+
+    EventsController -> DbContext: Remove attendee
+    activate DbContext
+    DbContext -> DB: DELETE FROM EventAttendees\nWHERE EventId = @eventId\nAND FamilyMemberId = @memberId
+    activate DB
+    DB --> DbContext: Attendee removed
+    deactivate DB
+    deactivate DbContext
+
+    EventsController --> CalendarPage: Attendee removed
+    deactivate EventsController
+
+else Option 3: Mark as Resolved (Accept double-booking)
+    User -> CalendarPage: Mark conflict as resolved
+    CalendarPage -> ConflictService: resolveConflict(conflictId, "accepted")
+    activate ConflictService
+
+    ConflictService -> ConflictsController: PUT /api/conflicts/{conflictId}/resolve
+    activate ConflictsController
+    note right
+      Request Body:
+      {
+        "resolutionMethod": "accepted",
+        "notes": "User accepts\n  double-booking"
+      }
+    end note
+
+    ConflictsController -> DbContext: Update conflict status
+    activate DbContext
+    DbContext -> DB: UPDATE ScheduleConflicts SET\nIsResolved = 1,\nResolvedAt = GETUTCDATE(),\nResolvedBy = @userId,\nResolutionMethod = @method,\nResolutionNotes = @notes\nWHERE ConflictId = @conflictId
+    activate DB
+    DB --> DbContext: Conflict marked resolved
+    deactivate DB
+    deactivate DbContext
+
+    ConflictsController --> ConflictService: Conflict resolved
+    deactivate ConflictsController
+
+    ConflictService --> CalendarPage: Resolution recorded
+    deactivate ConflictService
+end
+
+CalendarPage -> CalendarPage: Refresh calendar view
+CalendarPage -> CalendarPage: Remove conflict warning
+
+CalendarPage --> User: Display success message
+deactivate CalendarPage
+
+@enduml
