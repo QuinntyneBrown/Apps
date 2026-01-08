@@ -1,0 +1,121 @@
+@startuml
+title Setup Recurring Donation - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Recurring Donation\nForm" as form
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "ScheduleRecurringDonation\nCommand Handler" as handler
+participant "RecurringDonation\nAggregate" as aggregate
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: Click "Setup Recurring"
+activate dashboard
+
+dashboard -> form: Open recurring donation form
+activate form
+
+form --> user: Display form fields\n(Organization, Amount,\nFrequency, Start Date,\nEnd Date, Payment Method)
+
+user -> form: Select organization
+user -> form: Enter amount
+user -> form: Select frequency\n(Weekly, Monthly, Quarterly, etc.)
+user -> form: Pick start date\n(minimum tomorrow)
+user -> form: Optional: Set end date
+user -> form: Select payment method
+
+form -> form: Calculate projected annual total
+form -> form: Calculate next 3 scheduled dates
+
+form --> user: Display projected total:\n"Annual projection: $X,XXX"
+form --> user: Show next 3 donation dates
+
+user -> form: Click "Schedule"
+
+form -> validator: Validate form data
+activate validator
+
+validator -> validator: Check required fields
+validator -> validator: Validate amount > 0
+validator -> validator: Ensure start date is future
+validator -> validator: Verify end date > start date\n(if provided)
+
+alt Validation Fails
+    validator --> form: Return validation errors
+    form --> user: Display error messages
+else Validation Succeeds
+    validator --> form: Validation passed
+    deactivate validator
+
+    form -> api: POST /api/donations/recurring\n{organizationId, amount,\nfrequency, startDate,\nendDate, paymentMethod}
+    activate api
+
+    form --> user: Show loading spinner
+
+    api -> handler: Execute ScheduleRecurringDonationCommand
+    activate handler
+
+    handler -> handler: Validate OrganizationId exists
+    handler -> handler: Validate amount > 0
+    handler -> handler: Ensure start date is valid
+    handler -> handler: Calculate NextScheduledDate\nbased on frequency
+
+    handler -> aggregate: Create RecurringDonation aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Set RecurringDonationId (GUID)
+    aggregate -> aggregate: Set UserId from context
+    aggregate -> aggregate: Set frequency and dates
+    aggregate -> aggregate: Calculate NextScheduledDate
+    aggregate -> aggregate: Set IsActive = true
+    aggregate -> aggregate: Initialize DonationsMade = 0
+    aggregate -> aggregate: Initialize TotalDonated = 0
+
+    aggregate -> db: INSERT INTO RecurringDonations
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate -> events: Publish RecurringDonationScheduled event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> handler: Return RecurringDonationId
+    deactivate aggregate
+
+    handler --> api: 201 Created\n{recurringDonationId, nextScheduledDate}
+    deactivate handler
+
+    api --> form: Success response\nwith schedule details
+    deactivate api
+
+    form --> user: Display success message:\n"Recurring donation scheduled!\nYour first donation will be\nprocessed on [date]."
+
+    form --> user: Show confirmation with:\n- Next donation date\n- Frequency\n- Projected annual total
+
+    form -> form: Close modal
+    deactivate form
+
+    dashboard -> api: GET /api/donations/recurring?activeOnly=true
+    activate api
+    api -> db: Query active recurring donations
+    db --> api: Recurring donations list
+    api --> dashboard: Return recurring donations
+    deactivate api
+
+    dashboard -> dashboard: Update upcoming\nrecurring donations widget
+    dashboard --> user: Show updated dashboard\nwith new recurring schedule
+    deactivate dashboard
+end
+
+note right of events
+  Background Job will execute
+  recurring donation on
+  scheduled date and create
+  actual Donation records
+end note
+
+@enduml
