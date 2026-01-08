@@ -1,0 +1,174 @@
+@startuml packing-list
+title Packing List Flow - Manage Trip Packing Items
+
+actor User
+participant "Trip Detail Page" as UI
+participant "Packing List Component" as PackingUI
+participant "Add Item Modal" as Modal
+participant "PackingItem Service" as ItemSvc
+participant "PackingItems Controller" as ItemCtrl
+participant "CreatePackingItem Command" as CreateCmd
+participant "UpdatePackingItem Command" as UpdateCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to trip details
+activate UI
+
+UI -> PackingUI: Activate Packing List tab
+activate PackingUI
+
+PackingUI -> ItemSvc: getPackingItemsByTrip(tripId)
+activate ItemSvc
+
+ItemSvc -> ItemCtrl: GET /api/trips/{tripId}/packing-items
+activate ItemCtrl
+
+ItemCtrl -> DbContext: PackingItems.Where(p => p.TripId == tripId)\n.OrderBy(p => p.Category)\n(Filtered by TenantId)
+activate DbContext
+DbContext -> DB: SELECT * FROM PackingItems\nWHERE TripId = ? AND TenantId = ?\nORDER BY Category
+activate DB
+DB --> DbContext: PackingItem records
+deactivate DB
+DbContext --> ItemCtrl: List<PackingItem>
+deactivate DbContext
+
+ItemCtrl --> ItemSvc: 200 OK\n(List<PackingItemDto>)
+deactivate ItemCtrl
+
+ItemSvc --> PackingUI: Packing items data
+deactivate ItemSvc
+
+PackingUI -> PackingUI: Group items by category\n(Clothing, Toiletries, Electronics, etc.)\nCalculate completion percentage
+
+PackingUI --> User: Display packing list\n(with checked/unchecked items)
+
+User -> PackingUI: Click "Add Item"
+
+PackingUI -> Modal: Open Add Item Modal
+activate Modal
+
+Modal --> User: Display item form
+
+User -> Modal: Enter item details\n(name, category, quantity,\nassignee)
+
+Modal -> Modal: Validate form inputs
+
+User -> Modal: Click "Save"
+
+Modal -> ItemSvc: createPackingItem(itemData)
+activate ItemSvc
+
+ItemSvc -> ItemCtrl: POST /api/trips/{tripId}/packing-items
+activate ItemCtrl
+
+ItemCtrl -> CreateCmd: Handle CreatePackingItemCommand
+activate CreateCmd
+
+CreateCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> CreateCmd: TenantId
+deactivate TenantCtx
+
+CreateCmd -> CreateCmd: Create PackingItem entity\n(with TenantId and TripId)\n(IsPacked = false)
+
+CreateCmd -> DbContext: PackingItems.Add(packingItem)
+activate DbContext
+DbContext -> DB: INSERT INTO PackingItems\n(PackingItemId, TripId, Name,\nCategory, Quantity, IsPacked, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChanges()
+DbContext --> CreateCmd: Item saved
+deactivate DbContext
+
+CreateCmd --> ItemCtrl: CreatePackingItemResponse
+deactivate CreateCmd
+
+ItemCtrl --> ItemSvc: 201 Created\n(PackingItemDto)
+deactivate ItemCtrl
+
+ItemSvc --> Modal: Success
+deactivate ItemSvc
+
+Modal -> Modal: Close modal
+
+Modal --> PackingUI: Item created
+deactivate Modal
+
+PackingUI -> ItemSvc: getPackingItemsByTrip(tripId)
+activate ItemSvc
+
+ItemSvc -> ItemCtrl: GET /api/trips/{tripId}/packing-items
+activate ItemCtrl
+
+ItemCtrl -> DbContext: PackingItems.Where(p => p.TripId == tripId)\n.OrderBy(p => p.Category)
+activate DbContext
+DbContext -> DB: SELECT * FROM PackingItems\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Updated items
+deactivate DB
+DbContext --> ItemCtrl: List<PackingItem>
+deactivate DbContext
+
+ItemCtrl --> ItemSvc: 200 OK\n(List<PackingItemDto>)
+deactivate ItemCtrl
+
+ItemSvc --> PackingUI: Updated items
+deactivate ItemSvc
+
+PackingUI -> PackingUI: Regroup items\nRecalculate completion %
+
+PackingUI --> User: Display updated list
+
+== Toggle Item Packed Status ==
+
+User -> PackingUI: Click checkbox on item
+
+PackingUI -> ItemSvc: togglePackedStatus(itemId, isPacked)
+activate ItemSvc
+
+ItemSvc -> ItemCtrl: PATCH /api/packing-items/{itemId}
+activate ItemCtrl
+
+ItemCtrl -> UpdateCmd: Handle UpdatePackingItemCommand
+activate UpdateCmd
+
+UpdateCmd -> DbContext: PackingItems.Find(itemId)
+activate DbContext
+DbContext -> DB: SELECT * FROM PackingItems\nWHERE PackingItemId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: PackingItem record
+deactivate DB
+DbContext --> UpdateCmd: PackingItem entity
+deactivate DbContext
+
+UpdateCmd -> UpdateCmd: Update IsPacked status
+
+UpdateCmd -> DbContext: SaveChanges()
+activate DbContext
+DbContext -> DB: UPDATE PackingItems\nSET IsPacked = ?\nWHERE PackingItemId = ?
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> UpdateCmd: Changes saved
+deactivate DbContext
+
+UpdateCmd --> ItemCtrl: UpdatePackingItemResponse
+deactivate UpdateCmd
+
+ItemCtrl --> ItemSvc: 200 OK\n(Updated PackingItemDto)
+deactivate ItemCtrl
+
+ItemSvc --> PackingUI: Item updated
+deactivate ItemSvc
+
+PackingUI -> PackingUI: Update UI\nRecalculate completion %
+
+PackingUI --> User: Display updated status\n(item checked/unchecked)
+deactivate PackingUI
+deactivate UI
+
+@enduml
