@@ -1,0 +1,91 @@
+@startuml Pain Tracking Flow
+title Pain Tracking Flow
+
+actor User
+participant "Pain Tracking Page" as UI
+participant "Pain Entry Form" as Form
+participant "Pain Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+User -> UI: Navigate to Pain Tracking
+UI -> Service: Observable: painEntries$\n= getPainEntries(injuryId)
+Service -> API: GET /api/injuries/{injuryId}/pain-entries
+
+API -> DB: Query pain entries\n(tenant-scoped)
+DB --> API: List<PainEntry>
+API --> Service: PainEntryDto[]
+Service --> UI: Display pain history\n(chart & list)
+
+UI --> User: Show pain tracking interface\nwith history chart
+
+User -> UI: Click "Log Pain Level"
+UI -> Form: Open pain entry form
+Form --> User: Display form\n(pain level slider, notes, location)
+
+User -> Form: Set pain level (1-10)\nAdd notes & location
+User -> Form: Submit entry
+
+Form -> Form: Validate input
+Form -> Service: createPainEntry(painEntryDto)
+Service -> API: POST /api/injuries/{injuryId}/pain-entries
+
+API -> Handler: Handle CreatePainEntryCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+
+Handler -> DB: Query injury\n(verify ownership & tenant)
+DB --> Handler: Injury entity
+
+alt Injury not found or wrong tenant
+    Handler --> API: 404 Not Found
+    API --> Service: Error response
+    Service --> Form: Show error
+    Form --> User: "Injury not found"
+else Valid injury
+    Handler -> Handler: Create PainEntry entity\n(with TenantId, InjuryId)
+    Handler -> DB: Save pain entry
+    DB --> Handler: PainEntry saved
+
+    Handler -> Events: Publish PainEntryLogged event
+    Handler --> API: 201 Created
+
+    API --> Service: Success response
+    Service --> Form: Entry created
+    Form -> Form: Close form
+    Form -> UI: Refresh pain entries
+
+    UI -> Service: getPainEntries(injuryId)
+    Service -> API: GET /api/injuries/{injuryId}/pain-entries
+    API -> DB: Query pain entries
+    DB --> API: Updated list
+    API --> Service: PainEntryDto[]
+    Service --> UI: Update chart & list
+
+    UI --> User: Show updated pain chart\nwith new entry
+end
+
+note right of Handler
+  PainEntry entity:
+  - PainEntryId (Guid)
+  - TenantId (Guid)
+  - InjuryId (Guid)
+  - PainLevel (1-10)
+  - Location
+  - Notes
+  - Timestamp
+end note
+
+note left of UI
+  Pain Chart shows:
+  - Pain level trends
+  - Time series graph
+  - Average pain level
+  - Min/Max indicators
+  - Recent entries list
+end note
+
+@enduml
