@@ -1,0 +1,237 @@
+@startuml
+title Session Tracking Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Session Library\nPage" as Library
+participant "Session Detail\nPage" as Detail
+participant "Notes Editor\nComponent" as NotesEditor
+participant "SessionService" as Svc
+participant "SessionsController\n/api/sessions" as API
+participant "Command Handlers" as Handlers
+participant "IConferenceEventManagerContext" as DbContext
+database "Database" as DB
+
+User -> Library: Navigate to Sessions Library
+activate Library
+
+Library -> Svc: getSessions$()
+activate Svc
+
+Svc -> API: GET /api/sessions\nAuthorization: Bearer {token}
+activate API
+API -> DbContext: Query sessions\nFiltered by TenantId
+activate DbContext
+DbContext -> DB: SELECT Sessions
+activate DB
+DB --> DbContext: Session records
+deactivate DB
+deactivate DbContext
+API --> Svc: SessionDto[]
+deactivate API
+
+Svc --> Library: Observable<SessionDto[]>
+deactivate Svc
+
+Library -> User: Display sessions list\n- Filter by conference\n- Filter by track\n- Search by title/speaker
+
+User -> Library: Click on session
+
+Library -> Detail: Navigate to session detail
+activate Detail
+
+Detail -> Svc: getSession$(sessionId)
+activate Svc
+
+Svc -> API: GET /api/sessions/{id}
+activate API
+API -> DbContext: Query session by id
+activate DbContext
+DbContext -> DB: SELECT Session details
+activate DB
+DB --> DbContext: Session data
+deactivate DB
+deactivate DbContext
+API --> Svc: SessionDto
+deactivate API
+
+Svc --> Detail: Session details
+deactivate Svc
+
+Detail -> User: Display session info\n- Title, speakers, time\n- Track, description\n- Action buttons
+
+== Mark Session Attended ==
+
+User -> Detail: Click "Mark Attended"
+
+Detail -> Svc: attendSession(sessionId)
+activate Svc
+
+Svc -> API: POST /api/sessions/{id}/attend
+activate API
+
+API -> Handlers: AttendSessionCommand
+activate Handlers
+
+Handlers -> DbContext: Update session status
+activate DbContext
+DbContext -> DB: UPDATE SessionAttendance
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise SessionAttended\ndomain event
+
+Handlers --> API: Success
+deactivate Handlers
+
+API --> Svc: 200 OK
+deactivate API
+
+Svc --> Detail: Session marked attended
+deactivate Svc
+
+Detail -> User: Show success notification
+
+== Take Notes ==
+
+User -> Detail: Click "Take Notes"
+
+Detail -> NotesEditor: Open notes editor
+activate NotesEditor
+
+NotesEditor -> Svc: getSessionNotes$(sessionId)
+activate Svc
+
+Svc -> API: GET /api/sessions/{id}/notes
+activate API
+API -> DbContext: Query existing notes
+activate DbContext
+DbContext -> DB: SELECT SessionNotes
+activate DB
+DB --> DbContext: Notes (if exist)
+deactivate DB
+deactivate DbContext
+API --> Svc: SessionNotesDto
+deactivate API
+
+Svc --> NotesEditor: Existing notes
+deactivate Svc
+
+NotesEditor -> User: Display notes editor\n- Rich text editor\n- Action items section\n- Key takeaways
+
+User -> NotesEditor: Type notes & action items
+
+User -> NotesEditor: Click "Save Notes"
+
+NotesEditor -> Svc: saveSessionNotes(sessionId, notes)
+activate Svc
+
+Svc -> API: POST /api/sessions/{id}/notes\n{content, actionItems}
+activate API
+
+API -> Handlers: CreateSessionNotesCommand
+activate Handlers
+
+Handlers -> DbContext: Save session notes
+activate DbContext
+DbContext -> DB: INSERT/UPDATE SessionNotes
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise SessionNotesCreated\ndomain event
+
+Handlers --> API: SessionNotesDto
+deactivate Handlers
+
+API --> Svc: 201 Created
+deactivate API
+
+Svc --> NotesEditor: Notes saved
+deactivate Svc
+
+NotesEditor -> User: Show success notification
+
+deactivate NotesEditor
+
+== Rate Session ==
+
+User -> Detail: Click star rating (1-5)
+
+Detail -> Svc: rateSession(sessionId, rating)
+activate Svc
+
+Svc -> API: POST /api/sessions/{id}/rate\n{rating: 4}
+activate API
+
+API -> Handlers: RateSessionCommand
+activate Handlers
+
+Handlers -> DbContext: Save session rating
+activate DbContext
+DbContext -> DB: INSERT/UPDATE SessionRating
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise SessionRated\ndomain event
+
+Handlers --> API: Success
+deactivate Handlers
+
+API --> Svc: 200 OK
+deactivate API
+
+Svc --> Detail: Rating saved
+deactivate Svc
+
+Detail -> User: Update rating display
+
+== Schedule Speaker Follow-up ==
+
+User -> Detail: Click "Follow-up with Speaker"
+
+Detail -> User: Show follow-up dialog\n- Select date\n- Add notes
+
+User -> Detail: Confirm follow-up
+
+Detail -> Svc: scheduleFollowUp(sessionId, date, notes)
+activate Svc
+
+Svc -> API: POST /api/sessions/{id}/follow-up\n{date, notes}
+activate API
+
+API -> Handlers: ScheduleSpeakerFollowUpCommand
+activate Handlers
+
+Handlers -> DbContext: Create follow-up task
+activate DbContext
+DbContext -> DB: INSERT FollowUpTask
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise SpeakerFollowUpScheduled\ndomain event
+
+Handlers --> API: FollowUpDto
+deactivate Handlers
+
+API --> Svc: 201 Created
+deactivate API
+
+Svc --> Detail: Follow-up scheduled
+deactivate Svc
+
+Detail -> User: Show success notification
+
+deactivate Detail
+deactivate Library
+
+@enduml
