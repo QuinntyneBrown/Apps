@@ -1,0 +1,42 @@
+@startuml User Authentication Flow
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthService
+participant "API Gateway" as API
+participant "Auth Controller" as AuthController
+participant "Identity Service" as IdentityService
+database "User Database" as DB
+
+User -> UI: Enter username and password
+User -> UI: Click "Login" button
+UI -> UI: Validate form inputs
+
+UI -> AuthService: authenticate(username, password)
+AuthService -> API: POST /api/auth/login
+API -> AuthController: login(credentials)
+
+AuthController -> IdentityService: validateCredentials(username, password)
+IdentityService -> DB: getUserByUsername(username)
+DB --> IdentityService: User record
+
+IdentityService -> IdentityService: Hash password with salt\nusing PBKDF2-SHA256
+IdentityService -> IdentityService: Compare hashed password
+
+alt Valid Credentials
+    IdentityService -> IdentityService: Generate JWT token\n(sub, name, email, roles)
+    IdentityService --> AuthController: token, user info
+    AuthController --> API: 200 OK\n{token, expiresAt, user}
+    API --> AuthService: Authentication successful
+    AuthService -> AuthService: Store token in localStorage
+    AuthService --> UI: Login successful
+    UI -> UI: Redirect to Dashboard
+    UI --> User: Display Dashboard
+else Invalid Credentials
+    IdentityService --> AuthController: Invalid credentials
+    AuthController --> API: 401 Unauthorized\n{error: "Invalid username or password"}
+    API --> AuthService: Authentication failed
+    AuthService --> UI: Login failed
+    UI --> User: Display error message
+end
+
+@enduml
