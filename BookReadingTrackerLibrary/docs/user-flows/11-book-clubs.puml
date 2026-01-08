@@ -1,0 +1,180 @@
+@startuml Book Clubs Flow
+title Book Clubs and Reading Sessions Flow
+
+actor User
+participant "Book Clubs Page" as ClubsUI
+participant "Create Club Modal" as CreateModal
+participant "Club Detail Page" as ClubDetailUI
+participant "Schedule Session Modal" as SessionModal
+participant "Session Detail Page" as SessionUI
+participant "API Gateway" as API
+participant "Social Reading Controller" as Controller
+participant "Book Club Manager" as Manager
+database "Database" as DB
+
+== View Book Clubs ==
+User -> ClubsUI: Navigate to /book-clubs
+ClubsUI -> API: GET /api/book-clubs?\nuserId={userId}
+API -> Controller: GetUserBookClubs(userId)
+Controller -> Manager: GetBookClubsAsync(userId)
+Manager -> DB: SELECT book_clubs bc\nLEFT JOIN club_members cm\nON bc.id=cm.clubId\nWHERE cm.userId={userId}
+DB --> Manager: User's book clubs
+Manager -> DB: SELECT upcoming sessions\nFOR each club
+DB --> Manager: Upcoming sessions
+Manager --> Controller: ClubsWithSessions
+Controller --> API: 200 OK\n{bookClubs, upcomingSessions}
+API --> ClubsUI: Club data
+ClubsUI --> User: Display book club cards\n(next session, member count)
+
+== Create Book Club ==
+User -> ClubsUI: Click "Create Book Club"
+ClubsUI -> CreateModal: Open CreateBookClubModal
+CreateModal --> User: Display club creation form
+
+User -> CreateModal: Enter club name\n"Tech Book Club"
+User -> CreateModal: Add description\n"Monthly discussions on tech books"
+User -> CreateModal: Set visibility\n(Private / Public)
+User -> CreateModal: Upload club image (optional)
+User -> CreateModal: Set meeting frequency\n(Weekly / Bi-weekly / Monthly)
+User -> CreateModal: Click "Create Club"
+
+CreateModal -> CreateModal: Validate form\n(name required)
+
+alt Valid Form
+    CreateModal -> API: POST /api/book-clubs\n{name, description, visibility,\nfrequency, image}
+    API -> Controller: CreateBookClub(request)
+    Controller -> Manager: CreateClubAsync(club)
+    Manager -> DB: INSERT book_club\n{name, description, visibility,\ncreatedBy, frequency}
+    DB --> Manager: Club ID
+    Manager -> DB: INSERT club_member\n{clubId, userId, role: 'Admin'}
+    DB --> Manager: Membership created
+    Manager --> Controller: BookClubCreated\n{clubId, club}
+    Controller --> API: 201 Created\n{club}
+    API --> CreateModal: Success
+    CreateModal -> CreateModal: Close modal
+    CreateModal -> ClubDetailUI: Navigate to /book-clubs/{id}
+    ClubDetailUI --> User: Display new club page
+else Invalid Form
+    CreateModal --> User: Display validation errors
+end
+
+== View Club Details ==
+User -> ClubDetailUI: Navigate to /book-clubs/{id}
+ClubDetailUI -> API: GET /api/book-clubs/{id}
+API -> Controller: GetBookClubById(id)
+Controller -> Manager: GetClubDetailsAsync(id)
+Manager -> DB: SELECT book_club\nWHERE id={id}
+DB --> Manager: Club details
+Manager -> DB: SELECT club_members\nWHERE clubId={id}
+DB --> Manager: Member list
+Manager -> DB: SELECT sessions\nWHERE clubId={id}\nORDER BY sessionDate DESC
+DB --> Manager: Session history
+Manager -> DB: SELECT current_book\nFROM club_readings\nWHERE clubId={id}\nAND status='Current'
+DB --> Manager: Current book
+Manager --> Controller: CompleteClubDetails\n{club, members, sessions, currentBook}
+Controller --> API: 200 OK\n{clubDetails}
+API --> ClubDetailUI: Club data
+ClubDetailUI --> User: Display club page\n(info, members, sessions, current book)
+
+== Schedule Session ==
+User -> ClubDetailUI: Click "Schedule Session"
+ClubDetailUI -> SessionModal: Open ScheduleSessionModal
+SessionModal --> User: Display session form
+
+User -> SessionModal: Select book for discussion
+SessionModal -> SessionModal: Show book selector\n(from club's reading list)
+User -> SessionModal: Select date and time
+User -> SessionModal: Add location/platform\n"Zoom / Coffee Shop"
+User -> SessionModal: Add discussion topics\n"Character development,\nPlot twists"
+User -> SessionModal: Specify reading sections\n"Chapters 1-5"
+User -> SessionModal: Select participants\n(multi-select from members)
+User -> SessionModal: Click "Schedule Session"
+
+SessionModal -> SessionModal: Validate form\n(book, date, location required)
+
+alt Valid Form
+    SessionModal -> API: POST /api/book-clubs/{clubId}/sessions\n{bookId, date, location,\ntopics, sections, participants}
+    API -> Controller: ScheduleSession(clubId, request)
+    Controller -> Manager: CreateSessionAsync(clubId, session)
+    Manager -> DB: INSERT club_session\n{clubId, bookId, sessionDate,\nlocation, topics, sections}
+    DB --> Manager: Session ID
+    Manager -> DB: INSERT session_participants\n{sessionId, userIds[]}
+    DB --> Manager: Participants added
+    Manager -> Manager: Send invitations\nto participants
+    Manager --> Controller: SessionScheduled\n{sessionId, session}
+    Controller --> API: 201 Created\n{session}
+    API --> SessionModal: Success
+    SessionModal -> SessionModal: Close modal
+    SessionModal -> ClubDetailUI: Refresh club page
+    ClubDetailUI --> User: Show new session\nin upcoming list
+else Invalid Form
+    SessionModal --> User: Display validation errors
+end
+
+== Join Session ==
+User -> ClubDetailUI: View upcoming session
+User -> ClubDetailUI: Click "Join Session" / "RSVP"
+ClubDetailUI -> API: POST /api/book-clubs/sessions/{id}/rsvp\n{userId, attending: true}
+API -> Controller: RSVPToSession(sessionId, userId, status)
+Controller -> Manager: RecordRSVPAsync(sessionId, userId, attending)
+Manager -> DB: UPDATE session_participant\nSET rsvpStatus='Attending'\nWHERE sessionId={id}\nAND userId={userId}
+DB --> Manager: RSVP recorded
+Manager --> Controller: RSVPRecorded
+Controller --> API: 200 OK
+API --> ClubDetailUI: Success
+ClubDetailUI -> ClubDetailUI: Update session card\n(show RSVP status)
+ClubDetailUI --> User: Show confirmation\n"RSVP confirmed!"
+
+== Record Session Notes ==
+User -> SessionUI: Navigate to session\n/book-clubs/sessions/{id}
+SessionUI -> API: GET /api/book-clubs/sessions/{id}
+API -> Controller: GetSessionDetails(id)
+Controller -> Manager: GetSessionAsync(id)
+Manager -> DB: SELECT session details\nwith participants
+DB --> Manager: Session data
+Manager --> Controller: SessionDetails
+Controller --> API: 200 OK\n{session}
+API --> SessionUI: Session data
+SessionUI --> User: Display session page\n(info, participants, topics)
+
+User -> SessionUI: Click "Add Discussion Notes"
+SessionUI -> SessionUI: Open notes editor
+SessionUI --> User: Display rich text editor
+
+User -> SessionUI: Write discussion notes\n"Great insights on...",\nUser -> SessionUI: Tag discussion topics
+User -> SessionUI: Add key insights\n"Theme of redemption..."
+User -> SessionUI: Note participants' views
+User -> SessionUI: Click "Save Notes"
+
+SessionUI -> SessionUI: Validate form\n(notes required)
+
+alt Valid Form
+    SessionUI -> API: POST /api/book-clubs/sessions/{id}/participation\n{userId, notes, insights}
+    API -> Controller: RecordParticipation(sessionId, data)
+    Controller -> Manager: SaveParticipationAsync(sessionId, participation)
+    Manager -> DB: INSERT club_participation\n{sessionId, userId, notes,\ninsights, topics}
+    DB --> Manager: Participation ID
+    Manager -> DB: UPDATE session_participant\nSET participated=true
+    DB --> Manager: Updated
+    Manager --> Controller: ParticipationRecorded
+    Controller --> API: 201 Created\n{participation}
+    API --> SessionUI: Success
+    SessionUI --> User: Show success notification\n"Notes saved!"
+
+    alt Share with Club
+        User -> SessionUI: Check "Share with club"
+        SessionUI -> API: PUT /api/participation/{id}\nSET visibility='Club'
+        API -> Controller: UpdateVisibility
+        Controller -> Manager: UpdateVisibilityAsync
+        Manager -> DB: UPDATE visibility
+        DB --> Manager: Updated
+        Manager --> Controller: Updated
+        Controller --> API: 200 OK
+        API --> SessionUI: Success
+        SessionUI --> User: "Notes shared with club!"
+    end
+else Invalid Form
+    SessionUI --> User: Display validation errors
+end
+
+@enduml
