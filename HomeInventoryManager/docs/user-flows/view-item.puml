@@ -1,0 +1,73 @@
+@startuml view-item
+title View Item Details Flow
+
+actor User
+participant "Items Dashboard\nor Search Results" as Dashboard
+participant "Item Details Page\n(/items/:id)" as DetailsPage
+participant "Item Service" as ItemService
+participant "API Controller\n(/api/items)" as API
+participant "GetItem Handler" as Handler
+database "Items Table" as ItemsDB
+database "ItemPhotos Table" as PhotosDB
+database "Categories Table" as CategoriesDB
+database "Locations Table" as LocationsDB
+
+User -> Dashboard: Click on item card\nor select from list
+Dashboard -> DetailsPage: Navigate to /items/{itemId}
+
+activate DetailsPage
+DetailsPage -> ItemService: getItem(itemId)
+ItemService -> API: GET /api/items/{itemId}\nAuthorization: Bearer {token}
+
+API -> Handler: Handle GetItemByIdQuery
+Handler -> ItemsDB: Query item by ItemId and TenantId
+ItemsDB --> Handler: Item record
+
+alt Item found and user authorized
+    Handler -> PhotosDB: Query photos for item
+    PhotosDB --> Handler: Photo list
+
+    Handler -> CategoriesDB: Query category details
+    CategoriesDB --> Handler: Category info
+
+    Handler -> LocationsDB: Query location details
+    LocationsDB --> Handler: Location info
+
+    Handler -> Handler: Build ItemDto with:\n- Item details\n- Photo gallery\n- Category name\n- Location name\n- Activity timeline
+
+    Handler --> API: ItemDto
+    API --> ItemService: 200 OK\n{itemDetails}
+    ItemService --> DetailsPage: Item data
+
+    DetailsPage -> DetailsPage: Organize content:\n- Photo gallery (primary + thumbnails)\n- Item information sections\n- Purchase details\n- Current value\n- Condition and status\n- Activity timeline
+
+    DetailsPage --> User: Display item details with:\n- Photo gallery\n- All item information\n- Edit button\n- Quick actions\n- Activity history
+
+    User -> DetailsPage: View photos
+    DetailsPage -> DetailsPage: Show photo in lightbox\nwith zoom and pan
+
+    alt User wants to edit
+        User -> DetailsPage: Click "Edit" button
+        DetailsPage -> DetailsPage: Navigate to edit page
+    end
+
+    alt User wants to change location
+        User -> DetailsPage: Click "Change Location"
+        DetailsPage -> DetailsPage: Show location selector modal
+    end
+
+    alt User wants to print/export
+        User -> DetailsPage: Click "Print/Export"
+        DetailsPage -> DetailsPage: Generate printable view
+    end
+
+else Item not found or unauthorized
+    Handler --> API: 404 Not Found\nor 403 Forbidden
+    API --> ItemService: Error
+    ItemService --> DetailsPage: Item not found
+    DetailsPage --> User: Show error message:\n"Item not found" or\n"Access denied"
+end
+
+deactivate DetailsPage
+
+@enduml
