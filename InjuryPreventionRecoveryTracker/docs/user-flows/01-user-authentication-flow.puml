@@ -1,0 +1,50 @@
+@startuml User Authentication Flow
+title User Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthService
+participant "API Controller" as API
+participant "Auth Handler" as Handler
+participant "DbContext" as DB
+participant "JWT Service" as JWT
+
+User -> UI: Enter username & password
+UI -> UI: Validate form inputs
+UI -> AuthService: login(credentials)
+AuthService -> API: POST /api/auth/login
+API -> Handler: Handle LoginCommand
+
+Handler -> DB: Query User by username
+DB --> Handler: User entity
+
+Handler -> Handler: Validate password hash\n(PBKDF2 with salt)
+
+alt Invalid Credentials
+    Handler --> API: 401 Unauthorized
+    API --> AuthService: Error response
+    AuthService --> UI: Display error
+    UI --> User: Show "Invalid username or password"
+else Valid Credentials
+    Handler -> JWT: Generate JWT token\n(with claims: sub, name, email, roles)
+    JWT --> Handler: JWT token
+
+    Handler --> API: 200 OK\n(token, expiresAt, user info)
+    API --> AuthService: Success response
+    AuthService -> AuthService: Store token in localStorage
+    AuthService --> UI: Authentication success
+    UI -> UI: Redirect to dashboard
+    UI --> User: Show dashboard
+end
+
+note right of JWT
+  Token includes:
+  - User ID (sub)
+  - Username (name)
+  - Email
+  - Roles array
+  - Tenant ID (tenant_id)
+  - Expiration (24 hours)
+end note
+
+@enduml
