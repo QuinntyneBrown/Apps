@@ -1,0 +1,127 @@
+@startuml
+title Set Hydration Goals Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "Goals Settings\nPage" as GoalsPage
+participant "GoalService" as Service
+participant "GoalsController\n/api/goals" as API
+participant "CreateGoalCommand\nHandler" as CreateHandler
+participant "UpdateGoalCommand\nHandler" as UpdateHandler
+participant "ITenantContext" as TenantCtx
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Click "Settings" or "Goals" link
+activate Dashboard
+Dashboard -> GoalsPage: Navigate to goals page
+activate GoalsPage
+deactivate Dashboard
+
+GoalsPage -> Service: getActiveGoal()
+activate Service
+Service -> API: GET /api/goals/active
+activate API
+API -> DB: Goals.Where(g => g.IsActive)\n.FirstOrDefaultAsync()
+activate DB
+DB -> Database: Query active goal\n(filtered by TenantId)
+activate Database
+Database --> DB: Goal record or null
+deactivate Database
+DB --> API: Goal entity
+deactivate DB
+API --> Service: Goal DTO or 404
+deactivate API
+Service --> GoalsPage: Current goal data
+deactivate Service
+
+GoalsPage -> User: Display current settings\n(daily target, unit, activity level)
+deactivate GoalsPage
+
+User -> GoalsPage: Adjust daily water goal\n(ml or oz)
+activate GoalsPage
+GoalsPage -> GoalsPage: Validate amount > 0
+deactivate GoalsPage
+
+User -> GoalsPage: Select measurement unit\n(Milliliters / Ounces)
+activate GoalsPage
+deactivate GoalsPage
+
+User -> GoalsPage: Select activity level\n(Sedentary, Moderate, Active)
+activate GoalsPage
+deactivate GoalsPage
+
+User -> GoalsPage: Click "Save Goal" button
+activate GoalsPage
+
+alt No Existing Goal (Create)
+    GoalsPage -> Service: createGoal(goalData)
+    activate Service
+    Service -> API: POST /api/goals\n{dailyTarget, unit, activityLevel}
+    activate API
+    API -> CreateHandler: Execute(CreateGoalCommand)
+    activate CreateHandler
+    CreateHandler -> TenantCtx: Get current TenantId
+    activate TenantCtx
+    TenantCtx --> CreateHandler: TenantId (from JWT)
+    deactivate TenantCtx
+    CreateHandler -> CreateHandler: Create Goal entity\n(with TenantId, IsActive=true)
+    CreateHandler -> DB: Goals.Add(goal)
+    activate DB
+    DB -> Database: INSERT INTO Goals
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB -> DB: SaveChangesAsync()
+    DB --> CreateHandler: Goal saved
+    deactivate DB
+    CreateHandler --> API: CreateGoalResponse
+    deactivate CreateHandler
+    API --> Service: 201 Created
+    deactivate API
+    Service --> GoalsPage: Success
+    deactivate Service
+else Existing Goal (Update)
+    GoalsPage -> Service: updateGoal(goalId, goalData)
+    activate Service
+    Service -> API: PUT /api/goals/{goalId}\n{dailyTarget, unit, activityLevel}
+    activate API
+    API -> UpdateHandler: Execute(UpdateGoalCommand)
+    activate UpdateHandler
+    UpdateHandler -> DB: Goals.FindAsync(goalId)
+    activate DB
+    DB -> Database: Query goal by ID\n(filtered by TenantId)
+    activate Database
+    Database --> DB: Goal record
+    deactivate Database
+    DB --> UpdateHandler: Goal entity
+    deactivate DB
+    UpdateHandler -> UpdateHandler: Update goal properties
+    UpdateHandler -> DB: SaveChangesAsync()
+    activate DB
+    DB -> Database: UPDATE Goals
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> UpdateHandler: Changes saved
+    deactivate DB
+    UpdateHandler --> API: UpdateGoalResponse
+    deactivate UpdateHandler
+    API --> Service: 200 OK
+    deactivate API
+    Service --> GoalsPage: Success
+    deactivate Service
+end
+
+GoalsPage -> User: Display success message\n"Goal updated successfully"
+GoalsPage -> Dashboard: Navigate back to dashboard
+activate Dashboard
+Dashboard -> User: Display updated goal\nand progress
+deactivate Dashboard
+deactivate GoalsPage
+
+@enduml
