@@ -1,0 +1,92 @@
+@startuml milestone-achievement
+title Milestone Achievement Flow
+
+actor User
+participant "Milestone Timeline" as UI
+participant "Milestone Service" as MilestoneSvc
+participant "Milestones Controller" as Controller
+participant "AchieveMilestoneCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to Milestone Timeline
+activate UI
+
+UI -> UI: Display milestones\nwith achievement status
+
+User -> UI: Click "Mark as Achieved"\non a pending milestone
+
+UI -> UI: Show achievement\nconfirmation dialog
+
+User -> UI: Optionally add notes\nabout achievement
+
+User -> UI: Confirm achievement
+
+UI -> MilestoneSvc: achieveMilestone(milestoneId, notes)
+activate MilestoneSvc
+
+MilestoneSvc -> Controller: PUT /api/milestones/{id}/achieve
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: AchieveMilestoneCommand\n(milestoneId, notes)
+activate Command
+
+Command -> DbContext: Query Milestones table
+activate DbContext
+DbContext -> DB: SELECT m.*, g.TenantId\nFROM Milestones m\nJOIN Goals g ON m.GoalId = g.GoalId\nWHERE m.MilestoneId = @id\nAND g.TenantId = @tenantId
+activate DB
+DB --> DbContext: Milestone with Goal
+deactivate DB
+DbContext --> Command: Milestone entity
+deactivate DbContext
+
+Command -> Command: Validate milestone exists\nand is not already achieved
+
+Command -> Command: Update Milestone\n- Status = 'Achieved'\n- AchievedAt = Now\n- AchievementNotes = notes
+
+Command -> Command: Calculate progress\ntowards goal
+
+Command -> Command: Raise MilestoneAchieved event
+
+Command -> DbContext: Update(milestone)
+activate DbContext
+DbContext -> DB: UPDATE Milestones SET\nStatus = 'Achieved',\nAchievedAt = @achievedAt,\nAchievementNotes = @notes\nWHERE MilestoneId = @id
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'MilestoneAchieved',\nAggregateId: GoalId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: AchieveMilestoneResponse\n(MilestoneId, AchievedAt,\nProgressPercentage)
+deactivate Command
+
+Controller --> MilestoneSvc: 200 OK
+deactivate Controller
+
+MilestoneSvc --> UI: Milestone achieved successfully
+deactivate MilestoneSvc
+
+UI -> UI: Update milestone status\nto 'Achieved'
+UI -> UI: Update progress indicator
+UI -> UI: Show celebration animation
+UI --> User: Show success message\n"Milestone achieved! Great progress!"
+deactivate UI
+
+note over User, DB
+The MilestoneAchieved event may trigger:
+- Goal progress updates
+- Achievement notifications
+- Partner notifications
+- Progress chart updates
+- Next milestone suggestions
+end note
+
+@enduml
