@@ -1,0 +1,98 @@
+@startuml trip-management
+title Trip Management Flow - Create Trip
+
+actor User
+participant "Dashboard" as UI
+participant "Add Trip Modal" as Modal
+participant "Trip Service" as TripSvc
+participant "Trips Controller" as TripCtrl
+participant "CreateTrip Command" as CreateCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Click "+ New Trip"
+activate UI
+
+UI -> Modal: Open Add Trip Modal
+activate Modal
+
+Modal --> User: Display trip form
+
+User -> Modal: Enter trip details\n(name, destination, dates, description)
+
+Modal -> Modal: Validate form inputs
+
+User -> Modal: Click "Create"
+
+Modal -> TripSvc: createTrip(tripData)
+activate TripSvc
+
+TripSvc -> TripCtrl: POST /api/trips\n(Authorization: Bearer token)
+activate TripCtrl
+
+TripCtrl -> CreateCmd: Handle CreateTripCommand
+activate CreateCmd
+
+CreateCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> CreateCmd: TenantId (from JWT claims)
+deactivate TenantCtx
+
+CreateCmd -> CreateCmd: Create Trip entity\n(with TenantId)
+
+CreateCmd -> DbContext: Trips.Add(trip)
+activate DbContext
+DbContext -> DB: INSERT INTO Trips\n(TripId, Name, Destination, StartDate, EndDate, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext -> DbContext: SaveChanges()
+DbContext --> CreateCmd: Trip saved
+deactivate DbContext
+
+CreateCmd -> CreateCmd: Map Trip to TripDto
+
+CreateCmd --> TripCtrl: CreateTripResponse
+deactivate CreateCmd
+
+TripCtrl --> TripSvc: 201 Created\n(TripDto)
+deactivate TripCtrl
+
+TripSvc --> Modal: Success
+deactivate TripSvc
+
+Modal -> Modal: Close modal
+
+Modal --> UI: Trip created
+deactivate Modal
+
+UI -> UI: Refresh trips list
+
+UI -> TripSvc: getTrips()
+activate TripSvc
+
+TripSvc -> TripCtrl: GET /api/trips
+activate TripCtrl
+
+TripCtrl -> DbContext: Trips.Where(t => t.TenantId == currentTenantId)\n(Global query filter applied)
+activate DbContext
+DbContext -> DB: SELECT * FROM Trips WHERE TenantId = ?
+activate DB
+DB --> DbContext: Trip records
+deactivate DB
+DbContext --> TripCtrl: List<Trip>
+deactivate DbContext
+
+TripCtrl -> TripCtrl: Map to List<TripDto>
+
+TripCtrl --> TripSvc: 200 OK\n(List<TripDto>)
+deactivate TripCtrl
+
+TripSvc --> UI: Trips data
+deactivate TripSvc
+
+UI --> User: Display updated trips list
+deactivate UI
+
+@enduml
