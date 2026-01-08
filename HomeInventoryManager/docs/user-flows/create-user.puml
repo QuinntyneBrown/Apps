@@ -1,0 +1,88 @@
+@startuml create-user
+title Create User Flow
+
+actor Admin
+participant "User Management\nPage" as UserPage
+participant "Create User Form" as CreateForm
+participant "User Service" as UserService
+participant "API Controller\n(/api/users)" as API
+participant "CreateUser Handler" as Handler
+participant "Password Service" as PasswordService
+database "Users Table" as UsersDB
+
+Admin -> UserPage: Navigate to user management
+activate UserPage
+
+UserPage -> UserService: getUsers()
+UserService -> API: GET /api/users\nAuthorization: Bearer {token}\n(Admin role required)
+API -> UsersDB: Query all users
+UsersDB --> API: User list
+API --> UserService: Users (without passwords)
+UserService --> UserPage: Display user list
+
+UserPage --> Admin: Show user management:\n- User list\n- "Add User" button\n- User details
+
+Admin -> UserPage: Click "Add User" button
+UserPage -> CreateForm: Show create user form
+
+activate CreateForm
+CreateForm --> Admin: Display form fields:\n- Username (required, unique)\n- Email (required, unique, valid format)\n- Password (required, min 8 chars)\n- Confirm password
+
+Admin -> CreateForm: Enter username\n(e.g., "john.doe")
+Admin -> CreateForm: Enter email\n(e.g., "john@example.com")
+Admin -> CreateForm: Enter password\n(min 8 characters)
+Admin -> CreateForm: Confirm password
+
+CreateForm -> CreateForm: Validate form:\n- All required fields filled\n- Email format valid\n- Password length >= 8\n- Passwords match
+
+Admin -> CreateForm: Click "Create User"
+
+alt Validation passes
+    CreateForm -> UserService: createUser(userData)
+    UserService -> API: POST /api/users\nAuthorization: Bearer {token}\n{username, email, password}
+
+    API -> Handler: Handle CreateUserCommand
+
+    Handler -> UsersDB: Check username uniqueness
+    UsersDB --> Handler: Username check result
+
+    Handler -> UsersDB: Check email uniqueness
+    UsersDB --> Handler: Email check result
+
+    alt Username and email unique
+        Handler -> PasswordService: GenerateSalt()
+        PasswordService --> Handler: 32-byte salt
+
+        Handler -> PasswordService: HashPassword(password, salt)
+        PasswordService -> PasswordService: PBKDF2 with SHA-256\n(100,000 iterations)
+        PasswordService --> Handler: Password hash
+
+        Handler -> Handler: Create User entity:\n- UserId (Guid)\n- UserName\n- Email\n- Password (hashed)\n- Salt
+
+        Handler -> UsersDB: INSERT User record
+        UsersDB --> Handler: User created
+
+        Handler --> API: UserDto\n(without password/salt)
+        API --> UserService: 201 Created\n{userId, username, email}
+        UserService --> CreateForm: User created successfully
+
+        CreateForm -> CreateForm: Close form
+        CreateForm -> UserPage: Refresh user list
+        UserPage --> Admin: Show success notification:\n"User created successfully"
+        UserPage --> Admin: Display updated user list
+
+    else Username or email already exists
+        Handler --> API: 400 Bad Request\n{error: "Username/Email already exists"}
+        API --> UserService: Error
+        UserService --> CreateForm: Creation failed
+        CreateForm --> Admin: Show error message:\n"Username or email already exists"
+    end
+
+else Validation fails
+    CreateForm --> Admin: Show validation errors:\n- Highlight invalid fields\n- Display error messages\n  (e.g., "Email format invalid",\n   "Passwords don't match",\n   "Password must be at least 8 characters")
+end
+
+deactivate CreateForm
+deactivate UserPage
+
+@enduml
