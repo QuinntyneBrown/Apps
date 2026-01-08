@@ -1,0 +1,109 @@
+@startuml Add Bill Flow
+title Add Bill Flow
+
+actor User
+participant "Bills Dashboard" as Dashboard
+participant "Add Bill Form" as Form
+participant "Bill Service" as BillSvc
+participant "API Gateway" as API
+participant "Bills Controller" as BillCtrl
+participant "Bill Management\nService" as BillMgmt
+database "Bill Database" as DB
+
+User -> Dashboard: Click "Add Bill" button
+activate Dashboard
+Dashboard -> Form: Navigate to /bills/new
+deactivate Dashboard
+activate Form
+
+Form -> User: Display empty form with fields:\n- Payee\n- Amount\n- Due Date\n- Category\n- Recurrence\n- Account Number\n- Description\n- Tags
+
+User -> Form: Enter bill details
+Form -> Form: Real-time field validation
+
+alt Validation Errors
+    Form -> User: Display inline error messages\n(e.g., amount must be > 0)
+    User -> Form: Correct errors
+else All Fields Valid
+    User -> Form: Click "Save" button
+
+    Form -> BillSvc: createBill(billData)
+    activate BillSvc
+
+    BillSvc -> API: POST /api/bills
+    activate API
+    note right of API
+        Request Body:
+        {
+            "payee": "Electric Company",
+            "amount": 150.00,
+            "dueDate": "2024-01-15",
+            "category": "Utilities",
+            "recurrencePattern": "Monthly",
+            "accountNumber": "123456",
+            "description": "Monthly electric bill",
+            "tags": ["utility", "essential"],
+            "isActive": true
+        }
+    end note
+
+    API -> BillCtrl: Create bill request
+    activate BillCtrl
+
+    BillCtrl -> BillCtrl: Validate request data
+    BillCtrl -> BillCtrl: Extract userId from JWT token
+
+    BillCtrl -> BillMgmt: CreateBillAsync(userId, billData)
+    activate BillMgmt
+
+    BillMgmt -> BillMgmt: Create Bill entity
+    BillMgmt -> BillMgmt: Set audit fields\n(createdBy, createdAt)
+
+    BillMgmt -> DB: INSERT INTO Bills
+    activate DB
+    DB -> BillMgmt: Return created bill with billId
+    deactivate DB
+
+    BillMgmt -> BillCtrl: Return Bill entity
+    deactivate BillMgmt
+
+    BillCtrl -> API: 201 Created with bill data
+    deactivate BillCtrl
+    note right of API
+        Response Body:
+        {
+            "billId": "guid",
+            "userId": "guid",
+            "payee": "Electric Company",
+            "amount": 150.00,
+            "dueDate": "2024-01-15",
+            "category": "Utilities",
+            "recurrencePattern": "Monthly",
+            "isActive": true,
+            "createdAt": "2024-01-08T10:00:00Z"
+        }
+    end note
+
+    API -> BillSvc: Bill created successfully
+    deactivate API
+
+    BillSvc -> Form: Success response
+    deactivate BillSvc
+
+    Form -> Form: Show success toast notification\n"Bill added successfully"
+
+    alt User Clicked "Save"
+        Form -> Dashboard: Redirect to /bills
+        deactivate Form
+        activate Dashboard
+        Dashboard -> Dashboard: Refresh bills list
+        Dashboard -> User: Display updated bill list\nwith new bill
+        deactivate Dashboard
+    else User Clicked "Save & Add Another"
+        Form -> Form: Clear form
+        Form -> User: Display empty form\nfor next bill
+        deactivate Form
+    end
+end
+
+@enduml
