@@ -1,0 +1,158 @@
+@startuml User Management Flow
+title User Management Flow - FamilyCalendarEventPlanner
+
+actor "Admin User" as Admin
+participant "User Management\nPage" as UserPage
+participant "User Service" as UserService
+participant "Users Controller" as UsersController
+participant "Password\nHashing Service" as HashService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+== Create User ==
+Admin -> UserPage: Click "Add User" button
+activate UserPage
+UserPage --> Admin: Display user form
+
+Admin -> UserPage: Enter user details\n(username, email, password)
+UserPage -> UserPage: Validate form:\n- Username not empty\n- Email format valid\n- Password min 8 chars
+
+UserPage -> UserService: createUser(userData)
+activate UserService
+
+UserService -> UsersController: POST /api/users
+activate UsersController
+note right
+  Request Body:
+  {
+    "userName": "string",
+    "email": "string",
+    "password": "string"
+  }
+end note
+
+UsersController -> DbContext: Check username uniqueness
+activate DbContext
+DbContext -> DB: SELECT COUNT(*)\nFROM Users\nWHERE UserName = @username
+activate DB
+DB --> DbContext: Count result
+deactivate DB
+deactivate DbContext
+
+alt Username already exists
+    UsersController --> UserService: 409 Conflict\n{error: "Username already exists"}
+    deactivate UsersController
+    UserService --> UserPage: Creation failed
+    deactivate UserService
+    UserPage --> Admin: Display error message
+    deactivate UserPage
+else Username is unique
+    UsersController -> HashService: GenerateSalt()
+    activate HashService
+    HashService --> UsersController: 32-byte salt
+    deactivate HashService
+
+    UsersController -> HashService: HashPassword(password, salt)
+    activate HashService
+    note right
+      PBKDF2-SHA256
+      100,000 iterations
+    end note
+    HashService --> UsersController: Hashed password
+    deactivate HashService
+
+    UsersController -> DbContext: Add new User entity
+    activate DbContext
+    DbContext -> DB: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt, TenantId)
+    activate DB
+    DB --> DbContext: User created
+    deactivate DB
+    deactivate DbContext
+
+    UsersController --> UserService: 201 Created\n{userId, userName, email}
+    deactivate UsersController
+
+    UserService --> UserPage: User created successfully
+    deactivate UserService
+
+    UserPage -> UserPage: Refresh user list
+    UserPage --> Admin: Display success message
+    deactivate UserPage
+end
+
+== Assign Role to User ==
+Admin -> UserPage: Select user
+activate UserPage
+Admin -> UserPage: Click "Assign Role"
+UserPage --> Admin: Display role selection
+
+Admin -> UserPage: Select role(s)
+UserPage -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+
+UserService -> UsersController: POST /api/users/{userId}/roles
+activate UsersController
+note right
+  Request Body:
+  {
+    "roleId": "guid"
+  }
+end note
+
+UsersController -> DbContext: Check if user and role exist
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nWHERE UserId = @userId
+DB -> DB: SELECT * FROM Roles\nWHERE RoleId = @roleId
+DB --> DbContext: User and Role records
+deactivate DbContext
+
+UsersController -> DbContext: Add UserRole association
+activate DbContext
+DbContext -> DB: INSERT INTO UserRole\n(UserId, RoleId)
+activate DB
+DB --> DbContext: Association created
+deactivate DB
+deactivate DbContext
+
+UsersController --> UserService: 200 OK
+deactivate UsersController
+
+UserService --> UserPage: Role assigned
+deactivate UserService
+
+UserPage --> Admin: Display success message
+deactivate UserPage
+
+== Delete User ==
+Admin -> UserPage: Select user
+activate UserPage
+Admin -> UserPage: Click "Delete User"
+UserPage --> Admin: Confirm deletion
+
+Admin -> UserPage: Confirm
+UserPage -> UserService: deleteUser(userId)
+activate UserService
+
+UserService -> UsersController: DELETE /api/users/{userId}
+activate UsersController
+
+UsersController -> DbContext: Delete user
+activate DbContext
+DbContext -> DB: DELETE FROM UserRole\nWHERE UserId = @userId
+activate DB
+DB -> DB: DELETE FROM Users\nWHERE UserId = @userId
+DB --> DbContext: User deleted
+deactivate DB
+deactivate DbContext
+
+UsersController --> UserService: 204 No Content
+deactivate UsersController
+
+UserService --> UserPage: User deleted
+deactivate UserService
+
+UserPage -> UserPage: Refresh user list
+UserPage --> Admin: Display success message
+deactivate UserPage
+
+@enduml
