@@ -1,0 +1,129 @@
+@startuml budget-tracking
+title Budget Tracking Flow - Add Expense
+
+actor User
+participant "Trip Detail Page" as UI
+participant "Budget Component" as BudgetUI
+participant "Add Expense Modal" as Modal
+participant "Expense Service" as ExpenseSvc
+participant "Expenses Controller" as ExpenseCtrl
+participant "CreateExpense Command" as CreateCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to trip details
+activate UI
+
+UI -> UI: Load trip information
+
+UI -> BudgetUI: Activate Budget tab
+activate BudgetUI
+
+BudgetUI -> ExpenseSvc: getExpensesByTrip(tripId)
+activate ExpenseSvc
+
+ExpenseSvc -> ExpenseCtrl: GET /api/trips/{tripId}/expenses
+activate ExpenseCtrl
+
+ExpenseCtrl -> DbContext: Expenses.Where(e => e.TripId == tripId)\n(Filtered by TenantId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Expenses\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Expense records
+deactivate DB
+DbContext --> ExpenseCtrl: List<Expense>
+deactivate DbContext
+
+ExpenseCtrl --> ExpenseSvc: 200 OK\n(List<ExpenseDto>)
+deactivate ExpenseCtrl
+
+ExpenseSvc --> BudgetUI: Expenses data
+deactivate ExpenseSvc
+
+BudgetUI -> BudgetUI: Calculate total budget\nCalculate total spent\nCalculate remaining
+
+BudgetUI --> User: Display budget overview\n(Budget vs Actual)
+
+User -> BudgetUI: Click "Add Expense"
+
+BudgetUI -> Modal: Open Add Expense Modal
+activate Modal
+
+Modal --> User: Display expense form
+
+User -> Modal: Enter expense details\n(category, amount, date, description)
+
+Modal -> Modal: Validate form inputs
+
+User -> Modal: Click "Save"
+
+Modal -> ExpenseSvc: createExpense(expenseData)
+activate ExpenseSvc
+
+ExpenseSvc -> ExpenseCtrl: POST /api/trips/{tripId}/expenses
+activate ExpenseCtrl
+
+ExpenseCtrl -> CreateCmd: Handle CreateExpenseCommand
+activate CreateCmd
+
+CreateCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> CreateCmd: TenantId
+deactivate TenantCtx
+
+CreateCmd -> CreateCmd: Create Expense entity\n(with TenantId and TripId)
+
+CreateCmd -> DbContext: Expenses.Add(expense)
+activate DbContext
+DbContext -> DB: INSERT INTO Expenses\n(ExpenseId, TripId, Category, Amount, Date, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChanges()
+DbContext --> CreateCmd: Expense saved
+deactivate DbContext
+
+CreateCmd --> ExpenseCtrl: CreateExpenseResponse
+deactivate CreateCmd
+
+ExpenseCtrl --> ExpenseSvc: 201 Created\n(ExpenseDto)
+deactivate ExpenseCtrl
+
+ExpenseSvc --> Modal: Success
+deactivate ExpenseSvc
+
+Modal -> Modal: Close modal
+
+Modal --> BudgetUI: Expense created
+deactivate Modal
+
+BudgetUI -> ExpenseSvc: getExpensesByTrip(tripId)
+activate ExpenseSvc
+
+ExpenseSvc -> ExpenseCtrl: GET /api/trips/{tripId}/expenses
+activate ExpenseCtrl
+
+ExpenseCtrl -> DbContext: Expenses.Where(e => e.TripId == tripId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Expenses\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Updated expense records
+deactivate DB
+DbContext --> ExpenseCtrl: List<Expense>
+deactivate DbContext
+
+ExpenseCtrl --> ExpenseSvc: 200 OK\n(List<ExpenseDto>)
+deactivate ExpenseCtrl
+
+ExpenseSvc --> BudgetUI: Updated expenses
+deactivate ExpenseSvc
+
+BudgetUI -> BudgetUI: Recalculate budget totals
+
+BudgetUI --> User: Display updated budget\nand expense list
+deactivate BudgetUI
+deactivate UI
+
+@enduml

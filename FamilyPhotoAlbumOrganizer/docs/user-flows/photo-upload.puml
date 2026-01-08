@@ -1,0 +1,72 @@
+@startuml photo-upload
+actor User
+participant "Photo Library UI" as UI
+participant "Upload Zone" as UploadZone
+participant "Photo Service" as PhotoService
+participant "API Gateway" as API
+participant "Photo Controller" as PhotoController
+participant "Storage Service" as StorageService
+participant "EXIF Extractor" as EXIFExtractor
+database "Photo Database" as DB
+database "Blob Storage" as BlobStorage
+
+User -> UI: Click "Upload Photos" button\nor drag files to page
+
+UI -> UploadZone: Display upload zone
+UploadZone --> User: Show drag-and-drop area
+
+User -> UploadZone: Select multiple photo files
+
+UploadZone -> UploadZone: Validate file types\n(JPEG, PNG, HEIC)
+UploadZone -> UploadZone: Validate file sizes\n(max 50MB each)
+
+alt Valid Files
+    UploadZone -> UI: Display upload queue\nwith thumbnail previews
+    UI --> User: Show upload progress panel
+
+    loop For each photo in queue
+        UI -> PhotoService: uploadPhoto(file)
+        PhotoService -> PhotoService: Compress image\n(client-side optimization)
+        PhotoService -> API: POST /api/photos/upload\n(multipart/form-data)
+        API -> PhotoController: uploadPhoto(file)
+
+        PhotoController -> StorageService: saveToStorage(file)
+        StorageService -> BlobStorage: Upload file
+        BlobStorage --> StorageService: File URL
+
+        PhotoController -> EXIFExtractor: extractMetadata(file)
+        EXIFExtractor --> PhotoController: EXIF data\n(date, camera, location, etc.)
+
+        PhotoController -> DB: INSERT photo record\n(filename, path, metadata)
+        DB --> PhotoController: Photo ID
+
+        PhotoController --> API: 200 OK\n{photo: Photo}
+        API --> PhotoService: Upload successful
+        PhotoService -> UI: Update progress\n(show checkmark)
+        UI --> User: Show success indicator
+
+        alt Upload Failed
+            API --> PhotoService: 500 Error
+            PhotoService -> UI: Update progress\n(show error icon)
+            UI --> User: Show retry option
+
+            User -> UI: Click retry
+            UI -> PhotoService: uploadPhoto(file)
+            note right: Retry up to 3 times
+        end
+    end
+
+    UI -> UI: All uploads complete
+    UI --> User: Show notification:\n"X photos uploaded successfully"
+    UI -> UI: Update photo library grid
+
+else Invalid Files
+    UploadZone --> User: Show error:\n"Invalid file type" or\n"File too large (max 50MB)"
+end
+
+note over UI, User
+    Uploads continue in background
+    even if user navigates away
+end note
+
+@enduml
