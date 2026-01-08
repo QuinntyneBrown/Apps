@@ -1,0 +1,74 @@
+@startuml Create Journal Entry Flow
+
+actor User
+participant "Entry Editor\nPage" as EditorUI
+participant "Entry Editor\nComponent" as EditorComponent
+participant "Entry Service" as EntryService
+participant "Journal Entries\nController" as EntryAPI
+participant "Create Entry\nCommand Handler" as CommandHandler
+participant "Database" as DB
+
+User -> EditorUI: Navigate to /write
+activate EditorUI
+
+EditorUI -> EditorComponent: Initialize editor\nwith rich text support
+activate EditorComponent
+
+EditorComponent --> User: Display empty editor\nwith word count
+deactivate EditorComponent
+
+User -> EditorComponent: Type journal content
+activate EditorComponent
+
+EditorComponent -> EditorComponent: Update word count\nin real-time
+
+User -> EditorComponent: Add tags
+EditorComponent -> EditorComponent: Show tag suggestions
+
+loop Auto-save every 30 seconds
+    EditorComponent -> EntryService: autoSave(content, tags)
+    activate EntryService
+    EntryService -> EntryAPI: POST /api/journal-entries/draft
+    activate EntryAPI
+    EntryAPI -> DB: Upsert draft entry
+    activate DB
+    DB --> EntryAPI: Draft saved
+    deactivate DB
+    EntryAPI --> EntryService: Success
+    deactivate EntryAPI
+    EntryService --> EditorComponent: Draft saved indicator
+    deactivate EntryService
+end
+
+User -> EditorComponent: Click "Save Entry"
+
+EditorComponent -> EntryService: saveEntry(content, tags)
+activate EntryService
+
+EntryService -> EntryAPI: POST /api/journal-entries
+activate EntryAPI
+
+EntryAPI -> CommandHandler: CreateJournalEntryCommand
+activate CommandHandler
+
+CommandHandler -> CommandHandler: Validate entry data\n(TenantId, content)
+
+CommandHandler -> DB: Insert journal entry\nwith TenantId
+activate DB
+DB --> CommandHandler: Entry created
+deactivate DB
+
+CommandHandler --> EntryAPI: EntryDto
+deactivate CommandHandler
+
+EntryAPI --> EntryService: 201 Created with entry data
+deactivate EntryAPI
+
+EntryService --> EditorComponent: Entry saved successfully
+deactivate EntryService
+
+EditorComponent --> User: Show success message\nand redirect to /entries
+deactivate EditorComponent
+deactivate EditorUI
+
+@enduml
