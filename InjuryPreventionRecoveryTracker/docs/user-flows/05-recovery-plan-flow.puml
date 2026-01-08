@@ -1,0 +1,124 @@
+@startuml Recovery Plan Flow
+title Create Recovery Plan Flow
+
+actor User
+participant "Injury Detail Page" as UI
+participant "Recovery Plan Modal" as Modal
+participant "Recovery Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+User -> UI: View injury details
+UI -> Service: Observable: injury$\n= getInjury(injuryId)
+Service -> API: GET /api/injuries/{injuryId}
+API -> DB: Query injury (tenant-scoped)
+DB --> API: Injury with recovery plan
+API --> Service: InjuryDto
+Service --> UI: Display injury details
+
+alt No recovery plan exists
+    UI --> User: Show "Create Recovery Plan" button
+
+    User -> UI: Click "Create Recovery Plan"
+    UI -> Modal: Open recovery plan modal
+    Modal --> User: Display form
+
+    User -> Modal: Fill in plan details:\n- Goals\n- Duration\n- Milestones\n- Exercises
+
+    User -> Modal: Add recovery exercises\nfrom exercise library
+    Modal -> Service: getExerciseLibrary()
+    Service -> API: GET /api/exercises
+    API -> DB: Query exercises
+    DB --> API: Exercise list
+    API --> Service: ExerciseDto[]
+    Service --> Modal: Display exercise options
+
+    User -> Modal: Select exercises\nSet frequency & duration
+    User -> Modal: Submit plan
+
+    Modal -> Modal: Validate form
+    Modal -> Service: createRecoveryPlan(planDto)
+    Service -> API: POST /api/injuries/{injuryId}/recovery-plan
+
+    API -> Handler: Handle CreateRecoveryPlanCommand
+    Handler -> TenantCtx: Get TenantId
+    TenantCtx --> Handler: TenantId
+
+    Handler -> DB: Verify injury ownership
+    DB --> Handler: Injury entity
+
+    Handler -> Handler: Create RecoveryPlan entity\n(with TenantId, InjuryId)
+    Handler -> Handler: Create Milestone entities
+    Handler -> Handler: Link RecoveryExercises
+
+    Handler -> DB: Save recovery plan\nwith milestones & exercises
+    DB --> Handler: Plan created
+
+    Handler -> Events: Publish RecoveryPlanCreated event
+    Handler --> API: 201 Created
+
+    API --> Service: Success response
+    Service --> Modal: Plan created
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh injury details
+
+    UI -> Service: getInjury(injuryId)
+    Service -> API: GET /api/injuries/{injuryId}
+    API -> DB: Query injury with plan
+    DB --> API: Updated injury
+    API --> Service: InjuryDto with plan
+    Service --> UI: Update display
+
+    UI --> User: Show recovery plan\nwith milestones & exercises
+
+else Recovery plan exists
+    UI --> User: Show existing plan\nwith edit option
+
+    User -> UI: Click "Edit Plan"
+    UI -> Modal: Open with existing data
+    Modal --> User: Display populated form
+
+    User -> Modal: Modify plan details
+    User -> Modal: Submit changes
+
+    Modal -> Service: updateRecoveryPlan(planDto)
+    Service -> API: PUT /api/recovery-plans/{planId}
+
+    API -> Handler: Handle UpdateRecoveryPlanCommand
+    Handler -> TenantCtx: Get TenantId
+    TenantCtx --> Handler: TenantId
+
+    Handler -> DB: Query & verify plan ownership
+    DB --> Handler: RecoveryPlan entity
+
+    Handler -> Handler: Update plan properties
+    Handler -> DB: Save changes
+    DB --> Handler: Plan updated
+
+    Handler -> Events: Publish RecoveryPlanUpdated event
+    Handler --> API: 200 OK
+
+    API --> Service: Success response
+    Service --> Modal: Plan updated
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh view
+    UI --> User: Show updated plan
+end
+
+note right of Handler
+  RecoveryPlan entity:
+  - RecoveryPlanId (Guid)
+  - TenantId (Guid)
+  - InjuryId (Guid)
+  - Goals (text)
+  - EstimatedDuration
+  - StartDate
+  - Milestones[]
+  - RecoveryExercises[]
+  - Status
+end note
+
+@enduml
