@@ -1,0 +1,141 @@
+@startuml booking-management
+title Booking Management Flow - Create Flight/Hotel Booking
+
+actor User
+participant "Trip Detail Page" as UI
+participant "Bookings Component" as BookingsUI
+participant "Add Booking Modal" as Modal
+participant "Booking Service" as BookingSvc
+participant "Bookings Controller" as BookingCtrl
+participant "CreateBooking Command" as CreateCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to trip details
+activate UI
+
+UI -> BookingsUI: Activate Bookings tab
+activate BookingsUI
+
+BookingsUI -> BookingSvc: getBookingsByTrip(tripId)
+activate BookingSvc
+
+BookingSvc -> BookingCtrl: GET /api/trips/{tripId}/bookings
+activate BookingCtrl
+
+BookingCtrl -> DbContext: Bookings.Where(b => b.TripId == tripId)\n(Filtered by TenantId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Bookings\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Booking records
+deactivate DB
+DbContext --> BookingCtrl: List<Booking>
+deactivate DbContext
+
+BookingCtrl --> BookingSvc: 200 OK\n(List<BookingDto>)
+deactivate BookingCtrl
+
+BookingSvc --> BookingsUI: Bookings data
+deactivate BookingSvc
+
+BookingsUI --> User: Display bookings list\n(flights, hotels, car rentals)
+
+User -> BookingsUI: Click "Add Booking"
+
+BookingsUI -> Modal: Open Add Booking Modal
+activate Modal
+
+Modal --> User: Display booking form
+
+User -> Modal: Select booking type\n(Flight/Hotel/Car Rental)
+
+Modal -> Modal: Show type-specific fields
+
+User -> Modal: Enter booking details\n(confirmation #, vendor, dates,\ncost, status)
+
+Modal -> Modal: Validate form inputs
+
+User -> Modal: Click "Save"
+
+Modal -> BookingSvc: createBooking(bookingData)
+activate BookingSvc
+
+BookingSvc -> BookingCtrl: POST /api/trips/{tripId}/bookings
+activate BookingCtrl
+
+BookingCtrl -> CreateCmd: Handle CreateBookingCommand
+activate CreateCmd
+
+CreateCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> CreateCmd: TenantId
+deactivate TenantCtx
+
+CreateCmd -> CreateCmd: Create Booking entity\n(with TenantId and TripId)
+
+CreateCmd -> DbContext: Bookings.Add(booking)
+activate DbContext
+DbContext -> DB: INSERT INTO Bookings\n(BookingId, TripId, Type, Vendor,\nConfirmationNumber, Cost, Status, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChanges()
+DbContext --> CreateCmd: Booking saved
+deactivate DbContext
+
+CreateCmd -> CreateCmd: Optional: Create expense record\nfor booking cost
+
+alt Create expense for booking
+    CreateCmd -> DbContext: Expenses.Add(expense)
+    activate DbContext
+    DbContext -> DB: INSERT INTO Expenses\n(linked to booking)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext -> DbContext: SaveChanges()
+    DbContext --> CreateCmd: Expense created
+    deactivate DbContext
+end
+
+CreateCmd --> BookingCtrl: CreateBookingResponse
+deactivate CreateCmd
+
+BookingCtrl --> BookingSvc: 201 Created\n(BookingDto)
+deactivate BookingCtrl
+
+BookingSvc --> Modal: Success
+deactivate BookingSvc
+
+Modal -> Modal: Close modal
+
+Modal --> BookingsUI: Booking created
+deactivate Modal
+
+BookingsUI -> BookingSvc: getBookingsByTrip(tripId)
+activate BookingSvc
+
+BookingSvc -> BookingCtrl: GET /api/trips/{tripId}/bookings
+activate BookingCtrl
+
+BookingCtrl -> DbContext: Bookings.Where(b => b.TripId == tripId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Bookings\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Updated booking records
+deactivate DB
+DbContext --> BookingCtrl: List<Booking>
+deactivate DbContext
+
+BookingCtrl --> BookingSvc: 200 OK\n(List<BookingDto>)
+deactivate BookingCtrl
+
+BookingSvc --> BookingsUI: Updated bookings
+deactivate BookingSvc
+
+BookingsUI --> User: Display updated bookings list
+deactivate BookingsUI
+deactivate UI
+
+@enduml
