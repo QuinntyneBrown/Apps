@@ -1,0 +1,71 @@
+@startuml Update Task Progress Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Update Task Progress Flow
+
+actor User
+participant "Session\nCompletion Modal" as Modal
+participant "Session Store" as SessionStore
+participant "Task Store" as TaskStore
+participant "API" as API
+database Database
+
+User -> Modal: Complete focus session
+activate Modal
+Modal --> User: Show completion form\n(task assigned)
+
+User -> Modal: Add progress notes
+Modal --> User: Notes entered
+
+User -> Modal: Update progress %\n(optional slider)
+Modal --> User: Progress updated
+
+User -> Modal: Click "Complete Session"
+Modal -> SessionStore: completeSession(data)
+activate SessionStore
+SessionStore -> API: PATCH /api/sessions/{id}/complete
+activate API
+API -> Database: UPDATE session
+activate Database
+Database --> API: Session updated
+deactivate Database
+API --> SessionStore: Success
+deactivate API
+deactivate SessionStore
+
+Modal -> TaskStore: updateTaskProgress(taskId, progress)
+activate TaskStore
+TaskStore -> API: PATCH /api/tasks/{id}/progress
+activate API
+API -> Database: UPDATE task\nSET progress_percentage,\nADD progress_note
+activate Database
+Database --> API: Task updated
+Database -> Database: Check if progress >= 100%
+alt Progress reaches 100%
+    Database -> Database: Trigger completion event
+end
+deactivate Database
+API --> TaskStore: Updated task data
+deactivate API
+TaskStore --> Modal: Progress updated
+deactivate TaskStore
+
+alt Task completed (100%)
+    Modal -> UI: Show Task Completion Modal
+    activate UI
+    UI -> UI: Play celebration animation
+    UI --> User: Congratulations message
+    deactivate UI
+end
+
+Modal -> UI: Close modal
+Modal --> User: Success notification
+deactivate Modal
+
+@enduml
