@@ -1,0 +1,75 @@
+@startuml Start Round User Flow
+title Start Round User Flow
+
+actor User
+participant "Start Round\nPage" as UI
+participant "Course\nSelector" as CourseUI
+participant "API Gateway" as API
+participant "Round\nService" as RoundService
+participant "Course\nService" as CourseService
+database "Database" as DB
+
+User -> UI: Navigate to /rounds/start
+activate UI
+UI -> API: GET /api/courses
+activate API
+API -> CourseService: GetCourses()
+activate CourseService
+CourseService -> DB: Query courses
+activate DB
+DB --> CourseService: Return courses list
+deactivate DB
+CourseService --> API: Return courses
+deactivate CourseService
+API --> UI: Return courses data
+deactivate API
+UI --> User: Display Start Round form
+deactivate UI
+
+User -> CourseUI: Search and select course
+activate CourseUI
+CourseUI --> User: Show course details
+deactivate CourseUI
+
+User -> UI: Select tee box (Blue)
+activate UI
+UI --> User: Update course info
+deactivate UI
+
+User -> UI: Select playing partners (optional)
+activate UI
+UI --> User: Display selected partners
+deactivate UI
+
+User -> UI: Auto-detect weather
+activate UI
+UI -> API: GET /api/weather/current
+activate API
+API --> UI: Return weather data
+deactivate API
+UI --> User: Display weather info
+deactivate UI
+
+User -> UI: Click "Start Round"
+activate UI
+UI -> API: POST /api/rounds
+activate API
+note right: Request body:\n{\n  courseId,\n  teeBox,\n  partners,\n  weather,\n  startTime\n}
+API -> RoundService: CreateRound(request)
+activate RoundService
+RoundService -> DB: INSERT INTO Rounds
+activate DB
+DB --> RoundService: Return round ID
+deactivate DB
+RoundService -> DB: INSERT INTO RoundScores\n(create 18 hole placeholders)
+activate DB
+DB --> RoundService: Success
+deactivate DB
+RoundService --> API: Return round details
+deactivate RoundService
+API --> UI: Return round ID and data
+deactivate API
+UI --> User: Redirect to /rounds/{id}/active
+deactivate UI
+
+@enduml
