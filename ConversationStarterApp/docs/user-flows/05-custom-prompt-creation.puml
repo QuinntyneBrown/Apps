@@ -1,0 +1,211 @@
+@startuml Custom Prompt Creation Flow
+title Custom Prompt Creation Flow
+
+actor User
+participant "Custom Starters\nPage (Angular)" as UI
+participant "Prompt Service\n(Angular)" as PromptService
+participant "Prompts Controller\n/api/prompts" as API
+participant "CreateCustomPrompt\nCommand Handler" as Handler
+participant "ITenantContext" as TenantContext
+participant "ConversationStarter\nAppContext" as DB
+database "SQL Server\nDatabase" as Database
+
+== Navigate to Custom Prompts ==
+User -> UI: Navigate to\nCustom Starters page
+activate UI
+
+UI --> User: Display:\n- Create prompt button\n- List of user's\ncustom prompts
+deactivate UI
+
+== Create Custom Prompt ==
+User -> UI: Click "Create\nCustom Prompt" button
+activate UI
+
+UI -> UI: Open create prompt\nmodal/form with fields:\n- Prompt text (required)\n- Category (dropdown)\n- Context (dropdown)\n- Difficulty level (1-5)
+
+UI --> User: Display form
+deactivate UI
+
+User -> UI: Fill in form:\n- Enter prompt text\n- Select category\n- Select context\n- Set difficulty level
+activate UI
+
+User -> UI: Click "Save" button
+
+UI -> UI: Validate form:\n- Prompt text required\n- Max 500 characters\n- Valid category\n- Valid context\n- Difficulty 1-5
+
+alt Validation Failed
+    UI --> User: Display validation\nerrors inline
+    deactivate UI
+else Validation Passed
+    UI -> PromptService: createCustomPrompt(promptData)
+    activate PromptService
+
+    PromptService -> API: POST /api/prompts/custom\n{promptText, category,\ncontext, difficultyLevel}
+    activate API
+    note right: JWT token in\nAuthorization header
+
+    API -> Handler: Handle CreateCustomPromptCommand
+    activate Handler
+
+    Handler -> TenantContext: Get TenantId
+    activate TenantContext
+    TenantContext -> TenantContext: Extract tenant_id\nfrom JWT claims
+    TenantContext --> Handler: TenantId (Guid)
+    deactivate TenantContext
+
+    Handler -> Handler: Extract UserId\nfrom JWT claims
+
+    Handler -> Handler: Create Prompt entity:\n- PromptId (new Guid)\n- PromptText\n- Category\n- Context\n- DifficultyLevel\n- TenantId\n- CreatedBy (UserId)\n- IsCustom = true\n- IsActive = true\n- UsageCount = 0\n- CreatedAt (now)
+
+    Handler -> DB: ConversationPrompts.Add(prompt)
+    activate DB
+    DB -> Database: INSERT INTO ConversationPrompts\n(PromptId, PromptText, Category,\nContext, DifficultyLevel, TenantId,\nCreatedBy, IsCustom, IsActive,\nUsageCount, CreatedAt)
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    deactivate DB
+
+    Handler -> DB: SaveChanges()
+    activate DB
+    DB -> Database: COMMIT
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> Handler: Success
+    deactivate DB
+
+    Handler -> Handler: Emit CustomPromptCreated\ndomain event
+
+    Handler --> API: 201 Created\n{promptId, promptText,\ncategory, context,\ndifficultyLevel, createdAt}
+    deactivate Handler
+
+    API --> PromptService: PromptDto
+    deactivate API
+
+    PromptService --> UI: Custom prompt created
+    deactivate PromptService
+
+    UI -> UI: Close modal/form
+
+    UI -> UI: Refresh custom\nprompts list
+
+    UI --> User: Display success\nmessage and show\nnew prompt in list
+    deactivate UI
+end
+
+== View Custom Prompts ==
+User -> UI: View custom\nprompts list
+activate UI
+
+UI -> PromptService: getCustomPrompts()
+activate PromptService
+
+PromptService -> API: GET /api/prompts/custom
+activate API
+
+API -> API: Extract UserId and\nTenantId from JWT
+
+API -> DB: ConversationPrompts\n.Where(p => p.IsCustom\n&& p.CreatedBy == userId)\n.OrderByDescending(\np => p.CreatedAt)
+activate DB
+DB -> Database: SELECT * FROM ConversationPrompts\nWHERE IsCustom = 1\nAND CreatedBy = @userId\nAND TenantId = @tenantId\nORDER BY CreatedAt DESC
+activate Database
+Database --> DB: Custom prompts
+deactivate Database
+DB --> API: List<Prompt>
+deactivate DB
+
+API --> PromptService: List<PromptDto>
+deactivate API
+
+PromptService --> UI: Custom prompts list
+deactivate PromptService
+
+UI -> UI: Render prompt cards:\n- Prompt text\n- Category badge\n- Difficulty indicator\n- Created date\n- Edit button\n- Delete button\n- Use button
+
+UI --> User: Display custom\nprompts
+deactivate UI
+
+== Edit Custom Prompt ==
+User -> UI: Click "Edit" on\na custom prompt
+activate UI
+
+UI -> UI: Open edit form\nwith current values
+
+User -> UI: Modify prompt\ndetails
+
+User -> UI: Click "Save"
+
+UI -> PromptService: updateCustomPrompt(\npromptId, updatedData)
+activate PromptService
+
+PromptService -> API: PUT /api/prompts/custom/{promptId}\n{promptText, category,\ncontext, difficultyLevel}
+activate API
+
+API -> API: Verify userId matches\nCreatedBy field
+
+API -> DB: Update prompt
+activate DB
+DB -> Database: UPDATE ConversationPrompts\nSET PromptText = @promptText,\nCategory = @category,\nContext = @context,\nDifficultyLevel = @difficultyLevel,\nUpdatedAt = GETDATE()\nWHERE PromptId = @promptId\nAND CreatedBy = @userId\nAND TenantId = @tenantId
+activate Database
+Database --> DB: Success
+deactivate Database
+DB --> API: Updated prompt
+deactivate DB
+
+API --> PromptService: Updated PromptDto
+deactivate API
+
+PromptService --> UI: Success
+deactivate PromptService
+
+UI -> UI: Update prompt in list
+
+UI --> User: Display "Prompt\nupdated" message
+deactivate UI
+
+== Delete Custom Prompt ==
+User -> UI: Click "Delete" on\na custom prompt
+activate UI
+
+UI -> UI: Show confirmation\ndialog
+
+User -> UI: Confirm deletion
+
+UI -> PromptService: deleteCustomPrompt(promptId)
+activate PromptService
+
+PromptService -> API: DELETE /api/prompts/custom/{promptId}
+activate API
+
+API -> API: Verify userId matches\nCreatedBy field
+
+API -> DB: Remove prompt
+activate DB
+DB -> Database: DELETE FROM ConversationPrompts\nWHERE PromptId = @promptId\nAND CreatedBy = @userId\nAND TenantId = @tenantId\nAND IsCustom = 1
+activate Database
+Database --> DB: Success
+deactivate Database
+DB --> API: Success
+deactivate DB
+
+API --> PromptService: 204 No Content
+deactivate API
+
+PromptService --> UI: Deleted successfully
+deactivate PromptService
+
+UI -> UI: Remove prompt\nfrom list
+
+UI --> User: Display "Prompt\ndeleted" message
+deactivate UI
+
+== Use Custom Prompt ==
+User -> UI: Click "Use" on\na custom prompt
+activate UI
+
+UI -> UI: Navigate to\nDashboard with\nprompt displayed
+
+UI --> User: Show custom prompt\nwith same actions as\ngenerated prompts:\n- Favorite\n- Share
+deactivate UI
+
+@enduml
