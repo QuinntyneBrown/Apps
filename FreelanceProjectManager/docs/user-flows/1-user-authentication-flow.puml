@@ -1,0 +1,96 @@
+@startuml
+title User Authentication Flow
+
+actor "User" as User
+participant "Login Page\n(Angular)" as UI
+participant "Auth Service\n(Angular)" as AuthService
+participant "HTTP Interceptor" as Interceptor
+participant "Auth Controller\n(/api/auth)" as AuthController
+participant "Login Command\nHandler" as Handler
+participant "IFreelanceProjectManagerContext" as DbContext
+database "SQL Server" as DB
+
+== User Login ==
+User -> UI: Enter username\nand password
+activate UI
+UI -> UI: Validate form inputs
+UI -> AuthService: login(credentials)
+activate AuthService
+
+AuthService -> AuthController: POST /api/auth/login\n{username, password}
+activate AuthController
+
+AuthController -> Handler: Handle(LoginCommand)
+activate Handler
+
+Handler -> DbContext: Users.FirstOrDefault(u => u.UserName == username)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nWHERE UserName = @username
+activate DB
+DB --> DbContext: User record
+deactivate DB
+DbContext --> Handler: User entity
+deactivate DbContext
+
+Handler -> Handler: Validate password hash\nPBKDF2 with salt\n(100,000 iterations)
+
+alt Valid Credentials
+    Handler -> Handler: Generate JWT token\nwith claims:\n- sub (userId)\n- name (username)\n- email\n- roles\n- tenant_id
+    Handler --> AuthController: LoginResponseDto\n{token, expiresAt, user}
+    deactivate Handler
+    AuthController --> AuthService: 200 OK\n{token, expiresAt, user}
+    deactivate AuthController
+
+    AuthService -> AuthService: Store token in\nlocalStorage
+    AuthService --> UI: Login successful
+    deactivate AuthService
+    UI -> UI: Navigate to\nDashboard
+    UI --> User: Show Dashboard
+    deactivate UI
+
+else Invalid Credentials
+    Handler --> AuthController: 401 Unauthorized
+    AuthController --> AuthService: 401 Unauthorized\n{error: "Invalid username or password"}
+    AuthService --> UI: Login failed
+    UI -> UI: Display error message
+    UI --> User: Show error:\n"Invalid credentials"
+end
+
+== Subsequent API Requests ==
+User -> UI: Access protected\nresource
+activate UI
+UI -> AuthService: Call API method
+activate AuthService
+AuthService -> Interceptor: HTTP request
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization header:\nBearer {token}
+Interceptor -> AuthController: API request with\nAuthorization header
+activate AuthController
+
+AuthController -> AuthController: Validate JWT token:\n- Signature\n- Expiration\n- Issuer/Audience
+AuthController -> AuthController: Extract claims:\n- UserId\n- Roles\n- TenantId
+
+alt Valid Token
+    AuthController -> Handler: Execute business logic
+    activate Handler
+    Handler --> AuthController: Response data
+    deactivate Handler
+    AuthController --> Interceptor: 200 OK with data
+    deactivate AuthController
+    Interceptor --> AuthService: Response
+    deactivate Interceptor
+    AuthService --> UI: Data
+    deactivate AuthService
+    UI --> User: Display data
+    deactivate UI
+
+else Invalid/Expired Token
+    AuthController --> Interceptor: 401 Unauthorized
+    Interceptor --> AuthService: 401 response
+    AuthService -> AuthService: Clear stored token
+    AuthService --> UI: Redirect to login
+    UI --> User: Show login page
+end
+
+@enduml
