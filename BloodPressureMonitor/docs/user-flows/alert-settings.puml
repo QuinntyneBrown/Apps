@@ -1,0 +1,136 @@
+@startuml
+title Configure Alert Settings Flow
+
+actor User as user
+participant "Settings Menu\n(UI)" as menu
+participant "Alert Settings Page\n(UI)" as settingsPage
+participant "Settings Service\n(Frontend)" as settingsService
+participant "API Gateway" as api
+participant "Settings Controller\n(Backend)" as controller
+participant "Notification Service" as notificationService
+database "User Settings Database" as db
+
+user -> menu : Navigate to Settings
+activate menu
+menu -> user : Display settings menu
+deactivate menu
+
+user -> menu : Click "Alerts & Notifications"
+activate menu
+menu -> settingsPage : Load alert settings page
+deactivate menu
+
+activate settingsPage
+settingsPage -> api : GET /api/users/settings/alerts\nAuthorization: Bearer {token}
+deactivate settingsPage
+
+activate api
+api -> controller : Fetch user alert settings
+deactivate api
+
+activate controller
+controller -> db : Query user alert preferences
+activate db
+db --> controller : Return current settings:\n- High BP alerts: enabled\n- Thresholds: 140/90\n- Quiet hours: disabled\n- Channels: push, email
+deactivate db
+
+controller -> api : 200 OK {alertSettings}
+activate api
+api -> settingsPage : Return settings data
+deactivate api
+deactivate controller
+
+activate settingsPage
+settingsPage -> user : Display current settings:\n- Enable/disable toggles\n- Threshold sliders\n- Notification channels\n- Quiet hours settings
+deactivate settingsPage
+
+user -> settingsPage : Adjust high BP threshold\nSystolic: 140 → 135\nDiastolic: 90 → 85
+activate settingsPage
+settingsPage -> settingsPage : Update slider UI
+settingsPage -> user : Show new values: 135/85
+deactivate settingsPage
+
+user -> settingsPage : Enable quiet hours
+activate settingsPage
+settingsPage -> user : Show time pickers
+deactivate settingsPage
+
+user -> settingsPage : Set quiet hours\nStart: 10:00 PM\nEnd: 7:00 AM
+activate settingsPage
+settingsPage -> settingsPage : Validate time range
+deactivate settingsPage
+
+user -> settingsPage : Check "Critical alerts\noverride quiet hours"
+activate settingsPage
+settingsPage -> settingsPage : Update checkbox state
+deactivate settingsPage
+
+user -> settingsPage : Enable SMS notifications
+activate settingsPage
+settingsPage -> user : Show phone number input
+deactivate settingsPage
+
+user -> settingsPage : Enter phone number:\n(555) 123-4567
+activate settingsPage
+settingsPage -> settingsPage : Validate phone format
+deactivate settingsPage
+
+user -> settingsPage : Click "Send Test Alert"
+activate settingsPage
+settingsPage -> api : POST /api/alerts/test\nAuthorization: Bearer {token}\n{type: "high_bp"}
+deactivate settingsPage
+
+activate api
+api -> notificationService : Generate test notification
+deactivate api
+
+activate notificationService
+notificationService -> user : Send test push notification:\n"Test Alert: High Blood Pressure\nThis is a test notification"
+activate user
+user -> user : Receives and views\ntest notification
+deactivate user
+notificationService -> api : Test sent successfully
+deactivate notificationService
+
+activate api
+api -> settingsPage : 200 OK {testSent: true}
+deactivate api
+
+activate settingsPage
+settingsPage -> user : Show confirmation:\n"Test notification sent!"
+deactivate settingsPage
+
+user -> settingsPage : Click "Save Settings"
+activate settingsPage
+settingsPage -> settingsPage : Validate all settings
+settingsPage -> settingsService : Submit updated settings
+deactivate settingsPage
+
+activate settingsService
+settingsService -> api : PUT /api/users/settings/alerts\nAuthorization: Bearer {token}\n{thresholds, quietHours, channels, phone}
+deactivate settingsService
+
+activate api
+api -> controller : Update alert settings
+deactivate api
+
+activate controller
+controller -> controller : Validate settings data:\n- Phone number format\n- Time ranges\n- Threshold ranges
+
+controller -> db : Update user settings record
+activate db
+db --> controller : Confirm update
+deactivate db
+
+controller -> api : 200 OK {updatedSettings}
+activate api
+api -> settingsPage : Return confirmation
+deactivate api
+deactivate controller
+
+activate settingsPage
+settingsPage -> user : Show success message:\n"Alert settings saved successfully!"
+settingsPage -> settingsPage : Update UI with saved values
+deactivate settingsPage
+
+@enduml
