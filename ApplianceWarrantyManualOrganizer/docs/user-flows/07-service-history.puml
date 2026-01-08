@@ -1,0 +1,251 @@
+@startuml
+title Service History Flow
+
+actor User as user
+participant "Service History\nPage" as servicePage
+participant "Service Service\n(Angular)" as serviceService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Service History\nController" as controller
+participant "Command/Query\nHandler" as handler
+participant "DB Context" as dbContext
+participant "ServiceRecords\nTable" as database
+participant "Blob Storage\n(Receipts/Photos)" as blobStorage
+
+== View Service History ==
+
+user -> servicePage: Navigate to\nService History\n(for appliance or all)
+activate servicePage
+
+servicePage -> serviceService: getServiceHistory(applianceId?)
+activate serviceService
+
+serviceService -> interceptor: GET /api/service-history\n?applianceId={id}\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> handler: GetServiceHistoryQuery(applianceId)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+alt For Specific Appliance
+    handler -> dbContext: ServiceRecords\n.Where(s => s.TenantId == tenantId)\n.Where(s => s.ApplianceId == applianceId)\n.Include(s => s.Appliance)\n.OrderByDescending(s => s.ServiceDate)\n.ToListAsync()
+else For All Appliances
+    handler -> dbContext: ServiceRecords\n.Where(s => s.TenantId == tenantId)\n.Include(s => s.Appliance)\n.OrderByDescending(s => s.ServiceDate)\n.ToListAsync()
+end
+
+activate dbContext
+
+dbContext -> database: SELECT * FROM ServiceRecords\nWHERE TenantId = ?\n[AND ApplianceId = ?]\nORDER BY ServiceDate DESC
+activate database
+database --> dbContext: Service records
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<ServiceRecordDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[{ recordId, applianceId,\nserviceDate, serviceType,\nprovider, cost, description,\nreceiptUrl, ... }]
+deactivate controller
+
+interceptor --> serviceService: Success response
+deactivate interceptor
+
+serviceService --> servicePage: serviceRecords$
+deactivate serviceService
+
+servicePage -> servicePage: Render timeline view\nwith service details
+servicePage --> user: Display service history
+deactivate servicePage
+
+== Add Service Record ==
+
+user -> servicePage: Click [Add Service Record]
+activate servicePage
+
+servicePage -> servicePage: Open service record form
+
+user -> servicePage: Select appliance
+
+user -> servicePage: Enter service details\n(Service Date, Type,\nProvider, Description,\nCost)
+
+user -> servicePage: Select service type\n(Repair, Maintenance,\nInspection, Installation)
+
+user -> servicePage: Upload receipt/photos\n(optional)
+
+user -> servicePage: Click [Save]
+
+alt Has Receipt/Photos
+    servicePage -> serviceService: uploadFiles(files)
+    activate serviceService
+    serviceService -> blobStorage: Upload files
+    activate blobStorage
+    blobStorage --> serviceService: fileUrls[]
+    deactivate blobStorage
+    deactivate serviceService
+end
+
+servicePage -> serviceService: createServiceRecord(recordData)
+activate serviceService
+
+serviceService -> interceptor: POST /api/service-history\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: { applianceId, serviceDate,\nserviceType, provider,\ndescription, cost,\nreceiptUrl, photoUrls }
+activate controller
+
+controller -> handler: CreateServiceRecordCommand
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: ServiceRecords.Add(record)
+activate dbContext
+
+dbContext -> database: INSERT INTO ServiceRecords
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+handler -> dbContext: SaveChangesAsync()
+activate dbContext
+
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Record saved
+deactivate database
+deactivate dbContext
+
+handler -> handler: Update appliance\nlast service date
+
+handler -> dbContext: Appliances.Update()
+activate dbContext
+
+dbContext -> database: UPDATE Appliances\nSET LastServiceDate = ?
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+handler --> controller: ServiceRecordDto
+deactivate handler
+
+controller --> interceptor: 201 Created
+deactivate controller
+
+interceptor --> serviceService: Success response
+deactivate interceptor
+
+serviceService --> servicePage: Record created
+deactivate serviceService
+
+servicePage -> servicePage: Close form and\nrefresh history list
+servicePage --> user: Show updated\nservice history
+deactivate servicePage
+
+== View Service Details ==
+
+user -> servicePage: Click on service record
+activate servicePage
+
+servicePage -> servicePage: Expand record details
+
+servicePage -> servicePage: Display full information\n(description, cost,\nreceipt, photos)
+
+alt Has Receipt
+    user -> servicePage: Click [View Receipt]
+    servicePage -> serviceService: getReceiptUrl(recordId)
+    activate serviceService
+
+    serviceService -> interceptor: GET /api/service-history/{id}/receipt\n+ Authorization header
+    activate interceptor
+
+    interceptor -> controller: GET request
+    activate controller
+
+    controller -> handler: GetServiceReceiptQuery(recordId)
+    activate handler
+
+    handler -> handler: Extract TenantId from JWT
+
+    handler -> dbContext: ServiceRecords\n.Where(s => s.RecordId == recordId)\n.Where(s => s.TenantId == tenantId)\n.FirstOrDefaultAsync()
+    activate dbContext
+
+    dbContext -> database: SELECT * FROM ServiceRecords\nWHERE RecordId = ?\nAND TenantId = ?
+    activate database
+    database --> dbContext: Service record
+    deactivate database
+    deactivate dbContext
+
+    handler -> blobStorage: Generate SAS token
+    activate blobStorage
+    blobStorage --> handler: Signed URL
+    deactivate blobStorage
+
+    handler --> controller: { receiptUrl }
+    deactivate handler
+
+    controller --> interceptor: 200 OK
+    deactivate controller
+
+    interceptor --> serviceService: Success response
+    deactivate interceptor
+
+    serviceService --> servicePage: Signed URL
+    deactivate serviceService
+
+    servicePage -> servicePage: Open receipt\nin new window
+    servicePage --> user: Display receipt
+end
+
+deactivate servicePage
+
+== Filter Service History ==
+
+user -> servicePage: Apply filters\n(Date range, Service type,\nProvider, Cost range)
+activate servicePage
+
+servicePage -> serviceService: getFilteredServiceHistory(filters)
+activate serviceService
+
+serviceService -> interceptor: GET /api/service-history\n?dateFrom=x&dateTo=y\n&serviceType=Repair\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request with filters
+activate controller
+
+controller -> handler: GetFilteredServiceHistoryQuery(filters)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: ServiceRecords\n.Where(s => s.TenantId == tenantId)\n.Where(s => s.ServiceDate >= dateFrom)\n.Where(s => s.ServiceDate <= dateTo)\n.Where(s => s.ServiceType == type)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM ServiceRecords\nWHERE TenantId = ?\nAND ServiceDate BETWEEN ? AND ?\nAND ServiceType = ?
+activate database
+database --> dbContext: Filtered records
+deactivate database
+deactivate dbContext
+
+handler --> controller: Filtered List<ServiceRecordDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[filtered records]
+deactivate controller
+
+interceptor --> serviceService: Success response
+deactivate interceptor
+
+serviceService --> servicePage: filtered records$
+deactivate serviceService
+
+servicePage -> servicePage: Update view with\nfiltered results
+servicePage -> servicePage: Calculate total cost\nfor filtered records
+servicePage --> user: Display filtered\nservice history
+deactivate servicePage
+
+@enduml

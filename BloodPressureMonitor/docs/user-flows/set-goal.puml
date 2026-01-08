@@ -1,0 +1,118 @@
+@startuml
+title Set Blood Pressure Goal Flow
+
+actor User as user
+participant "Dashboard\n(UI)" as dashboard
+participant "Goal Form\n(UI Component)" as goalForm
+participant "Goal Service\n(Frontend)" as goalService
+participant "API Gateway" as api
+participant "Goal Controller\n(Backend)" as controller
+participant "Reading Service\n(Backend)" as readingService
+database "Goals Database" as goalsDb
+database "Readings Database" as readingsDb
+
+user -> dashboard : Click "Set Goal" button
+activate dashboard
+dashboard -> goalForm : Open goal setting form
+deactivate dashboard
+
+activate goalForm
+goalForm -> api : GET /api/readings/average?days=30\nAuthorization: Bearer {token}
+deactivate goalForm
+
+activate api
+api -> readingService : Get user's recent BP average
+deactivate api
+
+activate readingService
+readingService -> readingsDb : Query readings\nlast 30 days
+activate readingsDb
+readingsDb --> readingService : Return readings
+deactivate readingsDb
+
+readingService -> readingService : Calculate average:\n132/86 mmHg
+readingService -> api : Return average
+activate api
+api -> goalForm : 200 OK {average: "132/86"}
+deactivate api
+deactivate readingService
+
+activate goalForm
+goalForm -> user : Display form with:\n- Current average: 132/86\n- Preset templates\n- Custom range sliders\n- Goal type dropdown
+deactivate goalForm
+
+user -> goalForm : Select goal type:\n"Achieve doctor's target"
+activate goalForm
+goalForm -> goalForm : Update form context
+deactivate goalForm
+
+user -> goalForm : Adjust systolic slider:\nMin: 110, Max: 120
+activate goalForm
+goalForm -> goalForm : Update slider positions
+goalForm -> goalForm : Calculate BP category:\n"Normal Range"
+goalForm -> user : Show range indicator:\n110-120 (Normal)
+deactivate goalForm
+
+user -> goalForm : Adjust diastolic slider:\nMin: 70, Max: 80
+activate goalForm
+goalForm -> goalForm : Update slider positions
+goalForm -> goalForm : Calculate comparison:\nCurrent: 132/86\nTarget: 110-120 / 70-80\nReduction needed: ~15/8 mmHg
+goalForm -> user : Show improvement needed\nand estimated timeline
+deactivate goalForm
+
+user -> goalForm : Set deadline:\n6 months from now
+activate goalForm
+goalForm -> goalForm : Validate date is future
+deactivate goalForm
+
+user -> goalForm : Check "Set by doctor"
+activate goalForm
+goalForm -> goalForm : Mark goal as doctor-prescribed
+deactivate goalForm
+
+user -> goalForm : Click "Set Goal"
+activate goalForm
+goalForm -> goalForm : Validate all fields:\n- Systolic min < max\n- Diastolic min < max\n- Systolic > Diastolic\n- Deadline is future date
+goalForm -> goalService : Submit goal data
+deactivate goalForm
+
+activate goalService
+goalService -> api : POST /api/goals\nAuthorization: Bearer {token}\n{systolicRange, diastolicRange,\ndeadline, goalType, setByDoctor}
+deactivate goalService
+
+activate api
+api -> controller : Create new goal
+deactivate api
+
+activate controller
+controller -> controller : Validate goal data
+controller -> controller : Calculate goal metrics:\n- Current progress: 0%\n- Target range\n- Days to deadline: 180
+
+controller -> goalsDb : Insert goal record
+activate goalsDb
+goalsDb --> controller : Return goal ID
+deactivate goalsDb
+
+controller -> controller : Set goal as active\n(deactivate any previous goals)
+
+controller -> api : 201 Created\n{goalId, progress: 0%,\ndeadline, targetRange}
+activate api
+api -> goalService : Return created goal
+deactivate api
+deactivate controller
+
+activate goalService
+goalService -> goalForm : Goal created successfully
+deactivate goalService
+
+activate goalForm
+goalForm -> user : Show success message:\n"Goal set successfully!\nTarget: 110-120 / 70-80 mmHg\nDeadline: June 8, 2026"
+goalForm -> dashboard : Refresh with new goal
+deactivate goalForm
+
+activate dashboard
+dashboard -> dashboard : Display goal card with:\n- Progress ring: 0%\n- Target range\n- 180 days remaining\n- "Start tracking" prompt
+dashboard -> user : Show updated dashboard\nwith goal tracking
+deactivate dashboard
+
+@enduml
