@@ -1,0 +1,83 @@
+@startuml Search and Discover Persons Flow
+title Search and Discover Persons Flow
+
+actor User
+participant "Search/Discover\nPage" as UI
+participant "Person Service" as PersonSvc
+participant "Persons\nController" as PersonCtrl
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+
+User -> UI: Navigate to "Search"
+UI --> User: Display search page
+
+== Basic Search ==
+User -> UI: Enter search query:\n- Name\n- Birth/Death dates\n- Location
+User -> UI: Click "Search" or type
+
+UI -> UI: Validate input
+UI -> PersonSvc: searchPersons(searchQuery)
+PersonSvc -> PersonCtrl: GET /api/persons?query={searchParams}
+PersonCtrl -> PersonCtrl: Parse search parameters
+PersonCtrl -> DbContext: Persons\n.Where(TenantId)\n.Where(search criteria)\n.OrderBy(relevance)\n.ToListAsync()
+
+alt Search by Name
+    DbContext -> DB: SELECT * FROM Persons\nWHERE TenantId = @tenantId\nAND (FullName LIKE '%@query%'\nOR GivenName LIKE '%@query%'\nOR Surname LIKE '%@query%')
+else Search by Date Range
+    DbContext -> DB: SELECT * FROM Persons\nWHERE TenantId = @tenantId\nAND BirthDate BETWEEN\n@startDate AND @endDate
+else Search by Location
+    DbContext -> DB: SELECT * FROM Persons\nWHERE TenantId = @tenantId\nAND (BirthPlace LIKE '%@location%'\nOR DeathPlace LIKE '%@location%')
+else Combined Search
+    DbContext -> DB: SELECT * FROM Persons\nWHERE TenantId = @tenantId\nAND multiple criteria\nORDER BY relevance score
+end
+
+DB --> DbContext: Person entities
+DbContext --> PersonCtrl: Person list
+PersonCtrl --> PersonSvc: PersonDto[]
+PersonSvc --> UI: Search results
+
+UI -> UI: Group results by:\n- Generation\n- Surname\n- Time period
+UI --> User: Display search results\nwith person cards
+
+== Filter and Sort Results ==
+User -> UI: Apply filters:\n- Gender\n- Living/Deceased\n- Generation\n- Date range
+UI -> UI: Filter results locally
+UI --> User: Display filtered results
+
+User -> UI: Change sort order:\n- Name (A-Z)\n- Birth date\n- Generation
+UI -> UI: Sort results
+UI --> User: Display sorted results
+
+== View Person from Results ==
+User -> UI: Click on person card
+UI -> UI: Navigate to person profile
+note right: See View Person\nProfile Flow
+
+== Advanced Search ==
+User -> UI: Click "Advanced Search"
+UI -> UI: Display advanced form:\n- Multiple name fields\n- Date ranges\n- Multiple locations\n- Occupation\n- Relationship type
+
+User -> UI: Fill advanced criteria
+User -> UI: Click "Search"
+UI -> PersonSvc: searchPersons(advancedQuery)
+PersonSvc -> PersonCtrl: GET /api/persons/search\n{complexQuery}
+PersonCtrl -> DbContext: Complex query with\nmultiple WHERE clauses
+DbContext -> DB: SELECT with complex\nJOINS and filters
+DB --> DbContext: Person entities
+DbContext --> PersonCtrl: Results
+PersonCtrl --> PersonSvc: PersonDto[]
+PersonSvc --> UI: Search results
+UI --> User: Display results
+
+== No Results Found ==
+alt No Matches
+    UI -> UI: Check if results empty
+    UI --> User: Display "No persons found"\nwith suggestions:\n- Broaden search\n- Check spelling\n- Try different terms
+end
+
+== Save Search ==
+User -> UI: Click "Save Search"
+UI -> UI: Store search criteria\nin localStorage
+UI --> User: Show "Search saved"
+
+@enduml
