@@ -1,0 +1,50 @@
+@startuml View Applications Kanban Flow
+title View Applications Kanban Board Flow - JobSearchOrganizer
+
+actor User
+participant "Applications Page" as Page
+participant "Kanban Board" as Kanban
+participant "Application Service" as Service
+participant "API Gateway" as API
+participant "Application Controller" as Controller
+participant "IJobSearchOrganizerContext" as Context
+participant "Database" as DB
+
+User -> Page: Navigate to /applications
+Page -> Page: Initialize with viewModel$ (async pipe)
+Page -> Service: loadApplications(filters)
+Service -> API: GET /api/applications?status=all
+API -> Controller: GetApplicationsQuery
+Controller -> Context: Applications.Where(TenantId)
+Context -> DB: SELECT * FROM Applications\nWHERE TenantId = @tenantId
+DB --> Context: Applications list
+Context --> Controller: Application entities
+Controller -> Controller: Map to DTOs with status counts
+Controller --> API: 200 OK + ApplicationsDto
+API --> Service: Applications data
+Service --> Page: Observable<Applications>
+Page -> Kanban: Render columns by status
+
+Kanban -> Kanban: Group applications by status
+Kanban -> User: Display Kanban columns:\n(Draft, Submitted, Under Review, etc.)
+
+alt User Drags Card
+    User -> Kanban: Drag application to new column
+    Kanban -> Kanban: Show drop indicator
+    User -> Kanban: Drop on new status column
+    Kanban -> Service: updateStatus(appId, newStatus)
+    Service -> API: PUT /api/applications/{id}/status
+    API --> Service: Updated application
+    Service --> Kanban: Success
+    Kanban -> User: Move card with animation
+    Kanban -> User: Show undo option (5 seconds)
+end
+
+alt User Filters
+    User -> Page: Apply status filter
+    Page -> Service: loadApplications(newFilters)
+    Service --> Page: Filtered applications
+    Page -> Kanban: Re-render with filters
+end
+
+@enduml

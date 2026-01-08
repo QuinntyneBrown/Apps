@@ -1,0 +1,51 @@
+@startuml Start Application Flow
+title Start Application Flow - JobSearchOrganizer
+
+actor User
+participant "Applications Dashboard" as Dashboard
+participant "New Application Form" as Form
+participant "Application Service" as Service
+participant "API Gateway" as API
+participant "Application Controller" as Controller
+participant "IJobSearchOrganizerContext" as Context
+participant "Database" as DB
+
+User -> Dashboard: Click "New Application"
+Dashboard -> Form: Navigate to /applications/new
+
+Form -> Service: loadJobListings()
+Service -> API: GET /api/job-listings
+API -> Controller: Get available listings
+Controller -> Context: JobListings.Where(active)
+Context -> DB: SELECT * FROM JobListings WHERE Status = 'Active'
+DB --> Context: Job listings
+Context --> Controller: Listings list
+Controller --> API: 200 OK + listings
+API --> Service: Listings data
+Service --> Form: Populate dropdown
+
+User -> Form: Select job listing
+User -> Form: Set target submission date
+User -> Form: Add initial notes
+User -> Form: Click "Start Application"
+
+Form -> Form: Validate form fields
+
+alt Valid Form
+    Form -> Service: startApplication(data)
+    Service -> API: POST /api/applications
+    API -> Controller: CreateApplicationCommand
+    Controller -> Controller: Get TenantId from ITenantContext
+    Controller -> Context: Applications.Add(application)
+    Context -> DB: INSERT INTO Applications
+    DB --> Context: Application created
+    Controller --> API: 201 Created + ApplicationDto
+    API --> Service: New application
+    Service --> Form: Success
+    Form -> User: Show success notification
+    Form -> Dashboard: Navigate to application detail
+else Invalid Form
+    Form -> User: Show validation errors
+end
+
+@enduml
