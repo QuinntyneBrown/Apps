@@ -1,0 +1,107 @@
+@startuml
+title Quick Blood Pressure Reading Entry Flow
+
+actor User as user
+participant "Dashboard\n(UI)" as dashboard
+participant "Reading Form\n(UI Component)" as form
+participant "Reading Service\n(Frontend)" as readingService
+participant "API Gateway" as api
+participant "Reading Controller\n(Backend)" as controller
+participant "Validation Service" as validator
+database "Readings Database" as db
+participant "Alert Service" as alertService
+
+user -> dashboard : Click "Record Reading" button
+activate dashboard
+dashboard -> form : Open quick entry form
+deactivate dashboard
+
+activate form
+form -> user : Display form with auto-focus\non systolic field
+deactivate form
+
+user -> form : Enter systolic (e.g., 120)
+activate form
+form -> form : Validate on blur\n(50-250 range)
+form -> user : Show green checkmark
+deactivate form
+
+user -> form : Enter diastolic (e.g., 80)
+activate form
+form -> form : Validate on blur\n(30-150 range)
+form -> form : Check systolic > diastolic
+form -> user : Show green checkmark
+deactivate form
+
+user -> form : Enter pulse (optional, e.g., 72)
+activate form
+form -> form : Validate (30-250 range)
+deactivate form
+
+user -> form : Select measurement time\n(default: now)
+
+user -> form : Select arm used (Left/Right)
+
+opt Advanced Options
+    user -> form : Expand advanced section
+    user -> form : Select context (Resting)
+    user -> form : Select posture (Sitting)
+end
+
+user -> form : Click "Save Reading"
+activate form
+form -> form : Validate all required fields
+form -> readingService : Submit reading data
+deactivate form
+
+activate readingService
+readingService -> api : POST /api/readings\nAuthorization: Bearer {token}
+deactivate readingService
+
+activate api
+api -> controller : Forward create reading request
+deactivate api
+
+activate controller
+controller -> validator : Validate reading data
+activate validator
+validator -> validator : Check ranges\nCheck systolic > diastolic\nCheck date not in future
+validator --> controller : Validation passed
+deactivate validator
+
+controller -> db : Insert new reading record
+activate db
+db --> controller : Return saved reading with ID
+deactivate db
+
+controller -> controller : Calculate BP category\n(Normal, Elevated, High, etc.)
+
+controller -> alertService : Check if alert triggered
+activate alertService
+alertService -> alertService : Evaluate reading against\nthresholds
+alt Critical Reading Detected
+    alertService -> alertService : Create crisis alert
+end
+alertService --> controller : Alert evaluation complete
+deactivate alertService
+
+controller -> api : 201 Created\n{reading, category, alerts}
+activate api
+api -> readingService : Return saved reading
+deactivate api
+
+activate readingService
+readingService -> form : Update UI with success
+deactivate readingService
+
+activate form
+form -> user : Show success message\n"Reading recorded: 120/80 mmHg"
+form -> form : Clear form fields
+form -> dashboard : Refresh dashboard stats
+deactivate form
+
+activate dashboard
+dashboard -> user : Update quick stats\nand recent readings
+deactivate dashboard
+
+@enduml
