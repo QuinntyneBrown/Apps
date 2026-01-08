@@ -1,0 +1,96 @@
+@startuml ChangeBeneficiaryFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Plan Details Page" as PlanPage
+participant "Change Beneficiary Modal" as Modal
+participant "API Gateway" as API
+participant "Savings Plan Controller" as Controller
+participant "Change Beneficiary Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== View Plan Details ==
+User -> PlanPage: Navigate to /plans/{planId}
+PlanPage -> API: GET /api/savings-plans/{planId}
+API -> DB: Query savings plan
+DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+Database --> DB: Plan details
+DB --> API: SavingsPlan with current beneficiary
+API --> PlanPage: Plan details
+PlanPage -> User: Display plan with current beneficiary info
+
+== Initiate Change Beneficiary ==
+User -> PlanPage: Click "Change Beneficiary"
+PlanPage -> Modal: Open change beneficiary modal
+Modal -> API: GET /api/beneficiaries/eligible/{planId}
+API -> DB: Query eligible family members
+DB -> Database: SELECT * FROM Beneficiaries WHERE TenantId = ? AND BeneficiaryId != CurrentBeneficiaryId
+Database --> DB: Eligible beneficiaries
+DB --> API: List of eligible beneficiaries
+API --> Modal: Eligible family members
+Modal -> User: Display eligible beneficiaries list
+
+== Select New Beneficiary ==
+User -> Modal: Select new beneficiary
+Modal -> API: GET /api/savings-plans/{planId}/tax-impact?newBeneficiaryId={id}
+API -> Handler: Calculate tax impact
+Handler -> DB: Get plan and beneficiary details
+DB -> Database: SELECT relationship data
+Database --> DB: Beneficiary relationships
+DB --> Handler: Current and new beneficiary info
+Handler -> Handler: Determine if tax-free transfer
+note right
+  Tax-free if within same family:
+  - Siblings
+  - First cousins
+  - Parent/child
+  - Grandparent/grandchild
+end note
+Handler -> Handler: Calculate potential tax implications
+Handler --> API: Tax impact summary
+API --> Modal: Tax information
+Modal -> User: Display tax impact warning
+
+alt Tax Implications Exist
+    Modal -> User: Show warning: "This change may have tax consequences"
+    User -> Modal: Review tax impact details
+end
+
+== Confirm Change ==
+User -> Modal: Click "Confirm Change"
+Modal -> API: PUT /api/savings-plans/{planId}/beneficiary {newBeneficiaryId}
+API -> Controller: ChangeBeneficiary request
+Controller -> Handler: Handle ChangeBeneficiaryCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+Handler -> DB: Get SavingsPlan
+DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+Database --> DB: Current plan
+DB --> Handler: SavingsPlan
+Handler -> Handler: Store old beneficiary ID
+Handler -> Handler: Update beneficiary
+Handler -> DB: Update SavingsPlan.BeneficiaryId
+DB -> Database: UPDATE SavingsPlans SET BeneficiaryId = ? WHERE PlanId = ?
+Database --> DB: Beneficiary updated
+DB --> Handler: Updated plan
+Handler -> Handler: Recalculate years until enrollment
+Handler -> DB: Update projections
+DB -> Database: UPDATE cost projections based on new timeline
+Database --> DB: Projections updated
+DB --> Handler: Updated projections
+Handler -> Handler: Raise BeneficiaryChanged event
+Handler --> Controller: Updated SavingsPlanDto
+Controller --> API: 200 OK
+API --> Modal: Beneficiary changed successfully
+Modal -> Modal: Close modal
+Modal -> PlanPage: Refresh plan details
+PlanPage -> API: GET /api/savings-plans/{planId}
+API -> DB: Query updated plan
+DB --> API: Updated plan with new beneficiary
+API --> PlanPage: Updated plan data
+PlanPage -> User: Display plan with new beneficiary and recalculated projections
+
+@enduml
