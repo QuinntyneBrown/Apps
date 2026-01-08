@@ -1,0 +1,54 @@
+@startuml View Insights Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title View Insights Flow
+
+actor User
+participant "Insights\nDashboard" as UI
+participant "Pattern\nAnalytics Store" as Store
+participant "API" as API
+database Database
+
+User -> UI: Navigate to Insights Dashboard
+activate UI
+UI -> Store: fetchPatterns()
+activate Store
+Store -> API: GET /api/analytics/patterns
+activate API
+API -> Database: Check session count
+activate Database
+alt Insufficient data (<20 sessions)
+    Database --> API: Session count too low
+    API --> Store: Insufficient data response
+    Store --> UI: Not enough data
+    UI --> User: Show progress message:\n"Need 20 sessions,\ncurrent: 8/20"
+else Sufficient data
+    Database -> Database: Analyze patterns:\n- Optimal session length\n- Peak focus times\n- Distraction patterns\n- Productivity trends
+    Database --> API: Patterns data
+    deactivate Database
+    API --> Store: Patterns list
+    deactivate API
+    Store --> UI: Display patterns
+    deactivate Store
+
+    UI -> UI: Render pattern cards:\n- Optimal Length\n- Peak Times\n- Distraction Patterns\n- Trends
+    UI --> User: Patterns displayed
+
+    User -> UI: Filter by pattern type
+    UI --> User: Filtered view
+
+    User -> UI: Click pattern card
+    activate UI
+    UI -> UI: Open detailed view:\n- Confidence score\n- Recommendations\n- Supporting data\n- Actionable insights
+    UI --> User: Pattern details shown
+    deactivate UI
+end
+deactivate UI
+
+@enduml
