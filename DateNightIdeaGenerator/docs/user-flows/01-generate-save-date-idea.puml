@@ -1,0 +1,57 @@
+@startuml Generate and Save Date Idea
+title Generate and Save Date Idea Flow
+
+actor User
+participant "Idea Swiper UI" as UI
+participant "API Gateway" as API
+participant "Idea Generation\nService" as IdeaService
+participant "ML Recommendation\nEngine" as ML
+database "SQL Server" as DB
+
+User -> UI: Open Idea Swiper
+UI -> API: GET /api/ideas/generate
+API -> IdeaService: Generate Ideas Request
+IdeaService -> DB: Fetch User Preferences
+DB --> IdeaService: UserPreferences
+IdeaService -> ML: Get Recommendations\n(based on preferences)
+ML --> IdeaService: Recommended Ideas
+IdeaService -> DB: Fetch Idea Details
+DB --> IdeaService: DateIdea List
+IdeaService --> API: Ideas Collection
+API --> UI: Display Ideas
+
+User -> UI: Apply Filters\n(budget/category)
+UI -> UI: Filter Ideas Locally
+
+User -> UI: Swipe Right\n(Like Idea)
+UI -> API: POST /api/ideas/{id}/save
+API -> IdeaService: Save Date Idea Command
+IdeaService -> DB: INSERT SavedIdea
+DB --> IdeaService: Success
+IdeaService --> IdeaService: Publish DateIdeaSaved Event
+IdeaService --> API: SavedIdea Response
+API --> UI: Confirmation
+UI -> UI: Update Saved Ideas List
+UI --> User: Show Success Message
+
+alt Swipe Left (Reject Idea)
+    User -> UI: Swipe Left
+    UI -> API: POST /api/ideas/{id}/reject
+    API -> IdeaService: Reject Date Idea
+    IdeaService -> DB: Record Rejection
+    DB --> IdeaService: Success
+    IdeaService --> IdeaService: Publish DateIdeaRejected Event
+    IdeaService --> API: Acknowledged
+    API --> UI: Next Idea
+end
+
+User -> UI: View Saved Ideas
+UI -> API: GET /api/ideas/saved
+API -> IdeaService: Get Saved Ideas Query
+IdeaService -> DB: SELECT SavedIdeas\nWHERE TenantId = @TenantId
+DB --> IdeaService: Saved Ideas List
+IdeaService --> API: SavedIdeas Collection
+API --> UI: Display Saved Ideas
+UI --> User: Show Saved Ideas
+
+@enduml
