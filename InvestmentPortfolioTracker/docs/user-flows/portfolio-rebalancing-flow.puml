@@ -1,0 +1,82 @@
+@startuml portfolio-rebalancing-flow
+title Portfolio Rebalancing Flow
+
+actor User
+participant "Portfolio Details View" as DetailsView
+participant "Drift Indicator" as DriftIndicator
+participant "Rebalance View" as RebalanceView
+participant "Portfolio Service" as PortfolioService
+participant "API Controller\n/api/portfolios" as PortfolioController
+participant "RebalancePortfolio\nCommand Handler" as Handler
+participant "Portfolio Aggregate" as Portfolio
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+database "SQL Server" as Database
+
+User -> DetailsView: Navigate to portfolio details
+DetailsView -> PortfolioService: getPortfolio(portfolioId)
+PortfolioService -> PortfolioController: GET /api/portfolios/{portfolioId}
+PortfolioController --> PortfolioService: Portfolio with current allocation
+PortfolioService --> DetailsView: Portfolio data
+
+DetailsView -> DriftIndicator: Display current vs target allocation
+DriftIndicator -> DriftIndicator: Calculate drift percentage\nfor each asset class
+DriftIndicator -> DriftIndicator: Apply traffic light visualization\n(Green: <3%, Yellow: 3-5%, Red: >5%)
+
+alt Drift > 5%
+    DriftIndicator -> DriftIndicator: Show rebalance suggestion
+    DriftIndicator --> User: Display "Rebalancing recommended"
+
+    User -> DetailsView: Click "Rebalance Portfolio"
+    DetailsView -> RebalanceView: Navigate to rebalance view
+
+    RebalanceView -> RebalanceView: Display current allocation analysis
+    RebalanceView -> RebalanceView: Calculate recommended trades\nto restore target allocation
+    RebalanceView -> RebalanceView: Calculate expected costs
+    RebalanceView -> RebalanceView: Calculate tax impact
+    RebalanceView --> User: Display rebalance preview\nwith trade recommendations
+
+    User -> RebalanceView: Review trade recommendations
+    User -> RebalanceView: Click "Execute Rebalance"
+
+    RebalanceView -> RebalanceView: Show confirmation dialog
+    User -> RebalanceView: Confirm execution
+
+    RebalanceView -> PortfolioService: rebalancePortfolio(portfolioId)
+    PortfolioService -> PortfolioController: POST /api/portfolios/{portfolioId}/rebalance
+
+    PortfolioController -> Handler: Handle RebalancePortfolioCommand
+    Handler -> DbContext: Query Portfolios DbSet
+    DbContext -> Database: SELECT * FROM Portfolios\nWHERE PortfolioId = @portfolioId
+    Database --> DbContext: Portfolio record
+    DbContext --> Handler: Portfolio aggregate
+
+    Handler -> Portfolio: CalculateRebalanceTrades()
+    Portfolio -> Portfolio: Calculate buy/sell orders\nfor each asset class
+    Portfolio -> Portfolio: Ensure 2% minimum cash reserve
+    Portfolio -> Portfolio: Generate trade orders
+    Portfolio --> Handler: List<TradeOrder>
+
+    Handler -> Portfolio: ExecuteRebalance(tradeOrders)
+    Portfolio -> Portfolio: Update current allocation
+    Portfolio -> Portfolio: Update portfolio value
+    Portfolio -> Portfolio: Raise PortfolioRebalanced event\n(with previous/new allocation)
+    Portfolio --> Handler: Updated portfolio
+
+    Handler -> DbContext: SaveChangesAsync()
+    DbContext -> Database: UPDATE Portfolios SET\nTargetAllocation = @newAllocation,\nCurrentValue = @newValue,\nUpdatedAt = @timestamp\nWHERE PortfolioId = @portfolioId
+    Database --> DbContext: Success
+    DbContext --> Handler: Changes saved
+
+    Handler --> PortfolioController: 200 OK + RebalanceResult\n{tradesExecuted, newAllocation}
+    PortfolioController --> PortfolioService: Rebalance successful
+    PortfolioService --> RebalanceView: Success response
+
+    RebalanceView -> RebalanceView: Show success message
+    RebalanceView -> DetailsView: Navigate back to details
+    DetailsView -> DetailsView: Refresh portfolio data
+    DetailsView --> User: Display updated portfolio\nwith balanced allocation
+else Drift <= 5%
+    DriftIndicator --> User: Display "Portfolio is balanced"\n(Green indicator)
+end
+
+@enduml
