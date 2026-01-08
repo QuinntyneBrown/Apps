@@ -1,0 +1,91 @@
+@startuml
+title View Dashboard Flow - Camping Trip Planner
+
+actor User as user
+participant "Dashboard Page" as ui
+participant "Trip Service" as tripService
+participant "Campsite Service" as campsiteService
+participant "Gear Service" as gearService
+participant "Trip Controller" as tripController
+participant "Trip Query Handler" as tripHandler
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+
+user -> ui: Navigate to Dashboard
+activate ui
+
+ui -> tripService: getUpcomingTrips()
+activate tripService
+tripService -> tripController: GET /api/trips?filter=upcoming
+activate tripController
+tripController -> tripHandler: Handle GetTripsQuery
+activate tripHandler
+tripHandler -> dbContext: Query trips
+activate dbContext
+dbContext -> db: SELECT * FROM Trips\nWHERE TenantId = @tenantId\nAND StartDate >= @today\nORDER BY StartDate
+activate db
+db --> dbContext: Trip records
+deactivate db
+deactivate dbContext
+tripHandler --> tripController: Trip DTOs
+deactivate tripHandler
+tripController --> tripService: 200 OK {trips[]}
+deactivate tripController
+tripService --> ui: Observable<Trip[]>
+deactivate tripService
+
+ui -> campsiteService: getFavoriteSites()
+activate campsiteService
+campsiteService -> tripController: GET /api/campsites/favorites
+activate tripController
+tripController -> tripHandler: Handle GetFavoriteCampsitesQuery
+activate tripHandler
+tripHandler -> dbContext: Query favorite campsites
+activate dbContext
+dbContext -> db: SELECT * FROM FavoriteCampsites\nWHERE TenantId = @tenantId\nAND UserId = @userId
+activate db
+db --> dbContext: Campsite records
+deactivate db
+deactivate dbContext
+tripHandler --> tripController: Campsite DTOs
+deactivate tripHandler
+tripController --> campsiteService: 200 OK {campsites[]}
+deactivate tripController
+campsiteService --> ui: Observable<Campsite[]>
+deactivate campsiteService
+
+ui -> gearService: getGearStats()
+activate gearService
+gearService -> tripController: GET /api/gear/stats
+activate tripController
+tripController -> tripHandler: Handle GetGearStatsQuery
+activate tripHandler
+tripHandler -> dbContext: Query gear inventory
+activate dbContext
+dbContext -> db: SELECT COUNT(*) FROM GearItems\nWHERE TenantId = @tenantId\nAND UserId = @userId
+activate db
+db --> dbContext: Gear count
+deactivate db
+deactivate dbContext
+tripHandler --> tripController: Gear stats
+deactivate tripHandler
+tripController --> gearService: 200 OK {stats}
+deactivate tripController
+gearService --> ui: Observable<GearStats>
+deactivate gearService
+
+ui -> ui: Render dashboard with:\n- Upcoming trips\n- Favorite sites\n- Gear stats\n- Quick actions
+ui -> user: Display complete dashboard
+deactivate ui
+
+note right of ui
+  Dashboard displays:
+  - Total trips count
+  - Favorite sites count
+  - Gear items count
+  - Memories/photos count
+  - Upcoming trip cards
+  - Quick action buttons
+end note
+
+@enduml
