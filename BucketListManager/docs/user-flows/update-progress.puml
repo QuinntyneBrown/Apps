@@ -1,0 +1,76 @@
+@startuml update-progress
+title Update Progress Flow
+
+actor User
+participant "Item Detail Panel" as DetailPanel
+participant "Progress Update Component" as ProgressUI
+participant "Progress Service" as Service
+participant "API Controller" as API
+participant "UpdateProgressCommand Handler" as Handler
+participant "IBucketListManagerContext" as DB
+
+User -> DetailPanel: View item details
+DetailPanel --> User: Display current progress (0-100%)
+DetailPanel --> User: Show milestone timeline
+
+User -> ProgressUI: Click "Update Progress"
+ProgressUI --> User: Display progress slider
+ProgressUI --> User: Show notes input field
+
+User -> ProgressUI: Move slider to new percentage
+User -> ProgressUI: Add progress notes
+User -> ProgressUI: Click "Save Progress"
+
+ProgressUI -> ProgressUI: Validate progress value (0-100)
+ProgressUI -> Service: updateProgress(itemId, percentage, notes)
+Service -> Service: Prepare request with auth token
+Service -> API: PUT /api/bucket-list-items/{id}/progress
+note right: Authorization: Bearer {token}\nBody: { percentage, notes }
+
+API -> Handler: UpdateProgressCommand
+Handler -> DB: Query item by Id (filtered by TenantId)
+DB --> Handler: BucketListItem entity
+
+alt Item exists and belongs to user's tenant
+    Handler -> Handler: Validate item ownership
+    Handler -> Handler: Update progress percentage
+    Handler -> Handler: Create progress log entry
+    Handler -> Handler: Update last modified date
+    Handler -> Handler: Check if milestone reached
+
+    alt Milestone reached (25%, 50%, 75%, 100%)
+        Handler -> Handler: Create milestone event
+        Handler -> Handler: Set milestone achievement flag
+    end
+
+    Handler -> DB: Update(bucketListItem)
+    Handler -> DB: Add(progressLog)
+    Handler -> DB: SaveChangesAsync()
+    DB --> Handler: Success
+    Handler --> API: ProgressUpdatedResponse
+    API --> Service: 200 OK + updated progress
+    Service --> ProgressUI: Progress updated successfully
+
+    alt Milestone reached
+        ProgressUI -> ProgressUI: Show celebration modal
+        ProgressUI --> User: Display milestone badge
+    end
+
+    ProgressUI -> DetailPanel: Trigger refresh
+    DetailPanel -> Service: getProgress(itemId)
+    Service -> API: GET /api/bucket-list-items/{id}/progress
+    API -> DB: Query progress data
+    DB --> API: Progress data with logs
+    API --> Service: Progress DTO
+    Service --> DetailPanel: Updated progress
+    DetailPanel --> User: Display updated progress bar
+    DetailPanel --> User: Show milestone markers
+    DetailPanel --> User: Display progress notes
+else Item not found or unauthorized
+    Handler --> API: 404 Not Found / 403 Forbidden
+    API --> Service: Error response
+    Service --> ProgressUI: Update failed
+    ProgressUI --> User: Display error message
+end
+
+@enduml
