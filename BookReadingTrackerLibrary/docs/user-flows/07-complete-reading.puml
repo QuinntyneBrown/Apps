@@ -1,0 +1,105 @@
+@startuml Complete Reading Flow
+title Complete Reading a Book Flow
+
+actor User
+participant "Currently Reading Page" as ReadingUI
+participant "Progress Card" as Card
+participant "Complete Reading Modal" as Modal
+participant "Review Modal" as ReviewModal
+participant "API Gateway" as API
+participant "Reading Controller" as Controller
+participant "Reading Manager" as Manager
+participant "Goals Manager" as GoalsManager
+database "Database" as DB
+
+User -> ReadingUI: Navigate to /reading/current
+ReadingUI --> User: Display currently reading books
+
+User -> Card: Click "Mark as Complete"
+Card -> Modal: Open CompleteReadingModal
+Modal -> Modal: Load session details\n(book, start date, pages)
+Modal --> User: Display completion form
+
+User -> Modal: Confirm completion date\n(default: today)
+Modal -> Modal: Calculate total reading time\n(completion date - start date)
+Modal --> User: Show calculated duration
+
+User -> Modal: Enter total reading time\n(optional manual override)
+User -> Modal: Rate book (1-5 stars)\n(optional)
+User -> Modal: Check "Would Reread"\n(optional)
+User -> Modal: Add emotional impact notes\n"Life-changing book!"
+User -> Modal: Click "Complete Reading"
+
+Modal -> Modal: Validate form\n(completion date >= start date)
+
+alt Valid Form
+    Modal -> API: PUT /api/reading/sessions/{id}/complete\n{completionDate, readingTime,\nrating, wouldReread, notes}
+    API -> Controller: CompleteReading(sessionId, data)
+    Controller -> Manager: CompleteReadingSessionAsync(sessionId, completionData)
+
+    Manager -> DB: SELECT reading_session\nWHERE id={sessionId}
+    DB --> Manager: Session details
+
+    Manager -> Manager: Calculate final stats\n(total days, pages/day,\ntotal reading time)
+
+    Manager -> DB: UPDATE reading_session\nSET status='Completed',\ncompletionDate, rating,\nreadingTime, wouldReread, notes
+    DB --> Manager: Session updated
+
+    Manager -> DB: UPDATE book\nSET status='Available',\nlastReadDate=completionDate
+    DB --> Manager: Book updated
+
+    Manager -> DB: INSERT reading_statistics\n{userId, bookId, stats}
+    DB --> Manager: Stats recorded
+
+    Manager -> Manager: Update reading streak
+    Manager -> DB: UPDATE reading_streak\nSET lastReadDate,\ncurrentStreak, longestStreak
+    DB --> Manager: Streak updated
+
+    Manager -> GoalsManager: UpdateReadingGoals(userId, completionData)
+    GoalsManager -> DB: UPDATE reading_goals\nSET currentProgress\nWHERE applicable
+    DB --> GoalsManager: Goals updated
+
+    alt Goal Completed
+        GoalsManager --> Manager: GoalAchieved\n{goalId, goal}
+    end
+
+    Manager --> Controller: ReadingCompleted\n{session, stats, achievements}
+    Controller --> API: 200 OK\n{completedSession, achievements}
+    API --> Modal: Success with achievements
+
+    Modal -> Modal: Close modal
+    Modal -> ReadingUI: Remove from currently reading
+
+    ReadingUI --> User: Show success notification\n"Completed: [book title]"
+
+    alt Achievements Unlocked
+        ReadingUI --> User: Show achievement badges\n"Goal completed!", "10 books this year!"
+    end
+
+    alt Rating Provided
+        Modal -> ReviewModal: Prompt to write review\n"Would you like to add a review?"
+        alt User Accepts
+            User -> ReviewModal: Click "Write Review"
+            ReviewModal -> ReviewModal: Open review editor\nwith pre-filled rating
+        else User Declines
+            User -> ReviewModal: Click "Maybe Later"
+        end
+    end
+
+else Invalid Form
+    Modal --> User: Display validation errors
+end
+
+== View Reading History ==
+User -> ReadingUI: Navigate to /reading/history
+ReadingUI -> API: GET /api/reading/sessions?\nstatus=Completed&userId={userId}
+API -> Controller: GetReadingHistory(userId, filters)
+Controller -> Manager: GetCompletedSessionsAsync(userId)
+Manager -> DB: SELECT reading_sessions\nWHERE status='Completed'\nORDER BY completionDate DESC
+DB --> Manager: Completed sessions
+Manager --> Controller: Reading history
+Controller --> API: 200 OK\n{history}
+API --> ReadingUI: Historical data
+ReadingUI --> User: Display reading history table\n(books, dates, ratings, stats)
+
+@enduml
