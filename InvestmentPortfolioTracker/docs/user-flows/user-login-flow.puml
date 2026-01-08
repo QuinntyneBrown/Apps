@@ -1,0 +1,52 @@
+@startuml user-login-flow
+title User Login Flow
+
+actor User
+participant "Login Page" as LoginPage
+participant "Auth Service" as AuthService
+participant "API Controller\n/api/auth/login" as AuthController
+participant "Login Handler" as Handler
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+participant "JWT Token Service" as TokenService
+database "SQL Server" as Database
+
+User -> LoginPage: Enter username and password
+LoginPage -> LoginPage: Validate form input
+LoginPage -> AuthService: login(username, password)
+AuthService -> AuthController: POST /api/auth/login\n{username, password}
+
+AuthController -> Handler: Handle LoginCommand
+Handler -> DbContext: Query Users DbSet
+DbContext -> Database: SELECT * FROM Users\nWHERE Username = @username
+Database --> DbContext: User record
+DbContext --> Handler: User entity
+
+alt User Found
+    Handler -> Handler: Verify password hash\nusing PBKDF2 + Salt
+
+    alt Password Valid
+        Handler -> TokenService: Generate JWT Token
+        TokenService -> TokenService: Create claims\n(sub, name, email, roles)
+        TokenService -> TokenService: Sign token with HS256
+        TokenService --> Handler: JWT Token
+
+        Handler --> AuthController: LoginResponse\n{token, expiresAt, user}
+        AuthController --> AuthService: 200 OK + JWT Token
+        AuthService -> AuthService: Store token in localStorage
+        AuthService --> LoginPage: Login successful
+        LoginPage -> LoginPage: Redirect to dashboard
+        LoginPage --> User: Display dashboard
+    else Password Invalid
+        Handler --> AuthController: Validation error
+        AuthController --> AuthService: 401 Unauthorized\n{error: "Invalid credentials"}
+        AuthService --> LoginPage: Login failed
+        LoginPage --> User: Display error message
+    end
+else User Not Found
+    Handler --> AuthController: Not found error
+    AuthController --> AuthService: 401 Unauthorized\n{error: "Invalid credentials"}
+    AuthService --> LoginPage: Login failed
+    LoginPage --> User: Display error message
+end
+
+@enduml
