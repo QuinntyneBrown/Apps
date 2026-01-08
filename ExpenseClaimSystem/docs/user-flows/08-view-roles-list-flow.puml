@@ -1,0 +1,31 @@
+@startuml
+
+actor Administrator
+participant "Role Management\nPage" as UI
+participant "Role Service" as RoleService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to\nRole Management page
+
+UI -> UI: Component initializes
+
+UI -> RoleService: getAllRoles()
+RoleService -> API: GET /api/roles\nAuthorization: Bearer {token}
+
+API -> API: Validate JWT token\nand Admin role
+
+alt Authorized
+    API -> DB: SELECT Roles
+    DB --> API: List of roles
+
+    API --> RoleService: 200 OK\n[{roleId, name}]
+    RoleService --> UI: Roles data received
+    UI --> Administrator: Display roles table\nwith columns:\nrole name, actions
+else Unauthorized
+    API --> RoleService: 401 Unauthorized\nor 403 Forbidden
+    RoleService --> UI: Authorization failed
+    UI --> Administrator: Display error message\nor redirect to login
+end
+
+@enduml

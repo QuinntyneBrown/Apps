@@ -1,0 +1,116 @@
+@startuml task-assignment
+title Task Assignment Flow
+
+actor "Assigning Partner" as Assigner
+actor "Assigned Partner" as Assignee
+participant "Task Board" as UI
+participant "Task Service" as TaskSvc
+participant "Tasks Controller" as Controller
+participant "CreateTaskCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+Assigner -> UI: Navigate to Task Board
+activate UI
+
+UI -> TaskSvc: getTasks(filters)
+activate TaskSvc
+TaskSvc --> UI: Existing tasks
+deactivate TaskSvc
+
+UI --> Assigner: Display task board\nwith columns (To Do,\nIn Progress, Done)
+
+Assigner -> UI: Click "Add Task"
+
+UI -> UI: Show task creation form
+
+Assigner -> UI: Enter task details:\n- Description\n- Related Goal\n- Assign To (Partner)\n- Due Date\n- Priority (optional)
+
+Assigner -> UI: Click "Create Task"
+
+UI -> UI: Validate form inputs
+UI -> TaskSvc: createTask(taskData)
+activate TaskSvc
+
+TaskSvc -> Controller: POST /api/tasks
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: CreateTaskCommand\n(goalId, assignedTo,\ndescription, dueDate,\npriority)
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @goalId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Validate goal exists\nand is active
+
+Command -> DbContext: Query Partners table
+activate DbContext
+DbContext -> DB: SELECT * FROM Partners\nWHERE PartnerId = @assignedTo\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Partner entity
+deactivate DB
+DbContext --> Command: Partner
+deactivate DbContext
+
+Command -> Command: Validate assigned partner\nexists in tenant
+
+Command -> Command: Create Task entity\n- TaskId\n- GoalId\n- AssignedTo\n- Description\n- DueDate\n- Priority\n- Status = 'ToDo'\n- CreatedBy\n- CreatedAt
+
+Command -> Command: Raise TaskAssignmentCreated\nevent
+
+Command -> DbContext: Tasks.Add(task)
+activate DbContext
+DbContext -> DB: INSERT INTO Tasks\n(TaskId, GoalId, AssignedTo,\nDescription, DueDate,\nPriority, Status, CreatedBy,\nCreatedAt)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'TaskAssignmentCreated',\nAggregateId: TaskId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: CreateTaskResponse\n(TaskId, Status)
+deactivate Command
+
+Controller --> TaskSvc: 201 Created
+deactivate Controller
+
+TaskSvc --> UI: Task created successfully
+deactivate TaskSvc
+
+UI -> UI: Add task to board\n(To Do column)
+UI -> UI: Display task card
+
+UI --> Assigner: Show success message\n"Task assigned successfully"
+deactivate UI
+
+note over Assignee
+Notification sent to\nassigned partner
+end note
+
+Assignee -> UI: View notification
+activate UI
+UI --> Assignee: "New task assigned:\n[Description]"
+deactivate UI
+
+note over Assigner, DB
+The TaskAssignmentCreated event may trigger:
+- Email/push notification to assignee
+- Task reminder scheduling
+- Task board updates for both partners
+- Activity feed updates
+end note
+
+@enduml
