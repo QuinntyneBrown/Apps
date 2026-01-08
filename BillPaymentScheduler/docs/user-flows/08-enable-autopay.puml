@@ -1,0 +1,187 @@
+@startuml Enable Autopay Flow
+title Enable Autopay Flow
+
+actor User
+participant "Autopay Dashboard" as Dashboard
+participant "Enable Autopay\nForm" as Form
+participant "Confirmation\nDialog" as Dialog
+participant "Autopay Service" as AutopaySvc
+participant "Bill Service" as BillSvc
+participant "API Gateway" as API
+participant "Autopay Controller" as AutopayCtrl
+participant "Autopay Management\nService" as AutopayMgmt
+database "Autopay Database" as DB
+
+User -> Dashboard: Click "Enable Autopay" button
+activate Dashboard
+
+Dashboard -> BillSvc: loadUserBills()
+activate BillSvc
+BillSvc -> API: GET /api/bills
+activate API
+API -> BillSvc: Return bills list
+deactivate API
+BillSvc -> Dashboard: Bills loaded
+deactivate BillSvc
+
+Dashboard -> AutopaySvc: loadPaymentMethods()
+activate AutopaySvc
+AutopaySvc -> API: GET /api/payment-methods
+activate API
+API -> AutopaySvc: Return payment methods
+deactivate API
+AutopaySvc -> Dashboard: Payment methods loaded
+deactivate AutopaySvc
+
+Dashboard -> Form: Display enable autopay form
+deactivate Dashboard
+activate Form
+
+Form -> User: Show form with:\n- Bill selector (dropdown)\n- Payment method selector\n- Safety limits configuration\n- Execution timing settings
+
+User -> Form: Select bill from dropdown
+Form -> Form: Display bill details\n(payee, typical amount, due date)
+
+User -> Form: Select default payment method
+
+User -> Form: Configure safety settings
+note right of Form
+    Safety Settings:
+    - Maximum amount (optional)
+    - Approval threshold (%)
+    - Execution days before due date
+    - Failure handling options
+end note
+
+alt User sets maximum amount
+    User -> Form: Enter max amount (e.g., $200)
+    Form -> Form: Validate max amount >= bill amount
+end
+
+User -> Form: Set approval threshold slider\n(e.g., 15% change requires approval)
+
+User -> Form: Set execution timing\n(e.g., 3 days before due date)
+
+Form -> Form: Real-time validation
+
+alt Validation Errors
+    Form -> User: Display inline errors:\n- Bill must be selected\n- Payment method required\n- Max amount must be >= bill amount
+    User -> Form: Correct errors
+else All Fields Valid
+    User -> Form: Click "Enable Autopay" button
+
+    Form -> Dialog: Show confirmation summary
+    activate Dialog
+
+    Dialog -> User: Display confirmation:\n"Enable Autopay Summary:\n- Bill: Electric Company\n- Payment Method: Visa ****1234\n- Max Amount: $200\n- Approval if change > 15%\n- Execute 3 days before due date\n- Auto-disable after 3 failures\n\nConfirm?"
+
+    alt User Cancels
+        Dialog -> Form: Close dialog
+        deactivate Dialog
+        Form -> User: Return to form
+    else User Confirms
+        Dialog -> AutopaySvc: enableAutopay(autopayConfig)
+        deactivate Dialog
+        activate AutopaySvc
+
+        AutopaySvc -> API: POST /api/autopay/configurations
+        activate API
+        note right of API
+            Request Body:
+            {
+                "billId": "guid",
+                "paymentMethodId": "guid",
+                "isEnabled": true,
+                "maxAmount": 200.00,
+                "requireApproval": true,
+                "approvalThresholdPercentage": 15,
+                "executionDaysBefore": 3,
+                "autoDisableAfterFailures": 3
+            }
+        end note
+
+        API -> AutopayCtrl: Enable autopay request
+        activate AutopayCtrl
+
+        AutopayCtrl -> AutopayCtrl: Validate request
+        AutopayCtrl -> AutopayCtrl: Extract userId from JWT token
+        AutopayCtrl -> AutopayCtrl: Verify bill ownership
+        AutopayCtrl -> AutopayCtrl: Verify payment method ownership
+
+        AutopayCtrl -> AutopayMgmt: EnableAutopayAsync(userId, autopayConfig)
+        activate AutopayMgmt
+
+        AutopayMgmt -> DB: SELECT * FROM AutopayConfigs\nWHERE BillId = ? AND UserId = ?
+        activate DB
+        DB -> AutopayMgmt: Return existing config (if any)
+        deactivate DB
+
+        alt Autopay already exists for this bill
+            AutopayMgmt -> AutopayMgmt: Update existing configuration
+            AutopayMgmt -> DB: UPDATE AutopayConfigs\nSET IsEnabled = true,\nPaymentMethodId = ?,\nMaxAmount = ?,\nApprovalThresholdPercentage = ?,\nExecutionDaysBefore = ?,\nUpdatedAt = NOW()
+            activate DB
+            DB -> AutopayMgmt: Update successful
+            deactivate DB
+        else No existing autopay
+            AutopayMgmt -> AutopayMgmt: Create new AutopayConfiguration entity
+            AutopayMgmt -> AutopayMgmt: Set initial values
+            AutopayMgmt -> AutopayMgmt: Calculate next execution date
+
+            AutopayMgmt -> DB: INSERT INTO AutopayConfigs
+            activate DB
+            DB -> AutopayMgmt: Return created config
+            deactivate DB
+        end
+
+        AutopayMgmt -> AutopayMgmt: Schedule next autopay execution
+        note right of AutopayMgmt
+            Calculate next execution:
+            - Get bill due date
+            - Subtract execution days before
+            - Create pending autopay execution
+        end note
+
+        AutopayMgmt -> DB: INSERT INTO AutopayExecutions\n(Status = 'Pending', ScheduledDate = ?)
+        activate DB
+        DB -> AutopayMgmt: Execution scheduled
+        deactivate DB
+
+        AutopayMgmt -> AutopayCtrl: Return AutopayConfiguration
+        deactivate AutopayMgmt
+
+        AutopayCtrl -> API: 201 Created with autopay config
+        deactivate AutopayCtrl
+        note right of API
+            Response Body:
+            {
+                "autopayConfigId": "guid",
+                "billId": "guid",
+                "billName": "Electric Company",
+                "paymentMethodId": "guid",
+                "isEnabled": true,
+                "maxAmount": 200.00,
+                "approvalThresholdPercentage": 15,
+                "executionDaysBefore": 3,
+                "nextExecutionDate": "2024-01-17"
+            }
+        end note
+
+        API -> AutopaySvc: Autopay enabled successfully
+        deactivate API
+
+        AutopaySvc -> Form: Success response
+        deactivate AutopaySvc
+
+        Form -> Form: Show success notification\n"Autopay enabled successfully"
+
+        Form -> Dashboard: Navigate to autopay dashboard
+        deactivate Form
+        activate Dashboard
+
+        Dashboard -> Dashboard: Refresh autopay configurations
+        Dashboard -> User: Display autopay dashboard\nwith newly enabled config
+        deactivate Dashboard
+    end
+end
+
+@enduml
