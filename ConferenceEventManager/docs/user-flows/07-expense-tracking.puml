@@ -1,0 +1,248 @@
+@startuml
+title Expense Tracking & ROI Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Expense Tracker\nPage" as ExpensePage
+participant "Add Expense\nModal" as ExpenseModal
+participant "ROI Dashboard\nPage" as ROIDashboard
+participant "ExpenseService" as ExpSvc
+participant "ExpensesController\n/api/expenses" as ExpAPI
+participant "ROIController\n/api/roi" as ROIAPI
+participant "Azure Blob Storage" as Storage
+participant "Command Handlers" as Handlers
+participant "IConferenceEventManagerContext" as DbContext
+database "Database" as DB
+
+User -> ExpensePage: Navigate to Expense Tracker
+activate ExpensePage
+
+ExpensePage -> ExpSvc: getExpenses$()
+activate ExpSvc
+
+ExpSvc -> ExpAPI: GET /api/expenses
+activate ExpAPI
+ExpAPI -> DbContext: Query expenses\nFiltered by TenantId
+activate DbContext
+DbContext -> DB: SELECT Expenses\nGROUP BY Conference
+activate DB
+DB --> DbContext: Expense records
+deactivate DB
+deactivate DbContext
+ExpAPI --> ExpSvc: ExpenseDto[]
+deactivate ExpAPI
+
+ExpSvc --> ExpensePage: Observable<ExpenseDto[]>
+deactivate ExpSvc
+
+ExpensePage -> User: Display expenses\n- Grouped by conference\n- Total by category\n- Budget vs actual\n- Filter by date range
+
+== Add Expense ==
+
+User -> ExpensePage: Click "Add Expense"
+
+ExpensePage -> ExpenseModal: Open expense modal
+activate ExpenseModal
+
+ExpenseModal -> User: Display expense form\n- Conference selection\n- Category (Travel, Hotel, Food, etc.)\n- Amount\n- Date\n- Description\n- Receipt upload
+
+User -> ExpenseModal: Fill expense details
+
+User -> ExpenseModal: Upload receipt image
+
+ExpenseModal -> ExpenseModal: Validate form\n- Required fields\n- Valid amount\n- Receipt file size/type
+
+alt Validation fails
+    ExpenseModal -> User: Show validation errors
+else Validation succeeds
+    User -> ExpenseModal: Click "Save Expense"
+
+    ExpenseModal -> ExpSvc: createExpense(expenseData, receiptFile)
+    activate ExpSvc
+
+    alt Receipt file provided
+        ExpSvc -> Storage: Upload receipt image\nBlob name: expenses/{expenseId}/{filename}
+        activate Storage
+        Storage --> ExpSvc: Blob URL
+        deactivate Storage
+    end
+
+    ExpSvc -> ExpAPI: POST /api/expenses\nExpenseDto + receiptUrl
+    activate ExpAPI
+
+    ExpAPI -> Handlers: CreateExpenseCommand
+    activate Handlers
+
+    Handlers -> Handlers: Create Expense entity\n- Generate ExpenseId\n- Set TenantId\n- Associate with Conference\n- Store receipt URL
+
+    Handlers -> Handlers: Validate budget\n- Check against conference budget\n- Calculate running total
+
+    alt Budget exceeded
+        Handlers -> Handlers: Raise BudgetExceededWarning\ndomain event
+        note right of Handlers
+        Warning notification sent,
+        but expense still recorded
+        end note
+    end
+
+    Handlers -> DbContext: Add(expense)
+    activate DbContext
+    DbContext -> DB: INSERT Expense
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    deactivate DbContext
+
+    Handlers -> Handlers: Raise ExpenseRecorded\ndomain event
+
+    Handlers --> ExpAPI: ExpenseDto
+    deactivate Handlers
+
+    ExpAPI --> ExpSvc: 201 Created
+    deactivate ExpAPI
+
+    ExpSvc --> ExpenseModal: Expense created
+    deactivate ExpSvc
+
+    ExpenseModal -> ExpensePage: Refresh expenses list
+    deactivate ExpenseModal
+
+    ExpensePage -> User: Show success notification
+end
+
+== View ROI Dashboard ==
+
+User -> ExpensePage: Click "View ROI Dashboard"
+
+ExpensePage -> ROIDashboard: Navigate to ROI Dashboard
+activate ROIDashboard
+
+ROIDashboard -> ExpSvc: getROIAnalytics$(conferenceId)
+activate ExpSvc
+
+ExpSvc -> ROIAPI: GET /api/roi?conferenceId={id}
+activate ROIAPI
+
+ROIAPI -> DbContext: Query comprehensive ROI data
+activate DbContext
+
+DbContext -> DB: Calculate ROI metrics:\n- Total expenses\n- Leads generated (from contacts)\n- Deals closed\n- Revenue attributed
+activate DB
+DB --> DbContext: ROI data
+deactivate DB
+
+deactivate DbContext
+
+ROIAPI -> ROIAPI: Calculate ROI metrics:\n- ROI % = (Revenue - Cost) / Cost * 100\n- Cost per lead\n- Cost per connection\n- Learning value score
+
+ROIAPI --> ExpSvc: ROIAnalyticsDto
+deactivate ROIAPI
+
+ExpSvc --> ROIDashboard: Observable<ROIAnalyticsDto>
+deactivate ExpSvc
+
+ROIDashboard -> User: Display ROI dashboard\n- Total investment\n- Revenue generated\n- ROI percentage\n- Leads/connections made\n- Cost per lead\n- Sessions attended\n- Certificates earned\n- Charts & visualizations
+
+== View Expense Details ==
+
+User -> ExpensePage: Click on expense
+
+ExpensePage -> User: Show expense detail\n- All expense info\n- Receipt preview/download
+
+alt Receipt exists
+    User -> ExpensePage: Click "View Receipt"
+
+    ExpensePage -> Storage: Request receipt image
+    activate Storage
+    Storage --> ExpensePage: Receipt image URL
+    deactivate Storage
+
+    ExpensePage -> User: Display receipt in modal
+end
+
+== Edit/Delete Expense ==
+
+User -> ExpensePage: Click "Edit" or "Delete"
+
+alt Edit expense
+    ExpensePage -> ExpenseModal: Open with existing data
+    activate ExpenseModal
+
+    User -> ExpenseModal: Modify expense details
+
+    ExpenseModal -> ExpSvc: updateExpense(expenseId, data)
+    activate ExpSvc
+
+    ExpSvc -> ExpAPI: PUT /api/expenses/{id}
+    activate ExpAPI
+
+    ExpAPI -> Handlers: UpdateExpenseCommand
+    activate Handlers
+
+    Handlers -> DbContext: Update expense
+    activate DbContext
+    DbContext -> DB: UPDATE Expense
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    deactivate DbContext
+
+    Handlers --> ExpAPI: ExpenseDto
+    deactivate Handlers
+
+    ExpAPI --> ExpSvc: 200 OK
+    deactivate ExpAPI
+
+    ExpSvc --> ExpenseModal: Updated
+    deactivate ExpSvc
+
+    ExpenseModal -> ExpensePage: Refresh
+    deactivate ExpenseModal
+
+else Delete expense
+    ExpensePage -> User: Confirm deletion
+
+    alt User confirms
+        ExpensePage -> ExpSvc: deleteExpense(expenseId)
+        activate ExpSvc
+
+        ExpSvc -> ExpAPI: DELETE /api/expenses/{id}
+        activate ExpAPI
+
+        ExpAPI -> Handlers: DeleteExpenseCommand
+        activate Handlers
+
+        Handlers -> DbContext: Delete expense
+        activate DbContext
+        DbContext -> DB: DELETE Expense
+        activate DB
+        DB --> DbContext: Success
+        deactivate DB
+        deactivate DbContext
+
+        alt Receipt exists
+            Handlers -> Storage: Delete receipt blob
+            activate Storage
+            Storage --> Handlers: Deleted
+            deactivate Storage
+        end
+
+        Handlers --> ExpAPI: Success
+        deactivate Handlers
+
+        ExpAPI --> ExpSvc: 204 No Content
+        deactivate ExpAPI
+
+        ExpSvc --> ExpensePage: Deleted
+        deactivate ExpSvc
+
+        ExpensePage -> User: Show success notification
+    end
+end
+
+deactivate ROIDashboard
+deactivate ExpensePage
+
+@enduml
