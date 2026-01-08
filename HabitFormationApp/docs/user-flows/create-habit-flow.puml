@@ -1,0 +1,83 @@
+@startuml create-habit-flow
+title Create Habit User Flow
+
+actor User
+participant "Habit List View" as ListView
+participant "Create Habit Form" as Form
+participant "Validation" as Validator
+participant "HabitService" as Service
+participant "API Gateway" as API
+participant "Habit Controller" as Controller
+participant "Habit Repository" as Repository
+database "Database" as DB
+
+User -> ListView: Click "Create New Habit" button
+activate ListView
+ListView -> Form: Open create habit modal/form
+activate Form
+Form --> User: Display form with fields
+
+User -> Form: Enter habit details\n(name, description, category,\nfrequency, start date)
+Form -> Validator: Validate input (real-time)
+activate Validator
+Validator --> Form: Show validation errors/success
+deactivate Validator
+
+User -> Form: Click "Submit" button
+Form -> Validator: Final validation
+activate Validator
+Validator --> Form: Validation passed
+deactivate Validator
+
+Form -> Service: createHabit(habitData)
+activate Service
+Service -> API: POST /api/habits
+activate API
+API -> Controller: createHabit(CreateHabitDto)
+activate Controller
+
+Controller -> Repository: create(habit)
+activate Repository
+Repository -> DB: INSERT INTO habits
+activate DB
+DB --> Repository: Habit record created
+deactivate DB
+Repository --> Controller: Habit entity
+deactivate Repository
+
+Controller --> API: 201 Created (Habit)
+deactivate Controller
+API --> Service: Habit response
+deactivate API
+Service --> Form: Habit created successfully
+deactivate Service
+
+Form -> Form: Show success toast notification\n"Habit created successfully!"
+Form -> ListView: Close form and refresh habit list
+deactivate Form
+
+ListView -> Service: fetchHabits(userId)
+activate Service
+Service -> API: GET /api/habits?userId={userId}
+activate API
+API -> Controller: getHabits(userId)
+activate Controller
+Controller -> Repository: findByUserId(userId)
+activate Repository
+Repository -> DB: SELECT * FROM habits WHERE userId=?
+activate DB
+DB --> Repository: Habit records
+deactivate DB
+Repository --> Controller: List<Habit>
+deactivate Repository
+Controller --> API: 200 OK (List<Habit>)
+deactivate Controller
+API --> Service: Habits list
+deactivate API
+Service --> ListView: Habits data
+deactivate Service
+
+ListView --> User: Display updated habit list\nwith new habit visible
+deactivate ListView
+
+@enduml
