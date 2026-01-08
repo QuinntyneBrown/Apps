@@ -1,0 +1,102 @@
+@startuml
+title Share Shopping List User Flow
+
+actor "List Owner" as Owner
+participant "ListCard\nComponent" as ListCard
+participant "ShareListModal\nComponent" as Modal
+participant "Redux Store" as Redux
+participant "API\n/api/lists/{id}/share" as API
+database "Database" as DB
+actor "Shared User" as SharedUser
+participant "Notification\nService" as NotifService
+
+Owner -> ListCard: Click "Share" button on list
+activate ListCard
+
+ListCard -> API: GET /api/lists/{listId}/shares
+activate API
+API -> DB: SELECT FROM list_shares\nWHERE list_id = {listId}
+activate DB
+DB --> API: Current shares
+deactivate DB
+API --> ListCard: 200 OK\n[{userId, userName, permission}]
+deactivate API
+
+ListCard -> Modal: Open modal with\ncurrent shares
+activate Modal
+
+Modal --> Owner: Display share dialog:\n- Current shared users\n- Add user section
+
+Owner -> Modal: Enter email address\n(e.g., "alice@example.com")
+Modal -> Modal: Validate email format
+
+Owner -> Modal: Select permission level\n("view" | "edit" | "admin")
+Owner -> Modal: Click "Add" button
+
+alt Valid email and permission
+    Modal -> Redux: Dispatch shareList(listId, shareData)
+    activate Redux
+
+    Modal --> Owner: Show adding indicator
+
+    Redux -> API: POST /api/lists/{listId}/share\n{\n  email: "alice@example.com",\n  permissionLevel: "edit"\n}
+    activate API
+
+    API -> DB: Check user exists
+    activate DB
+    DB --> API: User found (userId)
+    deactivate DB
+
+    API -> DB: INSERT INTO list_shares\n(list_id, user_id, permission_level,\nshared_at, shared_by)
+    activate DB
+    DB --> API: Share created
+    deactivate DB
+
+    API -> NotifService: Send notification\nto shared user
+    activate NotifService
+    NotifService --> SharedUser: Email & Push notification:\n"[Owner] shared\n'Weekly Groceries' with you"
+    deactivate NotifService
+
+    API --> Redux: 201 Created\n{ userId, userName, permission }
+    deactivate API
+
+    Redux -> Redux: Update store:\n- Add share to shares[listId]\n- Update list.sharedWith
+
+    Redux --> Modal: Success
+    deactivate Redux
+
+    Modal -> Modal: Add user to\ncurrent shares list
+    Modal --> Owner: Show success:\n"List shared with alice@example.com"
+
+    Owner -> Modal: [Optional] Add more users\nor Click "Done"
+
+    Modal -> Modal: Close modal
+    deactivate Modal
+
+    ListCard -> ListCard: Update "Shared with" badge
+    ListCard --> Owner: Display updated share status
+
+else Invalid email
+    Modal --> Owner: Show error:\n"Invalid email address"
+
+else User not found
+    API --> Redux: 404 Not Found
+    Redux --> Modal: Error
+    Modal --> Owner: Show error:\n"User not found. They need to\nsign up first."
+
+else Permission denied
+    API --> Redux: 403 Forbidden
+    Redux --> Modal: Error
+    Modal --> Owner: Show error:\n"You don't have permission\nto share this list"
+end
+
+deactivate ListCard
+
+note right of SharedUser
+  Shared user can now:
+  - View the list (all permissions)
+  - Add/edit items (edit/admin)
+  - Share with others (admin only)
+end note
+
+@enduml
