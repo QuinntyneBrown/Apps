@@ -1,0 +1,48 @@
+@startuml Record Death Flow
+title Record Death Information Flow
+
+actor User
+participant "Person Profile\nPage" as UI
+participant "Person Service" as PersonSvc
+participant "Persons\nController" as PersonCtrl
+participant "RecordDeath\nCommandHandler" as Handler
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+
+User -> UI: View person profile\n(living person)
+UI --> User: Display profile with\n"Record Death" button
+
+User -> UI: Click "Record Death"
+UI -> UI: Display death information form
+User -> UI: Enter death details:\n- Death Date*\n- Death Place\n- Burial Place
+User -> UI: Click "Save"
+
+UI -> UI: Validate death date
+UI -> PersonSvc: recordDeath(personId, deathData)
+PersonSvc -> PersonCtrl: POST /api/persons/{personId}/death\n{deathDate, deathPlace, burialPlace}
+PersonCtrl -> PersonCtrl: Validate request
+PersonCtrl -> Handler: Handle RecordDeathCommand
+
+Handler -> DbContext: Persons.Find(personId)
+DbContext -> DB: SELECT with TenantId filter
+DB --> DbContext: Person entity
+DbContext --> Handler: Person aggregate
+
+Handler -> Handler: Validate PersonId exists
+Handler -> Handler: Set IsLiving = false
+Handler -> Handler: Set DeathDate
+Handler -> Handler: Set DeathPlace
+Handler -> Handler: Set BurialPlace
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: UPDATE Persons\nSET IsLiving = 0,\nDeathDate = @date,\nDeathPlace = @place,\nBurialPlace = @burial\nWHERE PersonId = @id
+DB --> DbContext: Success
+Handler -> Handler: Raise DeathRecorded\ndomain event
+
+Handler --> PersonCtrl: 200 OK
+PersonCtrl --> PersonSvc: Success
+PersonSvc --> UI: Death recorded
+UI -> UI: Close form
+UI -> UI: Refresh profile\n(show death information)
+UI --> User: Display updated profile\nwith death details
+
+@enduml
