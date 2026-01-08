@@ -1,0 +1,131 @@
+@startuml
+title Session Planning Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Conference Detail\nPage" as DetailPage
+participant "Schedule Planner\nComponent" as Planner
+participant "ConferenceService" as ConfSvc
+participant "SessionService" as SessSvc
+participant "ConferencesController\n/api/conferences" as ConfAPI
+participant "SessionsController\n/api/sessions" as SessAPI
+participant "PlanScheduleCommand\nHandler" as Handler
+participant "IConferenceEventManagerContext" as DbContext
+database "Database" as DB
+
+User -> DetailPage: Navigate to conference detail
+activate DetailPage
+
+DetailPage -> ConfSvc: getConference$(id)
+activate ConfSvc
+
+ConfSvc -> ConfAPI: GET /api/conferences/{id}
+activate ConfAPI
+ConfAPI -> DbContext: Query conference by id
+activate DbContext
+DbContext -> DB: SELECT Conference
+activate DB
+DB --> DbContext: Conference data
+deactivate DB
+deactivate DbContext
+ConfAPI --> ConfSvc: ConferenceDto
+deactivate ConfAPI
+
+ConfSvc --> DetailPage: Conference details
+deactivate ConfSvc
+
+DetailPage -> User: Display conference info\nwith "Plan Schedule" button
+
+User -> DetailPage: Click "Plan Schedule"
+
+DetailPage -> Planner: Open schedule planner
+activate Planner
+
+Planner -> SessSvc: getConferenceSessions$(conferenceId)
+activate SessSvc
+
+SessSvc -> SessAPI: GET /api/conferences/{id}/sessions
+activate SessAPI
+SessAPI -> DbContext: Query sessions for conference
+activate DbContext
+DbContext -> DB: SELECT Sessions\nWHERE ConferenceId = @id
+activate DB
+DB --> DbContext: Session records
+deactivate DB
+deactivate DbContext
+SessAPI --> SessSvc: SessionDto[]
+deactivate SessAPI
+
+SessSvc --> Planner: Available sessions list
+deactivate SessSvc
+
+Planner -> User: Display session timeline\n- All available sessions\n- Time slots\n- Track information
+
+User -> Planner: Select sessions to attend\n- Drag & drop to schedule\n- Click to add to personal schedule
+
+Planner -> Planner: Check for time conflicts
+note right of Planner
+Conflict detection:
+- Same time slot conflicts
+- Travel time between venues
+- Break time warnings
+end note
+
+alt Time conflict detected
+    Planner -> User: Show conflict warning\n"Session overlaps with {session}"
+    User -> Planner: Resolve conflict\n(deselect or adjust)
+else No conflicts
+    Planner -> User: Session added to schedule
+end
+
+User -> Planner: Continue adding sessions
+
+User -> Planner: Click "Save Schedule"
+
+Planner -> ConfSvc: planSchedule(conferenceId, sessionIds[])
+activate ConfSvc
+
+ConfSvc -> ConfAPI: POST /api/conferences/{id}/schedule\n{sessionIds: [...]}
+activate ConfAPI
+
+ConfAPI -> Handler: Send PlanScheduleCommand
+activate Handler
+
+Handler -> Handler: Validate schedule\n- Check all sessions exist\n- Verify no conflicts\n- Confirm within conference dates
+
+alt Validation fails
+    Handler --> ConfAPI: ValidationException
+    ConfAPI --> ConfSvc: 400 Bad Request
+    ConfSvc --> Planner: Schedule save failed
+    Planner -> User: Display error message
+else Validation passes
+    Handler -> DbContext: Save session schedule
+    activate DbContext
+    DbContext -> DB: INSERT/UPDATE UserSchedule
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    deactivate DbContext
+
+    Handler -> Handler: Raise ConferenceSchedulePlanned\ndomain event
+
+    Handler --> ConfAPI: ScheduleDto
+    deactivate Handler
+
+    ConfAPI --> ConfSvc: 200 OK
+    deactivate ConfAPI
+
+    ConfSvc --> Planner: Schedule saved
+    deactivate ConfSvc
+
+    Planner -> User: Show success notification\n"Schedule saved successfully"
+
+    Planner -> Planner: Offer export options\n- iCal format\n- Google Calendar\n- Outlook Calendar
+
+    deactivate Planner
+    deactivate DetailPage
+end
+
+@enduml
