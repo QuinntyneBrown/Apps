@@ -1,0 +1,105 @@
+@startuml photo-delete-restore
+actor User
+participant "Photo Library UI" as UI
+participant "Photo Service" as PhotoService
+participant "API Gateway" as API
+participant "Photo Controller" as PhotoController
+database "Photo Database" as DB
+participant "Notification Service" as Notification
+
+== Delete Photo Flow ==
+
+User -> UI: Select photo(s)
+UI --> User: Show selection (checkbox)
+
+User -> UI: Click "Delete" button
+UI -> UI: Show confirmation dialog:\n"Delete X photo(s)?"
+
+User -> UI: Confirm deletion
+
+UI -> PhotoService: deletePhoto(photoIds[])
+PhotoService -> API: DELETE /api/photos/{id}
+API -> PhotoController: softDeletePhoto(id)
+
+PhotoController -> DB: UPDATE photo\nSET isDeleted = true,\ndeletedAt = NOW(),\nwillBeDeletedAt = NOW() + 30 days
+DB --> PhotoController: Success
+
+PhotoController --> API: 200 OK
+API --> PhotoService: Delete successful
+PhotoService --> UI: Photo moved to trash
+
+UI -> UI: Remove photo from library view
+UI -> Notification: Show "Undo" snackbar\n(5 seconds)
+
+alt User clicks "Undo" within 5 seconds
+    User -> Notification: Click "Undo"
+    Notification -> PhotoService: restorePhoto(photoIds[])
+    PhotoService -> API: POST /api/photos/{id}/restore
+    API -> PhotoController: restorePhoto(id)
+    PhotoController -> DB: UPDATE photo\nSET isDeleted = false,\ndeletedAt = NULL
+    DB --> PhotoController: Success
+    PhotoController --> API: 200 OK
+    API --> PhotoService: Restore successful
+    PhotoService --> UI: Photo restored
+    UI -> UI: Add photo back to library
+    UI --> User: Show notification:\n"Photo restored"
+else Undo timeout expires
+    Notification -> Notification: Close snackbar
+end
+
+== Restore from Trash Flow ==
+
+User -> UI: Navigate to "Trash" view
+UI -> PhotoService: getDeletedPhotos()
+PhotoService -> API: GET /api/photos/trash
+API -> PhotoController: getDeletedPhotos()
+PhotoController -> DB: SELECT * FROM photos\nWHERE isDeleted = true
+DB --> PhotoController: Deleted photos list
+PhotoController --> API: 200 OK {photos[]}
+API --> PhotoService: Deleted photos
+PhotoService --> UI: Display deleted photos
+UI --> User: Show trash view with\ndays remaining indicator
+
+User -> UI: Select photo(s) to restore
+User -> UI: Click "Restore" button
+
+UI -> PhotoService: restorePhotos(photoIds[])
+loop For each photo
+    PhotoService -> API: POST /api/photos/{id}/restore
+    API -> PhotoController: restorePhoto(id)
+    PhotoController -> DB: UPDATE photo\nSET isDeleted = false,\ndeletedAt = NULL,\nwillBeDeletedAt = NULL
+    DB --> PhotoController: Success
+    PhotoController --> API: 200 OK
+    API --> PhotoService: Restore successful
+end
+
+PhotoService --> UI: All photos restored
+UI -> UI: Remove from trash view
+UI --> User: Show notification:\n"X photos restored"
+
+== Permanent Delete Flow ==
+
+alt Auto-delete after 30 days
+    DB -> DB: Background job:\nSELECT photos WHERE\nwillBeDeletedAt < NOW()
+    DB -> PhotoController: Permanently delete photos
+    PhotoController -> BlobStorage: Delete photo files
+    PhotoController -> DB: DELETE FROM photos\nWHERE id IN (...)
+else Manual permanent delete
+    User -> UI: Select photo in trash
+    User -> UI: Click "Delete Permanently"
+    UI -> UI: Show confirmation:\n"Permanently delete?\nThis cannot be undone."
+    User -> UI: Confirm
+    UI -> PhotoService: permanentlyDeletePhoto(photoId)
+    PhotoService -> API: DELETE /api/photos/{id}/permanent
+    API -> PhotoController: permanentlyDeletePhoto(id)
+    PhotoController -> BlobStorage: Delete photo files
+    BlobStorage --> PhotoController: Files deleted
+    PhotoController -> DB: DELETE FROM photos\nWHERE id = photoId
+    DB --> PhotoController: Success
+    PhotoController --> API: 200 OK
+    API --> PhotoService: Permanently deleted
+    PhotoService --> UI: Photo deleted permanently
+    UI --> User: Show notification:\n"Photo permanently deleted"
+end
+
+@enduml
