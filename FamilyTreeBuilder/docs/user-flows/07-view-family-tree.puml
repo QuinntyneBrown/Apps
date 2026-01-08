@@ -1,0 +1,69 @@
+@startuml View Family Tree Flow
+title View Family Tree Visualization Flow
+
+actor User
+participant "Tree View\nPage" as UI
+participant "Person Service" as PersonSvc
+participant "Relationship\nService" as RelSvc
+participant "Persons\nController" as PersonCtrl
+participant "Relationships\nController" as RelCtrl
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+participant "Tree Rendering\nEngine" as TreeEngine
+
+User -> UI: Navigate to "Tree View"
+UI -> UI: Display loading indicator
+
+par Load Persons and Relationships in Parallel
+    UI -> PersonSvc: getAllPersons()
+    PersonSvc -> PersonCtrl: GET /api/persons/tree/{treeId}
+    PersonCtrl -> DbContext: Persons\n.Where(TenantId)\n.ToListAsync()
+    DbContext -> DB: SELECT * FROM Persons\nWHERE TenantId = @tenantId\nORDER BY Generation
+    DB --> DbContext: Person entities
+    DbContext --> PersonCtrl: Person list
+    PersonCtrl --> PersonSvc: PersonDto[]
+    PersonSvc --> UI: Persons data
+else
+    UI -> RelSvc: getAllRelationships()
+    RelSvc -> RelCtrl: GET /api/relationships
+    RelCtrl -> DbContext: Relationships\n.Where(TenantId)\n.Include(Persons)\n.ToListAsync()
+    DbContext -> DB: SELECT * FROM Relationships\nWHERE TenantId = @tenantId\nAND IsActive = 1
+    DB --> DbContext: Relationship entities
+    DbContext --> RelCtrl: Relationship list
+    RelCtrl --> RelSvc: RelationshipDto[]
+    RelSvc --> UI: Relationships data
+end
+
+UI -> UI: Combine persons\nand relationships
+UI -> TreeEngine: buildTree(persons, relationships)
+TreeEngine -> TreeEngine: Calculate node positions
+TreeEngine -> TreeEngine: Determine root person(s)
+TreeEngine -> TreeEngine: Build hierarchy tree structure
+TreeEngine -> TreeEngine: Apply selected layout:\n- Pedigree view\n- Fan chart\n- Descendant tree
+TreeEngine --> UI: Tree data structure
+
+UI -> UI: Render SVG tree diagram
+UI -> UI: Add zoom/pan controls
+UI -> UI: Add click handlers\non nodes
+UI -> UI: Hide loading indicator
+UI --> User: Display interactive\nfamily tree
+
+User -> UI: Click on person node
+UI -> UI: Highlight selected person
+UI -> UI: Show person details\nin sidebar
+
+User -> UI: Use zoom controls
+UI -> UI: Scale SVG tree
+UI --> User: Updated view
+
+User -> UI: Use pan controls
+UI -> UI: Translate SVG tree
+UI --> User: Updated view
+
+User -> UI: Change layout\n(pedigree/fan/descendant)
+UI -> TreeEngine: buildTree(persons,\nrelationships, newLayout)
+TreeEngine --> UI: New tree structure
+UI -> UI: Re-render tree
+UI --> User: Display new layout
+
+@enduml
