@@ -1,0 +1,173 @@
+@startuml
+title Set Giving Goal - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Impact Tracking\nPage" as impact
+participant "Set Goal\nModal" as modal
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "SetAnnualGivingGoal\nCommand Handler" as handler
+participant "GivingGoal\nAggregate" as aggregate
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: Navigate to dashboard
+activate dashboard
+
+dashboard -> api: GET /api/impact/goals/{currentYear}
+activate api
+api -> db: Query goal for 2026
+activate db
+db --> api: Return goal if exists
+deactivate db
+api --> dashboard: Goal data or null
+deactivate api
+
+alt No Goal Set
+    dashboard --> user: Show "Set Giving Goal"\nfor 2026 card
+else Goal Exists
+    dashboard --> user: Show goal progress:\n"$X,XXX / $Y,YYY (Z% complete)"
+end
+
+user -> dashboard: Click "Set Goal" or\n"View Impact"
+
+dashboard -> impact: Navigate to\nImpact Tracking page
+activate impact
+
+impact -> api: GET /api/impact/goals/{currentYear}
+activate api
+api -> db: Query current year goal
+db --> api: Goal data
+api --> impact: Return goal
+deactivate api
+
+impact --> user: Display impact dashboard:\n- Goal progress visualization\n- Milestones achieved\n- Impact metrics charts
+
+user -> impact: Click "Set New Goal" or\n"Update Goal"
+
+impact -> modal: Open goal setting modal
+activate modal
+
+modal --> user: Display goal form:\n- Target Amount*\n- Tax Year (default: 2026)\n- Goal Type (Total Donations,\n  Tax Deductible Only, etc.)
+
+alt Updating Existing Goal
+    modal -> modal: Pre-fill with current goal:\nTarget: $5,000\nYear: 2026
+end
+
+user -> modal: Enter target amount\n(e.g., $10,000)
+user -> modal: Confirm tax year: 2026
+user -> modal: Optional: Select goal type
+user -> modal: Click "Set Goal"
+
+modal -> validator: Validate form data
+activate validator
+
+validator -> validator: Check target amount > 0
+validator -> validator: Ensure tax year is valid\n(current or future year)
+validator -> validator: Validate amount format
+
+alt Validation Fails
+    validator --> modal: Return validation errors
+    modal --> user: Display error:\n"Target amount must be greater than $0"
+else Validation Succeeds
+    validator --> modal: Validation passed
+    deactivate validator
+
+    modal -> api: POST /api/impact/goals\n{targetAmount: 10000,\ntaxYear: 2026,\ngoalType: "TotalDonations"}
+    activate api
+
+    modal --> user: Show loading spinner
+
+    api -> handler: Execute SetAnnualGivingGoalCommand
+    activate handler
+
+    handler -> handler: Validate target amount > 0
+    handler -> handler: Check tax year validity
+    handler -> handler: Get UserId from context
+
+    handler -> db: Check if goal exists\nfor user and year
+    activate db
+    db --> handler: Existing goal or null
+    deactivate db
+
+    alt Goal Exists - Update
+        handler -> aggregate: Load existing GivingGoal aggregate
+        activate aggregate
+        aggregate -> aggregate: Update TargetAmount
+        aggregate -> aggregate: Recalculate IsReached\nif CurrentAmount >= TargetAmount
+        aggregate -> db: UPDATE GivingGoals\nSET TargetAmount, UpdatedAt
+        activate db
+        db --> aggregate: Success
+        deactivate db
+    else New Goal - Create
+        handler -> aggregate: Create GivingGoal aggregate
+        activate aggregate
+        aggregate -> aggregate: Set GoalId (GUID)
+        aggregate -> aggregate: Set UserId
+        aggregate -> aggregate: Set TargetAmount
+        aggregate -> aggregate: Set TaxYear
+        aggregate -> aggregate: Set CurrentAmount = 0
+        aggregate -> aggregate: Set IsReached = false
+        aggregate -> db: INSERT INTO GivingGoals
+        activate db
+        db --> aggregate: Success
+        deactivate db
+    end
+
+    aggregate -> events: Publish AnnualGivingGoalSet event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> handler: Return GoalId
+    deactivate aggregate
+
+    handler -> api: Calculate current progress\nfrom existing donations
+    activate api
+    api -> db: SUM donations for 2026\nWHERE UserId = @userId\nAND IsTaxDeductible = true
+    activate db
+    db --> api: Current total: $3,500
+    deactivate db
+    api --> handler: Current progress
+    deactivate api
+
+    handler -> aggregate: Update CurrentAmount
+    activate aggregate
+    aggregate -> aggregate: Set CurrentAmount = $3,500
+    aggregate -> aggregate: Calculate progress: 35%
+    aggregate -> db: UPDATE CurrentAmount
+    activate db
+    db --> aggregate: Success
+    deactivate db
+    aggregate --> handler: Updated goal
+    deactivate aggregate
+
+    handler --> api: 201 Created or 200 OK\n{goalId, progress: 35%,\ncurrentAmount: 3500,\ntargetAmount: 10000}
+    deactivate handler
+
+    api --> modal: Goal set successfully
+    deactivate api
+
+    modal --> user: Display success:\n"Goal set for 2026!\nCurrent progress: $3,500 / $10,000 (35%)"
+
+    modal -> modal: Close modal
+    deactivate modal
+
+    impact -> api: GET /api/impact/goals/2026
+    activate api
+    api -> db: Query updated goal with progress
+    db --> api: Goal with progress data
+    api --> impact: Return updated goal
+    deactivate api
+
+    impact -> impact: Update progress visualization:\n- Progress bar: 35%\n- Remaining to goal: $6,500\n- Projected completion date
+
+    impact --> user: Show updated impact dashboard:\n- Animated progress bar\n- Goal achievement projection\n- Milestone indicators
+    deactivate impact
+
+    dashboard --> user: Dashboard goal widget\nupdated with new target
+    deactivate dashboard
+end
+
+@enduml
