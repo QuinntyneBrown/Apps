@@ -1,0 +1,83 @@
+@startuml Claim Gift Idea Flow
+autonumber
+title Claim Gift Idea Flow (I'll Buy This)
+
+actor "Family Member" as User
+participant "Shared Ideas\nPage" as UI
+participant "Idea Details\nComponent" as DetailsUI
+participant "Gift Idea Service" as Service
+participant "API Controller\n/api/gift-ideas/{ideaId}/claim" as API
+participant "Claim Handler" as Handler
+participant "Notification Service" as NotificationSvc
+database "Database" as DB
+
+User -> UI: Navigate to "Shared with Me"
+UI -> Service: getSharedIdeas()
+Service -> API: GET /api/gift-ideas/shared
+API -> API: Extract user ID from JWT
+API -> DB: Query shared gift ideas\nfor current user
+DB --> API: List of shared ideas
+API --> Service: 200 OK {shared ideas}
+Service --> UI: Shared ideas loaded
+UI -> UI: Display shared idea cards
+
+User -> UI: Select shared gift idea
+UI -> DetailsUI: Display idea details\nwith "I'll buy this" button
+
+User -> DetailsUI: Click "I'll buy this"
+DetailsUI -> DetailsUI: Display confirmation dialog\n"Are you sure you want to claim this gift?"
+
+User -> DetailsUI: Confirm claim
+
+DetailsUI -> Service: claimGiftIdea(giftIdeaId)
+Service -> API: POST /api/gift-ideas/{ideaId}/claim
+
+API -> API: Verify authentication\nand shared access
+API -> API: Extract user ID from JWT
+
+alt User Authenticated and Has Access
+    API -> Handler: Handle ClaimGiftIdeaCommand
+    Handler -> DB: Query gift idea\nand verify shared with user
+
+    alt Gift Idea Shared with User
+        Handler -> DB: Check if already claimed
+
+        alt Not Already Claimed
+            Handler -> DB: UPDATE GiftIdea\nSET ClaimedBy = UserId,\nClaimedDate = NOW(),\nStatus = 'Claimed'
+            DB --> Handler: Gift idea claimed
+
+            Handler -> DB: Query idea with owner details
+            DB --> Handler: Gift idea with owner
+
+            Handler -> NotificationSvc: Notify original owner\n"User claimed your gift idea"
+            NotificationSvc -> NotificationSvc: Create notification\nfor idea owner
+            NotificationSvc --> Handler: Notification sent
+
+            Handler --> API: ClaimResultDto\n{giftIdeaId, claimedBy, claimedDate}
+            API --> Service: 200 OK\n{message: "Gift idea claimed",\nclaimedBy: user}
+            Service --> DetailsUI: Claim successful
+            DetailsUI -> DetailsUI: Update button\nto "Claimed by You"
+            DetailsUI -> DetailsUI: Add claimed badge\nto idea card
+            DetailsUI --> User: Display success message\n"You've claimed this gift idea"
+        else Already Claimed by Someone
+            Handler -> DB: Query who claimed it
+            DB --> Handler: Claimer details
+
+            Handler --> API: Already claimed error
+            API --> Service: 409 Conflict\n{error: "Already claimed",\nclaimedBy: username}
+            Service --> DetailsUI: Already claimed
+            DetailsUI --> User: Display message\n"Already claimed by [username]"
+        end
+    else Gift Idea Not Shared or Not Found
+        Handler --> API: Not found error
+        API --> Service: 404 Not Found\n{error: "Gift idea not found"}
+        Service --> DetailsUI: Error occurred
+        DetailsUI --> User: Display error message
+    end
+else Not Authenticated or No Access
+    API --> Service: 401/403 Error\n{error: "Not authorized"}
+    Service --> DetailsUI: Authorization failed
+    DetailsUI --> User: Display authorization error\nor redirect to login
+end
+
+@enduml

@@ -1,0 +1,75 @@
+@startuml Start Reading Flow
+title Start Reading a Book Flow
+
+actor User
+participant "Book Detail Page" as DetailUI
+participant "Library Page" as LibraryUI
+participant "Currently Reading Page" as ReadingUI
+participant "API Gateway" as API
+participant "Reading Controller" as Controller
+participant "Reading Manager" as Manager
+database "Database" as DB
+
+== Start Reading from Book Detail ==
+User -> DetailUI: View book at /library/books/{id}
+DetailUI --> User: Display book details\n(status: Available)
+User -> DetailUI: Click "Start Reading" button
+DetailUI -> API: POST /api/reading/sessions/start\n{bookId, startDate: today}
+API -> Controller: StartReading(request)
+Controller -> Manager: StartReadingSessionAsync(bookId, userId)
+
+Manager -> DB: SELECT book WHERE id={bookId}
+DB --> Manager: Book details\n{totalPages, title, author}
+
+Manager -> DB: SELECT active sessions\nWHERE bookId={bookId}\nAND userId={userId}\nAND status='InProgress'
+DB --> Manager: Existing sessions
+
+alt No Active Session
+    Manager -> DB: INSERT reading_session\n{bookId, userId, startDate,\ncurrentPage: 0, status: 'InProgress'}
+    DB --> Manager: Session ID
+    Manager -> DB: UPDATE book\nSET status='Reading'
+    DB --> Manager: Updated
+    Manager --> Controller: SessionCreated\n{sessionId, session}
+    Controller --> API: 201 Created\n{session}
+    API --> DetailUI: Success
+    DetailUI -> DetailUI: Update button\nto "Update Progress"
+    DetailUI --> User: Show success notification\n"Started reading [book title]"
+    DetailUI -> DetailUI: Redirect to Currently Reading
+else Active Session Exists
+    Manager --> Controller: Conflict\n"Already reading this book"
+    Controller --> API: 409 Conflict
+    API --> DetailUI: Error message
+    DetailUI --> User: "You're already reading this book"
+end
+
+== Start Reading from Library ==
+User -> LibraryUI: Browse library at /library
+User -> LibraryUI: Click book card
+User -> LibraryUI: Select "Start Reading"\nfrom quick actions
+LibraryUI -> API: POST /api/reading/sessions/start\n{bookId}
+API -> Controller: StartReading(request)
+Controller -> Manager: StartReadingSessionAsync(bookId, userId)
+Manager -> DB: Create session (same as above)
+DB --> Manager: Session created
+Manager --> Controller: SessionCreated
+Controller --> API: 201 Created
+API --> LibraryUI: Success
+LibraryUI -> LibraryUI: Update book card status
+LibraryUI --> User: Show success notification
+
+== View Currently Reading ==
+User -> ReadingUI: Navigate to /reading/current
+ReadingUI -> API: GET /api/reading/sessions?\nstatus=InProgress&userId={userId}
+API -> Controller: GetCurrentlyReading(userId)
+Controller -> Manager: GetActiveSessionsAsync(userId)
+Manager -> DB: SELECT reading_sessions rs\nJOIN books b ON rs.bookId=b.id\nWHERE rs.userId={userId}\nAND rs.status='InProgress'
+DB --> Manager: Active reading sessions\nwith book details
+Manager -> Manager: Calculate progress %\n(currentPage / totalPages * 100)
+Manager -> Manager: Calculate reading pace\n(pages read / days since start)
+Manager -> Manager: Estimate completion date\n(remaining pages / avg pace)
+Manager --> Controller: CurrentlyReading list\n{sessions with stats}
+Controller --> API: 200 OK\n{currentlyReading}
+API --> ReadingUI: Reading session data
+ReadingUI --> User: Display progress cards\n(book, progress bar, stats)
+
+@enduml

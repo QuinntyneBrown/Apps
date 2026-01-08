@@ -1,0 +1,98 @@
+@startuml Add Contribution Flow
+title Add Contribution User Flow
+
+actor User
+participant "Goal Detail Page\n(/goals/{id})" as GoalDetail
+participant "Add Contribution\nModal" as Modal
+participant "ContributionsService" as Service
+participant "API\n(/api/goals/{id}/\ncontributions)" as API
+participant "GoalController" as Controller
+participant "AddContributionHandler" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+User -> GoalDetail: Click "Add Contribution" button
+activate GoalDetail
+GoalDetail -> Modal: Open Add Contribution Modal
+activate Modal
+
+Modal -> User: Display form\n(amount, date, source,\none-time/recurring toggle)
+
+alt Quick Contribution
+    User -> Modal: Click quick amount\n($10, $25, $50, $100)
+    Modal -> Modal: Set amount field
+else Custom Amount
+    User -> Modal: Enter custom amount
+end
+
+User -> Modal: Select date and source
+User -> Modal: Toggle one-time/recurring
+
+User -> Modal: Click "Save"
+Modal -> Modal: Validate form\n(amount > 0)
+
+alt Validation Success
+    Modal -> Service: addContribution(goalId, data)
+    activate Service
+    Service -> API: POST /api/goals/{id}/contributions\n{ amount, date, source, type }
+    activate API
+    API -> Controller: POST contributions
+    activate Controller
+    Controller -> Handler: Send AddContributionCommand
+    activate Handler
+    Handler -> Context: Load goal from database
+    activate Context
+    Context -> DB: SELECT * FROM Goals WHERE GoalId = {id}
+    activate DB
+    DB --> Context: Goal entity
+    deactivate DB
+    Context --> Handler: Goal
+    deactivate Context
+
+    Handler -> Handler: Create Contribution entity
+    Handler -> Handler: Update Goal.CurrentAmount
+    Handler -> Handler: Check if goal achieved\n(CurrentAmount >= TargetAmount)
+
+    Handler -> Context: contributions.Add(contribution)
+    activate Context
+    Context -> DB: INSERT INTO Contributions
+    activate DB
+    DB --> Context: Success
+    deactivate DB
+    Context -> DB: UPDATE Goals SET CurrentAmount
+    DB --> Context: Success
+    Context -> DB: Emit ManualContributionRecorded event
+    DB --> Context: Event saved
+
+    alt Goal Achieved
+        Context -> DB: UPDATE Goals SET Status = 'Achieved'
+        DB --> Context: Success
+        Context -> DB: Emit GoalAchieved event
+        DB --> Context: Event saved
+    end
+
+    Context --> Handler: Contribution saved
+    deactivate Context
+    Handler --> Controller: ContributionDto
+    deactivate Handler
+    Controller --> API: 201 Created\n{ contributionId, amount, ... }
+    deactivate Controller
+    API --> Service: ContributionDto
+    deactivate API
+    Service --> Modal: Contribution added
+    deactivate Service
+    Modal -> GoalDetail: Close modal
+    deactivate Modal
+    GoalDetail -> GoalDetail: Refresh goal details\nand progress
+
+    alt Goal Achieved
+        GoalDetail -> User: Show celebration animation\n"Goal Achieved!"
+    else Still In Progress
+        GoalDetail -> User: Show success message\n"Contribution added"
+    end
+    deactivate GoalDetail
+else Validation Failed
+    Modal -> User: Show validation errors
+end
+
+@enduml

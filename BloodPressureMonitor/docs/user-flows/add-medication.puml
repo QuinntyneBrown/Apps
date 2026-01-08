@@ -1,0 +1,156 @@
+@startuml
+title Add Medication Flow
+
+actor User as user
+participant "Medication List\n(UI)" as medList
+participant "Add Medication Form\n(UI Component)" as medForm
+participant "Medication Service\n(Frontend)" as medService
+participant "API Gateway" as api
+participant "Medication Controller\n(Backend)" as controller
+participant "Reminder Service\n(Backend)" as reminderService
+database "Medications Database" as medDb
+database "Reminders Database" as reminderDb
+
+user -> medList : Navigate to Medications page
+activate medList
+medList -> api : GET /api/medications\nAuthorization: Bearer {token}
+deactivate medList
+
+activate api
+api -> controller : Fetch user medications
+deactivate api
+
+activate controller
+controller -> medDb : Query active medications
+activate medDb
+medDb --> controller : Return medication list
+deactivate medDb
+
+controller -> api : 200 OK {medications: []}
+activate api
+api -> medList : Return data
+deactivate api
+deactivate controller
+
+activate medList
+medList -> user : Display medication list:\n- No active medications\n- "Add Medication" button
+deactivate medList
+
+user -> medList : Click "Add Medication"
+activate medList
+medList -> medForm : Open medication form modal
+deactivate medList
+
+activate medForm
+medForm -> user : Display form fields:\n- Name (autocomplete)\n- Dosage\n- Frequency\n- Time(s)\n- Start date\n- Reminder toggle\n- Notes
+deactivate medForm
+
+user -> medForm : Start typing medication name:\n"Lisi..."
+activate medForm
+medForm -> api : GET /api/medications/search?q=Lisi
+deactivate medForm
+
+activate api
+api -> controller : Search medication names
+deactivate api
+
+activate controller
+controller -> controller : Query medication database:\n- Lisinopril\n- Lisino...\n(common medications)
+controller -> api : 200 OK {suggestions: [...]}
+activate api
+api -> medForm : Return autocomplete results
+deactivate api
+deactivate controller
+
+activate medForm
+medForm -> user : Show dropdown suggestions:\n- Lisinopril\n- Lisinopril/HCTZ\n- ...
+deactivate medForm
+
+user -> medForm : Select "Lisinopril"
+activate medForm
+medForm -> medForm : Fill medication name
+deactivate medForm
+
+user -> medForm : Enter dosage: "10mg"
+activate medForm
+medForm -> medForm : Validate dosage format
+deactivate medForm
+
+user -> medForm : Select frequency:\n"Once daily"
+activate medForm
+medForm -> medForm : Update time picker:\nShow single time input
+deactivate medForm
+
+user -> medForm : Set time: "8:00 AM"
+activate medForm
+medForm -> medForm : Validate time format
+deactivate medForm
+
+user -> medForm : Start date: (defaults to today)
+
+user -> medForm : Enable reminder toggle
+activate medForm
+medForm -> medForm : Mark reminder as enabled
+deactivate medForm
+
+user -> medForm : Add notes:\n"Prescribed by Dr. Smith\nfor blood pressure control"
+activate medForm
+medForm -> medForm : Store notes
+deactivate medForm
+
+user -> medForm : Click "Add Medication"
+activate medForm
+medForm -> medForm : Validate all fields:\n- Name not empty\n- Dosage not empty\n- At least one time set\n- Start date not empty
+medForm -> medService : Submit medication data
+deactivate medForm
+
+activate medService
+medService -> api : POST /api/medications\nAuthorization: Bearer {token}\n{name: "Lisinopril", dosage: "10mg",\nfrequency: "once_daily", times: ["08:00"],\nstartDate: today, reminder: true,\nnotes: "..."}
+deactivate medService
+
+activate api
+api -> controller : Create new medication
+deactivate api
+
+activate controller
+controller -> controller : Validate medication data
+
+controller -> medDb : Insert medication record
+activate medDb
+medDb --> controller : Return medication ID
+deactivate medDb
+
+alt Reminder Enabled
+    controller -> reminderService : Create medication reminder
+    activate reminderService
+    reminderService -> reminderService : Calculate reminder schedule:\n- Daily at 8:00 AM\n- Starting today
+    reminderService -> reminderDb : Insert reminder records
+    activate reminderDb
+    reminderDb --> reminderService : Confirm creation
+    deactivate reminderDb
+    reminderService -> reminderService : Schedule first notification:\nTomorrow at 8:00 AM
+    reminderService --> controller : Reminder created
+    deactivate reminderService
+end
+
+controller -> api : 201 Created\n{medicationId, name, schedule,\nnextReminderAt: "tomorrow 8:00 AM"}
+activate api
+api -> medService : Return created medication
+deactivate api
+deactivate controller
+
+activate medService
+medService -> medForm : Medication added successfully
+deactivate medService
+
+activate medForm
+medForm -> user : Show success message:\n"Medication added!\nReminder set for 8:00 AM daily"
+medForm -> medList : Close modal and refresh list
+deactivate medForm
+
+activate medList
+medList -> medList : Add new medication to list
+medList -> user : Display updated medication list:\n- Lisinopril 10mg\n  • Once daily at 8:00 AM\n  • Next dose: Tomorrow 8:00 AM\n  • Adherence: N/A (just added)\n  • "Log Dose" button
+deactivate medList
+
+@enduml

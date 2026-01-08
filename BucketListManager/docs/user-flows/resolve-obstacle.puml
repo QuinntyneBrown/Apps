@@ -1,0 +1,73 @@
+@startuml resolve-obstacle
+title Resolve Obstacle Flow
+
+actor User
+participant "Item Detail Panel" as DetailPanel
+participant "Obstacle List" as ObstacleList
+participant "Resolution Modal" as Modal
+participant "Obstacle Service" as Service
+participant "API Controller" as API
+participant "ResolveObstacleCommand Handler" as Handler
+participant "IBucketListManagerContext" as DB
+
+User -> DetailPanel: View item details
+DetailPanel -> ObstacleList: Display active obstacles
+ObstacleList --> User: Show obstacles with status
+
+User -> ObstacleList: Select obstacle
+User -> ObstacleList: Click "Mark Resolved" button
+ObstacleList -> Modal: Open resolution form
+Modal --> User: Display solution input
+
+User -> Modal: Enter solution description
+User -> Modal: Add resolution notes
+User -> Modal: Click "Submit Resolution"
+
+Modal -> Modal: Validate solution provided
+Modal -> Service: resolveObstacle(obstacleId, solution)
+Service -> Service: Prepare request with auth token
+Service -> API: PUT /api/obstacles/{id}/resolve
+note right: Authorization: Bearer {token}\nBody: { solution, notes }
+
+API -> Handler: ResolveObstacleCommand
+Handler -> DB: Query obstacle by Id (filtered by TenantId)
+DB --> Handler: Obstacle entity
+Handler -> DB: Query associated item
+DB --> Handler: BucketListItem entity
+
+alt Obstacle exists and belongs to user's tenant
+    Handler -> Handler: Validate obstacle ownership
+    Handler -> Handler: Update obstacle status to "Resolved"
+    Handler -> Handler: Set resolution date
+    Handler -> Handler: Store solution description
+    Handler -> Handler: Store resolution notes
+    Handler -> Handler: Decrement item active obstacle count
+    Handler -> Handler: Update item last modified date
+    Handler -> DB: Update(obstacle)
+    Handler -> DB: Update(bucketListItem)
+    Handler -> DB: SaveChangesAsync()
+    DB --> Handler: Success
+    Handler --> API: ObstacleResolvedResponse
+    API --> Service: 200 OK + resolved obstacle
+    Service --> Modal: Resolution successful
+    Modal -> Modal: Close modal
+    Modal -> ObstacleList: Trigger refresh
+    ObstacleList -> Service: getObstacles(itemId)
+    Service -> API: GET /api/bucket-list-items/{id}/obstacles
+    API -> DB: Query all obstacles by ItemId (filtered by TenantId)
+    DB --> API: List of obstacles with statuses
+    API --> Service: Obstacles list
+    Service --> ObstacleList: Updated obstacles
+    ObstacleList --> User: Move resolved obstacle to history
+    ObstacleList --> User: Update active obstacle count
+    ObstacleList --> User: Show success notification
+    ObstacleList -> DetailPanel: Update obstacle badge
+    DetailPanel --> User: Display updated count
+else Obstacle not found or unauthorized
+    Handler --> API: 404 Not Found / 403 Forbidden
+    API --> Service: Error response
+    Service --> Modal: Resolution failed
+    Modal --> User: Display error message
+end
+
+@enduml

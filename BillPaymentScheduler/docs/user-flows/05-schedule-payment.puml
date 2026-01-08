@@ -1,0 +1,162 @@
+@startuml Schedule Payment Flow
+title Schedule Payment Flow
+
+actor User
+participant "Payment Dashboard" as Dashboard
+participant "Schedule Payment\nForm" as Form
+participant "Payment Service" as PaymentSvc
+participant "Bill Service" as BillSvc
+participant "API Gateway" as API
+participant "Payment Controller" as PaymentCtrl
+participant "Payment Scheduling\nService" as PaymentMgmt
+database "Payment Database" as DB
+
+User -> Dashboard: Click "Schedule Payment" button
+activate Dashboard
+Dashboard -> Form: Navigate to /payments/schedule
+deactivate Dashboard
+activate Form
+
+Form -> BillSvc: loadUserBills()
+activate BillSvc
+BillSvc -> API: GET /api/bills
+activate API
+API -> BillSvc: Return bills list
+deactivate API
+BillSvc -> Form: Bills loaded
+deactivate BillSvc
+
+Form -> PaymentSvc: loadPaymentMethods()
+activate PaymentSvc
+PaymentSvc -> API: GET /api/payment-methods
+activate API
+API -> PaymentSvc: Return payment methods
+deactivate API
+PaymentSvc -> Form: Payment methods loaded
+deactivate PaymentSvc
+
+Form -> User: Display form with:\n- Bill selector (dropdown)\n- Payment methods\n- Date picker
+
+User -> Form: Select bill from dropdown
+activate Form
+Form -> Form: Auto-populate amount from bill
+Form -> Form: Display bill details\n(payee, due date, amount)
+
+alt Scheduled date after due date
+    Form -> User: Show warning\n"Scheduled date is after bill due date"
+end
+
+User -> Form: Select scheduled date
+User -> Form: Select payment method
+
+alt Enable recurring payment
+    User -> Form: Toggle recurring payment
+    Form -> User: Show recurrence pattern selector
+    User -> Form: Select pattern (Monthly, Weekly, etc.)
+    Form -> Form: Display recurring schedule preview
+end
+
+User -> Form: Add optional notes
+Form -> Form: Real-time validation
+
+alt Validation Errors
+    Form -> User: Display inline errors:\n- Amount must be > 0\n- Date must be in future\n- Payment method required
+    User -> Form: Correct errors
+else All Fields Valid
+    User -> Form: Click "Schedule Payment" button
+
+    Form -> Form: Show confirmation dialog with:\n- Bill details\n- Payment amount\n- Scheduled date\n- Payment method\n- Processing fee (if any)
+
+    alt User Cancels Confirmation
+        Form -> User: Return to form
+    else User Confirms
+        Form -> PaymentSvc: schedulePayment(paymentData)
+        activate PaymentSvc
+
+        PaymentSvc -> API: POST /api/payments/schedule
+        activate API
+        note right of API
+            Request Body:
+            {
+                "billId": "guid",
+                "paymentMethodId": "guid",
+                "amount": 150.00,
+                "scheduledDate": "2024-01-20",
+                "isRecurring": true,
+                "recurrencePattern": "Monthly",
+                "notes": "Monthly electric payment"
+            }
+        end note
+
+        API -> PaymentCtrl: Schedule payment request
+        activate PaymentCtrl
+
+        PaymentCtrl -> PaymentCtrl: Validate request
+        PaymentCtrl -> PaymentCtrl: Extract userId from JWT token
+        PaymentCtrl -> PaymentCtrl: Verify payment method ownership
+        PaymentCtrl -> PaymentCtrl: Verify bill ownership
+
+        PaymentCtrl -> PaymentMgmt: SchedulePaymentAsync(userId, paymentData)
+        activate PaymentMgmt
+
+        PaymentMgmt -> PaymentMgmt: Create PaymentSchedule entity
+        PaymentMgmt -> PaymentMgmt: Set status to 'Scheduled'
+        PaymentMgmt -> PaymentMgmt: Generate confirmation number
+        PaymentMgmt -> PaymentMgmt: Set audit fields
+
+        PaymentMgmt -> DB: INSERT INTO PaymentSchedules
+        activate DB
+        DB -> PaymentMgmt: Return created payment schedule
+        deactivate DB
+
+        alt Is Recurring Payment
+            PaymentMgmt -> PaymentMgmt: Create recurring rule
+            PaymentMgmt -> DB: INSERT INTO RecurringPayments
+            activate DB
+            DB -> PaymentMgmt: Recurring rule created
+            deactivate DB
+        end
+
+        PaymentMgmt -> PaymentCtrl: Return PaymentSchedule entity
+        deactivate PaymentMgmt
+
+        PaymentCtrl -> API: 201 Created with payment schedule
+        deactivate PaymentCtrl
+        note right of API
+            Response Body:
+            {
+                "paymentScheduleId": "guid",
+                "billId": "guid",
+                "billName": "Electric Company",
+                "amount": 150.00,
+                "scheduledDate": "2024-01-20",
+                "status": "Scheduled",
+                "confirmationNumber": "PAY-2024-001234",
+                "isRecurring": true,
+                "recurrencePattern": "Monthly"
+            }
+        end note
+
+        API -> PaymentSvc: Payment scheduled successfully
+        deactivate API
+
+        PaymentSvc -> Form: Success response
+        deactivate PaymentSvc
+
+        Form -> Form: Show success notification\n"Payment scheduled successfully"
+
+        alt User clicked "Schedule & Add Another"
+            Form -> Form: Clear form
+            Form -> User: Display empty form
+        else User clicked "Schedule Payment"
+            Form -> Dashboard: Navigate to payment details\n/payments/{paymentScheduleId}
+            deactivate Form
+            activate Dashboard
+            Dashboard -> Dashboard: Load payment details
+            Dashboard -> User: Display scheduled payment\nwith confirmation number
+            deactivate Dashboard
+        end
+    end
+end
+
+@enduml

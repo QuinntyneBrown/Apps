@@ -1,0 +1,221 @@
+@startuml Create Custom Idea
+title Create Custom Idea Flow
+
+actor User
+participant "Custom Ideas\nUI" as CustomUI
+participant "API Gateway" as API
+participant "Idea Generation\nService" as IdeaService
+participant "Validation\nService" as Validator
+database "SQL Server" as DB
+
+== View Custom Ideas ==
+User -> CustomUI: Open Custom Ideas
+CustomUI -> API: GET /api/ideas/custom
+API -> IdeaService: Get Custom Ideas Query
+IdeaService -> DB: SELECT CustomIdeas\nWHERE TenantId = @TenantId\nAND CreatedBy = @UserId
+DB --> IdeaService: Custom Ideas List
+IdeaService --> API: Custom Ideas
+API --> CustomUI: Display Ideas
+CustomUI --> User: Show Custom Ideas List
+
+== Create New Custom Idea ==
+User -> CustomUI: Click "Create Custom Idea"
+CustomUI --> User: Show Idea Form
+
+User -> CustomUI: Enter Activity Name
+note right
+Example: "Stargazing at
+Observatory"
+end note
+
+User -> CustomUI: Select Category
+note right
+Categories:
+- Outdoor Activities
+- Dining
+- Entertainment
+- Arts & Culture
+- Sports
+- Adventure
+- Relaxation
+- Educational
+end note
+
+User -> CustomUI: Enter Description
+note right
+Detailed description of
+the activity and what
+makes it special
+end note
+
+User -> CustomUI: Set Cost Estimate
+note right
+Cost options:
+- Free ($0)
+- Low (< $50)
+- Medium ($50-$150)
+- High (> $150)
+- Custom amount
+end note
+
+User -> CustomUI: Set Duration
+note right
+Duration:
+- 1 hour
+- 2-3 hours
+- Half day
+- Full day
+- Evening
+- Weekend
+end note
+
+User -> CustomUI: Add Location
+note right
+Location can be:
+- Specific address
+- City/Area
+- "At home"
+- "Various locations"
+end note
+
+User -> CustomUI: Add Tags (Optional)
+note right
+Tags examples:
+- romantic
+- adventurous
+- indoor
+- outdoor
+- seasonal
+- requires booking
+end note
+
+User -> CustomUI: Add Notes (Optional)
+note right
+Additional notes:
+- Best time to go
+- Things to bring
+- Preparation needed
+- Special requirements
+end note
+
+User -> CustomUI: Add URL (Optional)
+note right
+Links to:
+- Venue website
+- Booking page
+- More information
+- Reviews
+end note
+
+User -> CustomUI: Click "Save Custom Idea"
+
+== Validation ==
+CustomUI -> API: POST /api/ideas/custom
+note right
+Request Body:
+{
+  "activityName": "...",
+  "category": "...",
+  "description": "...",
+  "estimatedCost": 75,
+  "duration": "Evening",
+  "location": "...",
+  "tags": [...],
+  "notes": "...",
+  "url": "..."
+}
+end note
+
+API -> Validator: Validate Input
+Validator -> Validator: Check Required Fields
+Validator -> Validator: Validate Data Types
+Validator -> Validator: Check Length Limits
+
+alt Validation Fails
+    Validator --> API: Validation Errors
+    API --> CustomUI: Error Response
+    CustomUI --> User: Show Error Messages
+    User -> CustomUI: Fix Errors
+    User -> CustomUI: Resubmit
+else Validation Succeeds
+    Validator --> API: Valid
+    API -> IdeaService: Create Custom Idea Command
+    IdeaService -> DB: INSERT CustomIdea\nSET TenantId = @TenantId,\nCreatedBy = @UserId
+    DB --> IdeaService: IdeaId
+    IdeaService --> IdeaService: Publish CustomIdeaCreated Event
+    IdeaService --> API: Custom Idea Created
+    API --> CustomUI: Success Response
+    CustomUI --> User: Show Success Message
+    CustomUI -> CustomUI: Update Ideas List
+    CustomUI --> User: Display New Idea
+end
+
+== Edit Custom Idea ==
+User -> CustomUI: Select Custom Idea
+CustomUI --> User: Show Idea Details
+
+User -> CustomUI: Click "Edit"
+CustomUI -> API: GET /api/ideas/custom/{id}
+API -> IdeaService: Get Idea Details
+IdeaService -> DB: SELECT CustomIdea\nWHERE Id = @Id\nAND TenantId = @TenantId
+DB --> IdeaService: Idea Details
+IdeaService --> API: Custom Idea
+API --> CustomUI: Populate Form
+CustomUI --> User: Show Editable Form
+
+User -> CustomUI: Modify Fields
+User -> CustomUI: Click "Save Changes"
+CustomUI -> API: PUT /api/ideas/custom/{id}
+API -> IdeaService: Update Custom Idea Command
+IdeaService -> DB: UPDATE CustomIdea\nWHERE Id = @Id
+DB --> IdeaService: Success
+IdeaService --> API: Idea Updated
+API --> CustomUI: Confirmation
+CustomUI --> User: Show Success Message
+
+== Delete Custom Idea ==
+User -> CustomUI: Select Idea to Delete
+User -> CustomUI: Click "Delete"
+CustomUI --> User: Show Confirmation Dialog
+note right
+"Are you sure you want to
+delete this custom idea?
+This action cannot be undone."
+end note
+
+User -> CustomUI: Confirm Deletion
+CustomUI -> API: DELETE /api/ideas/custom/{id}
+API -> IdeaService: Delete Custom Idea Command
+IdeaService -> DB: DELETE CustomIdea\nWHERE Id = @Id\nAND TenantId = @TenantId
+DB --> IdeaService: Success
+IdeaService --> API: Deleted
+API --> CustomUI: Confirmation
+CustomUI -> CustomUI: Remove from List
+CustomUI --> User: Show Deletion Success
+
+== Use Custom Idea ==
+User -> CustomUI: Select Custom Idea
+User -> CustomUI: Click "Use This Idea"
+CustomUI -> API: POST /api/ideas/{id}/save
+note right
+Saves the custom idea to
+the user's saved ideas list
+for planning
+end note
+API -> IdeaService: Save Idea Command
+IdeaService -> DB: INSERT SavedIdea\nSET CustomIdeaId = @Id
+DB --> IdeaService: Success
+IdeaService --> API: Saved
+API --> CustomUI: Confirmation
+CustomUI --> User: "Added to Saved Ideas"
+
+alt Schedule Directly
+    User -> CustomUI: Click "Schedule Now"
+    CustomUI --> User: Redirect to Scheduling
+    note right
+    Proceeds to Schedule
+    Date Night flow
+    end note
+end
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+
+actor Administrator
+participant "User Management\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to user details
+UI -> UserService: getUser(userId)
+UserService -> API: GET /api/users/{userId}
+API -> DB: SELECT User WHERE UserId
+DB --> API: User data
+API --> UserService: 200 OK\n{user data}
+UserService --> UI: Display user data
+UI --> Administrator: Show user form\nwith existing data
+
+Administrator -> UI: Modify email and/or\nusername and/or password
+Administrator -> UI: Click Update
+
+UI -> UI: Validate form
+
+alt Form Valid
+    UI -> UserService: updateUser(userId, userData)
+    UserService -> API: PUT /api/users/{userId}\n{username, email, password}
+
+    API -> API: Validate email uniqueness\n(if changed)
+
+    alt Valid Update
+        alt Password Changed
+            API -> API: Generate new\n32-byte salt
+            API -> API: Hash new password\nwith new salt
+        end
+
+        API -> DB: UPDATE User\nSET username, email,\npassword, salt\nWHERE UserId
+        DB --> API: User updated
+
+        API --> UserService: 200 OK\n{updated user data}
+        UserService --> UI: User updated successfully
+        UI --> Administrator: Show success message
+    else Duplicate Email
+        API --> UserService: 400 Bad Request\n{error: "Email already exists"}
+        UserService --> UI: Update failed
+        UI --> Administrator: Display error message
+    end
+else Form Invalid
+    UI --> Administrator: Display validation errors
+end
+
+@enduml

@@ -1,0 +1,168 @@
+@startuml Review, Rating, and Highlights Flow
+title Review, Rating, and Highlights Flow
+
+actor User
+participant "Book Detail Page" as BookUI
+participant "Review Page" as ReviewUI
+participant "Highlights Library" as HighlightsUI
+participant "Notes Collection" as NotesUI
+participant "API Gateway" as API
+participant "Review Controller" as Controller
+participant "Review Manager" as Manager
+database "Database" as DB
+
+== Rate and Review Book ==
+User -> BookUI: View book at /library/books/{id}
+BookUI --> User: Display book details
+User -> BookUI: Click "Write Review"
+BookUI -> ReviewUI: Navigate to /books/{id}/review
+ReviewUI -> API: GET /api/reviews/book/{id}?\nuserId={userId}
+API -> Controller: GetUserReview(bookId, userId)
+Controller -> Manager: GetReviewAsync(bookId, userId)
+Manager -> DB: SELECT review\nWHERE bookId={bookId}\nAND userId={userId}
+DB --> Manager: Existing review (if any)
+Manager --> Controller: Review data
+Controller --> API: 200 OK\n{review or null}
+API --> ReviewUI: Existing review
+ReviewUI --> User: Display review form\n(pre-filled if exists)
+
+User -> ReviewUI: Select star rating (1-5)
+ReviewUI -> ReviewUI: Show interactive stars
+User -> ReviewUI: Write review text\n(rich text editor)
+User -> ReviewUI: Toggle spoiler warning\n(if review contains spoilers)
+User -> ReviewUI: Add theme tags\n(e.g., "coming-of-age", "mystery")
+User -> ReviewUI: Check "Would Recommend"
+User -> ReviewUI: Click "Save Review"
+
+ReviewUI -> ReviewUI: Validate form\n(rating required)
+
+alt Valid Form
+    alt New Review
+        ReviewUI -> API: POST /api/reviews\n{bookId, rating, reviewText,\nhasSpoilers, themes,\nwouldRecommend}
+        API -> Controller: CreateReview(request)
+        Controller -> Manager: CreateReviewAsync(review)
+        Manager -> DB: INSERT book_review\n{userId, bookId, rating,\nreviewText, themes, etc.}
+        DB --> Manager: Review ID
+        Manager -> DB: UPDATE book\nSET averageRating,\nreviewCount
+        DB --> Manager: Updated
+        Manager --> Controller: ReviewCreated
+        Controller --> API: 201 Created\n{review}
+    else Update Existing
+        ReviewUI -> API: PUT /api/reviews/{id}\n{updated data}
+        API -> Controller: UpdateReview(id, request)
+        Controller -> Manager: UpdateReviewAsync(id, review)
+        Manager -> DB: UPDATE book_review\nSET rating, reviewText, etc.
+        DB --> Manager: Updated
+        Manager -> DB: RECALCULATE book\naverageRating
+        DB --> Manager: Updated
+        Manager --> Controller: ReviewUpdated
+        Controller --> API: 200 OK\n{review}
+    end
+    API --> ReviewUI: Success
+    ReviewUI --> User: Show success notification\n"Review saved!"
+    ReviewUI -> BookUI: Navigate back to book
+    BookUI -> BookUI: Refresh with new review
+else Invalid Form
+    ReviewUI --> User: Display validation errors
+end
+
+== Add Highlight ==
+User -> BookUI: While reading book
+User -> BookUI: Click "Add Highlight"
+BookUI -> BookUI: Open highlight modal
+BookUI --> User: Display highlight form
+
+User -> BookUI: Enter quoted text\n"To be or not to be..."
+User -> BookUI: Enter page number
+User -> BookUI: Select category\n(Favorite / Important / Quote)
+User -> BookUI: Add personal note\n"Shakespeare's most famous line"
+User -> BookUI: Click "Save Highlight"
+
+BookUI -> BookUI: Validate form\n(quote and page required)
+
+alt Valid Form
+    BookUI -> API: POST /api/highlights\n{bookId, quotedText, pageNumber,\ncategory, personalNote}
+    API -> Controller: CreateHighlight(request)
+    Controller -> Manager: AddHighlightAsync(highlight)
+    Manager -> DB: INSERT book_highlight\n{userId, bookId, quotedText,\npageNumber, category, note}
+    DB --> Manager: Highlight ID
+    Manager --> Controller: HighlightCreated
+    Controller --> API: 201 Created\n{highlight}
+    API --> BookUI: Success
+    BookUI --> User: Show success notification\n"Highlight saved!"
+else Invalid Form
+    BookUI --> User: Display validation errors
+end
+
+== View Highlights Library ==
+User -> HighlightsUI: Navigate to /highlights
+HighlightsUI -> API: GET /api/highlights?\nuserId={userId}
+API -> Controller: GetHighlights(userId, filters)
+Controller -> Manager: GetHighlightsAsync(userId)
+Manager -> DB: SELECT highlights h\nJOIN books b ON h.bookId=b.id\nWHERE h.userId={userId}\nORDER BY h.createdDate DESC
+DB --> Manager: Highlights with book info
+Manager --> Controller: Highlights collection
+Controller --> API: 200 OK\n{highlights}
+API --> HighlightsUI: Highlights data
+HighlightsUI --> User: Display highlight cards\n(quote, book, page, note)
+
+User -> HighlightsUI: Enter search text
+HighlightsUI -> HighlightsUI: Filter highlights\n(client-side search)
+HighlightsUI --> User: Show filtered results
+
+User -> HighlightsUI: Filter by book
+HighlightsUI -> API: GET /api/highlights?\nbookId={selectedBookId}
+API -> Controller: GetHighlights(filters)
+Controller -> Manager: GetHighlightsAsync(filters)
+Manager -> DB: SELECT filtered highlights
+DB --> Manager: Filtered results
+Manager --> Controller: Highlights
+Controller --> API: 200 OK
+API --> HighlightsUI: Filtered data
+HighlightsUI --> User: Show book-specific highlights
+
+User -> HighlightsUI: Click "Export"
+HighlightsUI -> HighlightsUI: Generate export file\n(PDF or Markdown)
+HighlightsUI --> User: Download highlights
+
+== Add and View Notes ==
+User -> NotesUI: Navigate to /notes
+NotesUI -> API: GET /api/notes?\nuserId={userId}
+API -> Controller: GetNotes(userId)
+Controller -> Manager: GetNotesAsync(userId)
+Manager -> DB: SELECT book_notes\nWHERE userId={userId}
+DB --> Manager: Notes collection
+Manager --> Controller: Notes list
+Controller --> API: 200 OK\n{notes}
+API --> NotesUI: Notes data
+NotesUI --> User: Display notes grid\n(tabs: Analysis/Question/Connection)
+
+User -> NotesUI: Click "Add Note"
+NotesUI -> NotesUI: Open note modal
+NotesUI --> User: Display note form
+
+User -> NotesUI: Select note type\n(Analysis / Question / Connection)
+User -> NotesUI: Select book
+User -> NotesUI: Enter note title
+User -> NotesUI: Write note content\n(rich text)
+User -> NotesUI: Add page reference (optional)
+User -> NotesUI: Click "Save Note"
+
+NotesUI -> NotesUI: Validate form\n(type, book, title, content required)
+
+alt Valid Form
+    NotesUI -> API: POST /api/notes\n{bookId, type, title,\ncontent, pageRef}
+    API -> Controller: CreateNote(request)
+    Controller -> Manager: AddNoteAsync(note)
+    Manager -> DB: INSERT book_note\n{userId, bookId, type,\ntitle, content, pageRef}
+    DB --> Manager: Note ID
+    Manager --> Controller: NoteCreated
+    Controller --> API: 201 Created\n{note}
+    API --> NotesUI: Success
+    NotesUI -> NotesUI: Refresh notes grid
+    NotesUI --> User: Show new note card
+else Invalid Form
+    NotesUI --> User: Display validation errors
+end
+
+@enduml

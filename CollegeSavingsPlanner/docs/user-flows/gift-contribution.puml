@@ -1,0 +1,123 @@
+@startuml GiftContributionFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Plan Owner" as Owner
+actor "Family/Friend" as Donor
+participant "Plan Details Page" as PlanPage
+participant "Gift Link Generator" as LinkGen
+participant "Public Gift Portal" as GiftPortal
+participant "Payment Gateway" as Payment
+participant "API Gateway" as API
+participant "Contribution Controller" as Controller
+participant "Process Gift Handler" as Handler
+participant "Notification Service" as NotificationSvc
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== Generate Gift Contribution Link ==
+Owner -> PlanPage: Navigate to /plans/{planId}
+PlanPage -> Owner: Display plan details
+Owner -> PlanPage: Click "Share for Contributions"
+PlanPage -> LinkGen: Open gift link generator
+LinkGen -> Owner: Display sharing options
+
+Owner -> LinkGen: Select occasion (birthday, holiday, graduation, general)
+Owner -> LinkGen: Add custom message (optional)
+Owner -> LinkGen: Set contribution goal amount (optional)
+LinkGen -> API: POST /api/gift-links {planId, occasion, message, goalAmount}
+API -> DB: Create shareable gift link token
+DB -> Database: INSERT INTO GiftLinks (Token, PlanId, Occasion, ExpiresAt)
+Database --> DB: Gift link created
+DB --> API: Gift link token
+API --> LinkGen: Shareable URL
+LinkGen -> Owner: Display shareable link and QR code
+Owner -> Owner: Copy link or share via email/social media
+
+== Donor Accesses Gift Portal ==
+Donor -> GiftPortal: Open gift link URL
+GiftPortal -> API: GET /api/gift-links/{token}
+API -> DB: Validate gift link token
+DB -> Database: SELECT * FROM GiftLinks WHERE Token = ? AND ExpiresAt > NOW()
+Database --> DB: Gift link details
+DB --> API: Valid link with plan info
+API -> DB: Get beneficiary and plan details (public info only)
+DB -> Database: SELECT public details
+Database --> DB: Beneficiary name, age, years until college
+DB --> API: Public plan information
+API --> GiftPortal: Beneficiary info, occasion, custom message
+GiftPortal -> Donor: Display beneficiary details and contribution form
+
+== Donor Makes Contribution ==
+Donor -> GiftPortal: Enter contribution amount
+Donor -> GiftPortal: Enter donor name
+Donor -> GiftPortal: Enter donor email
+Donor -> GiftPortal: Add personal message (optional)
+Donor -> GiftPortal: Select anonymity (show name or anonymous)
+GiftPortal -> Donor: Display contribution summary
+
+== Process Payment ==
+Donor -> GiftPortal: Click "Contribute"
+GiftPortal -> Payment: Process payment
+Payment -> Payment: Validate payment method
+Payment -> Payment: Process transaction
+alt Payment Successful
+    Payment --> GiftPortal: Payment confirmation
+    GiftPortal -> API: POST /api/gift-contributions
+    API -> Controller: ProcessGiftContribution request
+    Controller -> Handler: Handle ProcessGiftContributionCommand
+    Handler -> DB: Get SavingsPlan from gift link
+    DB -> Database: SELECT PlanId FROM GiftLinks WHERE Token = ?
+    Database --> DB: Plan ID
+    DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ?
+    Database --> DB: Savings plan
+    DB --> Handler: SavingsPlan
+    Handler -> Handler: Create Contribution entity
+    Handler -> DB: Add Contribution
+    DB -> Database: INSERT INTO Contributions (Type='Gift', Source='Family/Friend', DonorName, Amount)
+    Database --> DB: Contribution recorded
+    DB --> Handler: Contribution entity
+    Handler -> Handler: Update plan balance
+    Handler -> DB: Update SavingsPlan.CurrentBalance
+    DB -> Database: UPDATE SavingsPlans SET CurrentBalance = CurrentBalance + ?
+    Database --> DB: Balance updated
+    DB --> Handler: Updated plan
+    Handler -> Handler: Raise GiftContributionReceived event
+    Handler -> NotificationSvc: Send thank-you notification
+    NotificationSvc -> NotificationSvc: Prepare thank-you email
+    alt Anonymous Gift
+        NotificationSvc -> NotificationSvc: Prepare anonymous notification to owner
+    else Named Gift
+        NotificationSvc -> NotificationSvc: Include donor name in notification
+        NotificationSvc -> Donor: Send contribution receipt and thank-you
+    end
+    NotificationSvc -> Owner: Send gift contribution notification email
+    Handler --> Controller: GiftContributionDto
+    Controller --> API: 201 Created
+    API --> GiftPortal: Contribution successful
+    GiftPortal -> Donor: Display thank-you message and receipt
+else Payment Failed
+    Payment --> GiftPortal: Payment failed
+    GiftPortal -> Donor: Display error and retry option
+end
+
+== Owner Views Gift Contributions ==
+Owner -> PlanPage: Navigate to /plans/{planId}
+PlanPage -> API: GET /api/savings-plans/{planId}/contributions?type=gift
+API -> DB: Query gift contributions
+DB -> Database: SELECT * FROM Contributions WHERE PlanId = ? AND Type = 'Gift'
+Database --> DB: Gift contributions
+DB --> API: List of gift contributions
+API --> PlanPage: Gift contribution history
+PlanPage -> Owner: Display gift contributors with amounts and messages
+
+== Send Thank-You Notes ==
+Owner -> PlanPage: Click "Send Thank You" for specific contribution
+alt Non-Anonymous Contribution
+    PlanPage -> NotificationSvc: Send personalized thank-you
+    NotificationSvc -> Donor: Email personalized thank-you note
+else Anonymous Contribution
+    PlanPage -> Owner: Display message: Cannot send to anonymous donor
+end
+
+@enduml

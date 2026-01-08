@@ -1,0 +1,231 @@
+@startuml Manage Roles Flow
+
+actor Admin
+participant "Role Management\nPage" as RoleUI
+participant "Role List\nComponent" as RoleList
+participant "Role Form\nComponent" as RoleForm
+participant "User Role\nComponent" as UserRoleComponent
+participant "Role Service" as RoleService
+participant "Roles Controller" as RoleAPI
+participant "Users Controller" as UserAPI
+participant "Role Command\nHandler" as RoleHandler
+participant "User Command\nHandler" as UserHandler
+participant "Database" as DB
+
+Admin -> RoleUI: Navigate to role management
+activate RoleUI
+
+RoleUI -> RoleList: Initialize role list
+activate RoleList
+
+RoleList -> RoleService: getRoles()
+activate RoleService
+
+RoleService -> RoleAPI: GET /api/roles
+activate RoleAPI
+note right: Requires Admin role
+
+RoleAPI -> DB: Query all roles
+activate DB
+DB --> RoleAPI: List of roles
+deactivate DB
+
+RoleAPI --> RoleService: 200 OK with role list
+deactivate RoleAPI
+
+RoleService --> RoleList: Observable of roles
+deactivate RoleService
+
+RoleList --> Admin: Display role list
+deactivate RoleList
+
+== Create New Role ==
+
+Admin -> RoleUI: Click "Create Role"
+activate RoleUI
+
+RoleUI -> RoleForm: Open create role form
+activate RoleForm
+
+RoleForm --> Admin: Display form field (role name)
+deactivate RoleForm
+
+Admin -> RoleForm: Enter role name
+activate RoleForm
+
+RoleForm -> RoleForm: Validate form\n(non-empty name)
+
+Admin -> RoleForm: Click "Save"
+
+RoleForm -> RoleService: createRole(roleName)
+activate RoleService
+
+RoleService -> RoleAPI: POST /api/roles
+activate RoleAPI
+
+RoleAPI -> RoleHandler: CreateRoleCommand
+activate RoleHandler
+
+RoleHandler -> RoleHandler: Validate role name uniqueness
+
+RoleHandler -> DB: Insert role
+activate DB
+DB --> RoleHandler: Role created
+deactivate DB
+
+RoleHandler --> RoleAPI: RoleDto
+deactivate RoleHandler
+
+RoleAPI --> RoleService: 201 Created with role data
+deactivate RoleAPI
+
+RoleService --> RoleForm: Role created successfully
+deactivate RoleService
+
+RoleForm --> Admin: Show success message
+deactivate RoleForm
+
+RoleForm -> RoleList: Refresh role list
+activate RoleList
+RoleList --> Admin: Display updated role list
+deactivate RoleList
+deactivate RoleUI
+
+== Assign Role to User ==
+
+Admin -> RoleUI: Click "Manage User Roles"
+activate RoleUI
+
+RoleUI -> UserRoleComponent: Open user role assignment
+activate UserRoleComponent
+
+UserRoleComponent -> RoleService: getUsers()
+activate RoleService
+
+RoleService -> UserAPI: GET /api/users
+activate UserAPI
+
+UserAPI -> DB: Query all users
+activate DB
+DB --> UserAPI: List of users with roles
+deactivate DB
+
+UserAPI --> RoleService: 200 OK with users
+deactivate UserAPI
+
+RoleService --> UserRoleComponent: Observable of users
+deactivate RoleService
+
+UserRoleComponent --> Admin: Display user list
+deactivate UserRoleComponent
+
+Admin -> UserRoleComponent: Select user and role to add
+activate UserRoleComponent
+
+UserRoleComponent -> RoleService: addRoleToUser(userId, roleId)
+activate RoleService
+
+RoleService -> UserAPI: POST /api/users/{userId}/roles
+activate UserAPI
+
+UserAPI -> UserHandler: AddRoleToUserCommand
+activate UserHandler
+
+UserHandler -> UserHandler: Check if role already assigned\n(idempotent operation)
+
+UserHandler -> DB: Insert user-role association
+activate DB
+DB --> UserHandler: Role assigned
+deactivate DB
+
+UserHandler --> UserAPI: Success
+deactivate UserHandler
+
+UserAPI --> RoleService: 200 OK
+deactivate UserAPI
+
+RoleService --> UserRoleComponent: Role assigned successfully
+deactivate RoleService
+
+UserRoleComponent --> Admin: Show success message and update UI
+deactivate UserRoleComponent
+deactivate RoleUI
+
+== Remove Role from User ==
+
+Admin -> UserRoleComponent: Click "Remove Role" from user
+activate UserRoleComponent
+
+UserRoleComponent -> UserRoleComponent: Show confirmation dialog
+
+Admin -> UserRoleComponent: Confirm removal
+
+UserRoleComponent -> RoleService: removeRoleFromUser(userId, roleId)
+activate RoleService
+
+RoleService -> UserAPI: DELETE /api/users/{userId}/roles/{roleId}
+activate UserAPI
+
+UserAPI -> UserHandler: RemoveRoleFromUserCommand
+activate UserHandler
+
+UserHandler -> DB: Delete user-role association
+activate DB
+DB --> UserHandler: Role removed
+deactivate DB
+
+UserHandler --> UserAPI: Success
+deactivate UserHandler
+
+UserAPI --> RoleService: 204 No Content
+deactivate UserAPI
+
+RoleService --> UserRoleComponent: Role removed successfully
+deactivate RoleService
+
+UserRoleComponent --> Admin: Update UI to reflect change
+deactivate UserRoleComponent
+
+== Delete Role ==
+
+Admin -> RoleList: Click "Delete" on role
+activate RoleList
+
+RoleList -> RoleList: Show confirmation dialog
+
+Admin -> RoleList: Confirm deletion
+
+RoleList -> RoleService: deleteRole(roleId)
+activate RoleService
+
+RoleService -> RoleAPI: DELETE /api/roles/{roleId}
+activate RoleAPI
+
+RoleAPI -> RoleHandler: DeleteRoleCommand
+activate RoleHandler
+
+RoleHandler -> DB: Remove role from all users\nand delete role
+activate DB
+note right of DB
+  Cascading deletion
+  removes all user-role
+  associations first
+end note
+DB --> RoleHandler: Role deleted
+deactivate DB
+
+RoleHandler --> RoleAPI: Success
+deactivate RoleHandler
+
+RoleAPI --> RoleService: 204 No Content
+deactivate RoleAPI
+
+RoleService --> RoleList: Deletion successful
+deactivate RoleService
+
+RoleList -> RoleList: Remove role from list
+
+RoleList --> Admin: Display updated list
+deactivate RoleList
+
+@enduml

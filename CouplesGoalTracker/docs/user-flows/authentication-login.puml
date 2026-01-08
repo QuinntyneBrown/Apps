@@ -1,0 +1,68 @@
+@startuml authentication-login
+title User Authentication and Login Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthSvc
+participant "Auth Controller" as Controller
+participant "Auth Command" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+participant "JWT Service" as JWT
+database "SQL Server" as DB
+
+User -> UI: Enter username and password
+activate UI
+
+UI -> UI: Validate form inputs
+UI -> AuthSvc: login(username, password)
+activate AuthSvc
+
+AuthSvc -> Controller: POST /api/auth/login
+activate Controller
+
+Controller -> Command: LoginCommand(username, password)
+activate Command
+
+Command -> DbContext: Query Users table
+activate DbContext
+DbContext -> DB: SELECT * FROM Users WHERE Username = @username
+activate DB
+DB --> DbContext: User record
+deactivate DB
+DbContext --> Command: User entity
+deactivate DbContext
+
+Command -> Command: Verify password hash\n(PBKDF2 SHA-256)
+
+alt Password Valid
+    Command -> JWT: GenerateToken(user)
+    activate JWT
+    JWT -> JWT: Create claims\n(sub, name, email, roles,\niat, exp, iss, aud)
+    JWT -> JWT: Sign token with secret key\n(HS256 algorithm)
+    JWT --> Command: JWT token
+    deactivate JWT
+
+    Command --> Controller: LoginResponse\n(token, expiresAt, user)
+    deactivate Command
+    Controller --> AuthSvc: 200 OK with token
+    deactivate Controller
+
+    AuthSvc -> AuthSvc: Store token in localStorage
+    AuthSvc --> UI: Login successful
+    deactivate AuthSvc
+
+    UI --> User: Redirect to Dashboard
+    deactivate UI
+
+else Password Invalid
+    Command --> Controller: Invalid credentials
+    deactivate Command
+    Controller --> AuthSvc: 401 Unauthorized
+    deactivate Controller
+    AuthSvc --> UI: Login failed
+    deactivate AuthSvc
+    UI --> User: Display error message\n"Invalid username or password"
+    deactivate UI
+end
+
+@enduml

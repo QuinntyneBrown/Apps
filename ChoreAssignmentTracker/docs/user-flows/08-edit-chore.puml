@@ -1,0 +1,182 @@
+@startuml Edit Chore Flow
+
+title Edit Chore Flow
+
+actor Parent
+participant "Chore Details" as DetailUI
+participant "Edit Chore Form" as EditForm
+participant "Chore Controller" as ChoreAPI
+participant "ModifyChoreCommand" as ModifyCmd
+participant "Chore Repository" as ChoreRepo
+participant "Assignment Repository" as AssignRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== View and Initiate Edit ==
+Parent -> DetailUI: View chore details
+DetailUI -> ChoreAPI: GET /api/chores/{choreId}
+ChoreAPI -> ChoreRepo: GetChoreById(choreId)
+ChoreRepo -> DB: SELECT * FROM Chores\nWHERE ChoreId = @choreId
+DB --> ChoreRepo: Chore data
+ChoreRepo --> ChoreAPI: Chore entity
+ChoreAPI --> DetailUI: 200 OK {chore}
+
+DetailUI --> Parent: Display chore information
+
+Parent -> DetailUI: Click "Edit Chore"
+
+DetailUI -> ChoreAPI: GET /api/chores/{choreId}/assignments/active
+ChoreAPI -> AssignRepo: GetActiveAssignments(choreId)
+AssignRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE ChoreId = @choreId\nAND Status IN ('Pending', 'InProgress')
+DB --> AssignRepo: Active assignments
+AssignRepo --> ChoreAPI: List of active assignments
+ChoreAPI --> DetailUI: 200 OK {activeAssignments}
+
+DetailUI -> EditForm: Open edit form with:\n- Current chore data\n- Active assignments count
+
+EditForm --> Parent: Display form pre-populated\nwith current values
+
+alt Has Active Assignments
+    EditForm --> Parent: Show warning banner:\n"[N] active assignment(s) will be affected\nby changes to points or difficulty"
+end
+
+== Modify Chore Details ==
+Parent -> EditForm: Update chore name
+EditForm -> EditForm: Validate uniqueness in household
+
+Parent -> EditForm: Update description
+EditForm -> EditForm: Validate required field
+
+Parent -> EditForm: Change category
+EditForm -> EditForm: Update icon preview
+
+Parent -> EditForm: Adjust estimated duration
+EditForm -> EditForm: Update duration display
+
+Parent -> EditForm: Change difficulty level
+EditForm -> EditForm: Recalculate suggested points:\n- Easy: 1-5 points\n- Medium: 6-10 points\n- Hard: 11-20 points
+
+EditForm -> EditForm: Show point value change:\n"[OldPoints] → [NewPoints]"
+
+alt Points Changed and Has Active Assignments
+    EditForm --> Parent: Warning:\n"Active assignments will be\nupdated with new point value"
+end
+
+Parent -> EditForm: Update frequency
+EditForm -> EditForm: Update frequency display
+
+opt Update Optional Fields
+    Parent -> EditForm: Modify instructions
+    Parent -> EditForm: Replace reference photo
+    EditForm -> EditForm: Validate image
+end
+
+EditForm -> EditForm: Track all modified fields
+
+== Submit Changes ==
+Parent -> EditForm: Click "Save Changes"
+EditForm -> EditForm: Validate all required fields
+
+alt Validation Successful
+    EditForm -> EditForm: Build change summary:\n- List modified fields\n- Show before/after values
+
+    EditForm --> Parent: Show confirmation dialog:\n"Save these changes?\n[ChangesSummary]"
+
+    alt Has Active Assignments with Significant Changes
+        EditForm --> Parent: Additional warning:\n"This will affect [N] active\nassignment(s). Continue?"
+    end
+
+    Parent -> EditForm: Confirm "Save"
+
+    EditForm -> ChoreAPI: PUT /api/chores/{choreId}\n{\n  choreName,\n  description,\n  category,\n  estimatedDuration,\n  difficultyLevel,\n  pointValue,\n  frequency,\n  instructions,\n  imageUrl,\n  modifiedFields: [...]\n}
+
+    ChoreAPI -> ModifyCmd: Handle ModifyChoreCommand
+
+    ModifyCmd -> ChoreRepo: GetChoreById(choreId)
+    ChoreRepo -> DB: SELECT * FROM Chores
+    DB --> ChoreRepo: Current chore data
+    ChoreRepo --> ModifyCmd: Chore entity
+
+    ModifyCmd -> ModifyCmd: Store previous values\nfor audit trail
+
+    ModifyCmd -> ModifyCmd: Validate:\n- Chore exists\n- Name unique in household\n- Duration 0 < x < 480 minutes\n- Points within difficulty range\n- Parent has permission
+
+    alt Validation Passes
+        ModifyCmd -> ChoreRepo: UpdateChore(\n  choreId,\n  updatedFields,\n  modifiedBy: parentId\n)
+        ChoreRepo -> DB: UPDATE Chores SET ...\nWHERE ChoreId = @choreId
+        DB --> ChoreRepo: Success
+
+        alt Point Value Changed
+            ModifyCmd -> AssignRepo: GetActiveAssignments(choreId)
+            AssignRepo -> DB: SELECT * FROM ChoreAssignments\nWHERE ChoreId = @choreId\nAND Status = 'Pending'
+            DB --> AssignRepo: Active assignments
+            AssignRepo --> ModifyCmd: Assignments to update
+
+            loop For each active assignment
+                ModifyCmd -> AssignRepo: UpdateAssignmentPoints(\n  assignmentId,\n  newPointValue\n)
+                AssignRepo -> DB: UPDATE ChoreAssignments\nSET PointValue = @newPoints
+            end
+
+            ModifyCmd -> Events: Publish ChorePointsUpdated event\n{\n  choreId,\n  oldPoints,\n  newPoints,\n  affectedAssignments\n}
+
+            Events -> NotifyService: Notify affected members
+
+            NotifyService -> NotifyService: Create notifications:\n"[ChoreName] now worth [NewPoints] points!"
+            NotifyService -> DB: INSERT INTO Notifications
+            NotifyService -> NotifyService: Send push notifications
+        end
+
+        ModifyCmd -> Events: Publish ChoreModified event\n{\n  choreId,\n  modifiedFields: [...],\n  previousValues: {...},\n  newValues: {...},\n  modifiedBy: parentId,\n  modifiedAt\n}
+
+        alt Difficulty Changed
+            Events -> Events: Additional notification about\ndifficulty adjustment
+        end
+
+        ModifyCmd --> ChoreAPI: Success
+        ChoreAPI --> EditForm: 200 OK {updatedChore}
+
+        EditForm -> EditForm: Show success message:\n"Chore updated successfully"
+
+        alt Had Point Changes
+            EditForm --> Parent: "[N] active assignment(s)\nupdated with new points"
+        end
+
+        EditForm -> DetailUI: Close form and refresh
+        DetailUI -> DetailUI: Reload chore data
+        DetailUI --> Parent: Display updated chore details
+
+        alt Notifications Sent
+            NotifyService --> Parent: Affected members notified
+        end
+
+    else Validation Fails (Name Conflict)
+        ModifyCmd --> ChoreAPI: Name already exists
+        ChoreAPI --> EditForm: 409 Conflict\n{error: "Chore name already exists"}
+        EditForm --> Parent: "A chore with this name\nalready exists in your household"
+
+    else Validation Fails (Other)
+        ModifyCmd --> ChoreAPI: Validation errors
+        ChoreAPI --> EditForm: 400 Bad Request {errors}
+        EditForm --> Parent: Display validation errors
+    end
+
+else Form Validation Fails
+    EditForm --> Parent: Highlight invalid fields\nShow error messages
+end
+
+== Audit Trail ==
+note over ChoreRepo, DB
+  ChoreModified event includes:
+  - Complete change history
+  - Before/after values
+  - Timestamp and user
+  - Affected assignments
+
+  This enables:
+  - Change tracking
+  - Rollback capability
+  - Compliance reporting
+end note
+
+@enduml

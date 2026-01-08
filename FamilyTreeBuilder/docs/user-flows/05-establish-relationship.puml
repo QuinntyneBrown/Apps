@@ -1,0 +1,52 @@
+@startuml Establish Relationship Flow
+title Establish Relationship Between Persons Flow
+
+actor User
+participant "Add Relationship\nForm" as UI
+participant "Relationship\nService" as RelSvc
+participant "Relationships\nController" as RelCtrl
+participant "Establish\nRelationship\nCommandHandler" as Handler
+participant "IFamilyTreeBuilder\nContext" as DbContext
+participant "ITenantContext" as TenantCtx
+database "Database" as DB
+
+User -> UI: Click "Add Relationship"
+UI -> UI: Display relationship form
+UI -> DbContext: Load persons list\nfor dropdowns
+DbContext -> DB: SELECT Persons\nWHERE TenantId = @tenantId
+DB --> DbContext: List of persons
+DbContext --> UI: PersonDto list
+
+User -> UI: Select Person 1\nfrom dropdown
+User -> UI: Select Person 2\nfrom dropdown
+User -> UI: Select Relationship Type:\n- Parent\n- Child\n- Sibling\n- Spouse\n- Adoptive
+User -> UI: Enter Start Date (optional)
+User -> UI: Click "Save"
+
+UI -> UI: Validate selections
+UI -> RelSvc: establishRelationship(data)
+RelSvc -> RelCtrl: POST /api/relationships\n{person1Id, person2Id, type, startDate}
+RelCtrl -> RelCtrl: Validate persons exist
+RelCtrl -> Handler: Handle EstablishRelationshipCommand
+
+Handler -> TenantCtx: GetCurrentTenantId()
+TenantCtx --> Handler: TenantId (Guid)
+
+Handler -> Handler: Create Relationship\naggregate with TenantId
+Handler -> Handler: Set Person1Id, Person2Id
+Handler -> Handler: Set RelationshipType
+Handler -> Handler: Set StartDate, IsActive=true
+Handler -> DbContext: Relationships.Add(relationship)
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: INSERT INTO Relationships\n(RelationshipId, TenantId,\nPerson1Id, Person2Id, Type, ...)
+DB --> DbContext: Success
+Handler -> Handler: Raise RelationshipEstablished\ndomain event
+
+Handler --> RelCtrl: RelationshipId (Guid)
+RelCtrl --> RelSvc: 201 Created\n{relationshipId}
+RelSvc --> UI: Relationship created
+UI -> UI: Close form
+UI -> UI: Refresh relationships view
+UI --> User: Show success message\nand updated relationships
+
+@enduml

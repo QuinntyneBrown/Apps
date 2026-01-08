@@ -1,0 +1,97 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Users Controller" as Controller
+participant "Create User\nCommand Handler" as Handler
+participant "Password Hash\nService" as HashService
+participant "User Repository" as UserRepo
+database "Database" as DB
+
+title Create User Flow
+
+Admin -> UI: Click "Create User"
+activate UI
+
+UI -> UI: Show create\nuser form
+
+Admin -> UI: Enter username,\nemail, password
+Admin -> UI: Click "Save"
+
+UI -> UI: Validate form
+
+UI -> UserService: createUser(userData)
+activate UserService
+
+UserService -> Interceptor: POST /api/users\n{username, email, password}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: POST /api/users\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: CreateUser request
+activate Controller
+
+Controller -> Handler: Handle CreateUserCommand
+activate Handler
+
+Handler -> Handler: Validate username\nand email uniqueness
+
+alt Username or Email Already Exists
+    Handler --> Controller: Validation error
+    Controller --> API: 400 Bad Request\n{error: "Username or email already exists"}
+    API --> UserService: Error response
+    UserService --> UI: Creation failed
+    UI --> Admin: Display error\nmessage
+else Valid Input
+    Handler -> HashService: GenerateSalt()
+    activate HashService
+    HashService --> Handler: 32-byte salt
+    deactivate HashService
+
+    Handler -> HashService: HashPassword(password, salt)
+    activate HashService
+    HashService -> HashService: PBKDF2 with\nSHA-256 (100k iterations)
+    HashService --> Handler: Hashed password
+    deactivate HashService
+
+    Handler -> UserRepo: Add(user)
+    activate UserRepo
+
+    UserRepo -> DB: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt)
+    activate DB
+    DB --> UserRepo: Success
+    deactivate DB
+
+    UserRepo --> Handler: User created
+    deactivate UserRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 201 Created\n{userId, userName, email}
+    deactivate Controller
+
+    API --> UserService: Success response
+    deactivate API
+
+    UserService --> UI: User created
+    deactivate UserService
+
+    UI -> UI: Refresh user list
+
+    UI --> Admin: Show success\nmessage
+    deactivate UI
+end
+
+@enduml

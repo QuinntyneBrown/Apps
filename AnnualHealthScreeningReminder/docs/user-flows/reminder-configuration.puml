@@ -1,0 +1,164 @@
+@startuml ReminderConfiguration
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "ReminderPreferencesForm\n(UI Component)" as PreferencesForm
+participant "ReminderNotification\n(UI Component)" as Notification
+participant "ReminderHistory\n(UI Component)" as History
+participant "Reminder API\n(Controller)" as API
+participant "Reminder Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== Configure Reminder Preferences ==
+User -> PreferencesForm: Navigate to reminder settings
+activate PreferencesForm
+PreferencesForm -> API: GET /api/reminders/preferences
+activate API
+API -> Service: GetUserPreferences(userId)
+activate Service
+Service -> DB: QUERY reminder_preferences\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Current preferences
+deactivate DB
+Service --> API: Preferences
+deactivate Service
+API --> PreferencesForm: 200 OK\n{preferences}
+deactivate API
+PreferencesForm -> PreferencesForm: Display current settings
+PreferencesForm --> User: Show preferences form
+
+User -> PreferencesForm: Toggle notification channels\n(email, SMS, push)
+User -> PreferencesForm: Set advance notice days\n(slider: 1-30 days)
+User -> PreferencesForm: Configure quiet hours\n(start time, end time)
+User -> PreferencesForm: Save preferences
+PreferencesForm -> PreferencesForm: Validate settings
+PreferencesForm -> API: PUT /api/reminders/preferences\n{channels, advanceNoticeDays, quietHours}
+activate API
+API -> Service: UpdatePreferences(userId, data)
+activate Service
+Service -> DB: UPDATE reminder_preferences\nSET channels={c},\nadvance_notice_days={d},\nquiet_hours={h}
+activate DB
+DB --> Service: Preferences updated
+deactivate DB
+Service -> Service: Recalculate reminder schedule\nfor existing reminders
+Service --> API: Preferences saved
+deactivate Service
+API --> PreferencesForm: 200 OK\n{updatedPreferences}
+deactivate API
+PreferencesForm -> PreferencesForm: Display success message
+PreferencesForm --> User: Show confirmation
+deactivate PreferencesForm
+
+== Receive and Interact with Reminder ==
+Service -> Service: Reminder job triggered\nfor due screening
+activate Service
+Service -> DB: QUERY reminders\nWHERE send_date <= NOW()\nAND status = 'Pending'
+activate DB
+DB --> Service: Pending reminders
+deactivate DB
+Service -> Service: Check user preferences\nand quiet hours
+Service -> Service: Generate notification\ncontent
+
+alt Email Channel Enabled
+    Service -> Service: Send email reminder
+end
+
+alt SMS Channel Enabled
+    Service -> Service: Send SMS reminder
+end
+
+alt Push Channel Enabled
+    Service -> Service: Send push notification
+end
+
+Service -> DB: UPDATE reminders\nSET status='Sent',\nsent_date=NOW()
+activate DB
+DB --> Service: Reminder status updated
+deactivate DB
+deactivate Service
+
+Service -> Notification: Display notification\nin app
+activate Notification
+Notification --> User: Show screening reminder\nwith urgency indicator
+
+User -> Notification: Click "Schedule"
+Notification -> Notification: Navigate to\nscreening schedule form
+Notification -> API: POST /api/reminders/{id}/acknowledge
+activate API
+API -> Service: AcknowledgeReminder(id, 'Scheduled')
+activate Service
+Service -> DB: UPDATE reminders\nSET status='Acknowledged',\naction='Scheduled'
+activate DB
+DB --> Service: Reminder acknowledged
+deactivate DB
+Service --> API: Acknowledged
+deactivate Service
+API --> Notification: 200 OK
+deactivate API
+deactivate Notification
+
+== View Reminder History ==
+User -> History: Navigate to reminder history
+activate History
+History -> API: GET /api/reminders/history
+activate API
+API -> Service: GetReminderHistory(userId)
+activate Service
+Service -> DB: QUERY reminders\nWHERE user_id = {userId}\nORDER BY sent_date DESC
+activate DB
+DB --> Service: Reminder records
+deactivate DB
+Service --> API: Reminder history
+deactivate Service
+API --> History: 200 OK\n{reminders}
+deactivate API
+History -> History: Display list of reminders\nwith status indicators
+History --> User: Show reminder history
+
+User -> History: Filter by status/type
+History -> History: Apply filters\nto reminder list
+History --> User: Show filtered results
+deactivate History
+
+== Snooze Reminder ==
+User -> Notification: Click "Snooze"
+activate Notification
+Notification -> Notification: Show snooze options\n(1 day, 3 days, 1 week)
+User -> Notification: Select snooze duration
+Notification -> API: POST /api/reminders/{id}/snooze\n{snoozeDuration}
+activate API
+API -> Service: SnoozeReminder(id, duration)
+activate Service
+Service -> Service: Calculate new send date
+Service -> DB: UPDATE reminders\nSET status='Snoozed',\nsend_date={newDate}
+activate DB
+DB --> Service: Reminder snoozed
+deactivate DB
+Service --> API: Snoozed
+deactivate Service
+API --> Notification: 200 OK\n{newSendDate}
+deactivate API
+Notification -> Notification: Hide notification
+Notification --> User: Show snooze confirmation
+deactivate Notification
+
+== Dismiss Reminder ==
+User -> Notification: Click "Dismiss"
+activate Notification
+Notification -> API: POST /api/reminders/{id}/acknowledge
+activate API
+API -> Service: AcknowledgeReminder(id, 'Dismissed')
+activate Service
+Service -> DB: UPDATE reminders\nSET status='Dismissed',\naction='Dismissed'
+activate DB
+DB --> Service: Reminder dismissed
+deactivate DB
+Service --> API: Acknowledged
+deactivate Service
+API --> Notification: 200 OK
+deactivate API
+Notification -> Notification: Remove notification
+Notification --> User: Notification dismissed
+deactivate Notification
+
+@enduml

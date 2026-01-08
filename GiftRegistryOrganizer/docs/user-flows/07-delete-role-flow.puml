@@ -1,0 +1,97 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "Role Management\nPage (Angular)" as UI
+participant "Role Service\n(Angular)" as RoleService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Roles Controller" as Controller
+participant "Delete Role\nCommand Handler" as Handler
+participant "Role Repository" as RoleRepo
+database "Database" as DB
+
+title Delete Role Flow
+
+Admin -> UI: Click "Delete"\nbutton for role
+activate UI
+
+UI -> UI: Show confirmation\ndialog with warning:\n"This will remove role\nfrom all users"
+
+Admin -> UI: Confirm deletion
+
+UI -> RoleService: deleteRole(roleId)
+activate RoleService
+
+RoleService -> Interceptor: DELETE /api/roles/{roleId}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: DELETE /api/roles/{roleId}\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: DeleteRole request
+activate Controller
+
+Controller -> Handler: Handle DeleteRoleCommand
+activate Handler
+
+Handler -> RoleRepo: FindById(roleId)
+activate RoleRepo
+
+RoleRepo -> DB: SELECT * FROM Roles\nWHERE RoleId = ?
+activate DB
+DB --> RoleRepo: Role record
+deactivate DB
+
+RoleRepo --> Handler: Role entity
+deactivate RoleRepo
+
+alt Role Not Found
+    Handler --> Controller: Not found error
+    Controller --> API: 404 Not Found\n{error: "Role not found"}
+    API --> RoleService: Error response
+    RoleService --> UI: Deletion failed
+    UI --> Admin: Display error\nmessage
+else Role Found
+    Handler -> RoleRepo: Delete(roleId)
+    activate RoleRepo
+
+    RoleRepo -> DB: DELETE FROM UserRoles\nWHERE RoleId = ?
+    activate DB
+    note right: Remove role from\nall associated users
+    DB --> RoleRepo: Associations removed
+    deactivate DB
+
+    RoleRepo -> DB: DELETE FROM Roles\nWHERE RoleId = ?
+    activate DB
+    DB --> RoleRepo: Role deleted
+    deactivate DB
+
+    RoleRepo --> Handler: Success
+    deactivate RoleRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 204 No Content
+    deactivate Controller
+
+    API --> RoleService: Success response
+    deactivate API
+
+    RoleService --> UI: Role deleted
+    deactivate RoleService
+
+    UI -> UI: Remove role from\nlist display
+
+    UI --> Admin: Show success\nmessage
+    deactivate UI
+end
+
+@enduml

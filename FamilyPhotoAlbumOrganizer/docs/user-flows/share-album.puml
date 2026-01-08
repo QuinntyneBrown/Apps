@@ -1,0 +1,102 @@
+@startuml share-album
+actor "Album Owner" as Owner
+participant "Album Detail View" as AlbumView
+participant "Share Dialog" as ShareDialog
+participant "Share Service" as ShareService
+participant "API Gateway" as API
+participant "Share Controller" as ShareController
+database "Share Database" as ShareDB
+participant "Notification Service" as NotificationService
+
+Owner -> AlbumView: View album
+AlbumView --> Owner: Display album with photos
+
+Owner -> AlbumView: Click "Share" button
+AlbumView -> ShareDialog: Open share dialog
+ShareDialog --> Owner: Show sharing options
+
+Owner -> ShareDialog: Configure sharing options:\n- Content type: Album\n- Expiration date (optional)\n- Password protection (toggle)\n- View limit (optional)\n- Download allowed (toggle)
+
+ShareDialog -> ShareDialog: Validate options:\n- Expiration date in future\n- Password length if enabled\n- View limit > 0 if set
+
+alt Owner clicks "Generate Link"
+    Owner -> ShareDialog: Click "Generate Link" button
+    ShareDialog -> ShareService: createShareLink(albumId, options)
+    ShareService -> API: POST /api/share/album/{id}
+    API -> ShareController: createShareLink(albumId, shareOptions)
+
+    ShareController -> ShareController: Generate unique share token\n(UUID or short code)
+    ShareController -> ShareController: Hash password if provided
+
+    ShareController -> ShareDB: INSERT INTO share_links\n(albumId, token, expiresAt,\npasswordHash, viewLimit,\nallowDownload)
+    ShareDB --> ShareController: Share link record
+
+    ShareController -> ShareDB: UPDATE albums\nSET isShared = true\nWHERE id = albumId
+    ShareDB --> ShareController: Success
+
+    ShareController --> API: 201 Created\n{shareLink: ShareLink}
+    API --> ShareService: Share link created
+    ShareService --> ShareDialog: Display share URL
+    ShareDialog --> Owner: Show shareable link:\n"https://app.com/shared/{token}"
+
+    Owner -> ShareDialog: Select sharing method
+
+    alt Copy to clipboard
+        Owner -> ShareDialog: Click "Copy Link" button
+        ShareDialog -> ShareDialog: Copy URL to clipboard
+        ShareDialog --> Owner: Show notification:\n"Link copied to clipboard"
+    end
+
+    alt Share via social media
+        Owner -> ShareDialog: Click social media icon\n(Facebook, Twitter, etc.)
+        ShareDialog -> ShareDialog: Open share popup\nwith pre-filled message
+        ShareDialog --> Owner: Social media share dialog
+    end
+
+    alt Send via email
+        Owner -> ShareDialog: Click "Email" button
+        ShareDialog -> NotificationService: sendShareEmail(shareLink, email)
+        NotificationService --> Owner: "Email sent"
+    end
+
+    ShareDialog --> Owner: Show share details:\n- Link URL\n- Expiration date\n- View count: 0/limit\n- Password protected: Yes/No
+
+else Owner cancels
+    Owner -> ShareDialog: Click "Cancel" button
+    ShareDialog -> ShareDialog: Close dialog
+    ShareDialog -> AlbumView: Return without sharing
+end
+
+alt Share creation fails
+    API --> ShareService: 400 Bad Request\nor 500 Server Error
+    ShareService --> ShareDialog: Share creation failed
+    ShareDialog --> Owner: Show error message:\n"Failed to create share link.\nPlease try again."
+end
+
+== Manage Existing Share Links ==
+
+Owner -> AlbumView: Click "Share Settings"
+AlbumView -> ShareService: getShareLinks(albumId)
+ShareService -> API: GET /api/share/album/{id}/links
+API -> ShareController: getShareLinks(albumId)
+ShareController -> ShareDB: SELECT * FROM share_links\nWHERE albumId = albumId
+ShareDB --> ShareController: Share links list
+ShareController --> API: 200 OK {shareLinks[]}
+API --> ShareService: Share links data
+ShareService --> ShareDialog: Display existing links
+ShareDialog --> Owner: Show list of share links with:\n- Creation date\n- Expiration date\n- View count\n- Status (active/expired)
+
+alt Owner wants to revoke link
+    Owner -> ShareDialog: Click "Revoke" on link
+    ShareDialog -> ShareService: revokeShareLink(linkId)
+    ShareService -> API: DELETE /api/share/{linkId}
+    API -> ShareController: revokeShareLink(linkId)
+    ShareController -> ShareDB: DELETE FROM share_links\nWHERE id = linkId
+    ShareDB --> ShareController: Success
+    ShareController --> API: 200 OK
+    API --> ShareService: Link revoked
+    ShareService --> ShareDialog: Update links list
+    ShareDialog --> Owner: Show notification:\n"Share link revoked"
+end
+
+@enduml

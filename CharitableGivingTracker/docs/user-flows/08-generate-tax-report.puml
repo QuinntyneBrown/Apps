@@ -1,0 +1,194 @@
+@startuml
+title Generate Tax Report - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Tax Report\nPage" as taxPage
+participant "Report Viewer" as viewer
+participant "API Gateway" as api
+participant "CalculateTaxDeduction\nCommand Handler" as calcHandler
+participant "GenerateForm8283\nCommand Handler" as formHandler
+participant "TaxDeduction\nAggregate" as aggregate
+participant "Database" as db
+participant "PDF Generator" as pdf
+participant "Event Bus" as events
+
+user -> dashboard: Navigate to dashboard
+activate dashboard
+
+dashboard -> api: GET /api/tax/deductions/{currentYear}
+activate api
+api -> db: Query tax deduction summary for 2026
+activate db
+db --> api: Tax deduction data if exists
+deactivate db
+api --> dashboard: Deduction summary or null
+deactivate api
+
+dashboard --> user: Display tax dashboard card:\n- Current year deduction total\n- Missing acknowledgments alert\n- Form 8283 requirement badge
+
+user -> dashboard: Click "View Tax Report" or\n"Download Tax Report"
+
+dashboard -> taxPage: Navigate to Tax Report page
+activate taxPage
+
+taxPage -> api: GET /api/tax/deductions/2026
+activate api
+api -> db: Query existing deduction summary
+db --> api: Existing data or null
+api --> taxPage: Return data
+deactivate api
+
+alt No Calculation Yet
+    taxPage -> api: POST /api/tax/calculate/2026
+    activate api
+
+    taxPage --> user: Show loading:\n"Calculating tax deductions..."
+
+    api -> calcHandler: Execute CalculateTaxDeductionCommand
+    activate calcHandler
+
+    calcHandler -> calcHandler: Validate tax year
+    calcHandler -> calcHandler: Get UserId from context
+
+    calcHandler -> db: Query all tax-deductible donations\nSELECT * FROM Donations\nWHERE UserId = @userId\nAND YEAR(DonationDate) = 2026\nAND IsTaxDeductible = true
+    activate db
+    db --> calcHandler: List of deductible donations
+    deactivate db
+
+    calcHandler -> calcHandler: Calculate total amount:\nSUM(Amount) = $12,350
+    calcHandler -> calcHandler: Count donations: 27
+    calcHandler -> calcHandler: Count unique organizations: 8
+
+    calcHandler -> aggregate: Create TaxDeduction aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Set TaxDeductionId (GUID)
+    aggregate -> aggregate: Set UserId
+    aggregate -> aggregate: Set TaxYear = 2026
+    aggregate -> aggregate: Set TotalDeductibleAmount = $12,350
+    aggregate -> aggregate: Set DonationCount = 27
+    aggregate -> aggregate: Set OrganizationsCount = 8
+    aggregate -> aggregate: Set CalculatedAt = now
+
+    aggregate -> db: INSERT INTO TaxDeductions
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate -> events: Publish TaxDeductionCalculated event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> calcHandler: Return TaxDeductionId
+    deactivate aggregate
+
+    calcHandler --> api: 200 OK\n{totalDeductible: 12350,\ndonationCount: 27,\norganizationsCount: 8}
+    deactivate calcHandler
+
+    api --> taxPage: Calculation complete
+    deactivate api
+end
+
+taxPage -> api: GET /api/donations/tax-year/2026
+activate api
+api -> db: Query detailed donation breakdown
+activate db
+db --> api: Donations by organization:\n- Red Cross: $3,500 (8 donations)\n- United Way: $2,800 (6 donations)\n- ...
+deactivate db
+api --> taxPage: Detailed breakdown
+deactivate api
+
+taxPage -> viewer: Display tax report viewer
+activate viewer
+
+viewer --> user: Show tax report sections:\n1. Summary Statistics\n   - Total Deductible: $12,350\n   - Number of Donations: 27\n   - Organizations: 8\n2. Breakdown by Organization\n3. Month-by-Month Analysis\n4. Missing Acknowledgments (if any)
+
+alt Has Non-Cash Donations > $500
+    viewer -> api: Check for Form 8283 requirement
+    activate api
+    api -> db: SELECT non-cash donations\nWHERE TaxYear = 2026\nAND FairMarketValue > 500
+    activate db
+    db --> api: Non-cash donations:\n- Property: $8,000\n- Stock: $2,500
+    deactivate db
+    api --> viewer: Form 8283 required
+    deactivate api
+
+    viewer --> user: Display alert:\n"Form 8283 Required\nYou have $10,500 in non-cash\ndonations requiring Form 8283"
+
+    user -> viewer: Click "Generate Form 8283"
+
+    viewer -> api: GET /api/tax/form8283/2026
+    activate api
+
+    viewer --> user: Show loading:\n"Generating Form 8283..."
+
+    api -> formHandler: Execute GenerateForm8283Command
+    activate formHandler
+
+    formHandler -> formHandler: Validate tax year
+    formHandler -> formHandler: Validate non-cash donations > $500
+
+    formHandler -> db: Query non-cash donations\nfor 2026
+    activate db
+    db --> formHandler: Non-cash donations list
+    deactivate db
+
+    formHandler -> formHandler: Prepare Form 8283 data:\n- Part I: Donations $500-$5,000\n- Part II: Donations > $5,000\n- Organization details\n- Valuation methods
+
+    formHandler -> pdf: Generate Form 8283 PDF
+    activate pdf
+    pdf -> pdf: Create PDF with:\n- User information\n- Donation details\n- Organization info\n- Appraisal information (if required)
+    pdf --> formHandler: Return PDF binary
+    deactivate pdf
+
+    formHandler --> api: 200 OK with PDF
+    deactivate formHandler
+
+    api --> viewer: Return Form 8283 PDF
+    deactivate api
+
+    viewer --> user: Download Form 8283:\n"Form_8283_2026.pdf"
+end
+
+user -> viewer: Click "Export to PDF"
+
+viewer -> api: GET /api/tax/report/2026\n?format=pdf
+activate api
+
+viewer --> user: Show loading:\n"Generating tax report..."
+
+api -> pdf: Generate comprehensive tax report PDF
+activate pdf
+
+pdf -> pdf: Create PDF report with:\n- Cover page\n- Summary statistics\n- Donation breakdown by organization\n- Month-by-month analysis\n- Individual donation details\n- Missing acknowledgments list\n- Form 8283 summary (if applicable)
+
+pdf --> api: Return PDF binary
+deactivate pdf
+
+api --> viewer: 200 OK with PDF
+deactivate api
+
+viewer --> user: Download PDF:\n"Tax_Report_2026.pdf"
+
+user -> viewer: Click "Export to CSV"
+
+viewer -> api: GET /api/donations/export\n?taxYear=2026\n&format=csv
+activate api
+
+api -> db: Query all deductible donations
+db --> api: Donation data
+api -> api: Format as CSV
+api --> viewer: Return CSV file
+deactivate api
+
+viewer --> user: Download CSV:\n"tax_donations_2026.csv"
+
+viewer --> user: Show export success message
+
+deactivate viewer
+deactivate taxPage
+deactivate dashboard
+
+@enduml

@@ -1,0 +1,99 @@
+@startuml
+title Plan New Trip Flow - Camping Trip Planner
+
+actor User as user
+participant "Dashboard Page" as dashboard
+participant "Add Trip Modal" as modal
+participant "Campsite Service" as campsiteService
+participant "Trip Service" as tripService
+participant "Trip Controller" as tripController
+participant "Create Trip\nCommand Handler" as createTripHandler
+participant "ICampingTripPlannerContext" as dbContext
+participant "ITenantContext" as tenantContext
+database "SQL Server" as db
+
+user -> dashboard: Click "Plan New Trip"
+activate dashboard
+dashboard -> modal: Open modal dialog
+activate modal
+modal -> user: Display trip planning form
+deactivate dashboard
+
+user -> modal: Fill in trip details:\n- Trip name\n- Description\n- Start/End dates\n- Campsite selection
+activate modal
+
+user -> modal: Search for campsite
+modal -> campsiteService: searchCampsites(query)
+activate campsiteService
+campsiteService -> tripController: GET /api/campsites/search?q={query}
+activate tripController
+tripController --> campsiteService: 200 OK {campsites[]}
+deactivate tripController
+campsiteService --> modal: Campsite suggestions
+deactivate campsiteService
+modal -> user: Display campsite options
+deactivate modal
+
+user -> modal: Select campsite and\nadd participants
+activate modal
+user -> modal: Select activities
+user -> modal: Set difficulty level
+user -> modal: Add notes
+user -> modal: Click "Create Trip"
+
+modal -> modal: Validate form data
+modal -> tripService: createTrip(tripData)
+activate tripService
+
+tripService -> tripController: POST /api/trips\n{tripData}
+activate tripController
+
+tripController -> createTripHandler: Handle CreateTripCommand
+activate createTripHandler
+
+createTripHandler -> tenantContext: GetCurrentTenantId()
+activate tenantContext
+tenantContext --> createTripHandler: TenantId
+deactivate tenantContext
+
+createTripHandler -> createTripHandler: Create Trip entity\nwith TenantId
+
+createTripHandler -> dbContext: Trips.Add(trip)
+activate dbContext
+dbContext -> db: INSERT INTO Trips\n(TripId, Name, StartDate, EndDate,\nCampsiteId, TenantId, ...)
+activate db
+db --> dbContext: Trip created
+deactivate db
+
+createTripHandler -> createTripHandler: Raise TripPlannedEvent
+
+createTripHandler -> dbContext: SaveChangesAsync()
+dbContext -> db: COMMIT transaction
+db --> dbContext: Success
+deactivate db
+deactivate dbContext
+
+createTripHandler --> tripController: Trip created with TripId
+deactivate createTripHandler
+
+tripController --> tripService: 201 Created\n{trip}
+deactivate tripController
+
+tripService --> modal: Trip created successfully
+deactivate tripService
+
+modal -> modal: Close modal
+modal -> dashboard: Refresh trip list
+activate dashboard
+dashboard -> user: Navigate to trip details page
+deactivate dashboard
+deactivate modal
+
+note right of createTripHandler
+  Domain Event: TripPlannedEvent
+  - Triggers notifications
+  - Updates statistics
+  - Creates default checklist
+end note
+
+@enduml

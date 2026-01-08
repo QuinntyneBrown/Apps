@@ -1,0 +1,94 @@
+@startuml
+title Appliance Registration Flow
+
+actor User as user
+participant "Appliance Inventory\nPage" as inventoryPage
+participant "Add Appliance\nModal" as modal
+participant "Appliance Form\nComponent" as form
+participant "Appliance Service\n(Angular)" as applianceService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Appliances\nController" as controller
+participant "Create Appliance\nCommand Handler" as commandHandler
+participant "DB Context" as dbContext
+participant "Appliances Table" as database
+participant "Blob Storage\n(Photos)" as blobStorage
+
+user -> inventoryPage: Click [+ Add Appliance]
+activate inventoryPage
+inventoryPage -> modal: Open modal
+activate modal
+modal -> form: Display empty form
+activate form
+form --> user: Show form fields
+
+user -> form: Enter appliance details\n(Name, Brand, Model,\nSerial, Purchase Date, etc.)
+user -> form: Select location\n(Room/Property)
+user -> form: Upload photo
+
+form -> form: Validate form inputs
+form -> form: Preview photo
+
+user -> form: Click [Save]
+
+form -> applianceService: createAppliance(applianceData)
+activate applianceService
+
+alt Has Photo
+    applianceService -> blobStorage: Upload photo
+    activate blobStorage
+    blobStorage --> applianceService: photoUrl
+    deactivate blobStorage
+    applianceService -> applianceService: Add photoUrl to request
+end
+
+applianceService -> interceptor: POST /api/appliances\n+ Authorization header
+activate interceptor
+interceptor -> controller: { name, brand, modelNumber,\nserialNumber, purchaseDate,\npurchasePrice, retailer,\nlocation, photoUrl }
+activate controller
+
+controller -> commandHandler: CreateApplianceCommand
+activate commandHandler
+
+commandHandler -> commandHandler: Extract TenantId from JWT
+commandHandler -> commandHandler: Create Appliance entity\nwith TenantId
+
+commandHandler -> dbContext: Appliances.Add(appliance)
+activate dbContext
+dbContext -> database: INSERT INTO Appliances
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+commandHandler -> dbContext: SaveChangesAsync()
+activate dbContext
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Appliance saved
+deactivate database
+deactivate dbContext
+
+commandHandler -> commandHandler: Publish ApplianceRegistered event
+
+commandHandler --> controller: ApplianceDto
+deactivate commandHandler
+
+controller --> interceptor: 201 Created\n{ applianceId, name, ... }
+deactivate controller
+
+interceptor --> applianceService: Success response
+deactivate interceptor
+
+applianceService --> form: Appliance created
+deactivate applianceService
+
+form -> modal: Close modal
+deactivate form
+modal -> inventoryPage: Refresh appliance list
+deactivate modal
+
+inventoryPage -> inventoryPage: Show success message
+inventoryPage --> user: Display new appliance\nin grid/list
+deactivate inventoryPage
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml Create User Flow
+autonumber
+title Create User Flow (Admin)
+
+actor Admin
+participant "User Management\nUI" as UI
+participant "User Service" as Service
+participant "API Controller\n/api/users" as API
+participant "User Handler" as Handler
+participant "Password Service" as PwdService
+database "Database" as DB
+
+Admin -> UI: Click "Add User"
+UI -> UI: Display create user form
+
+Admin -> UI: Enter user details\n(username, email, password)
+UI -> UI: Validate form\n(email format, password length >= 8)
+
+alt Validation Successful
+    UI -> Service: createUser(userData)
+    Service -> API: POST /api/users\n{username, email, password}
+
+    API -> API: Verify Admin role\nfrom JWT token
+
+    alt Admin Authorized
+        API -> Handler: Handle CreateUserCommand
+        Handler -> DB: Check username uniqueness
+        Handler -> DB: Check email uniqueness
+
+        alt Username and Email Available
+            Handler -> PwdService: Generate unique salt (32 bytes)
+            PwdService --> Handler: salt
+            Handler -> PwdService: HashPassword(password, salt)
+            PwdService --> Handler: hashedPassword
+
+            Handler -> DB: INSERT User\n(UserId, Username, Email,\nHashedPassword, Salt)
+            DB --> Handler: User created
+
+            Handler --> API: UserDto (without password)
+            API --> Service: 201 Created\n{userId, username, email}
+            Service --> UI: User created successfully
+            UI --> Admin: Display success message\nand refresh user list
+        else Username or Email Taken
+            Handler --> API: Validation error
+            API --> Service: 400 Bad Request\n{error: "Username/Email exists"}
+            Service --> UI: Validation failed
+            UI --> Admin: Display error message
+        end
+    else Not Admin
+        API --> Service: 403 Forbidden\n{error: "Admin access required"}
+        Service --> UI: Unauthorized
+        UI --> Admin: Display authorization error
+    end
+else Validation Failed
+    UI --> Admin: Display validation errors
+end
+
+@enduml

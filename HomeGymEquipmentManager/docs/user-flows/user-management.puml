@@ -1,0 +1,135 @@
+@startuml
+title User Management Flow - Create User
+
+actor Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "Users Controller\n(/api/users)" as UserController
+participant "Create User\nCommand Handler" as CreateHandler
+participant "Password Hash\nService" as HashService
+database "Database\n(SQL Server)" as DB
+
+== View Users List ==
+
+Admin -> UI: Navigate to\nUser Management
+activate UI
+
+UI -> UserService: getUsers()
+activate UserService
+
+UserService -> UserController: GET /api/users
+activate UserController
+note right: Requires Admin role\nin JWT token
+
+UserController -> DB: SELECT * FROM Users
+activate DB
+DB --> UserController: User entities
+deactivate DB
+
+UserController -> UserController: Map to UserDto\n(exclude passwords)
+
+UserController --> UserService: 200 OK\n[UserDto array]
+deactivate UserController
+
+UserService --> UI: Users list
+deactivate UserService
+
+UI --> Admin: Display users table\nwith roles
+deactivate UI
+
+== Create New User ==
+
+Admin -> UI: Click "Add User"
+activate UI
+
+UI -> UI: Open Create User\nmodal/form
+
+Admin -> UI: Enter user details:\n- Username (unique)\n- Email (unique)\n- Password (min 8 chars)\n- Assign roles
+
+UI -> UI: Validate form:\n- Username not empty\n- Email format valid\n- Password min length\n- Email uniqueness
+
+Admin -> UI: Click "Create"
+
+UI -> UserService: createUser(userData)
+activate UserService
+
+UserService -> UserController: POST /api/users\n{username, email,\npassword, roles}
+activate UserController
+
+UserController -> CreateHandler: Handle(CreateUserCommand)
+activate CreateHandler
+
+CreateHandler -> CreateHandler: Validate uniqueness\nconstraints
+
+CreateHandler -> HashService: HashPassword(password)
+activate HashService
+
+HashService -> HashService: Generate 32-byte\nrandom salt
+
+HashService -> HashService: Apply PBKDF2 with\nSHA-256 (100k iterations)
+
+HashService --> CreateHandler: {hashedPassword,\nsalt}
+deactivate HashService
+
+CreateHandler -> CreateHandler: Create User entity:\n- UserId (GUID)\n- UserName\n- Email\n- HashedPassword\n- Salt\n- CreatedAt
+
+CreateHandler -> DB: INSERT INTO Users
+activate DB
+
+alt Username or Email Already Exists
+    DB --> CreateHandler: Unique constraint\nviolation
+    deactivate DB
+
+    CreateHandler --> UserController: Validation error
+    deactivate CreateHandler
+
+    UserController --> UserService: 400 Bad Request\n{error: "Username/Email exists"}
+    deactivate UserController
+
+    UserService --> UI: Creation failed
+    deactivate UserService
+
+    UI --> Admin: Show error message
+    deactivate UI
+
+else Successful Creation
+    DB --> CreateHandler: User created
+    deactivate DB
+
+    CreateHandler -> DB: INSERT UserRoles\nfor assigned roles
+    activate DB
+    DB --> CreateHandler: Roles assigned
+    deactivate DB
+
+    CreateHandler -> CreateHandler: Raise UserCreated\ndomain event
+
+    CreateHandler --> UserController: UserDto
+    deactivate CreateHandler
+
+    UserController --> UserService: 201 Created\n{user}
+    deactivate UserController
+
+    UserService --> UI: User created
+    deactivate UserService
+
+    UI -> UI: Close modal
+
+    UI -> UserService: Refresh users list
+    activate UserService
+
+    UserService -> UserController: GET /api/users
+    activate UserController
+    UserController -> DB: SELECT * FROM Users
+    activate DB
+    DB --> UserController: Updated list
+    deactivate DB
+    UserController --> UserService: Users array
+    deactivate UserController
+    UserService --> UI: Updated list
+    deactivate UserService
+
+    UI --> Admin: Show updated users\ntable
+    deactivate UI
+end
+
+@enduml

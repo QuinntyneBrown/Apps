@@ -1,0 +1,158 @@
+@startuml
+title Log Medication Dose Flow
+
+actor User as user
+participant "Mobile Device\n(OS)" as device
+participant "Notification" as notification
+participant "App\n(UI)" as app
+participant "Medication Log\n(UI Component)" as logUI
+participant "Medication Service\n(Frontend)" as medService
+participant "API Gateway" as api
+participant "Medication Controller\n(Backend)" as controller
+participant "Adherence Calculator" as adherenceCalc
+database "Dose Log Database" as doseDb
+database "Medications Database" as medDb
+
+note over user, medDb : 8:00 AM - Scheduled medication time
+
+controller -> device : Send push notification
+activate device
+device -> notification : Display notification:\n"Lisinopril 10mg\nTime to take your medication\n[Log Dose] [Snooze]"
+deactivate device
+
+activate notification
+notification -> user : Notification appears\nwith alert sound
+deactivate notification
+
+user -> notification : Click notification
+activate notification
+notification -> app : Open app to dose log
+deactivate notification
+
+activate app
+app -> logUI : Navigate to log dose screen\nfor Lisinopril
+deactivate app
+
+activate logUI
+logUI -> user : Display log confirmation:\n"Lisinopril 10mg\nScheduled: 8:00 AM\nTake now and log?\n[Log Dose] [Mark as Missed]"
+deactivate logUI
+
+user -> logUI : Click "Log Dose"
+activate logUI
+logUI -> logUI : Set timestamp: current time (8:02 AM)
+logUI -> user : Show optional prompt:\n"Take BP reading now?\n[Yes] [No] [Later]"
+deactivate logUI
+
+user -> logUI : Click "Yes" to BP reading
+activate logUI
+logUI -> logUI : Open BP reading form\nwith medication context
+deactivate logUI
+
+user -> logUI : Enter BP reading:\nSystolic: 128\nDiastolic: 82\nPulse: 70
+activate logUI
+logUI -> medService : Submit dose log and BP reading
+deactivate logUI
+
+activate medService
+medService -> api : POST /api/medications/doses\nAuthorization: Bearer {token}\n{medicationId, takenAt: "8:02 AM",\nscheduledAt: "8:00 AM", status: "taken"}
+activate api
+api -> controller : Log medication dose
+deactivate api
+
+activate controller
+controller -> doseDb : Insert dose log record
+activate doseDb
+doseDb --> controller : Return dose log ID
+deactivate doseDb
+
+controller -> adherenceCalc : Update adherence statistics
+activate adherenceCalc
+adherenceCalc -> doseDb : Query recent doses\n(last 30 days)
+activate doseDb
+doseDb --> adherenceCalc : Return dose history
+deactivate doseDb
+
+adherenceCalc -> adherenceCalc : Calculate adherence:\nTaken: 29/30 doses\nOn time: 27/30\nAdherence: 96.7%
+
+adherenceCalc --> controller : Return updated adherence
+deactivate adherenceCalc
+
+controller -> api : 201 Created {doseLog, adherence: 96.7%}
+deactivate controller
+
+api -> medService : Return success
+deactivate api
+
+medService -> api : POST /api/readings\n{systolic: 128, diastolic: 82,\npulse: 70, medicationContext: true,\ntimeSinceMedication: 2}
+activate api
+api -> controller : Save BP reading with medication tag
+deactivate api
+
+activate controller
+controller -> doseDb : Link reading to dose log
+activate doseDb
+doseDb --> controller : Confirm linkage
+deactivate doseDb
+
+controller -> api : 201 Created {reading}
+deactivate controller
+
+activate api
+api -> medService : Reading saved
+deactivate api
+deactivate medService
+
+activate logUI
+logUI -> user : Show success:\n"Dose logged!\nBP: 128/82 recorded\nAdherence: 96.7%"
+logUI -> app : Navigate to medication dashboard
+deactivate logUI
+
+activate app
+app -> app : Update medication card:\n- Lisinopril 10mg\n- Last dose: Today 8:02 AM (on time)\n- Next dose: Tomorrow 8:00 AM\n- Adherence: 96.7% (green)\n- Streak: 28 days
+app -> user : Display updated dashboard
+deactivate app
+
+alt Alternative: User Marks as Missed
+    user -> logUI : Click "Mark as Missed"
+    activate logUI
+    logUI -> logUI : Show reason selection:\n- Forgot\n- Side effects\n- Ran out\n- Other
+    deactivate logUI
+
+    user -> logUI : Select reason: "Forgot"
+    activate logUI
+    logUI -> medService : Submit missed dose
+    deactivate logUI
+
+    activate medService
+    medService -> api : POST /api/medications/doses\n{medicationId, scheduledAt: "8:00 AM",\nstatus: "missed", reason: "forgot"}
+    deactivate medService
+
+    activate api
+    api -> controller : Log missed dose
+    deactivate api
+
+    activate controller
+    controller -> doseDb : Insert missed dose record
+    activate doseDb
+    doseDb --> controller : Confirm
+    deactivate doseDb
+
+    controller -> adherenceCalc : Update adherence
+    activate adherenceCalc
+    adherenceCalc -> adherenceCalc : Recalculate:\nAdherence: 93.3%\n(28/30 doses taken)
+    adherenceCalc --> controller : Updated stats
+    deactivate adherenceCalc
+
+    controller -> api : 201 Created {missedDose, adherence: 93.3%}
+    deactivate controller
+
+    activate api
+    api -> logUI : Success
+    deactivate api
+
+    activate logUI
+    logUI -> user : Show message:\n"Dose marked as missed\nSet reminder for later?\n[Yes] [No]"
+    deactivate logUI
+end
+
+@enduml

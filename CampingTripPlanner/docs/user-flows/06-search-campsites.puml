@@ -1,0 +1,136 @@
+@startuml
+title Search and Discover Campsites Flow - Camping Trip Planner
+
+actor User as user
+participant "Campsite Directory Page" as directoryPage
+participant "Campsite Service" as campsiteService
+participant "Campsite Controller" as campsiteController
+participant "Search Campsites\nQuery Handler" as searchHandler
+participant "Add Favorite\nCommand Handler" as favoriteHandler
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+
+user -> directoryPage: Navigate to\nCampsite Directory
+activate directoryPage
+
+directoryPage -> campsiteService: getAllCampsites()
+activate campsiteService
+campsiteService -> campsiteController: GET /api/campsites
+activate campsiteController
+campsiteController -> searchHandler: Handle GetCampsitesQuery
+activate searchHandler
+searchHandler -> dbContext: Query all campsites
+activate dbContext
+dbContext -> db: SELECT * FROM Campsites\nWHERE IsActive = 1\nORDER BY Rating DESC
+activate db
+db --> dbContext: Campsite records
+deactivate db
+deactivate dbContext
+searchHandler --> campsiteController: Campsite DTOs
+deactivate searchHandler
+campsiteController --> campsiteService: 200 OK {campsites[]}
+deactivate campsiteController
+campsiteService --> directoryPage: Observable<Campsite[]>
+deactivate campsiteService
+
+directoryPage -> directoryPage: Render campsite cards\nwith filters
+directoryPage -> user: Display campsite directory
+deactivate directoryPage
+
+== User Searches for Campsites ==
+
+user -> directoryPage: Enter search query:\n"Yosemite"
+activate directoryPage
+directoryPage -> campsiteService: searchCampsites(query, filters)
+activate campsiteService
+campsiteService -> campsiteController: GET /api/campsites/search\n?q=Yosemite&type=national
+activate campsiteController
+campsiteController -> searchHandler: Handle SearchCampsitesQuery
+activate searchHandler
+searchHandler -> dbContext: Search campsites
+activate dbContext
+dbContext -> db: SELECT * FROM Campsites\nWHERE (Name LIKE '%@query%'\nOR Location LIKE '%@query%')\nAND Type = @type\nORDER BY Rating DESC
+activate db
+db --> dbContext: Matching campsites
+deactivate db
+deactivate dbContext
+searchHandler --> campsiteController: Filtered campsite DTOs
+deactivate searchHandler
+campsiteController --> campsiteService: 200 OK {campsites[]}
+deactivate campsiteController
+campsiteService --> directoryPage: Observable<Campsite[]>
+deactivate campsiteService
+
+directoryPage -> directoryPage: Update campsite grid\nwith search results
+directoryPage -> user: Show filtered campsites
+deactivate directoryPage
+
+== User Adds Campsite to Favorites ==
+
+user -> directoryPage: Click favorite button\non campsite card
+activate directoryPage
+directoryPage -> campsiteService: addToFavorites(campsiteId)
+activate campsiteService
+campsiteService -> campsiteController: POST /api/campsites/{campsiteId}/favorite
+activate campsiteController
+campsiteController -> favoriteHandler: Handle AddFavoriteCampsiteCommand
+activate favoriteHandler
+favoriteHandler -> dbContext: Add favorite
+activate dbContext
+dbContext -> db: INSERT INTO FavoriteCampsites\n(UserId, CampsiteId, TenantId,\nDateAdded)
+activate db
+db --> dbContext: Favorite added
+deactivate db
+deactivate dbContext
+favoriteHandler --> campsiteController: Success
+deactivate favoriteHandler
+campsiteController --> campsiteService: 200 OK
+deactivate campsiteController
+campsiteService --> directoryPage: Favorite added
+deactivate campsiteService
+
+directoryPage -> directoryPage: Update UI:\n- Mark as favorited\n- Update favorite count
+directoryPage -> user: Show updated card
+deactivate directoryPage
+
+== User Views Campsite Details ==
+
+user -> directoryPage: Click "View Details"
+activate directoryPage
+directoryPage -> directoryPage: Navigate to\n/campsites/{campsiteId}
+directoryPage -> campsiteService: getCampsiteDetails(campsiteId)
+activate campsiteService
+campsiteService -> campsiteController: GET /api/campsites/{campsiteId}
+activate campsiteController
+campsiteController -> searchHandler: Handle GetCampsiteByIdQuery
+activate searchHandler
+searchHandler -> dbContext: Query campsite with reviews
+activate dbContext
+dbContext -> db: SELECT c.*, r.*, a.*\nFROM Campsites c\nLEFT JOIN Reviews r ON c.CampsiteId = r.CampsiteId\nLEFT JOIN Amenities a ON c.CampsiteId = a.CampsiteId\nWHERE c.CampsiteId = @campsiteId
+activate db
+db --> dbContext: Campsite with reviews\nand amenities
+deactivate db
+deactivate dbContext
+searchHandler --> campsiteController: Detailed campsite DTO
+deactivate searchHandler
+campsiteController --> campsiteService: 200 OK {campsite}
+deactivate campsiteController
+campsiteService --> directoryPage: Observable<CampsiteDetails>
+deactivate campsiteService
+
+directoryPage -> user: Display campsite\ndetails page
+deactivate directoryPage
+
+note right of directoryPage
+  Directory features:
+  - Search by name/location
+  - Filter by type, amenities
+  - Sort by rating, distance
+  - View campsite details
+  - Add to favorites
+  - Read/write reviews
+  - View amenities
+  - Track visit history
+end note
+
+@enduml

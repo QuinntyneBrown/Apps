@@ -1,0 +1,125 @@
+@startuml
+title Availability Submission Flow
+skinparam sequenceMessageAlign center
+
+actor "Friend Group Member" as user
+participant "Event Detail Page\n(Angular)" as eventDetail
+participant "Availability Selector\n(Angular Component)" as selector
+participant "Scheduling Service\n(Angular)" as schedService
+participant "API Gateway\n/api/availability" as api
+participant "SubmitAvailability Handler\n(MediatR)" as handler
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nAvailability Table" as db
+participant "Availability Algorithm\n(Domain Service)" as algorithm
+
+== View Event and Poll ==
+user -> eventDetail: Navigate to event detail
+activate eventDetail
+eventDetail -> schedService: getPoll(eventId)
+activate schedService
+schedService -> api: GET /api/polls?eventId={id}
+activate api
+api --> schedService: Poll with time slots
+deactivate api
+schedService --> eventDetail: Poll data
+deactivate schedService
+eventDetail -> selector: Display time slot selector
+activate selector
+selector --> user: Show available time slots
+deactivate selector
+deactivate eventDetail
+
+== Select Available Times ==
+user -> selector: Select available time slots\n(checkboxes/date picker)
+activate selector
+selector -> selector: Track selected slots\nin component state
+selector --> user: Show selected slots
+deactivate selector
+
+== Submit Availability ==
+user -> selector: Click "Submit Availability"
+activate selector
+selector -> selector: Validate at least\none slot selected
+selector -> schedService: submitAvailability(userId, eventId, slots)
+activate schedService
+schedService -> api: POST /api/availability\n{userId, eventId,\navailableSlots[]}
+activate api
+api -> api: Authenticate user\nfrom JWT token
+api -> handler: Handle SubmitAvailabilityCommand
+activate handler
+
+handler -> dbContext: Availability.FirstOrDefault(\na => a.UserId && a.EventId)
+activate dbContext
+dbContext -> db: SELECT * FROM Availability\nWHERE UserId = @userId\nAND EventId = @eventId
+activate db
+
+alt Existing Availability Found
+    db --> dbContext: Existing availability record
+    deactivate db
+    dbContext --> handler: Existing availability entity
+    deactivate dbContext
+    handler -> handler: Update available slots
+    handler -> dbContext: SaveChanges()
+    activate dbContext
+    dbContext -> db: UPDATE Availability\nSET AvailableSlots = @slots
+    activate db
+else No Existing Availability
+    db --> dbContext: null
+    deactivate db
+    dbContext --> handler: null
+    deactivate dbContext
+    handler -> handler: Create new Availability entity
+    handler -> dbContext: Availability.Add(availability)
+    activate dbContext
+    dbContext -> db: INSERT INTO Availability\n(UserId, EventId, AvailableSlots)
+    activate db
+end
+
+db --> dbContext: Changes saved
+deactivate db
+dbContext --> handler: Success
+deactivate dbContext
+
+handler -> handler: Raise AvailabilitySubmitted\ndomain event
+
+handler -> algorithm: CalculateOptimalTimes(eventId)
+activate algorithm
+algorithm -> dbContext: Availability.Where(a => a.EventId)\n.ToList()
+activate dbContext
+dbContext -> db: SELECT * FROM Availability\nWHERE EventId = @eventId
+activate db
+db --> dbContext: All availability records
+deactivate db
+dbContext --> algorithm: List of availabilities
+deactivate dbContext
+
+algorithm -> algorithm: Analyze overlapping slots\nRank by most attendees\nIdentify optimal times
+
+algorithm --> handler: Optimal time slots
+deactivate algorithm
+
+handler --> api: SubmitAvailabilityResponseDto\n{success, optimalTimes[]}
+deactivate handler
+
+api --> schedService: 200 OK\n{success, optimalTimes}
+deactivate api
+
+schedService --> selector: Availability submitted
+deactivate schedService
+
+selector -> selector: Show success message
+selector --> eventDetail: Refresh view
+activate eventDetail
+eventDetail -> schedService: getOptimalTimes(eventId)
+activate schedService
+schedService -> api: GET /api/events/{id}/optimal-times
+activate api
+api --> schedService: Optimal times with scores
+deactivate api
+schedService --> eventDetail: Optimal times
+deactivate schedService
+eventDetail --> user: Display updated results\nwith optimal times
+deactivate eventDetail
+deactivate selector
+
+@enduml

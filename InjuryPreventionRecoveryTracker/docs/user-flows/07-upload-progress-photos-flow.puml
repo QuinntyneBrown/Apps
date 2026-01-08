@@ -1,0 +1,112 @@
+@startuml Upload Progress Photos Flow
+title Upload Progress Photos Flow
+
+actor User
+participant "Progress Photos Page" as UI
+participant "Photo Upload Component" as Upload
+participant "Photo Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "File Storage Service" as FileStorage
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+User -> UI: Navigate to Progress Photos\nfor an injury
+UI -> Service: Observable: photos$\n= getProgressPhotos(injuryId)
+Service -> API: GET /api/injuries/{injuryId}/photos
+
+API -> DB: Query photos\n(tenant-scoped)
+DB --> API: List<ProgressPhoto>
+API --> Service: ProgressPhotoDto[]
+Service --> UI: Display photo gallery\n(timeline view)
+
+UI --> User: Show existing photos\nwith upload button
+
+User -> UI: Click "Upload Photo"
+UI -> Upload: Open upload component
+Upload --> User: Display file picker\nand form
+
+User -> Upload: Select photo file(s)\n(from camera or gallery)
+Upload -> Upload: Validate file:\n- Type (jpg, png)\n- Size (< 10MB)\n- Dimensions
+
+alt Invalid file
+    Upload --> User: Show validation error\n"File too large" or\n"Invalid file type"
+else Valid file
+    User -> Upload: Add notes & date
+    User -> Upload: Submit upload
+
+    Upload -> Upload: Show upload progress
+    Upload -> Service: uploadProgressPhoto(formData)
+    Service -> API: POST /api/injuries/{injuryId}/photos\nContent-Type: multipart/form-data
+
+    API -> Handler: Handle UploadProgressPhotoCommand
+    Handler -> TenantCtx: Get current TenantId
+    TenantCtx --> Handler: TenantId
+
+    Handler -> DB: Query injury\n(verify ownership)
+    DB --> Handler: Injury entity
+
+    alt Injury not found
+        Handler --> API: 404 Not Found
+        API --> Service: Error response
+        Service --> Upload: Show error
+        Upload --> User: "Injury not found"
+    else Valid injury
+        Handler -> FileStorage: Upload file to blob storage
+        FileStorage -> FileStorage: Generate unique filename\nResize/optimize image
+        FileStorage --> Handler: File URL & metadata
+
+        Handler -> Handler: Create ProgressPhoto entity\n(with TenantId, InjuryId, URL)
+
+        Handler -> DB: Save photo record
+        DB --> Handler: Photo saved
+
+        Handler -> Events: Publish ProgressPhotoUploaded event
+        Handler --> API: 201 Created (PhotoDto)
+
+        API --> Service: Success response
+        Service --> Upload: Photo uploaded
+        Upload -> Upload: Clear form
+        Upload -> UI: Refresh photo gallery
+
+        UI -> Service: getProgressPhotos(injuryId)
+        Service -> API: GET /api/injuries/{injuryId}/photos
+        API -> DB: Query updated photos
+        DB --> API: Photo list
+        API --> Service: ProgressPhotoDto[]
+        Service --> UI: Update gallery
+
+        UI --> User: Show new photo\nin timeline
+    end
+end
+
+User -> UI: Click on photo
+UI -> UI: Open full-size view\nwith details
+
+User -> UI: Compare photos\n(select multiple)
+UI -> UI: Show side-by-side\ncomparison view
+UI --> User: Display visual progress
+
+note right of FileStorage
+  File Storage:
+  - Azure Blob Storage
+  - Generate unique names
+  - Organize by tenant/injury
+  - Create thumbnails
+  - Set appropriate access
+  - Compress images
+end note
+
+note left of UI
+  Photo Gallery features:
+  - Timeline view
+  - Grid view
+  - Side-by-side comparison
+  - Date filtering
+  - Notes display
+  - Download option
+  - Delete option (admin)
+end note
+
+@enduml

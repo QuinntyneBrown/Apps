@@ -1,0 +1,87 @@
+@startuml View Dashboard Flow
+title View Goals Dashboard User Flow
+
+actor User
+participant "Goals Dashboard\n(/goals)" as Dashboard
+participant "GoalsService" as Service
+participant "API\n(/api/goals)" as API
+participant "GoalController" as Controller
+participant "GetGoalsHandler" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+User -> Dashboard: Navigate to /goals
+activate Dashboard
+
+Dashboard -> Dashboard: Initialize component\nCreate viewModel$ observable
+
+Dashboard -> Service: getGoals(filter: 'active')
+activate Service
+Service -> API: GET /api/goals?status=active
+activate API
+API -> Controller: GET goals with filter
+activate Controller
+Controller -> Handler: Send GetGoalsQuery(filter)
+activate Handler
+Handler -> Context: Query goals.Where(status == Active)
+activate Context
+Context -> DB: SELECT * FROM Goals\nWHERE Status = 'Active'\nAND TenantId = {currentTenant}
+activate DB
+DB --> Context: List of active goals
+deactivate DB
+Context --> Handler: List<Goal>
+deactivate Context
+Handler --> Controller: List<GoalDto>
+deactivate Handler
+Controller --> API: 200 OK\n[ { goalId, name, progress, ... } ]
+deactivate Controller
+API --> Service: List<GoalDto>
+deactivate API
+Service --> Dashboard: Observable<Goals[]>
+deactivate Service
+
+Dashboard -> Dashboard: Transform to viewModel$\nusing RxJS operators
+
+Dashboard -> User: Display goals grid with:\n- Goal cards (progress bars)\n- Target vs current amounts\n- Deadline countdowns\n- Priority indicators\n- Status badges
+
+== User Filters Goals ==
+
+User -> Dashboard: Click "Completed" tab
+activate Dashboard
+Dashboard -> Service: getGoals(filter: 'completed')
+activate Service
+Service -> API: GET /api/goals?status=completed
+activate API
+API -> Controller: GET goals with filter
+activate Controller
+Controller -> Handler: Send GetGoalsQuery(filter)
+activate Handler
+Handler -> Context: Query goals.Where(status == Achieved)
+activate Context
+Context -> DB: SELECT * FROM Goals\nWHERE Status = 'Achieved'\nAND TenantId = {currentTenant}
+activate DB
+DB --> Context: List of completed goals
+deactivate DB
+Context --> Handler: List<Goal>
+deactivate Context
+Handler --> Controller: List<GoalDto>
+deactivate Handler
+Controller --> API: 200 OK\n[ completed goals ]
+deactivate Controller
+API --> Service: List<GoalDto>
+deactivate API
+Service --> Dashboard: Observable<Goals[]>
+deactivate Service
+
+Dashboard -> Dashboard: Update viewModel$
+
+Dashboard -> User: Display completed goals\nwith achievement dates
+deactivate Dashboard
+
+== Empty State ==
+
+alt No Goals Found
+    Dashboard -> User: Display empty state\n"No goals yet. Create your first goal!"
+end
+
+@enduml

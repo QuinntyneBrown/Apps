@@ -1,0 +1,147 @@
+@startuml
+
+title BBQ Grilling Recipe Book - Cook Timer Flow
+
+actor User
+participant "Recipe Detail" as RecipeDetail
+participant "Cook Timer" as Timer
+participant "Timer Service" as TimerService
+participant "Browser Notification" as Notification
+participant "Local Storage" as Storage
+
+== Start Timer from Recipe ==
+User -> RecipeDetail: View recipe with cooking steps
+activate RecipeDetail
+RecipeDetail --> User: Display steps with time durations
+User -> RecipeDetail: Click "Start Timer" for a step
+RecipeDetail -> Timer: Open timer interface
+activate Timer
+Timer --> User: Display timer setup screen
+User -> Timer: Set timer duration
+User -> Timer: Add timer label
+User -> Timer: Click "Start"
+Timer -> TimerService: startTimer(duration, label)
+activate TimerService
+TimerService -> Storage: Save timer state
+activate Storage
+Storage --> TimerService: Timer state saved
+deactivate Storage
+TimerService -> TimerService: Start countdown
+TimerService --> Timer: Timer started
+deactivate TimerService
+Timer --> User: Show active timer counting down
+deactivate RecipeDetail
+
+== Monitor Active Timer ==
+loop Every Second
+    Timer -> TimerService: getTimerStatus()
+    activate TimerService
+    TimerService -> TimerService: Calculate remaining time
+    TimerService --> Timer: Current time remaining
+    deactivate TimerService
+    Timer -> Timer: Update display
+    Timer --> User: Show countdown
+end
+
+== Timer Alert ==
+TimerService -> TimerService: Detect timer completion
+activate TimerService
+TimerService -> Notification: sendNotification(label)
+activate Notification
+Notification --> User: Browser notification alert
+Notification --> User: Play audio alert
+deactivate Notification
+TimerService -> Timer: timerCompleted event
+deactivate TimerService
+activate Timer
+Timer -> Timer: Show completion alert
+Timer --> User: Visual and audio alert
+deactivate Timer
+
+== Manage Multiple Timers ==
+User -> Timer: Click "Add Another Timer"
+activate Timer
+Timer --> User: Display new timer setup
+User -> Timer: Set second timer duration
+User -> Timer: Click "Start"
+Timer -> TimerService: startTimer(duration, label)
+activate TimerService
+TimerService -> Storage: Save timer state
+activate Storage
+Storage --> TimerService: Timer state saved
+deactivate Storage
+TimerService --> Timer: Second timer started
+deactivate TimerService
+Timer --> User: Show multiple active timers
+deactivate Timer
+
+== Pause Timer ==
+User -> Timer: Click "Pause" on active timer
+activate Timer
+Timer -> TimerService: pauseTimer(timerId)
+activate TimerService
+TimerService -> Storage: Update timer state to paused
+activate Storage
+Storage --> TimerService: State updated
+deactivate Storage
+TimerService --> Timer: Timer paused
+deactivate TimerService
+Timer --> User: Show paused timer
+deactivate Timer
+
+== Resume Timer ==
+User -> Timer: Click "Resume" on paused timer
+activate Timer
+Timer -> TimerService: resumeTimer(timerId)
+activate TimerService
+TimerService -> Storage: Update timer state to active
+activate Storage
+Storage --> TimerService: State updated
+deactivate Storage
+TimerService -> TimerService: Resume countdown
+TimerService --> Timer: Timer resumed
+deactivate TimerService
+Timer --> User: Show active timer
+deactivate Timer
+
+== Stop Timer ==
+User -> Timer: Click "Stop" on timer
+activate Timer
+Timer -> Timer: Show confirmation dialog
+Timer --> User: Confirm stop timer
+User -> Timer: Confirm
+Timer -> TimerService: stopTimer(timerId)
+activate TimerService
+TimerService -> Storage: Remove timer state
+activate Storage
+Storage --> TimerService: Timer removed
+deactivate Storage
+TimerService --> Timer: Timer stopped
+deactivate TimerService
+Timer -> Timer: Remove timer from display
+Timer --> User: Timer stopped and removed
+deactivate Timer
+
+== Restore Timers on Page Reload ==
+User -> Timer: Navigate back to timer page
+activate Timer
+Timer -> TimerService: getActiveTimers()
+activate TimerService
+TimerService -> Storage: Load saved timer states
+activate Storage
+Storage --> TimerService: Active timer data
+deactivate Storage
+TimerService -> TimerService: Calculate elapsed time
+TimerService -> TimerService: Update timer states
+TimerService --> Timer: Restored timer states
+deactivate TimerService
+Timer --> User: Display active timers
+note right of User
+Timers persist across:
+- Page refreshes
+- Browser restarts
+- Tab changes
+end note
+deactivate Timer
+
+@enduml

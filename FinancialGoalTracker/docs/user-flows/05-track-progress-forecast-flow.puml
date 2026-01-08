@@ -1,0 +1,145 @@
+@startuml Track Progress and Forecast Flow
+title Track Progress and Forecast User Flow
+
+actor User
+participant "Goal Detail Page" as GoalDetail
+participant "Milestone Tracker\nComponent" as MilestoneTracker
+participant "Forecast Card\nComponent" as ForecastCard
+participant "MilestonesService" as MilestoneService
+participant "ForecastService" as ForecastService
+participant "API" as API
+participant "Controllers" as Controller
+participant "Handlers" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+User -> GoalDetail: Navigate to goal detail page
+activate GoalDetail
+
+GoalDetail -> MilestoneTracker: Initialize milestone tracker
+activate MilestoneTracker
+
+MilestoneTracker -> MilestoneService: getMilestones(goalId)
+activate MilestoneService
+MilestoneService -> API: GET /api/goals/{id}/milestones
+activate API
+API -> Controller: GET milestones
+activate Controller
+Controller -> Handler: Send GetMilestonesQuery
+activate Handler
+Handler -> Context: Query milestones and goal
+activate Context
+Context -> DB: SELECT * FROM Milestones\nWHERE GoalId = {id}
+activate DB
+DB --> Context: List of milestones
+deactivate DB
+Context -> DB: SELECT * FROM Goals WHERE GoalId = {id}
+activate DB
+DB --> Context: Goal with current amount
+deactivate DB
+Context --> Handler: Milestones + Goal data
+deactivate Context
+
+Handler -> Handler: Calculate milestone status\n(25%, 50%, 75%, 100%)
+Handler -> Handler: Check which milestones achieved\n(CurrentAmount >= MilestoneAmount)
+Handler -> Handler: Get achievement dates
+
+Handler --> Controller: MilestoneDto[]\n(with isAchieved, achievementDate)
+deactivate Handler
+Controller --> API: 200 OK\n[ milestones with status ]
+deactivate Controller
+API --> MilestoneService: List<MilestoneDto>
+deactivate API
+MilestoneService --> MilestoneTracker: Observable<Milestones[]>
+deactivate MilestoneService
+
+MilestoneTracker -> User: Display milestone timeline:\n- 25% checkpoint (✓ if achieved)\n- 50% checkpoint (✓ if achieved)\n- 75% checkpoint (✓ if achieved)\n- 100% target\n- Achievement dates
+deactivate MilestoneTracker
+
+GoalDetail -> ForecastCard: Initialize forecast card
+activate ForecastCard
+
+ForecastCard -> ForecastService: getForecast(goalId)
+activate ForecastService
+ForecastService -> API: GET /api/goals/{id}/forecast
+activate API
+API -> Controller: GET forecast
+activate Controller
+Controller -> Handler: Send GetForecastQuery
+activate Handler
+Handler -> Context: Query goal and contributions
+activate Context
+Context -> DB: SELECT * FROM Goals WHERE GoalId = {id}
+activate DB
+DB --> Context: Goal data
+deactivate DB
+Context -> DB: SELECT * FROM Contributions\nWHERE GoalId = {id}\nORDER BY ContributionDate
+activate DB
+DB --> Context: Contribution history
+deactivate DB
+Context --> Handler: Goal + Contributions
+deactivate Context
+
+Handler -> Handler: Calculate average contribution rate
+Handler -> Handler: Calculate remaining amount\n(TargetAmount - CurrentAmount)
+Handler -> Handler: Project completion date\nbased on current pace
+Handler -> Handler: Calculate confidence level
+Handler -> Handler: Check if on track\n(projectedDate <= deadline)
+
+Handler --> Controller: ForecastDto\n(projectedDate, confidenceLevel,\nisOnTrack, requiredMonthlyAmount)
+deactivate Handler
+Controller --> API: 200 OK\n{ forecast data }
+deactivate Controller
+API --> ForecastService: ForecastDto
+deactivate API
+ForecastService --> ForecastCard: Observable<Forecast>
+deactivate ForecastService
+
+ForecastCard -> ForecastCard: Create progress projection chart\n(current pace vs required pace)
+
+alt On Track
+    ForecastCard -> User: Display:\n- Projected completion date\n- "On Track" badge (green)\n- Confidence level\n- Progress projection chart\n- Current pace line\n- Required pace line
+else Behind Schedule
+    ForecastCard -> User: Display:\n- Projected completion date\n- "Behind Schedule" badge (red)\n- Confidence level\n- Required monthly amount to get back on track\n- Recommendation panel with suggestions\n- Progress projection chart showing gap
+else Ahead of Schedule
+    ForecastCard -> User: Display:\n- Projected completion date\n- "Ahead of Schedule" badge (blue)\n- Confidence level\n- Progress projection chart\n- Early completion estimate
+end
+deactivate ForecastCard
+
+== User Interaction ==
+
+User -> GoalDetail: Click "Add Custom Milestone"
+activate GoalDetail
+GoalDetail -> User: Show add milestone dialog
+User -> GoalDetail: Enter custom milestone\n(amount, target date)
+GoalDetail -> MilestoneService: createMilestone(goalId, data)
+activate MilestoneService
+MilestoneService -> API: POST /api/goals/{id}/milestones
+activate API
+API -> Controller: POST milestone
+activate Controller
+Controller -> Handler: Send CreateMilestoneCommand
+activate Handler
+Handler -> Context: Add custom milestone
+activate Context
+Context -> DB: INSERT INTO Milestones
+activate DB
+DB --> Context: Success
+deactivate DB
+Context -> DB: Emit CustomMilestoneSet event
+DB --> Context: Event saved
+Context --> Handler: Milestone created
+deactivate Context
+Handler --> Controller: MilestoneDto
+deactivate Handler
+Controller --> API: 201 Created
+deactivate Controller
+API --> MilestoneService: MilestoneDto
+deactivate API
+MilestoneService --> GoalDetail: Milestone added
+deactivate MilestoneService
+GoalDetail -> MilestoneTracker: Refresh milestones
+GoalDetail -> User: Show success message
+deactivate GoalDetail
+
+@enduml

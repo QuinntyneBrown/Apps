@@ -1,0 +1,106 @@
+@startuml Lend and Return Book Flow
+title Lend and Return Book Flow
+
+actor User
+participant "Book Detail Page" as DetailUI
+participant "Lend Book Modal" as LendModal
+participant "Return Book Modal" as ReturnModal
+participant "Active Loans Page" as LoansUI
+participant "API Gateway" as API
+participant "Library Controller" as Controller
+participant "Loan Manager" as Manager
+database "Database" as DB
+
+== Lend Book ==
+User -> DetailUI: Click "Lend Book" button
+DetailUI -> LendModal: Open LendBookModal
+LendModal --> User: Display loan form
+
+User -> LendModal: Enter borrower name
+LendModal -> LendModal: Show autocomplete\nfrom previous borrowers
+User -> LendModal: Select/enter borrower
+User -> LendModal: Select loan date (default: today)
+User -> LendModal: Select expected return date
+User -> LendModal: Add condition notes (optional)
+User -> LendModal: Set reminder preference
+User -> LendModal: Click "Confirm Loan"
+
+LendModal -> LendModal: Validate form\n(borrower name required,\nreturn date > loan date)
+
+alt Valid Form
+    LendModal -> API: POST /api/library/loans\n{bookId, borrower, dates, notes}
+    API -> Controller: CreateLoan(request)
+    Controller -> Manager: LendBookAsync(loan)
+    Manager -> DB: UPDATE book\nSET status='Loaned'
+    DB --> Manager: Updated
+    Manager -> DB: INSERT loan record\n{bookId, borrower, dates, status}
+    DB --> Manager: Loan ID
+    Manager -> Manager: Schedule reminder\n(if requested)
+    Manager --> Controller: LoanCreated\n{loanId, loan}
+    Controller --> API: 201 Created\n{loan}
+    API --> LendModal: Success
+    LendModal -> LendModal: Close modal
+    LendModal -> DetailUI: Refresh book details
+    DetailUI -> DetailUI: Update book status\nto "Loaned"
+    DetailUI --> User: Show success notification\n"Book loaned to [borrower]"
+else Invalid Form
+    LendModal --> User: Display validation errors
+end
+
+== View Active Loans ==
+User -> LoansUI: Navigate to /library/loans
+LoansUI -> API: GET /api/library/loans?\nstatus=Active
+API -> Controller: GetLoans(filter)
+Controller -> Manager: GetLoansAsync(status)
+Manager -> DB: SELECT loans WHERE\nstatus IN ('Active', 'Overdue')
+DB --> Manager: Loan records
+Manager -> Manager: Calculate days until/overdue
+Manager --> Controller: Loans with status
+Controller --> API: 200 OK\n{loans}
+API --> LoansUI: Active loans data
+LoansUI --> User: Display loans table\n(highlight overdue)
+
+== Return Book ==
+User -> LoansUI: Click "Mark as Returned"
+alt From Loans Page
+    LoansUI -> ReturnModal: Open ReturnBookModal\n(pre-filled with loan)
+else From Book Detail Page
+    User -> DetailUI: Click "Return Book"
+    DetailUI -> ReturnModal: Open ReturnBookModal
+end
+
+ReturnModal --> User: Display return form\n(shows loan details)
+
+User -> ReturnModal: Confirm return date\n(default: today)
+User -> ReturnModal: Enter condition notes
+User -> ReturnModal: Add borrower feedback\n(optional)
+User -> ReturnModal: Click "Complete Return"
+
+ReturnModal -> ReturnModal: Validate form\n(return date >= loan date)
+
+alt Valid Form
+    ReturnModal -> API: PUT /api/library/loans/{id}/return\n{returnDate, condition, feedback}
+    API -> Controller: ReturnBook(loanId, request)
+    Controller -> Manager: ReturnBookAsync(loanId, returnInfo)
+    Manager -> DB: UPDATE loan\nSET status='Returned',\nreturnDate, condition
+    DB --> Manager: Updated
+    Manager -> DB: UPDATE book\nSET status='Available'
+    DB --> Manager: Updated
+    Manager -> Manager: Calculate late fees\n(if overdue)
+    Manager --> Controller: BookReturned\n{loan, book}
+    Controller --> API: 200 OK\n{completedLoan}
+    API --> ReturnModal: Success
+    ReturnModal -> ReturnModal: Close modal
+
+    alt From Loans Page
+        ReturnModal -> LoansUI: Refresh loans list
+        LoansUI --> User: Remove from active loans
+    else From Book Detail Page
+        ReturnModal -> DetailUI: Refresh book details
+        DetailUI --> User: Update status to "Available"
+    end
+else Invalid Form
+    ReturnModal --> User: Display validation errors
+end
+
+@enduml

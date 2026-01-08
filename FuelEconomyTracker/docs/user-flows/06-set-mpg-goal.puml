@@ -1,0 +1,222 @@
+@startuml Set MPG Goal Flow
+
+title Set MPG Goal Flow
+
+actor User
+participant "Economy Dashboard" as Dashboard
+participant "Set Goal Modal" as GoalModal
+participant "Goal Controller" as GoalAPI
+participant "Goal Service" as GoalService
+participant "Economy Service" as EconService
+database "Database" as DB
+
+== Open Set Goal Modal ==
+User -> Dashboard: Click "Set MPG Goal" button
+activate Dashboard
+Dashboard --> User: Open Set Goal Modal
+
+activate GoalModal
+GoalModal -> GoalAPI: GET /api/vehicles/{vehicleId}/economy-stats
+activate GoalAPI
+GoalAPI -> DB: Query current MPG baseline
+activate DB
+DB --> GoalAPI: Current average MPG
+deactivate DB
+GoalAPI --> GoalModal: Baseline MPG
+deactivate GoalAPI
+
+alt Active Goal Exists
+    GoalModal -> GoalAPI: GET /api/economy-goals/active?vehicleId={id}
+    activate GoalAPI
+    GoalAPI -> DB: Query active goal
+    activate DB
+    DB --> GoalAPI: Existing goal data
+    deactivate DB
+    GoalAPI --> GoalModal: Active goal details
+    deactivate GoalAPI
+    GoalModal --> User: Pre-fill form with existing goal
+else No Active Goal
+    GoalModal --> User: Show empty form with suggested baseline
+end
+deactivate Dashboard
+
+== Configure Goal ==
+User -> GoalModal: Adjust target MPG slider
+GoalModal -> GoalModal: Calculate improvement percentage
+GoalModal -> GoalModal: Calculate potential savings
+
+alt Target MPG > Current MPG
+    GoalModal --> User: Show positive improvement and savings
+else Target MPG = Current MPG
+    GoalModal --> User: Show warning about maintaining current level
+else Target MPG < Current MPG
+    GoalModal --> User: Show warning about unrealistic goal
+end
+
+User -> GoalModal: Select timeframe
+alt 30 Days Selected
+    GoalModal -> GoalModal: Calculate daily improvement needed
+else 60 Days Selected
+    GoalModal -> GoalModal: Calculate daily improvement needed
+else 90 Days Selected
+    GoalModal -> GoalModal: Calculate daily improvement needed
+end
+
+GoalModal -> EconService: EstimateFuelSavings(currentMPG, targetMPG)
+activate EconService
+EconService -> DB: Query average monthly miles
+activate DB
+DB --> EconService: Average mileage data
+deactivate DB
+EconService -> EconService: Calculate fuel saved per month
+EconService -> DB: Query recent fuel prices
+activate DB
+DB --> EconService: Average price per gallon
+deactivate DB
+EconService -> EconService: Calculate monetary savings
+EconService --> GoalModal: Estimated savings
+deactivate EconService
+
+GoalModal --> User: Update visual preview with chart and savings
+
+User -> GoalModal: Enter motivation text
+
+== Save Goal ==
+User -> GoalModal: Click "Set Goal"
+
+GoalModal -> GoalModal: Validate target MPG > 0
+GoalModal -> GoalModal: Validate timeframe selected
+
+alt Validation Fails
+    GoalModal --> User: Show validation errors
+else Validation Passes
+    alt Active Goal Exists
+        GoalModal -> GoalAPI: PUT /api/economy-goals/{goalId}
+        activate GoalAPI
+        GoalAPI -> GoalService: UpdateGoal(goalId, goalData)
+        activate GoalService
+        GoalService -> DB: UPDATE economy_goal record
+        activate DB
+        DB --> GoalService: Update successful
+        deactivate DB
+        GoalService --> GoalAPI: Updated goal
+        deactivate GoalService
+        GoalAPI --> GoalModal: 200 OK + goal details
+        deactivate GoalAPI
+    else No Active Goal
+        GoalModal -> GoalAPI: POST /api/economy-goals
+        activate GoalAPI
+        GoalAPI -> GoalService: CreateGoal(goalData)
+        activate GoalService
+
+        GoalService -> DB: BEGIN TRANSACTION
+        activate DB
+
+        GoalService -> DB: Deactivate any existing active goals
+        GoalService -> DB: INSERT new economy_goal record
+        GoalService -> DB: Set goal status to active
+
+        GoalService -> DB: COMMIT TRANSACTION
+        DB --> GoalService: Transaction successful
+        deactivate DB
+
+        GoalService --> GoalAPI: Created goal
+        deactivate GoalService
+        GoalAPI --> GoalModal: 201 Created + goal details
+        deactivate GoalAPI
+    end
+
+    GoalModal --> User: Show success message
+    deactivate GoalModal
+
+    GoalModal -> Dashboard: Close modal and refresh dashboard
+    activate Dashboard
+
+    Dashboard -> GoalAPI: GET /api/economy-goals/active?vehicleId={id}
+    activate GoalAPI
+    GoalAPI -> DB: Query active goal
+    activate DB
+    DB --> GoalAPI: New goal data
+    deactivate DB
+    GoalAPI --> Dashboard: Goal details
+    deactivate GoalAPI
+
+    Dashboard --> User: Display goal progress section with new goal
+    deactivate Dashboard
+end
+
+== Monitor Goal Progress ==
+User -> Dashboard: View goal progress over time
+activate Dashboard
+
+Dashboard -> GoalAPI: GET /api/economy-goals/{goalId}/progress
+activate GoalAPI
+GoalAPI -> GoalService: GetGoalProgress(goalId)
+activate GoalService
+
+GoalService -> DB: Query goal details
+activate DB
+GoalService -> DB: Query MPG history since goal start date
+DB --> GoalService: Goal and history data
+deactivate DB
+
+GoalService -> GoalService: Calculate current progress percentage
+GoalService -> GoalService: Calculate daily progress needed
+GoalService -> GoalService: Determine if on track or behind
+GoalService -> GoalService: Project completion date based on current trend
+
+GoalService --> GoalAPI: Progress metrics
+deactivate GoalService
+GoalAPI --> Dashboard: Progress data
+deactivate GoalAPI
+
+Dashboard --> User: Display progress bar, trend, and projection
+deactivate Dashboard
+
+== Update or Cancel Goal ==
+User -> Dashboard: Click "Edit Goal"
+activate Dashboard
+Dashboard --> User: Open edit modal
+
+User -> GoalModal: Modify goal parameters
+activate GoalModal
+User -> GoalModal: Click "Update Goal"
+GoalModal -> GoalAPI: PUT /api/economy-goals/{goalId}
+activate GoalAPI
+GoalAPI -> GoalService: UpdateGoal(goalId, updatedData)
+activate GoalService
+GoalService -> DB: UPDATE goal record
+activate DB
+DB --> GoalService: Update successful
+deactivate DB
+GoalService --> GoalAPI: Updated goal
+deactivate GoalService
+GoalAPI --> GoalModal: 200 OK
+deactivate GoalAPI
+GoalModal --> User: Show success message
+deactivate GoalModal
+deactivate Dashboard
+
+alt User Wants to Cancel Goal
+    User -> Dashboard: Click "Cancel Goal"
+    activate Dashboard
+    Dashboard --> User: Show confirmation dialog
+
+    User -> Dashboard: Confirm cancellation
+    Dashboard -> GoalAPI: PUT /api/economy-goals/{goalId}/cancel
+    activate GoalAPI
+    GoalAPI -> GoalService: CancelGoal(goalId)
+    activate GoalService
+    GoalService -> DB: UPDATE goal status to cancelled
+    activate DB
+    DB --> GoalService: Update successful
+    deactivate DB
+    GoalService --> GoalAPI: Goal cancelled
+    deactivate GoalService
+    GoalAPI --> Dashboard: 200 OK
+    deactivate GoalAPI
+    Dashboard --> User: Remove goal section from dashboard
+    deactivate Dashboard
+end
+
+@enduml

@@ -1,0 +1,82 @@
+@startuml User Authentication Flow
+title User Authentication Flow
+
+actor User
+participant "Login Page\n(Angular)" as UI
+participant "Auth Service\n(Angular)" as AuthService
+participant "Auth Controller\n/api/auth/login" as API
+participant "Login Command\nHandler" as Handler
+participant "Password\nHashing Service" as PasswordService
+participant "JWT Token\nService" as JWTService
+participant "ConversationStarter\nAppContext" as DB
+database "SQL Server\nDatabase" as Database
+
+User -> UI: Enter username\nand password
+activate UI
+
+UI -> UI: Validate form\n(required fields)
+
+UI -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> API: POST /api/auth/login\n{username, password}
+activate API
+
+API -> Handler: Handle LoginCommand
+activate Handler
+
+Handler -> DB: Users.FirstOrDefault(\nu => u.UserName == username)
+activate DB
+DB -> Database: SELECT * FROM Users\nWHERE UserName = @username
+activate Database
+Database --> DB: User record
+deactivate Database
+DB --> Handler: User entity
+deactivate DB
+
+Handler -> PasswordService: ValidatePassword(\npassword, user.Password, user.Salt)
+activate PasswordService
+PasswordService -> PasswordService: Hash input password\nwith stored salt
+PasswordService --> Handler: isValid: true/false
+deactivate PasswordService
+
+alt Invalid Credentials
+    Handler --> API: 401 Unauthorized\n{error: "Invalid username or password"}
+    API --> AuthService: 401 Error
+    AuthService --> UI: Authentication failed
+    UI --> User: Display error message
+    deactivate Handler
+    deactivate API
+    deactivate AuthService
+    deactivate UI
+else Valid Credentials
+    Handler -> DB: UserRoles.Where(\nur => ur.UserId == user.UserId)
+    activate DB
+    DB -> Database: SELECT * FROM UserRoles\nWHERE UserId = @userId
+    activate Database
+    Database --> DB: Role records
+    deactivate Database
+    DB --> Handler: List<Role>
+    deactivate DB
+
+    Handler -> JWTService: GenerateToken(\nuserId, username, email, roles)
+    activate JWTService
+    JWTService -> JWTService: Create JWT claims:\n- sub: userId\n- name: username\n- email: email\n- roles: [roles]\n- iat, exp, iss, aud
+    JWTService -> JWTService: Sign with HS256\nusing secret key
+    JWTService --> Handler: JWT token string
+    deactivate JWTService
+
+    Handler --> API: 200 OK\n{token, expiresAt, user}
+    deactivate Handler
+    API --> AuthService: LoginResponse
+    deactivate API
+
+    AuthService -> AuthService: Store token in\nlocalStorage
+    AuthService --> UI: Success with user data
+    deactivate AuthService
+
+    UI --> User: Redirect to dashboard
+    deactivate UI
+end
+
+@enduml

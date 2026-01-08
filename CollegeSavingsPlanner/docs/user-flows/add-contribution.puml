@@ -1,0 +1,99 @@
+@startuml AddContributionFlow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor "Parent/Guardian" as User
+participant "Plan Details Page" as PlanPage
+participant "Add Contribution Modal" as Modal
+participant "API Gateway" as API
+participant "Contribution Controller" as Controller
+participant "Add Contribution Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "ICollegeSavingsPlannerContext" as DB
+database "SQL Server" as Database
+
+== View Plan Details ==
+User -> PlanPage: Navigate to /plans/{planId}
+PlanPage -> API: GET /api/savings-plans/{planId}
+API -> DB: Query savings plan
+DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+Database --> DB: Plan details
+DB --> API: SavingsPlan
+API --> PlanPage: Plan with balance, beneficiary, history
+PlanPage -> User: Display plan overview and contribution history
+
+== Initiate Add Contribution ==
+User -> PlanPage: Click "Add Contribution"
+PlanPage -> Modal: Open contribution modal
+Modal -> User: Display contribution form
+
+== Enter Contribution Details ==
+User -> Modal: Enter amount
+User -> Modal: Enter contribution date
+User -> Modal: Select type (one-time or recurring)
+alt Recurring Contribution
+    User -> Modal: Select frequency (weekly, monthly, annually)
+    User -> Modal: Enter start date and end date (optional)
+    Modal -> User: Show recurring schedule preview
+end
+User -> Modal: Enter source (parent, family, friend, employer)
+User -> Modal: Add notes (optional)
+
+== Validate Contribution Limits ==
+Modal -> API: GET /api/savings-plans/{planId}/contribution-limits
+API -> DB: Calculate year-to-date and lifetime contributions
+DB -> Database: SELECT SUM(Amount) FROM Contributions WHERE PlanId = ? AND Year = ?
+Database --> DB: Contribution totals
+DB --> API: Current contribution amounts
+API --> Modal: Contribution limit status
+
+alt Approaching Limit
+    Modal -> User: Display warning about contribution limits
+    User -> Modal: Confirm to proceed or adjust amount
+end
+
+== Submit Contribution ==
+User -> Modal: Click "Save Contribution"
+Modal -> Modal: Validate form data
+alt Validation Successful
+    Modal -> API: POST /api/contributions {planId, amount, date, type, frequency, source}
+    API -> Controller: CreateContribution request
+    Controller -> Handler: Handle AddContributionCommand
+    Handler -> TenantCtx: Get current TenantId
+    TenantCtx --> Handler: TenantId
+    Handler -> DB: Get SavingsPlan to verify ownership
+    DB -> Database: SELECT * FROM SavingsPlans WHERE PlanId = ? AND TenantId = ?
+    Database --> DB: SavingsPlan
+    DB --> Handler: Verify plan belongs to tenant
+    Handler -> Handler: Create Contribution entity
+    Handler -> DB: Add Contribution
+    DB -> Database: INSERT INTO Contributions
+    Database --> DB: Contribution created
+    DB --> Handler: Contribution entity
+    Handler -> Handler: Update plan balance
+    Handler -> DB: Update SavingsPlan.CurrentBalance
+    DB -> Database: UPDATE SavingsPlans SET CurrentBalance = CurrentBalance + ?
+    Database --> DB: Balance updated
+    DB --> Handler: Updated plan
+    Handler -> Handler: Raise ContributionMade event
+    alt Recurring Contribution
+        Handler -> Handler: Raise RecurringContributionScheduled event
+    end
+    alt Approaching Limits
+        Handler -> Handler: Raise ContributionLimitApproached event
+    end
+    Handler --> Controller: ContributionDto
+    Controller --> API: 201 Created
+    API --> Modal: Contribution added successfully
+    Modal -> Modal: Close modal
+    Modal -> PlanPage: Refresh plan details
+    PlanPage -> API: GET /api/savings-plans/{planId}
+    API -> DB: Query updated plan
+    DB --> API: Updated plan with new balance
+    API --> PlanPage: Updated plan data
+    PlanPage -> User: Display updated balance and contribution history
+else Validation Failed
+    Modal -> User: Display validation errors
+end
+
+@enduml

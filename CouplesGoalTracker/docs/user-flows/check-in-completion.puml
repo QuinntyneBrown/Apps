@@ -1,0 +1,129 @@
+@startuml check-in-completion
+title Weekly Check-In Completion Flow
+
+actor "Partner 1" as Partner1
+actor "Partner 2" as Partner2
+participant "Weekly Review Page" as UI
+participant "Check-In Service" as CheckInSvc
+participant "Check-Ins Controller" as Controller
+participant "CompleteCheckInCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+Partner1 -> UI: Navigate to Weekly Review
+activate UI
+
+UI -> CheckInSvc: getActiveGoals()
+activate CheckInSvc
+CheckInSvc --> UI: List of active goals
+deactivate CheckInSvc
+
+UI --> Partner1: Display check-in form\nwith active goals
+
+Partner1 -> Partner2: Discuss goals together
+Partner2 --> Partner1: Share feedback
+
+Partner1 -> UI: Review each goal:\n- Current status\n- Challenges faced\n- Adjustments needed
+
+Partner1 -> UI: Select goals reviewed
+
+Partner1 -> UI: Add discussion notes\nand action items
+
+Partner1 -> UI: Rate overall satisfaction\n(1-5 scale)
+
+Partner1 -> UI: Note celebrations/wins
+
+Partner1 -> UI: Click "Complete Check-In"
+
+UI -> UI: Validate all required\nfields completed
+
+UI -> CheckInSvc: completeCheckIn(checkInData)
+activate CheckInSvc
+
+CheckInSvc -> Controller: POST /api/check-ins
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: CompleteCheckInCommand\n(date, goalsReviewed[],\nadjustmentsMade,\nsatisfaction, notes)
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId IN @goalIds\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entities
+deactivate DB
+DbContext --> Command: Goals
+deactivate DbContext
+
+Command -> Command: Validate all goals exist
+
+Command -> Command: Create CheckIn entity\n- CheckInId\n- Date = Now\n- GoalsReviewed[]\n- AdjustmentsMade\n- Satisfaction\n- Notes
+
+Command -> DbContext: Query for streak
+activate DbContext
+DbContext -> DB: SELECT * FROM CheckIns\nWHERE TenantId = @tenantId\nORDER BY Date DESC\nLIMIT 10
+activate DB
+DB --> DbContext: Recent check-ins
+deactivate DB
+DbContext --> Command: Check-in history
+deactivate DbContext
+
+Command -> Command: Calculate streak count
+
+alt Streak Milestone Reached
+    Command -> Command: Raise StreakAchieved event
+end
+
+Command -> Command: Raise WeeklyCheckInCompleted\nevent
+
+Command -> DbContext: CheckIns.Add(checkIn)
+activate DbContext
+DbContext -> DB: INSERT INTO CheckIns\n(CheckInId, TenantId, Date,\nGoalsReviewed, AdjustmentsMade,\nSatisfaction, Notes, StreakCount)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'WeeklyCheckInCompleted',\nAggregateId: CheckInId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+alt Goals need adjustments
+    DbContext -> DB: UPDATE Goals SET ...\n(based on adjustments)
+    DB --> DbContext: Success
+end
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: CompleteCheckInResponse\n(CheckInId, StreakCount,\nCelebrations[])
+deactivate Command
+
+Controller --> CheckInSvc: 201 Created
+deactivate Controller
+
+CheckInSvc --> UI: Check-in completed successfully
+deactivate CheckInSvc
+
+UI -> UI: Display completion message
+alt Streak Milestone
+    UI -> UI: Show streak celebration\n"X weeks in a row!"
+end
+
+UI -> UI: Show next check-in date
+
+UI --> Partner1: Redirect to dashboard
+deactivate UI
+
+note over Partner1, DB
+The WeeklyCheckInCompleted event may trigger:
+- Streak badges/achievements
+- Partner notifications
+- Reminder for next week
+- Goal adjustment processing
+- Celebration displays
+end note
+
+@enduml

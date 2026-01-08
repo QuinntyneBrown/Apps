@@ -1,0 +1,57 @@
+@startuml User Management Flow
+title User Management Flow - MarriageEnrichmentJournal
+
+actor Admin
+participant "User Management Page" as Page
+participant "User Service" as Service
+participant "API Gateway" as API
+participant "Users Controller" as Controller
+participant "IMarriageEnrichmentJournalContext" as Context
+participant "Database" as DB
+
+== View Users ==
+Admin -> Page: Navigate to /admin/users
+Page -> Service: loadUsers()
+Service -> API: GET /api/users
+API -> Controller: [Authorize(Roles="Admin")]
+Controller -> Context: Users.Include(UserRoles).ThenInclude(Role)
+Context -> DB: SELECT * FROM Users WITH Roles
+DB --> Context: Users with roles
+Context --> Controller: User entities
+Controller --> API: 200 OK + UserDtos
+API --> Service: Users list
+Service --> Page: Display users table
+
+== Create User ==
+Admin -> Page: Click "Add User"
+Page -> Page: Open create user modal
+Admin -> Page: Enter username, email, password
+Admin -> Page: Click "Save"
+
+Page -> Service: createUser(userData)
+Service -> API: POST /api/users
+API -> Controller: CreateUserCommand
+Controller -> Controller: Validate uniqueness
+Controller -> Controller: Hash password (PBKDF2 + 32-byte salt)
+Controller -> Context: Users.Add(user)
+Context -> DB: INSERT INTO Users
+DB --> Context: User created
+Controller --> API: 201 Created
+API --> Service: New user
+Service --> Page: Refresh list and show success
+
+== Assign Role to User ==
+Admin -> Page: Select user
+Admin -> Page: Click "Manage Roles"
+Admin -> Page: Select role to add
+Page -> Service: addRoleToUser(userId, roleId)
+Service -> API: POST /api/users/{id}/roles
+API -> Controller: AddRoleToUserCommand
+Controller -> Context: UserRoles.Add(new UserRole)
+Context -> DB: INSERT INTO UserRoles
+DB --> Context: Success
+Controller --> API: 200 OK
+API --> Service: Updated user
+Service --> Page: Refresh role display
+
+@enduml

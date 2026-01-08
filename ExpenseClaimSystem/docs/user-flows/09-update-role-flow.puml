@@ -1,0 +1,45 @@
+@startuml
+
+actor Administrator
+participant "Role Management\nPage" as UI
+participant "Role Service" as RoleService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to role details
+UI -> RoleService: getRole(roleId)
+RoleService -> API: GET /api/roles/{roleId}
+API -> DB: SELECT Role WHERE RoleId
+DB --> API: Role data
+API --> RoleService: 200 OK\n{roleId, name}
+RoleService --> UI: Display role data
+UI --> Administrator: Show role form\nwith existing name
+
+Administrator -> UI: Modify role name
+Administrator -> UI: Click Update
+
+UI -> UI: Validate form\n(non-empty name)
+
+alt Form Valid
+    UI -> RoleService: updateRole(roleId, roleName)
+    RoleService -> API: PUT /api/roles/{roleId}\n{name}
+
+    API -> API: Validate role name\nuniqueness
+
+    alt Unique Role Name
+        API -> DB: UPDATE Role\nSET name\nWHERE RoleId
+        DB --> API: Role updated
+
+        API --> RoleService: 200 OK\n{roleId, name}
+        RoleService --> UI: Role updated successfully
+        UI --> Administrator: Show success message
+    else Duplicate Role Name
+        API --> RoleService: 400 Bad Request\n{error: "Role name\nalready exists"}
+        RoleService --> UI: Update failed
+        UI --> Administrator: Display error message
+    end
+else Form Invalid
+    UI --> Administrator: Display validation errors
+end
+
+@enduml

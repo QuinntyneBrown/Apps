@@ -1,0 +1,66 @@
+@startuml Add Gift Idea Flow
+autonumber
+title Add Gift Idea Flow
+
+actor User
+participant "Idea Bank\nPage" as UI
+participant "Add Idea Form\nComponent" as Form
+participant "Gift Idea Service" as Service
+participant "API Controller\n/api/gift-ideas" as API
+participant "Gift Idea Handler" as Handler
+database "Database" as DB
+
+User -> UI: Click "Add Idea"
+UI -> Form: Display add gift idea form
+
+User -> Form: Enter gift details\n(title, description, price,\nURL, recipient, category)
+Form -> Form: Validate form inputs\n(required fields, price format)
+
+alt Validation Successful
+    Form -> Service: createGiftIdea(giftIdeaData)
+    Service -> API: POST /api/gift-ideas\n{title, description, price,\nurl, recipientId, category}
+
+    API -> API: Verify authentication\nfrom JWT token
+    API -> API: Extract user ID and tenant ID\nfrom JWT claims
+
+    alt User Authenticated
+        API -> Handler: Handle CreateGiftIdeaCommand
+        Handler -> DB: Verify recipient exists\nand belongs to tenant
+
+        alt Recipient Valid
+            Handler -> Handler: Validate gift idea data\n(URL format, price range)
+
+            alt Data Valid
+                Handler -> DB: INSERT GiftIdea\n(GiftIdeaId, TenantId, CreatedBy,\nTitle, Description, Price, URL,\nRecipientId, Category, Status=Active)
+                DB --> Handler: Gift idea created
+
+                Handler -> DB: Query complete gift idea\nwith recipient details
+                DB --> Handler: Gift idea with recipient
+
+                Handler --> API: GiftIdeaDto
+                API --> Service: 201 Created\n{giftIdeaId, title, description,\nprice, recipient, category}
+                Service --> UI: Gift idea created successfully
+                UI -> UI: Add idea card to grid
+                UI --> User: Display success message\nand show new idea card
+            else Data Invalid
+                Handler --> API: Validation error
+                API --> Service: 400 Bad Request\n{error: "Invalid data"}
+                Service --> Form: Validation failed
+                Form --> User: Display validation errors
+            end
+        else Recipient Not Found or Wrong Tenant
+            Handler --> API: Not found error
+            API --> Service: 404 Not Found\n{error: "Recipient not found"}
+            Service --> Form: Error occurred
+            Form --> User: Display error message
+        end
+    else Not Authenticated
+        API --> Service: 401 Unauthorized\n{error: "Authentication required"}
+        Service --> Form: Unauthorized
+        Form --> User: Redirect to login
+    end
+else Form Validation Failed
+    Form --> User: Display validation errors\n(highlight required fields)
+end
+
+@enduml

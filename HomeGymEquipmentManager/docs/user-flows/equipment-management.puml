@@ -1,0 +1,108 @@
+@startuml
+title Equipment Management Flow - Add New Equipment
+
+actor User
+participant "Equipment List\nPage (Angular)" as UI
+participant "Equipment Service\n(Angular)" as Service
+participant "Equipment\nController" as Controller
+participant "Create Equipment\nCommand Handler" as CreateHandler
+participant "ITenantContext" as TenantContext
+database "Database\n(SQL Server)" as DB
+
+== View Equipment List ==
+
+User -> UI: Navigate to\nEquipment page
+activate UI
+
+UI -> Service: getEquipments()
+activate Service
+
+Service -> Controller: GET /api/equipment
+activate Controller
+note right: JWT token in\nAuthorization header
+
+Controller -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> Controller: Current tenant GUID
+deactivate TenantContext
+
+Controller -> DB: Query Equipment\nWHERE TenantId = current
+activate DB
+DB --> Controller: Equipment list
+deactivate DB
+
+Controller --> Service: 200 OK\n[Equipment DTOs]
+deactivate Controller
+
+Service --> UI: Equipment array
+deactivate Service
+
+UI --> User: Display equipment\nlist with pagination
+deactivate UI
+
+== Add New Equipment ==
+
+User -> UI: Click "+ New"\nbutton
+activate UI
+
+UI -> UI: Open Add\nEquipment modal
+
+User -> UI: Fill equipment form:\n- Name\n- Description\n- Category\n- Purchase date\n- etc.
+
+UI -> UI: Validate form inputs
+
+User -> UI: Click "Save"
+
+UI -> Service: createEquipment(data)
+activate Service
+
+Service -> Controller: POST /api/equipment\n{equipmentData}
+activate Controller
+note right: JWT token includes\ntenant_id claim
+
+Controller -> CreateHandler: Handle(CreateEquipmentCommand)
+activate CreateHandler
+
+CreateHandler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext --> CreateHandler: Current tenant GUID
+deactivate TenantContext
+
+CreateHandler -> CreateHandler: Create Equipment entity:\n- Set TenantId\n- Set EquipmentId (GUID)\n- Set properties\n- Set CreatedAt
+
+CreateHandler -> DB: INSERT Equipment
+activate DB
+DB --> CreateHandler: Success
+deactivate DB
+
+CreateHandler -> CreateHandler: Raise EquipmentCreated\ndomain event
+
+CreateHandler --> Controller: EquipmentDto
+deactivate CreateHandler
+
+Controller --> Service: 201 Created\n{equipment}
+deactivate Controller
+
+Service --> UI: Created equipment
+deactivate Service
+
+UI -> UI: Close modal
+
+UI -> Service: Refresh equipment list
+activate Service
+
+Service -> Controller: GET /api/equipment
+activate Controller
+Controller -> DB: Query Equipment
+activate DB
+DB --> Controller: Updated list
+deactivate DB
+Controller --> Service: Equipment list
+deactivate Controller
+Service --> UI: Updated array
+deactivate Service
+
+UI --> User: Show updated list\nwith new equipment
+deactivate UI
+
+@enduml

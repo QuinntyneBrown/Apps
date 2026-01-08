@@ -1,0 +1,166 @@
+@startuml AppointmentBooking
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "AppointmentCalendar\n(UI Component)" as Calendar
+participant "ProviderSearch\n(UI Component)" as ProviderSearch
+participant "AppointmentBookingForm\n(UI Component)" as BookingForm
+participant "Appointment API\n(Controller)" as API
+participant "Appointment Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== View Appointments Calendar ==
+User -> Calendar: Navigate to appointments
+activate Calendar
+Calendar -> API: GET /api/appointments?startDate={date}&endDate={date}
+activate API
+API -> Service: GetAppointments(userId, dateRange)
+activate Service
+Service -> DB: QUERY appointments\nWHERE user_id = {userId}\nAND date BETWEEN {start} AND {end}
+activate DB
+DB --> Service: Appointment records
+deactivate DB
+Service --> API: Appointments
+deactivate Service
+API --> Calendar: 200 OK\n{appointments}
+deactivate API
+Calendar -> Calendar: Render calendar view\nwith appointments
+Calendar --> User: Show monthly/weekly calendar
+deactivate Calendar
+
+== Search for Provider ==
+User -> Calendar: Click "Book Appointment"
+activate Calendar
+Calendar -> ProviderSearch: Open provider search
+activate ProviderSearch
+ProviderSearch --> User: Display search form
+deactivate Calendar
+
+User -> ProviderSearch: Enter search criteria\n(specialty, location, name)
+ProviderSearch -> API: GET /api/providers/search?specialty={s}&location={l}
+activate API
+API -> Service: SearchProviders(criteria)
+activate Service
+Service -> DB: QUERY providers\nWHERE specialty = {s}\nAND location LIKE {l}
+activate DB
+DB --> Service: Provider results
+deactivate DB
+Service -> Service: Calculate distance\nand ratings
+Service --> API: Providers with metadata
+deactivate Service
+API --> ProviderSearch: 200 OK\n{providers}
+deactivate API
+ProviderSearch -> ProviderSearch: Display provider cards\nwith details
+ProviderSearch --> User: Show search results
+deactivate ProviderSearch
+
+== Book Appointment ==
+User -> ProviderSearch: Select provider
+activate ProviderSearch
+ProviderSearch -> BookingForm: Open booking form\nwith selected provider
+activate BookingForm
+BookingForm -> API: GET /api/providers/{id}/availability
+activate API
+API -> Service: GetProviderAvailability(providerId)
+activate Service
+Service -> DB: QUERY provider_schedules
+activate DB
+DB --> Service: Available time slots
+deactivate DB
+Service --> API: Availability
+deactivate Service
+API --> BookingForm: 200 OK\n{availableSlots}
+deactivate API
+BookingForm -> BookingForm: Display date/time picker\nwith available slots
+BookingForm --> User: Show booking form
+deactivate ProviderSearch
+
+User -> BookingForm: Select date and time
+User -> BookingForm: Add appointment notes
+User -> BookingForm: Submit appointment
+BookingForm -> BookingForm: Validate form data
+BookingForm -> API: POST /api/appointments\n{providerId, date, time, notes}
+activate API
+API -> Service: CreateAppointment(data)
+activate Service
+Service -> DB: INSERT INTO appointments
+activate DB
+DB --> Service: Appointment created
+deactivate DB
+Service -> Service: Send confirmation email
+Service -> Service: Create calendar event
+Service -> Service: Schedule reminder
+Service --> API: Appointment confirmed
+deactivate Service
+API --> BookingForm: 201 Created\n{appointment}
+deactivate API
+BookingForm -> BookingForm: Display success message\nwith confirmation details
+BookingForm --> User: Show appointment confirmation
+deactivate BookingForm
+
+== View Appointment Details ==
+User -> Calendar: Click on appointment
+activate Calendar
+Calendar -> Calendar: Show AppointmentCard\nwith details
+Calendar -> API: GET /api/appointments/{id}
+activate API
+API -> Service: GetAppointment(id)
+activate Service
+Service -> DB: QUERY appointments\nWHERE id = {id}
+activate DB
+DB --> Service: Appointment details
+deactivate DB
+Service -> DB: QUERY providers\nWHERE id = {providerId}
+activate DB
+DB --> Service: Provider details
+deactivate DB
+Service --> API: Appointment with provider
+deactivate Service
+API --> Calendar: 200 OK\n{appointment, provider}
+deactivate API
+Calendar -> Calendar: Display full details\n(date, provider, location, notes)
+Calendar --> User: Show appointment details\nwith action buttons
+deactivate Calendar
+
+== Cancel or Reschedule ==
+User -> Calendar: Click "Cancel" or "Reschedule"
+activate Calendar
+alt Cancel Appointment
+    Calendar -> API: DELETE /api/appointments/{id}
+    activate API
+    API -> Service: CancelAppointment(id)
+    activate Service
+    Service -> DB: UPDATE appointments\nSET status='Cancelled'
+    activate DB
+    DB --> Service: Appointment cancelled
+    deactivate DB
+    Service -> Service: Send cancellation notice
+    Service --> API: Appointment cancelled
+    deactivate Service
+    API --> Calendar: 200 OK
+    deactivate API
+    Calendar -> Calendar: Remove from calendar
+    Calendar --> User: Show cancellation confirmation
+else Reschedule Appointment
+    Calendar -> BookingForm: Open with current details
+    activate BookingForm
+    User -> BookingForm: Select new date/time
+    BookingForm -> API: PUT /api/appointments/{id}\n{newDate, newTime}
+    activate API
+    API -> Service: RescheduleAppointment(id, newData)
+    activate Service
+    Service -> DB: UPDATE appointments\nSET date={new}, time={new}
+    activate DB
+    DB --> Service: Appointment updated
+    deactivate DB
+    Service -> Service: Send reschedule notice
+    Service --> API: Appointment rescheduled
+    deactivate Service
+    API --> BookingForm: 200 OK\n{updatedAppointment}
+    deactivate API
+    BookingForm --> User: Show reschedule confirmation
+    deactivate BookingForm
+end
+deactivate Calendar
+
+@enduml

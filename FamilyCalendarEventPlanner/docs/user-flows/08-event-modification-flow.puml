@@ -1,0 +1,288 @@
+@startuml Event Modification Flow
+title Event Modification Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Event Details\nPage" as EventPage
+participant "Event Service" as EventService
+participant "Events Controller" as EventsController
+participant "Conflict Detector\nService" as ConflictService
+participant "Notification Service" as NotificationService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+== View Event Details ==
+User -> EventPage: Click on event in calendar
+activate EventPage
+
+EventPage -> EventService: getEventDetails(eventId)
+activate EventService
+
+EventService -> EventsController: GET /api/events/{eventId}
+activate EventsController
+
+EventsController -> DbContext: Query event with related data
+activate DbContext
+DbContext -> DB: SELECT e.*, ea.FamilyMemberId,\nfm.Name as AttendeeName,\ner.RSVPStatus, er.Notes\nFROM Events e\nLEFT JOIN EventAttendees ea\nON e.EventId = ea.EventId\nLEFT JOIN FamilyMembers fm\nON ea.FamilyMemberId = fm.FamilyMemberId\nLEFT JOIN EventRSVPs er\nON e.EventId = er.EventId\nAND ea.FamilyMemberId = er.FamilyMemberId\nWHERE e.EventId = @eventId\nAND e.TenantId = @tenantId
+activate DB
+DB --> DbContext: Event details with attendees
+deactivate DB
+deactivate DbContext
+
+EventsController --> EventService: 200 OK {event details}
+deactivate EventsController
+
+EventService --> EventPage: Event data
+deactivate EventService
+
+EventPage --> User: Display event details
+deactivate EventPage
+
+== Modify Event ==
+User -> EventPage: Click "Edit Event"
+activate EventPage
+
+EventPage --> User: Display edit form with\ncurrent event details
+
+User -> EventPage: Modify event details:\n- Change title\n- Update time\n- Change location\n- Update description\n- Add/remove attendees
+
+EventPage -> EventPage: Validate changes:\n- Title not empty\n- Valid date/time\n- Start before end time
+
+EventPage -> EventService: updateEvent(eventId, changes)
+activate EventService
+
+EventService -> EventsController: PUT /api/events/{eventId}
+activate EventsController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "title": "string",
+    "startTime": "datetime",
+    "endTime": "datetime",
+    "location": "string",
+    "description": "string",
+    "eventType": "enum",
+    "attendeeIds": ["guid", ...]
+  }
+end note
+
+EventsController -> DbContext: Get original event details
+activate DbContext
+DbContext -> DB: SELECT * FROM Events\nWHERE EventId = @eventId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Original event data
+deactivate DB
+deactivate DbContext
+
+EventsController -> EventsController: Track changed fields for\nEventModified domain event
+
+EventsController -> DbContext: Update event
+activate DbContext
+DbContext -> DB: UPDATE Events SET\nTitle = @title,\nStartTime = @startTime,\nEndTime = @endTime,\nLocation = @location,\nDescription = @description,\nEventType = @eventType,\nModifiedAt = GETUTCDATE(),\nModifiedBy = @userId\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Event updated
+deactivate DB
+deactivate DbContext
+
+alt Attendees changed
+    EventsController -> DbContext: Get current attendees
+    activate DbContext
+    DbContext -> DB: SELECT FamilyMemberId\nFROM EventAttendees\nWHERE EventId = @eventId
+    activate DB
+    DB --> DbContext: Current attendees
+    deactivate DB
+    deactivate DbContext
+
+    EventsController -> EventsController: Calculate:\n- Removed attendees\n- Added attendees
+
+    EventsController -> DbContext: Remove attendees
+    activate DbContext
+    DbContext -> DB: DELETE FROM EventAttendees\nWHERE EventId = @eventId\nAND FamilyMemberId IN (@removedIds)
+    activate DB
+    DB --> DbContext: Attendees removed
+    deactivate DB
+    deactivate DbContext
+
+    EventsController -> DbContext: Add new attendees
+    activate DbContext
+    DbContext -> DB: INSERT INTO EventAttendees\n(EventId, FamilyMemberId)\nVALUES (@eventId, @memberId)
+    activate DB
+    DB --> DbContext: Attendees added
+    deactivate DB
+    deactivate DbContext
+end
+
+EventsController -> DbContext: Create change history
+activate DbContext
+DbContext -> DB: INSERT INTO EventChangeHistory\n(EventId, ChangedBy, ChangedAt,\nChangedFields, PreviousValues,\nNewValues)
+activate DB
+note right
+  Triggers EventModified
+  domain event
+end note
+DB --> DbContext: History recorded
+deactivate DB
+deactivate DbContext
+
+alt Time changed
+    EventsController -> ConflictService: ReCheckConflicts(eventId)
+    activate ConflictService
+    note right
+      Re-run conflict detection
+      with new event time
+    end note
+
+    ConflictService -> DbContext: Clear old conflicts for this event
+    activate DbContext
+    DbContext -> DB: DELETE FROM ScheduleConflicts\nWHERE EventId1 = @eventId\nOR EventId2 = @eventId
+    activate DB
+    DB --> DbContext: Old conflicts cleared
+    deactivate DB
+    deactivate DbContext
+
+    ConflictService -> ConflictService: Detect new conflicts\n(same logic as creation)
+
+    alt New conflicts detected
+        ConflictService -> DbContext: Create conflict records
+        activate DbContext
+        DbContext -> DB: INSERT INTO ScheduleConflicts
+        activate DB
+        DB --> DbContext: Conflicts created
+        deactivate DB
+        deactivate DbContext
+
+        ConflictService --> EventsController: Conflicts found
+    else No conflicts
+        ConflictService --> EventsController: No conflicts
+    end
+    deactivate ConflictService
+end
+
+EventsController -> NotificationService: NotifyEventChange(eventId, changes)
+activate NotificationService
+note right
+  Notify all attendees
+  about event changes
+end note
+
+NotificationService -> DbContext: Get all attendees
+activate DbContext
+DbContext -> DB: SELECT fm.Email, fm.Name\nFROM EventAttendees ea\nJOIN FamilyMembers fm\nON ea.FamilyMemberId = fm.FamilyMemberId\nWHERE ea.EventId = @eventId
+activate DB
+DB --> DbContext: Attendee list
+deactivate DB
+deactivate DbContext
+
+NotificationService -> NotificationService: Send change notifications:\n- Email to each attendee\n- Push notification\n- In-app notification
+
+NotificationService -> DbContext: Log notifications
+activate DbContext
+DbContext -> DB: INSERT INTO EventNotifications\n(EventId, NotificationType,\nRecipients, SentAt, Content)
+activate DB
+note right
+  Triggers EventChangeNotificationSent
+  domain event
+end note
+DB --> DbContext: Notifications logged
+deactivate DB
+deactivate DbContext
+
+NotificationService --> EventsController: Notifications sent
+deactivate NotificationService
+
+EventsController -> DbContext: Update RSVP status if time changed
+activate DbContext
+note right
+  Reset RSVPs to "Maybe" if
+  significant time change
+end note
+DbContext -> DB: UPDATE EventRSVPs SET\nRSVPStatus = 'Maybe',\nNeedsReconfirmation = 1\nWHERE EventId = @eventId\nAND @timeChanged = 1
+activate DB
+DB --> DbContext: RSVPs updated
+deactivate DB
+deactivate DbContext
+
+EventsController --> EventService: 200 OK\n{eventId, hasConflicts,\nnotificationsSent}
+deactivate EventsController
+
+EventService --> EventPage: Event updated successfully
+deactivate EventService
+
+EventPage -> EventPage: Refresh event details
+
+alt Has new conflicts
+    EventPage --> User: Display success with\nconflict warning
+else No conflicts
+    EventPage --> User: Display success:\n"Event updated. Attendees notified."
+end
+deactivate EventPage
+
+== Cancel Event ==
+User -> EventPage: View event
+activate EventPage
+
+User -> EventPage: Click "Cancel Event"
+
+EventPage --> User: Confirm cancellation\nand ask for reason
+
+User -> EventPage: Confirm with reason
+
+EventPage -> EventService: cancelEvent(eventId, reason)
+activate EventService
+
+EventService -> EventsController: DELETE /api/events/{eventId}
+activate EventsController
+note right
+  Alternative: Mark as cancelled
+  instead of hard delete
+end note
+
+EventsController -> DbContext: Get event attendees
+activate DbContext
+DbContext -> DB: SELECT FamilyMemberId\nFROM EventAttendees\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Attendee list
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Mark event as cancelled
+activate DbContext
+DbContext -> DB: UPDATE Events SET\nIsCancelled = 1,\nCancelledAt = GETUTCDATE(),\nCancelledBy = @userId,\nCancellationReason = @reason\nWHERE EventId = @eventId
+activate DB
+note right
+  Triggers EventCancelled
+  domain event
+end note
+DB --> DbContext: Event cancelled
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Delete reminders
+activate DbContext
+DbContext -> DB: DELETE FROM EventReminders\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Reminders deleted
+deactivate DB
+deactivate DbContext
+
+EventsController -> NotificationService: NotifyCancellation(eventId, reason)
+activate NotificationService
+note right
+  Notify all attendees about
+  event cancellation
+end note
+NotificationService --> EventsController: Cancellation notifications sent
+deactivate NotificationService
+
+EventsController --> EventService: 200 OK
+deactivate EventsController
+
+EventService --> EventPage: Event cancelled
+deactivate EventService
+
+EventPage -> EventPage: Remove event from calendar
+
+EventPage --> User: Display confirmation:\n"Event cancelled. Attendees notified."
+deactivate EventPage
+
+@enduml

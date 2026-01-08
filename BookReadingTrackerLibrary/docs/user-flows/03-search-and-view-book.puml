@@ -1,0 +1,67 @@
+@startuml Search and View Book Details Flow
+title Search and View Book Details Flow
+
+actor User
+participant "Library Page" as UI
+participant "SearchBar" as Search
+participant "FilterPanel" as Filter
+participant "API Gateway" as API
+participant "Library Controller" as Controller
+participant "Book Manager" as Manager
+participant "Book Detail Page" as DetailUI
+database "Database" as DB
+
+User -> UI: Navigate to /library
+UI -> API: GET /api/library/books?page=1&size=25
+API -> Controller: GetBooks(query)
+Controller -> Manager: GetBooksAsync(filter, pagination)
+Manager -> DB: SELECT books with pagination
+DB --> Manager: Book list
+Manager --> Controller: PagedResult<Book>
+Controller --> API: 200 OK\n{books, totalCount, pageInfo}
+API --> UI: Book grid data
+UI --> User: Display books in grid/list view
+
+== Search Books ==
+User -> Search: Enter search text\n"Harry Potter"
+Search -> Search: Debounce input (300ms)
+Search -> API: GET /api/library/books?\nsearch=Harry+Potter
+API -> Controller: GetBooks(query)
+Controller -> Manager: SearchBooksAsync(searchQuery)
+Manager -> DB: SELECT books WHERE\ntitle/author/ISBN LIKE '%search%'
+DB --> Manager: Matching books
+Manager --> Controller: Filtered books
+Controller --> API: 200 OK\n{filteredBooks}
+API --> UI: Update book list
+UI --> User: Show search results
+
+== Filter Books ==
+User -> Filter: Select filters\n(Format: Physical, Genre: Fiction)
+Filter -> API: GET /api/library/books?\nformat=Physical&genre=Fiction
+API -> Controller: GetBooks(filterCriteria)
+Controller -> Manager: GetBooksAsync(filters)
+Manager -> DB: SELECT books WHERE\nformat='Physical' AND genre='Fiction'
+DB --> Manager: Filtered books
+Manager --> Controller: Filtered results
+Controller --> API: 200 OK\n{filteredBooks}
+API --> UI: Update book list
+UI --> User: Show filtered results
+
+== View Book Details ==
+User -> UI: Click on book card
+UI -> DetailUI: Navigate to /library/books/{id}
+DetailUI -> API: GET /api/library/books/{id}
+API -> Controller: GetBookById(id)
+Controller -> Manager: GetBookByIdAsync(id)
+Manager -> DB: SELECT book WHERE id={id}
+DB --> Manager: Book with full details
+Manager -> DB: SELECT loan history\nWHERE bookId={id}
+DB --> Manager: Loan records
+Manager -> DB: SELECT reading sessions\nWHERE bookId={id}
+DB --> Manager: Reading history
+Manager --> Controller: BookDetails\n{book, loans, readings}
+Controller --> API: 200 OK\n{bookDetails}
+API --> DetailUI: Complete book data
+DetailUI --> User: Display book details page\n(info, actions, history)
+
+@enduml

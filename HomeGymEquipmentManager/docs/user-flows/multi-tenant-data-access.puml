@@ -1,0 +1,133 @@
+@startuml
+title Multi-Tenant Data Access Flow
+
+actor "User\n(Tenant A)" as UserA
+participant "Angular App" as UI
+participant "HTTP Interceptor" as Interceptor
+participant "API Controller" as Controller
+participant "TenantContext\nService" as TenantContext
+participant "Command/Query\nHandler" as Handler
+participant "DbContext" as DbContext
+database "Database\n(Shared)" as DB
+
+== Request Initialization ==
+
+UserA -> UI: Perform action\n(e.g., view equipment)
+activate UI
+
+UI -> Interceptor: HTTP request
+activate Interceptor
+note right: JWT token stored\nin localStorage
+
+Interceptor -> Interceptor: Add Authorization header:\nBearer {JWT token}
+
+Interceptor -> Controller: HTTP request with\nJWT token
+deactivate Interceptor
+activate Controller
+
+== Tenant Resolution ==
+
+Controller -> Controller: Validate JWT token
+note right: JWT contains:\n- sub: userId\n- tenant_id: GUID\n- roles\n- exp
+
+Controller -> TenantContext: Extract tenant_id\nfrom JWT claims
+activate TenantContext
+
+TenantContext -> TenantContext: Parse tenant_id claim:\n"11111111-1111-1111-\n1111-111111111111"
+
+TenantContext -> TenantContext: Set current TenantId\nfor request scope
+
+TenantContext --> Controller: TenantId available
+note right: TenantContext.TenantId\n= Tenant A GUID
+deactivate TenantContext
+
+== Data Access with Tenant Isolation ==
+
+Controller -> Handler: Process request\n(e.g., GetEquipmentQuery)
+activate Handler
+
+Handler -> TenantContext: Get current TenantId
+activate TenantContext
+TenantContext --> Handler: Tenant A GUID
+deactivate TenantContext
+
+Handler -> DbContext: Query Equipment
+activate DbContext
+note right: IHomeGymEquipmentManager\nContext interface
+
+DbContext -> DbContext: Apply Global Query Filter:\nWHERE TenantId = \n{Current TenantId}
+
+DbContext -> DB: SELECT * FROM Equipment\nWHERE TenantId = \n'11111111-1111-...'
+activate DB
+note right: Automatic tenant\nfiltering ensures\ndata isolation
+
+DB --> DbContext: Equipment records\n(Tenant A only)
+deactivate DB
+
+DbContext --> Handler: Equipment entities\n(filtered by tenant)
+deactivate DbContext
+
+Handler -> Handler: Map to DTOs
+
+Handler --> Controller: Equipment DTOs\n(Tenant A data only)
+deactivate Handler
+
+Controller --> UI: 200 OK\n{equipment list}
+deactivate Controller
+
+UI --> UserA: Display equipment\n(only Tenant A data)
+deactivate UI
+
+== Alternative: Fallback to X-Tenant-Id Header ==
+
+note over UserA, DB
+Alternative flow when JWT is not available
+(e.g., development/testing scenarios)
+end note
+
+UserA -> UI: Perform action
+activate UI
+
+UI -> Interceptor: HTTP request
+activate Interceptor
+
+Interceptor -> Interceptor: Add header:\nX-Tenant-Id: {tenantId}
+
+Interceptor -> Controller: HTTP request with\nX-Tenant-Id header
+deactivate Interceptor
+activate Controller
+
+Controller -> TenantContext: Extract tenant from\nX-Tenant-Id header
+activate TenantContext
+
+TenantContext -> TenantContext: Read header value
+
+TenantContext -> TenantContext: Parse to Guid
+
+TenantContext --> Controller: TenantId available
+deactivate TenantContext
+
+Controller -> Handler: Process with\ntenant context
+activate Handler
+
+Handler -> DbContext: Query with\ntenant filter
+activate DbContext
+
+DbContext -> DB: SELECT with\nTenantId WHERE clause
+activate DB
+DB --> DbContext: Filtered results
+deactivate DB
+
+DbContext --> Handler: Tenant-scoped data
+deactivate DbContext
+
+Handler --> Controller: Response
+deactivate Handler
+
+Controller --> UI: Filtered results
+deactivate Controller
+
+UI --> UserA: Display data
+deactivate UI
+
+@enduml

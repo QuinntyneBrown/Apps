@@ -1,0 +1,204 @@
+@startuml ComplianceTracking
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "ComplianceScore\n(UI Component)" as ComplianceScore
+participant "ComplianceBreakdown\n(UI Component)" as Breakdown
+participant "ComplianceHistory\n(UI Component)" as History
+participant "AchievementBadges\n(UI Component)" as Badges
+participant "Compliance API\n(Controller)" as API
+participant "Compliance Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== View Compliance Dashboard ==
+User -> ComplianceScore: Navigate to compliance
+activate ComplianceScore
+ComplianceScore -> API: GET /api/compliance/score
+activate API
+API -> Service: GetComplianceScore(userId)
+activate Service
+Service -> DB: QUERY health_profiles\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Health profile
+deactivate DB
+Service -> DB: QUERY recommendations\nWHERE user_id = {userId}\nAND status = 'Active'
+activate DB
+DB --> Service: Active recommendations
+deactivate DB
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}
+activate DB
+DB --> Service: User screenings
+deactivate DB
+Service -> Service: Calculate compliance:\nCompleted screenings /\nTotal recommended screenings
+Service -> Service: Weight by priority\nand clinical importance
+Service -> Service: Calculate overall\ncompliance score (0-100)
+Service --> API: Compliance score and breakdown
+deactivate Service
+API --> ComplianceScore: 200 OK\n{score, completed, total, percentage}
+deactivate API
+ComplianceScore -> ComplianceScore: Display circular progress\nindicator with score
+ComplianceScore --> User: Show compliance score\nwith visual indicator
+deactivate ComplianceScore
+
+== View Compliance Breakdown ==
+User -> Breakdown: View detailed breakdown
+activate Breakdown
+Breakdown -> API: GET /api/compliance/breakdown
+activate API
+API -> Service: GetComplianceBreakdown(userId)
+activate Service
+Service -> DB: QUERY recommendations\nWHERE user_id = {userId}
+activate DB
+DB --> Service: All recommendations
+deactivate DB
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}
+activate DB
+DB --> Service: All screenings
+deactivate DB
+Service -> Service: Categorize by status:\n- Completed on time\n- Completed late\n- Scheduled\n- Overdue\n- Not scheduled
+Service -> Service: Calculate compliance\nfor each screening type
+Service --> API: Breakdown by screening
+deactivate Service
+API --> Breakdown: 200 OK\n{screeningBreakdown}
+deactivate API
+Breakdown -> Breakdown: Display list of screenings\nwith status indicators
+Breakdown --> User: Show compliance status\nfor each screening
+deactivate Breakdown
+
+== View Compliance History ==
+User -> History: View compliance over time
+activate History
+History -> API: GET /api/compliance/history?period={months}
+activate API
+API -> Service: GetComplianceHistory(userId, period)
+activate Service
+Service -> DB: QUERY compliance_snapshots\nWHERE user_id = {userId}\nAND date >= {startDate}
+activate DB
+DB --> Service: Historical compliance data
+deactivate DB
+
+alt No Historical Data
+    Service -> Service: Calculate historical scores\nfrom screening data
+    Service -> DB: QUERY screenings\nWHERE user_id = {userId}\nORDER BY completed_date
+    activate DB
+    DB --> Service: All screenings
+    deactivate DB
+    Service -> Service: Build timeline of\ncompliance changes
+    Service -> DB: INSERT INTO compliance_snapshots
+    activate DB
+    DB --> Service: Snapshots saved
+    deactivate DB
+end
+
+Service -> Service: Format data for chart\n(dates, scores)
+Service --> API: Historical compliance
+deactivate Service
+API --> History: 200 OK\n{historyData, trend}
+deactivate API
+History -> History: Display line chart\nshowing score over time
+History --> User: Show compliance trend\nand improvements
+deactivate History
+
+== View Achievement Badges ==
+User -> Badges: View achievements
+activate Badges
+Badges -> API: GET /api/compliance/achievements
+activate API
+API -> Service: GetAchievements(userId)
+activate Service
+Service -> DB: QUERY user_achievements\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Earned achievements
+deactivate DB
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}\nAND status = 'Completed'
+activate DB
+DB --> Service: Completed screenings
+deactivate DB
+Service -> Service: Check achievement criteria:\n- First screening completed\n- 100% compliance month\n- Streak of on-time screenings\n- All annual screenings done\n- Early detection champion
+
+Service -> Service: Unlock new achievements\nbased on recent activity
+Service -> DB: INSERT INTO user_achievements\n(newly earned)
+activate DB
+DB --> Service: New achievements saved
+deactivate DB
+Service --> API: Achievements list
+deactivate Service
+API --> Badges: 200 OK\n{earned, available, recent}
+deactivate API
+Badges -> Badges: Display earned badges\nwith unlock dates
+Badges -> Badges: Show locked badges\nwith requirements
+Badges --> User: Show achievement badges\nand progress
+deactivate Badges
+
+== Improve Compliance Score ==
+User -> Breakdown: Click on overdue screening
+activate Breakdown
+Breakdown -> Breakdown: Highlight actionable items
+Breakdown --> User: Show quick action:\n"Schedule Now"
+
+User -> Breakdown: Click "Schedule Now"
+Breakdown -> Breakdown: Navigate to\nscreening schedule form
+Breakdown -> API: POST /api/screenings/schedule\n{screeningType}
+activate API
+API -> Service: InitiateScheduling(userId, type)
+activate Service
+Service -> DB: INSERT INTO screenings\nSET status='Scheduled'
+activate DB
+DB --> Service: Screening scheduled
+deactivate DB
+Service -> Service: Recalculate\ncompliance score
+Service -> DB: UPDATE compliance_snapshots
+activate DB
+DB --> Service: Score updated
+deactivate DB
+Service --> API: Scheduling initiated
+deactivate Service
+API --> Breakdown: 201 Created\n{newScreening}
+deactivate API
+Breakdown -> Breakdown: Update compliance display
+Breakdown --> User: Show improved score\nand confirmation
+deactivate Breakdown
+
+== Share Compliance Achievement ==
+User -> ComplianceScore: Click "Share Achievement"
+activate ComplianceScore
+ComplianceScore -> ComplianceScore: Show share options
+User -> ComplianceScore: Select share method
+ComplianceScore -> API: POST /api/compliance/share\n{method, achievement}
+activate API
+API -> Service: ShareAchievement(userId, data)
+activate Service
+Service -> Service: Generate shareable\ncontent/image
+Service -> Service: Create share link\nwith privacy settings
+Service --> API: Share data
+deactivate Service
+API --> ComplianceScore: 200 OK\n{shareLink, content}
+deactivate API
+ComplianceScore -> ComplianceScore: Display share\nconfirmation
+ComplianceScore --> User: Show shareable content\nor link
+deactivate ComplianceScore
+
+== Set Compliance Goals ==
+User -> ComplianceScore: Click "Set Goals"
+activate ComplianceScore
+ComplianceScore -> ComplianceScore: Show goal setting form
+User -> ComplianceScore: Set target score\nand timeframe
+User -> ComplianceScore: Submit goal
+ComplianceScore -> API: POST /api/compliance/goals\n{targetScore, deadline}
+activate API
+API -> Service: SetComplianceGoal(userId, goal)
+activate Service
+Service -> DB: INSERT INTO compliance_goals\nSET target={score},\ndeadline={date}
+activate DB
+DB --> Service: Goal saved
+deactivate DB
+Service -> Service: Calculate required actions\nto meet goal
+Service --> API: Goal set with action plan
+deactivate Service
+API --> ComplianceScore: 201 Created\n{goal, actionPlan}
+deactivate API
+ComplianceScore -> ComplianceScore: Display goal tracker\nand action items
+ComplianceScore --> User: Show goal and\nsteps to achieve it
+deactivate ComplianceScore
+
+@enduml

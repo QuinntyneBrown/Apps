@@ -1,0 +1,80 @@
+@startuml user-management
+title User Management - Create User Flow
+
+actor Admin
+participant "User Management Page" as UserMgmt
+participant "Create User Modal" as Modal
+participant "User Service" as Service
+participant "API Controller" as API
+participant "CreateUserCommand Handler" as Handler
+participant "Password Hash Service" as HashService
+participant "IBucketListManagerContext" as DB
+
+Admin -> UserMgmt: Navigate to user management
+UserMgmt -> Service: getUsers()
+Service -> API: GET /api/users
+note right: Authorization: Bearer {token}\nRequires Admin role
+API -> DB: Query all users
+DB --> API: List of users (without passwords)
+API --> Service: Users list
+Service --> UserMgmt: Users data
+UserMgmt --> Admin: Display user list
+
+Admin -> UserMgmt: Click "Create User" button
+UserMgmt -> Modal: Open create user form
+Modal --> Admin: Display form
+
+Admin -> Modal: Enter username (unique)
+Admin -> Modal: Enter email (valid format)
+Admin -> Modal: Enter password (min 8 chars)
+Admin -> Modal: Select roles (optional)
+Admin -> Modal: Click "Create"
+
+Modal -> Modal: Validate form inputs
+note right: Check username/email format,\npassword requirements
+Modal -> Service: createUser(userData)
+Service -> Service: Prepare request with admin token
+Service -> API: POST /api/users
+note right: Authorization: Bearer {token}\nBody: { username, email, password, roles }
+
+API -> Handler: CreateUserCommand
+Handler -> DB: Check username uniqueness
+DB --> Handler: Username check result
+Handler -> DB: Check email uniqueness
+DB --> Handler: Email check result
+
+alt Username and email are unique
+    Handler -> HashService: Hash password
+    HashService -> HashService: Generate unique salt (32 bytes)
+    HashService -> HashService: Apply PBKDF2 with SHA-256
+    note right: 100,000 iterations
+    HashService --> Handler: Hashed password + salt
+    Handler -> Handler: Create User entity
+    Handler -> Handler: Set UserId, UserName, Email
+    Handler -> Handler: Set Password (hashed), Salt
+    Handler -> Handler: Assign selected roles
+    Handler -> DB: Add(user)
+    Handler -> DB: SaveChangesAsync()
+    DB --> Handler: Success
+    Handler --> API: UserCreatedResponse
+    API --> Service: 201 Created + user DTO (no password)
+    Service --> Modal: User created successfully
+    Modal -> Modal: Close modal
+    Modal -> UserMgmt: Trigger refresh
+    UserMgmt -> Service: getUsers()
+    Service -> API: GET /api/users
+    API -> DB: Query all users
+    DB --> API: Updated users list
+    API --> Service: Users list
+    Service --> UserMgmt: Updated users
+    UserMgmt --> Admin: Display new user in list
+    UserMgmt --> Admin: Show success notification
+else Username or email already exists
+    Handler --> API: 400 Bad Request
+    note right: Validation error
+    API --> Service: Error response
+    Service --> Modal: Creation failed
+    Modal --> Admin: Display validation error
+end
+
+@enduml

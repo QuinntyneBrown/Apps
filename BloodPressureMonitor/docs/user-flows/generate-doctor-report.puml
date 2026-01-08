@@ -1,0 +1,202 @@
+@startuml
+title Generate Doctor Report Flow
+
+actor User as user
+participant "Reports Page\n(UI)" as reportsPage
+participant "Generate Report Form\n(UI Component)" as reportForm
+participant "Report Preview\n(UI Component)" as preview
+participant "Report Service\n(Frontend)" as reportService
+participant "API Gateway" as api
+participant "Report Controller\n(Backend)" as controller
+participant "Report Generator" as generator
+participant "Email Service" as emailService
+database "Readings Database" as readingsDb
+database "Medications Database" as medDb
+database "Lifestyle Database" as lifestyleDb
+database "Alerts Database" as alertsDb
+database "Reports Storage" as reportStorage
+
+note over user : User has doctor appointment tomorrow
+
+user -> reportsPage : Navigate to Reports
+activate reportsPage
+reportsPage -> user : Display reports library\nand "Generate New Report" button
+deactivate reportsPage
+
+user -> reportsPage : Click "Generate New Report"
+activate reportsPage
+reportsPage -> reportForm : Open report generation form
+deactivate reportsPage
+
+activate reportForm
+reportForm -> user : Display form options:\n- Report type dropdown\n- Date range picker\n- Include options (checkboxes)\n- Format selection
+deactivate reportForm
+
+user -> reportForm : Select "Doctor Report\n(Comprehensive)"
+activate reportForm
+reportForm -> reportForm : Update form:\nEnable all include options\nby default
+deactivate reportForm
+
+user -> reportForm : Select date range:\nLast 3 months\n(Oct 8 - Jan 8)
+activate reportForm
+reportForm -> reportForm : Validate date range
+deactivate reportForm
+
+user -> reportForm : Verify include options:\n☑ All readings\n☑ Charts and graphs\n☑ Medication details\n☑ Lifestyle factors\n☑ Alerts history\n☑ Personal notes
+activate reportForm
+reportForm -> reportForm : All options checked
+deactivate reportForm
+
+user -> reportForm : Select format: "PDF"
+
+user -> reportForm : Click "Generate Report"
+activate reportForm
+reportForm -> reportForm : Validate selections
+reportForm -> user : Show loading indicator:\n"Generating report..."
+reportForm -> reportService : Submit report request
+deactivate reportForm
+
+activate reportService
+reportService -> api : POST /api/reports/generate\nAuthorization: Bearer {token}\n{type: "doctor", dateRange: {start, end},\ninclude: [...], format: "pdf"}
+deactivate reportService
+
+activate api
+api -> controller : Process report generation
+deactivate api
+
+activate controller
+controller -> controller : Create background job\nfor report generation
+controller -> api : 202 Accepted {jobId, status: "processing"}
+activate api
+api -> reportForm : Return job ID
+deactivate api
+
+reportForm -> reportForm : Poll for job completion
+
+note over controller, generator : Background job executing
+
+controller -> generator : Generate comprehensive report
+
+activate generator
+generator -> readingsDb : Query readings\nfor date range
+activate readingsDb
+readingsDb --> generator : Return 270 readings\n(~3 per day × 90 days)
+deactivate readingsDb
+
+generator -> generator : Calculate statistics:\n- Average BP: 128/82\n- Trend: Decreasing\n- Readings in normal range: 65%
+
+generator -> medDb : Query medications
+activate medDb
+medDb --> generator : Return medication list:\n- Lisinopril 10mg\n- Adherence: 96.7%
+deactivate medDb
+
+generator -> lifestyleDb : Query lifestyle factors
+activate lifestyleDb
+lifestyleDb --> generator : Return lifestyle data:\n- Sodium, exercise, stress logs
+deactivate lifestyleDb
+
+generator -> alertsDb : Query alerts
+activate alertsDb
+alertsDb --> generator : Return alerts:\n- 5 high BP alerts\n- 1 crisis alert (Nov 15)
+deactivate alertsDb
+
+generator -> generator : Generate report sections:\n1. Cover page\n2. Executive summary\n3. BP readings table\n4. Trend charts\n5. Medication adherence\n6. Lifestyle correlations\n7. Alerts summary\n8. Statistical analysis
+
+generator -> generator : Create PDF document:\n- 8 pages\n- Charts embedded\n- Professional formatting
+
+generator -> reportStorage : Save generated PDF
+activate reportStorage
+reportStorage --> generator : Return storage URL
+deactivate reportStorage
+
+generator -> controller : Report complete\n{reportId, fileSize: "2.4 MB",\npageCount: 8, url}
+deactivate generator
+
+activate controller
+controller -> api : Update job status:\ncompleted
+deactivate controller
+
+activate api
+api -> reportForm : Job completed {reportId}
+deactivate api
+
+activate reportForm
+reportForm -> api : GET /api/reports/{reportId}
+deactivate reportForm
+
+activate api
+api -> controller : Fetch report metadata
+deactivate api
+
+activate controller
+controller -> reportStorage : Get report details
+activate reportStorage
+reportStorage --> controller : Return metadata
+deactivate reportStorage
+
+controller -> api : 200 OK {report details}
+activate api
+api -> preview : Return report data
+deactivate api
+deactivate controller
+
+activate preview
+preview -> user : Display preview:\n- Thumbnail of first page\n- File size: 2.4 MB\n- Pages: 8\n- Summary of contents\n- [Download] [Email] [Share] buttons
+deactivate preview
+
+user -> preview : Click "Email to Doctor"
+activate preview
+preview -> preview : Show email form:\n- Doctor's email input\n- Optional message textarea\n- Subject: "BP Report for\n  Appointment on Jan 9"
+deactivate preview
+
+user -> preview : Enter doctor's email:\ndoctor@example.com
+activate preview
+preview -> preview : Validate email format
+deactivate preview
+
+user -> preview : Add message:\n"See attached BP report for\ntomorrow's appointment"
+
+user -> preview : Click "Send"
+activate preview
+preview -> reportService : Submit email request
+deactivate preview
+
+activate reportService
+reportService -> api : POST /api/reports/{reportId}/email\nAuthorization: Bearer {token}\n{to: "doctor@example.com",\nmessage: "..."}
+deactivate reportService
+
+activate api
+api -> controller : Send report email
+deactivate api
+
+activate controller
+controller -> emailService : Compose and send email
+activate emailService
+emailService -> emailService : Create email:\n- Subject: "BP Report from Patient"\n- Body: User's message\n- Attachment: PDF report
+
+emailService -> emailService : Send via SMTP
+emailService --> controller : Email sent successfully
+deactivate emailService
+
+controller -> reportStorage : Update report metadata:\nsharedWith: ["doctor@example.com"]
+activate reportStorage
+reportStorage --> controller : Confirm update
+deactivate reportStorage
+
+controller -> api : 200 OK {emailSent: true}
+activate api
+api -> preview : Confirm success
+deactivate api
+deactivate controller
+
+activate preview
+preview -> user : Show confirmation:\n"Report sent successfully!\nEmail delivered to doctor@example.com"
+preview -> reportsPage : Navigate back to library
+deactivate preview
+
+activate reportsPage
+reportsPage -> reportsPage : Add report to library:\n- Doctor Report\n- Period: Oct 8 - Jan 8, 2026\n- Generated: Today\n- Shared with: doctor@example.com
+reportsPage -> user : Display updated reports list
+deactivate reportsPage
+
+@enduml

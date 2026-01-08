@@ -1,0 +1,87 @@
+@startuml bulk-import
+title Bulk Import Items Flow
+
+actor User
+participant "Bulk Import Page\n(/items/import)" as ImportPage
+participant "Item Service" as ItemService
+participant "API Controller\n(/api/items)" as API
+participant "BulkImport Handler" as Handler
+database "Items Table" as ItemsDB
+database "ItemPhotos Table" as PhotosDB
+database "Categories Table" as CategoriesDB
+database "Locations Table" as LocationsDB
+
+User -> ImportPage: Navigate to import page
+activate ImportPage
+
+ImportPage --> User: Display import interface:\n- File upload area\n- Template download link\n- Instructions
+
+User -> ImportPage: Click "Download Template"
+ImportPage --> User: Download CSV/Excel template\nwith required columns
+
+User -> User: Fill spreadsheet with item data:\n- Name, Description\n- Category, Location\n- Purchase info, Value\n- Serial number, Notes
+
+User -> ImportPage: Upload filled CSV/Excel file
+ImportPage -> ImportPage: Read file locally
+ImportPage -> ImportPage: Parse rows into objects
+
+alt File format valid
+    ImportPage -> ImportPage: Show preview table with:\n- First 10 rows\n- Field mapping interface\n- Validation warnings
+
+    ImportPage --> User: Display preview and\nfield mapping
+
+    User -> ImportPage: Review data\nand adjust mapping
+
+    alt User finds errors
+        User -> ImportPage: Correct file and re-upload
+    end
+
+    User -> ImportPage: Click "Import"
+
+    ImportPage -> ItemService: bulkImport(fileData)
+    ItemService -> API: POST /api/items/bulk-import\nAuthorization: Bearer {token}\nContent-Type: multipart/form-data\n{file}
+
+    API -> Handler: Handle BulkImportItemsCommand
+    Handler -> Handler: Parse file (CSV/Excel)
+    Handler -> Handler: Extract TenantId from JWT
+
+    Handler -> CategoriesDB: Validate categories exist
+    CategoriesDB --> Handler: Category mappings
+
+    Handler -> LocationsDB: Validate locations exist
+    LocationsDB --> Handler: Location mappings
+
+    Handler -> Handler: Validate each row:\n- Required fields (name, category, location)\n- Data types and formats\n- Serial number uniqueness\n- Value ranges
+
+    Handler -> Handler: Separate valid and invalid rows
+
+    loop For each valid row
+        Handler -> Handler: Create Item entity with TenantId
+        Handler -> ItemsDB: INSERT Item record
+        ItemsDB --> Handler: Item created
+        Handler -> Handler: Raise ItemAdded event
+    end
+
+    Handler -> Handler: Build import summary:\n- Total rows processed\n- Successful imports\n- Failed rows with errors
+
+    Handler --> API: ImportResultDto\n{successCount, failedCount, errors[]}
+    API --> ItemService: 200 OK\n{importSummary}
+    ItemService --> ImportPage: Import complete
+
+    ImportPage --> User: Display import summary:\n"X items imported successfully"\n"Y items failed"\n- Download error report (if failures)
+
+    alt All imports successful
+        ImportPage --> User: Show success notification
+        ImportPage -> ImportPage: Option to navigate to dashboard
+    else Some imports failed
+        ImportPage --> User: Show partial success with\nerror details
+        ImportPage --> User: Option to download error CSV\nfor correction
+    end
+
+else File format invalid
+    ImportPage --> User: Show error:\n"Invalid file format"\n"Please use CSV or Excel template"
+end
+
+deactivate ImportPage
+
+@enduml

@@ -1,0 +1,261 @@
+@startuml Recurring Event Flow
+title Recurring Event Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Event Form\nPage" as EventPage
+participant "Event Service" as EventService
+participant "Events Controller" as EventsController
+participant "ITenantContext" as TenantContext
+participant "Recurrence\nGenerator" as RecurrenceGenerator
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+== Create Recurring Event ==
+User -> EventPage: Create new event
+activate EventPage
+
+User -> EventPage: Fill in event details
+
+User -> EventPage: Check "Recurring Event"
+
+EventPage --> User: Display recurrence options
+
+User -> EventPage: Configure recurrence:\n- Pattern (Daily/Weekly/Monthly)\n- Frequency (every N days/weeks/months)\n- Days of week (for weekly)\n- End condition:\n  * End date\n  * Number of occurrences\n  * Never (up to 2 years)
+
+EventPage -> EventPage: Validate recurrence pattern
+
+EventPage -> EventService: createRecurringEvent(eventData, recurrencePattern)
+activate EventService
+
+EventService -> EventsController: POST /api/events/recurring
+activate EventsController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "title": "string",
+    "startTime": "datetime",
+    "endTime": "datetime",
+    "location": "string",
+    "description": "string",
+    "eventType": "enum",
+    "attendeeIds": ["guid", ...],
+    "recurrence": {
+      "pattern": "Daily|Weekly|Monthly",
+      "frequency": 1,
+      "daysOfWeek": ["Monday", "Wednesday"],
+      "endType": "EndDate|OccurrenceCount|Never",
+      "endDate": "datetime",
+      "occurrenceCount": 10
+    }
+  }
+end note
+
+EventsController -> TenantContext: GetCurrentTenantId()
+activate TenantContext
+TenantContext --> EventsController: TenantId
+deactivate TenantContext
+
+EventsController -> DbContext: Create RecurringEventSeries
+activate DbContext
+DbContext -> DB: INSERT INTO RecurringEventSeries\n(SeriesId, Title, Description,\nLocation, EventType, AttendeeIds,\nRecurrencePattern, StartDate,\nEndDate, TenantId, CreatedBy)
+activate DB
+note right
+  Triggers RecurringEventSeriesCreated
+  domain event
+end note
+DB --> DbContext: Series created
+deactivate DB
+deactivate DbContext
+
+EventsController -> RecurrenceGenerator: GenerateOccurrences(series)
+activate RecurrenceGenerator
+note right
+  Generate individual event instances
+  based on recurrence pattern
+end note
+
+RecurrenceGenerator -> RecurrenceGenerator: Calculate occurrence dates:\n1. Start from series start date\n2. Apply pattern (daily/weekly/monthly)\n3. Filter by days of week\n4. Continue until end condition\n5. Limit to max 2 years
+
+RecurrenceGenerator --> EventsController: List of occurrence dates
+deactivate RecurrenceGenerator
+
+EventsController -> DbContext: Create Event instances
+activate DbContext
+loop For each occurrence
+    DbContext -> DB: INSERT INTO Events\n(EventId, SeriesId, Title,\nStartTime, EndTime, Location,\nDescription, EventType,\nIsRecurring, TenantId, CreatedBy)
+    activate DB
+    DB -> DB: INSERT INTO EventAttendees\n(EventId, FamilyMemberId)\nfor each attendee
+    DB --> DbContext: Event instance created
+    deactivate DB
+end
+deactivate DbContext
+
+EventsController --> EventService: 201 Created\n{seriesId, occurrenceCount, firstEventId}
+deactivate EventsController
+
+EventService --> EventPage: Recurring series created
+deactivate EventService
+
+EventPage -> EventPage: Refresh calendar\nwith all occurrences
+
+EventPage --> User: Display success:\n"{count} events created"
+deactivate EventPage
+
+== Modify Single Occurrence ==
+User -> EventPage: Click on single occurrence
+activate EventPage
+
+EventPage --> User: Display event details
+
+User -> EventPage: Click "Edit This Event"
+
+EventPage --> User: Show edit options:\n- This event only\n- This and future events\n- All events in series
+
+User -> EventPage: Select "This event only"
+
+User -> EventPage: Modify event details\n(e.g., change time or location)
+
+EventPage -> EventService: updateOccurrence(eventId, changes)
+activate EventService
+
+EventService -> EventsController: PUT /api/events/{eventId}/occurrence
+activate EventsController
+note right
+  Request Body:
+  {
+    "modifyScope": "ThisOnly",
+    "startTime": "datetime",
+    "endTime": "datetime",
+    "location": "string"
+  }
+end note
+
+EventsController -> DbContext: Get event and series info
+activate DbContext
+DbContext -> DB: SELECT * FROM Events e\nJOIN RecurringEventSeries s\nON e.SeriesId = s.SeriesId\nWHERE e.EventId = @eventId
+activate DB
+DB --> DbContext: Event and series data
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Create recurrence exception
+activate DbContext
+DbContext -> DB: INSERT INTO RecurrenceExceptions\n(ExceptionId, SeriesId,\nOriginalDate, ModificationType,\nModifiedEventId, Reason)
+activate DB
+note right
+  Triggers RecurrenceExceptionAdded
+  domain event
+end note
+DB --> DbContext: Exception created
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Update event instance
+activate DbContext
+DbContext -> DB: UPDATE Events SET\nStartTime = @newStart,\nEndTime = @newEnd,\nLocation = @newLocation,\nIsException = 1\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Event updated
+deactivate DB
+deactivate DbContext
+
+EventsController --> EventService: Occurrence updated
+deactivate EventsController
+
+EventService --> EventPage: Changes saved
+deactivate EventService
+
+EventPage --> User: Display success message
+deactivate EventPage
+
+== Modify All Future Occurrences ==
+User -> EventPage: Edit recurring event
+activate EventPage
+
+User -> EventPage: Select "This and future events"
+
+User -> EventPage: Make changes
+
+EventPage -> EventService: updateFutureOccurrences(eventId, changes)
+activate EventService
+
+EventService -> EventsController: PUT /api/events/{eventId}/future-occurrences
+activate EventsController
+
+EventsController -> DbContext: Get current event date
+activate DbContext
+DbContext -> DB: SELECT StartTime, SeriesId\nFROM Events\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Event start time and series
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Update all future occurrences
+activate DbContext
+DbContext -> DB: UPDATE Events SET\nTitle = @newTitle,\nLocation = @newLocation,\nDescription = @newDescription\nWHERE SeriesId = @seriesId\nAND StartTime >= @eventStartTime\nAND IsException = 0
+activate DB
+DB --> DbContext: Future events updated
+deactivate DB
+deactivate DbContext
+
+EventsController -> DbContext: Update series template
+activate DbContext
+DbContext -> DB: UPDATE RecurringEventSeries\nSET Title = @newTitle,\nLocation = @newLocation,\nDescription = @newDescription\nWHERE SeriesId = @seriesId
+activate DB
+DB --> DbContext: Series updated
+deactivate DB
+deactivate DbContext
+
+EventsController --> EventService: Future occurrences updated
+deactivate EventsController
+
+EventService --> EventPage: Changes saved
+deactivate EventService
+
+EventPage --> User: Display success
+deactivate EventPage
+
+== Delete Recurring Series ==
+User -> EventPage: Select recurring event
+activate EventPage
+
+User -> EventPage: Click "Delete"
+
+EventPage --> User: Confirm deletion:\n- Delete this event\n- Delete all events in series
+
+User -> EventPage: Select "Delete all"
+
+EventPage -> EventService: deleteRecurringSeries(seriesId)
+activate EventService
+
+EventService -> EventsController: DELETE /api/events/series/{seriesId}
+activate EventsController
+
+EventsController -> DbContext: Delete all occurrences
+activate DbContext
+DbContext -> DB: DELETE FROM EventAttendees\nWHERE EventId IN\n  (SELECT EventId FROM Events\n   WHERE SeriesId = @seriesId)
+activate DB
+DB -> DB: DELETE FROM EventRSVPs\nWHERE EventId IN\n  (SELECT EventId FROM Events\n   WHERE SeriesId = @seriesId)
+DB -> DB: DELETE FROM Events\nWHERE SeriesId = @seriesId
+DB -> DB: DELETE FROM RecurrenceExceptions\nWHERE SeriesId = @seriesId
+DB -> DB: DELETE FROM RecurringEventSeries\nWHERE SeriesId = @seriesId
+note right
+  Triggers RecurringEventEnded
+  domain event
+end note
+DB --> DbContext: Series and all occurrences deleted
+deactivate DB
+deactivate DbContext
+
+EventsController --> EventService: 204 No Content
+deactivate EventsController
+
+EventService --> EventPage: Series deleted
+deactivate EventService
+
+EventPage -> EventPage: Refresh calendar
+
+EventPage --> User: Display success message
+deactivate EventPage
+
+@enduml

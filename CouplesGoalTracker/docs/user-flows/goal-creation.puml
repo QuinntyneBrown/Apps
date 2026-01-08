@@ -1,0 +1,71 @@
+@startuml goal-creation
+title Shared Goal Creation Flow
+
+actor User
+participant "Add Goal Modal" as UI
+participant "Goal Service" as GoalSvc
+participant "Goals Controller" as Controller
+participant "CreateGoalCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as DB
+
+User -> UI: Click "Add Goal" button
+activate UI
+UI -> UI: Open Add Goal Modal
+
+User -> UI: Fill goal details:\n- Title\n- Category\n- Target Date\n- Success Criteria\n- Partner 1\n- Partner 2
+
+User -> UI: Click "Create"
+
+UI -> UI: Validate form inputs
+UI -> GoalSvc: createGoal(goalData)
+activate GoalSvc
+
+GoalSvc -> Controller: POST /api/goals
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: CreateGoalCommand
+activate Command
+
+Command -> TenantContext: GetCurrentTenantId()
+activate TenantContext
+TenantContext --> Command: TenantId (Guid)
+deactivate TenantContext
+
+Command -> Command: Create Goal entity\n(with TenantId)
+
+Command -> DbContext: Goals.Add(goal)
+activate DbContext
+DbContext -> DB: INSERT INTO Goals\n(GoalId, TenantId, Title,\nCategory, TargetDate,\nSuccessCriteria,\nPartner1Id, Partner2Id,\nCreatedAt)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+Command -> Command: Raise SharedGoalCreated event
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventId, EventType,\nAggregateId, Data,\nTimestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: CreateGoalResponse\n(GoalId, Title, CreatedAt)
+deactivate Command
+
+Controller --> GoalSvc: 201 Created\n(Location: /api/goals/{id})
+deactivate Controller
+
+GoalSvc --> UI: Goal created successfully
+deactivate GoalSvc
+
+UI -> UI: Close modal
+UI -> UI: Refresh goals list
+UI --> User: Show success message\n"Goal created successfully"
+deactivate UI
+
+@enduml

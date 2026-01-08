@@ -1,0 +1,80 @@
+@startuml View Users Flow
+title View Users Flow
+
+actor "Administrator" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "Users Controller\n(/api/users)" as UsersAPI
+participant "GetUsersQuery" as Query
+database "SQL Database" as DB
+
+Admin -> UI: Navigate to User Management page
+activate UI
+
+UI -> UI: Initialize component
+UI -> UserService: getUsers()
+activate UserService
+
+UserService -> Interceptor: GET /api/users
+activate Interceptor
+
+Interceptor -> Interceptor: Inject JWT token from localStorage
+Interceptor -> UsersAPI: Forward request with Authorization header
+deactivate Interceptor
+activate UsersAPI
+
+UsersAPI -> UsersAPI: Verify authentication\n(valid JWT token)
+
+alt Invalid or Missing Token
+    UsersAPI --> UserService: 401 Unauthorized
+    deactivate UsersAPI
+    UserService --> UI: Authentication failed
+    deactivate UserService
+    UI --> Admin: Redirect to login page
+    deactivate UI
+else Valid Token
+    UsersAPI -> UsersAPI: Verify Admin role in JWT claims
+
+    alt Not Admin Role
+        UsersAPI --> UserService: 403 Forbidden
+        deactivate UsersAPI
+        UserService --> UI: Access denied
+        deactivate UserService
+        UI --> Admin: Display error: "Admin access required"
+        deactivate UI
+    else Admin Role Verified
+        UsersAPI -> Query: Execute GetUsersQuery
+        activate Query
+
+        Query -> DB: SELECT * FROM Users\nJOIN UserRoles\nJOIN Roles
+        activate DB
+        DB --> Query: Return user records with roles
+        deactivate DB
+
+        Query -> Query: Map to UserDto objects\n(exclude password and salt)
+        Query --> UsersAPI: Return List<UserDto>
+        deactivate Query
+
+        UsersAPI --> UserService: 200 OK\n[{userId, username, email, roles[]}, ...]
+        deactivate UsersAPI
+
+        UserService --> UI: Return user list
+        deactivate UserService
+
+        UI -> UI: Display users in table/grid\nwith columns: username, email, roles
+        UI --> Admin: Show user list with actions\n(edit, delete, manage roles)
+        deactivate UI
+    end
+end
+
+note right of UI
+  User list displays:
+  - Username
+  - Email address
+  - Assigned roles (as badges)
+  - Action buttons (Edit, Delete, Manage Roles)
+  - Add User button at top
+end note
+
+@enduml

@@ -1,0 +1,147 @@
+@startuml User Management Flow
+title User Management Flow - Create User with Roles
+
+actor Administrator
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "Users Controller\n/api/users" as API
+participant "CreateUser\nCommand Handler" as CreateHandler
+participant "AddRoleToUser\nCommand Handler" as RoleHandler
+participant "Password\nHashing Service" as PasswordService
+participant "ConversationStarter\nAppContext" as DB
+database "SQL Server\nDatabase" as Database
+
+== Create User ==
+Administrator -> UI: Click "Create User"\nbutton
+activate UI
+
+UI -> UI: Open create user\ndialog/form
+
+Administrator -> UI: Enter user details:\n- Username\n- Email\n- Password\n- Select roles
+
+UI -> UI: Validate form:\n- Email format\n- Password min 8 chars\n- Username required
+
+UI -> UserService: createUser(userData)
+activate UserService
+
+UserService -> API: POST /api/users\n{username, email, password}
+activate API
+
+API -> CreateHandler: Handle CreateUserCommand
+activate CreateHandler
+
+CreateHandler -> DB: Users.Any(\nu => u.Email == email)
+activate DB
+DB -> Database: SELECT COUNT(*) FROM Users\nWHERE Email = @email
+activate Database
+Database --> DB: Count
+deactivate Database
+DB --> CreateHandler: emailExists: true/false
+deactivate DB
+
+alt Email Already Exists
+    CreateHandler --> API: 400 Bad Request\n{error: "Email already in use"}
+    API --> UserService: Validation error
+    UserService --> UI: Error response
+    UI --> Administrator: Display error message
+    deactivate CreateHandler
+    deactivate API
+    deactivate UserService
+else Email Available
+    CreateHandler -> PasswordService: HashPassword(password)
+    activate PasswordService
+    PasswordService -> PasswordService: Generate unique\n32-byte salt
+    PasswordService -> PasswordService: Hash password with\nPBKDF2-SHA256\n(100,000 iterations)
+    PasswordService --> CreateHandler: {hashedPassword, salt}
+    deactivate PasswordService
+
+    CreateHandler -> CreateHandler: Create User entity:\n- UserId (new Guid)\n- Username\n- Email\n- HashedPassword\n- Salt
+
+    CreateHandler -> DB: Users.Add(user)
+    activate DB
+    DB -> Database: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt)
+    activate Database
+    Database --> DB: User created
+    deactivate Database
+    deactivate DB
+
+    CreateHandler -> DB: SaveChanges()
+    activate DB
+    DB -> Database: COMMIT
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> CreateHandler: Success
+    deactivate DB
+
+    CreateHandler --> API: 201 Created\n{userId, username, email}
+    deactivate CreateHandler
+    API --> UserService: UserDto
+    deactivate API
+    UserService --> UI: User created successfully
+    deactivate UserService
+
+    UI --> Administrator: Display success message
+end
+
+== Assign Roles to User ==
+Administrator -> UI: Select roles\nfor new user
+
+UI -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+
+loop For each selected role
+    UserService -> API: POST /api/users/{userId}/roles\n{roleId}
+    activate API
+
+    API -> RoleHandler: Handle AddRoleToUserCommand
+    activate RoleHandler
+
+    RoleHandler -> DB: Users.FindAsync(userId)
+    activate DB
+    DB -> Database: SELECT * FROM Users\nWHERE UserId = @userId
+    activate Database
+    Database --> DB: User entity
+    deactivate Database
+    DB --> RoleHandler: User
+    deactivate DB
+
+    RoleHandler -> DB: Roles.FindAsync(roleId)
+    activate DB
+    DB -> Database: SELECT * FROM Roles\nWHERE RoleId = @roleId
+    activate Database
+    Database --> DB: Role entity
+    deactivate Database
+    DB --> RoleHandler: Role
+    deactivate DB
+
+    RoleHandler -> DB: UserRoles.Add(\nnew UserRole(userId, roleId))
+    activate DB
+    DB -> Database: INSERT INTO UserRoles\n(UserId, RoleId)
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    deactivate DB
+
+    RoleHandler -> DB: SaveChanges()
+    activate DB
+    DB -> Database: COMMIT
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> RoleHandler: Success
+    deactivate DB
+
+    RoleHandler --> API: 200 OK
+    deactivate RoleHandler
+    API --> UserService: Role assigned
+    deactivate API
+end
+
+UserService --> UI: All roles assigned
+deactivate UserService
+
+UI --> Administrator: User created with\nroles successfully
+deactivate UI
+
+@enduml

@@ -1,0 +1,145 @@
+@startuml Wishlist and Recommendations Flow
+title Wishlist and Recommendations Flow
+
+actor User
+participant "Wishlist Page" as WishlistUI
+participant "Recommendations Page" as RecommendUI
+participant "Discover Page" as DiscoverUI
+participant "Add to Wishlist Modal" as WishlistModal
+participant "Recommend Modal" as RecommendModal
+participant "API Gateway" as API
+participant "Discovery Controller" as Controller
+participant "Discovery Manager" as Manager
+participant "AI Service" as AI
+database "Database" as DB
+
+== View Wishlist ==
+User -> WishlistUI: Navigate to /wishlist
+WishlistUI -> API: GET /api/wishlist?\nuserId={userId}
+API -> Controller: GetWishlist(userId)
+Controller -> Manager: GetWishlistAsync(userId)
+Manager -> DB: SELECT wishlist_items\nWHERE userId={userId}\nORDER BY priority DESC,\nanticipatedDate ASC
+DB --> Manager: Wishlist items
+Manager --> Controller: Prioritized wishlist
+Controller --> API: 200 OK\n{wishlist}
+API --> WishlistUI: Wishlist data
+WishlistUI --> User: Display wishlist cards\n(priority, anticipated date)
+
+== Add to Wishlist ==
+User -> DiscoverUI: Browse books at /discover
+DiscoverUI --> User: Show recommended books
+User -> DiscoverUI: Click "Add to Wishlist"\non book card
+DiscoverUI -> WishlistModal: Open modal
+WishlistModal --> User: Display wishlist form
+
+User -> WishlistModal: Set priority (1-5 stars)
+User -> WishlistModal: Select anticipated\nread date (optional)
+User -> WishlistModal: Add interest reason\n"Recommended by friend"
+User -> WishlistModal: Add acquisition plan\n(Buy / Library / Gift)
+User -> WishlistModal: Click "Add to Wishlist"
+
+WishlistModal -> WishlistModal: Validate form\n(priority required)
+
+alt Valid Form
+    WishlistModal -> API: POST /api/wishlist\n{bookId, priority, date,\nreason, acquisitionPlan}
+    API -> Controller: AddToWishlist(request)
+    Controller -> Manager: AddToWishlistAsync(wishlistItem)
+    Manager -> DB: SELECT existing wishlist\nWHERE bookId={bookId}\nAND userId={userId}
+    DB --> Manager: Existing item check
+
+    alt Not in Wishlist
+        Manager -> DB: INSERT wishlist_item\n{userId, bookId, priority,\nanticipatedDate, reason, plan}
+        DB --> Manager: Item ID
+        Manager --> Controller: WishlistItemCreated
+        Controller --> API: 201 Created\n{wishlistItem}
+        API --> WishlistModal: Success
+        WishlistModal -> WishlistModal: Close modal
+        WishlistModal -> DiscoverUI: Update button\nto "In Wishlist"
+        DiscoverUI --> User: Show success notification
+    else Already in Wishlist
+        Manager --> Controller: Conflict
+        Controller --> API: 409 Conflict
+        API --> WishlistModal: Error
+        WishlistModal --> User: "Already in wishlist"
+    end
+else Invalid Form
+    WishlistModal --> User: Display validation errors
+end
+
+== Give Recommendation ==
+User -> RecommendUI: Navigate to /recommendations
+RecommendUI --> User: Display tabs\n(Received / Given)
+User -> RecommendUI: Click "Recommend a Book"
+RecommendUI -> RecommendModal: Open modal
+RecommendModal --> User: Display recommendation form
+
+User -> RecommendModal: Search and select book
+User -> RecommendModal: Enter recipient\n(friend's email/username)
+User -> RecommendModal: Add recommendation reason\n"You'll love the characters!"
+User -> RecommendModal: Add personal note (optional)
+User -> RecommendModal: Click "Send Recommendation"
+
+RecommendModal -> RecommendModal: Validate form\n(book, recipient, reason required)
+
+alt Valid Form
+    RecommendModal -> API: POST /api/recommendations\n{bookId, recipientId, reason,\npersonalNote}
+    API -> Controller: GiveRecommendation(request)
+    Controller -> Manager: CreateRecommendationAsync(recommendation)
+    Manager -> DB: INSERT book_recommendation\n{fromUserId, toUserId, bookId,\nreason, note, status: 'Pending'}
+    DB --> Manager: Recommendation ID
+    Manager -> Manager: Send notification\nto recipient
+    Manager --> Controller: RecommendationSent
+    Controller --> API: 201 Created\n{recommendation}
+    API --> RecommendModal: Success
+    RecommendModal -> RecommendModal: Close modal
+    RecommendModal -> RecommendUI: Refresh "Given" tab
+    RecommendUI --> User: Show success notification\n"Recommendation sent!"
+else Invalid Form
+    RecommendModal --> User: Display validation errors
+end
+
+== Receive Recommendation ==
+User -> RecommendUI: Navigate to /recommendations
+RecommendUI -> API: GET /api/recommendations/received?\nuserId={userId}
+API -> Controller: GetReceivedRecommendations(userId)
+Controller -> Manager: GetRecommendationsAsync(userId)
+Manager -> DB: SELECT recommendations\nWHERE toUserId={userId}\nORDER BY createdDate DESC
+DB --> Manager: Recommendations
+Manager --> Controller: Recommendations list
+Controller --> API: 200 OK\n{recommendations}
+API --> RecommendUI: Recommendation data
+RecommendUI --> User: Display recommendation cards\n(book, recommender, reason)
+
+User -> RecommendUI: Click "Accept" on recommendation
+RecommendUI -> API: PUT /api/recommendations/{id}/accept
+API -> Controller: AcceptRecommendation(id)
+Controller -> Manager: AcceptRecommendationAsync(id)
+Manager -> DB: UPDATE recommendation\nSET status='Accepted'
+DB --> Manager: Updated
+Manager -> Manager: Auto-add to wishlist\n(high priority)
+Manager -> DB: INSERT wishlist_item\n{bookId, priority: 4,\nreason: "Recommended by [name]"}
+DB --> Manager: Wishlist item created
+Manager --> Controller: RecommendationAccepted
+Controller --> API: 200 OK
+API --> RecommendUI: Success
+RecommendUI --> User: Show success\n"Added to wishlist!"
+
+== AI Recommendations ==
+User -> DiscoverUI: Navigate to /discover
+DiscoverUI -> API: GET /api/discover/ai-suggestions?\nuserId={userId}
+API -> Controller: GetAISuggestions(userId)
+Controller -> Manager: GetPersonalizedSuggestionsAsync(userId)
+Manager -> DB: SELECT reading_history\nWHERE userId={userId}
+DB --> Manager: User reading patterns
+Manager -> DB: SELECT user preferences\n(favorite genres, authors)
+DB --> Manager: User preferences
+Manager -> AI: GenerateSuggestions\n{readingHistory, preferences}
+AI -> AI: Analyze reading patterns
+AI -> AI: Find similar books
+AI --> Manager: Personalized suggestions\n{books, reasons}
+Manager --> Controller: AI recommendations
+Controller --> API: 200 OK\n{suggestions}
+API --> DiscoverUI: Personalized books
+DiscoverUI --> User: Display AI recommendations\n(with explanation for each)
+
+@enduml

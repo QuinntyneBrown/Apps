@@ -1,0 +1,169 @@
+@startuml InsuranceIntegration
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "InsuranceCard\n(UI Component)" as InsuranceCard
+participant "CoverageChecker\n(UI Component)" as CoverageChecker
+participant "BenefitsTracker\n(UI Component)" as BenefitsTracker
+participant "SavingsCalculator\n(UI Component)" as SavingsCalculator
+participant "Insurance API\n(Controller)" as API
+participant "Insurance Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== Add/Update Insurance Information ==
+User -> InsuranceCard: Navigate to insurance
+activate InsuranceCard
+InsuranceCard -> API: GET /api/insurance/profile
+activate API
+API -> Service: GetInsuranceProfile(userId)
+activate Service
+Service -> DB: QUERY insurance_profiles\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Insurance profile
+deactivate DB
+Service --> API: Profile
+deactivate Service
+API --> InsuranceCard: 200 OK\n{insuranceProfile}
+deactivate API
+InsuranceCard -> InsuranceCard: Display insurance info
+InsuranceCard --> User: Show insurance card
+
+User -> InsuranceCard: Click "Edit"
+InsuranceCard -> InsuranceCard: Show edit form
+User -> InsuranceCard: Enter insurance details\n(provider, policy number, group)
+User -> InsuranceCard: Submit
+InsuranceCard -> API: PUT /api/insurance/profile\n{provider, policyNumber, group}
+activate API
+API -> Service: UpdateInsuranceProfile(userId, data)
+activate Service
+Service -> DB: UPDATE insurance_profiles\nSET provider={p},\npolicy_number={n},\ngroup_number={g}
+activate DB
+DB --> Service: Profile updated
+deactivate DB
+Service --> API: Profile saved
+deactivate Service
+API --> InsuranceCard: 200 OK\n{updatedProfile}
+deactivate API
+InsuranceCard -> InsuranceCard: Display success message
+InsuranceCard --> User: Show updated insurance card
+deactivate InsuranceCard
+
+== Check Coverage for Screening ==
+User -> CoverageChecker: Select screening to check
+activate CoverageChecker
+CoverageChecker -> CoverageChecker: Display screening selection
+User -> CoverageChecker: Choose screening type
+CoverageChecker -> API: GET /api/insurance/coverage/check\n?screening={type}&userId={id}
+activate API
+API -> Service: CheckCoverage(userId, screeningType)
+activate Service
+Service -> DB: QUERY insurance_profiles\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Insurance profile
+deactivate DB
+Service -> Service: Query insurance provider API\nor coverage database
+Service -> DB: QUERY coverage_rules\nWHERE provider={p}\nAND screening_type={type}
+activate DB
+DB --> Service: Coverage rules
+deactivate DB
+Service -> Service: Calculate copay,\ndeductible, coverage %
+Service -> DB: QUERY user_benefits_used\nWHERE user_id={id}\nAND year=CURRENT_YEAR
+activate DB
+DB --> Service: Benefits used YTD
+deactivate DB
+Service -> Service: Determine if preventive\ncare benefit available
+Service --> API: Coverage details
+deactivate Service
+API --> CoverageChecker: 200 OK\n{covered, copay, deductible, preventiveCare}
+deactivate API
+CoverageChecker -> CoverageChecker: Display coverage details\nwith cost breakdown
+CoverageChecker --> User: Show coverage information\nand estimated cost
+deactivate CoverageChecker
+
+== View Benefits Tracker ==
+User -> BenefitsTracker: Navigate to benefits
+activate BenefitsTracker
+BenefitsTracker -> API: GET /api/insurance/benefits
+activate API
+API -> Service: GetBenefitsUsage(userId)
+activate Service
+Service -> DB: QUERY insurance_profiles\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Insurance profile
+deactivate DB
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}\nAND completed_date >= YEAR_START\nAND status = 'Completed'
+activate DB
+DB --> Service: Completed screenings
+deactivate DB
+Service -> Service: Calculate benefits used\nvs available
+Service -> DB: QUERY insurance_plans\nWHERE provider = {p}
+activate DB
+DB --> Service: Plan limits and allowances
+deactivate DB
+Service -> Service: Determine remaining\npreventive care benefits
+Service --> API: Benefits summary
+deactivate Service
+API --> BenefitsTracker: 200 OK\n{benefitsUsed, benefitsRemaining, limits}
+deactivate API
+BenefitsTracker -> BenefitsTracker: Display benefits tracker\nwith progress bars
+BenefitsTracker --> User: Show benefits usage\nand remaining allowances
+deactivate BenefitsTracker
+
+== Calculate Savings ==
+User -> SavingsCalculator: Navigate to savings
+activate SavingsCalculator
+SavingsCalculator -> API: GET /api/insurance/savings
+activate API
+API -> Service: CalculateSavings(userId)
+activate Service
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}\nAND status = 'Completed'\nAND completed_date >= YEAR_START
+activate DB
+DB --> Service: Completed screenings
+deactivate DB
+Service -> DB: QUERY screening_costs\nWHERE screening_type IN (...)
+activate DB
+DB --> Service: Standard screening costs
+deactivate DB
+Service -> Service: Calculate total value\nof preventive screenings
+Service -> Service: Calculate amount saved\nthrough insurance coverage
+Service -> Service: Calculate potential\nearly detection savings
+Service --> API: Savings breakdown
+deactivate Service
+API --> SavingsCalculator: 200 OK\n{totalValue, amountSaved, potentialSavings}
+deactivate API
+SavingsCalculator -> SavingsCalculator: Display savings calculator\nwith visual charts
+SavingsCalculator --> User: Show money saved and\npotential cost avoidance
+deactivate SavingsCalculator
+
+== Verify Coverage Before Scheduling ==
+User -> CoverageChecker: Before scheduling screening
+activate CoverageChecker
+CoverageChecker -> API: POST /api/insurance/coverage/verify\n{screening, provider, date}
+activate API
+API -> Service: VerifyCoverage(userId, details)
+activate Service
+Service -> DB: QUERY insurance_profiles
+activate DB
+DB --> Service: Insurance info
+deactivate DB
+Service -> Service: Real-time verification\nwith insurance provider API
+Service -> Service: Check network status\nof provider
+Service -> Service: Verify active coverage\nfor date
+Service -> DB: SAVE verification_records
+activate DB
+DB --> Service: Verification saved
+deactivate DB
+Service --> API: Verification result
+deactivate Service
+API --> CoverageChecker: 200 OK\n{verified, networkStatus, authRequired}
+deactivate API
+CoverageChecker -> CoverageChecker: Display verification status
+
+alt Coverage Verified
+    CoverageChecker --> User: Coverage confirmed\nProceed with scheduling
+else Coverage Issue
+    CoverageChecker --> User: Coverage issue found\nShow resolution steps
+end
+deactivate CoverageChecker
+
+@enduml

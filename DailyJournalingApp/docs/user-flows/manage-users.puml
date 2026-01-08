@@ -1,0 +1,173 @@
+@startuml Manage Users Flow
+
+actor Admin
+participant "User Management\nPage" as UserUI
+participant "User List\nComponent" as UserList
+participant "User Form\nComponent" as UserForm
+participant "User Service" as UserService
+participant "Users Controller" as UserAPI
+participant "User Command\nHandler" as CommandHandler
+participant "Database" as DB
+
+Admin -> UserUI: Navigate to user management
+activate UserUI
+
+UserUI -> UserList: Initialize user list
+activate UserList
+
+UserList -> UserService: getUsers()
+activate UserService
+
+UserService -> UserAPI: GET /api/users
+activate UserAPI
+note right: Requires Admin role
+
+UserAPI -> DB: Query all users
+activate DB
+DB --> UserAPI: List of users
+deactivate DB
+
+UserAPI --> UserService: 200 OK with user list
+deactivate UserAPI
+
+UserService --> UserList: Observable of users
+deactivate UserService
+
+UserList --> Admin: Display user list
+deactivate UserList
+
+== Create New User ==
+
+Admin -> UserUI: Click "Create User"
+activate UserUI
+
+UserUI -> UserForm: Open create user form
+activate UserForm
+
+UserForm --> Admin: Display form fields\n(username, email, password)
+deactivate UserForm
+
+Admin -> UserForm: Fill in user details
+activate UserForm
+
+UserForm -> UserForm: Validate form\n(email format, password strength)
+
+Admin -> UserForm: Click "Save"
+
+UserForm -> UserService: createUser(userData)
+activate UserService
+
+UserService -> UserAPI: POST /api/users
+activate UserAPI
+
+UserAPI -> CommandHandler: CreateUserCommand
+activate CommandHandler
+
+CommandHandler -> CommandHandler: Validate uniqueness\n(email, username)
+
+CommandHandler -> CommandHandler: Hash password with PBKDF2\nand generate salt
+
+CommandHandler -> DB: Insert user with hashed password
+activate DB
+DB --> CommandHandler: User created
+deactivate DB
+
+CommandHandler --> UserAPI: UserDto
+deactivate CommandHandler
+
+UserAPI --> UserService: 201 Created with user data
+deactivate UserAPI
+
+UserService --> UserForm: User created successfully
+deactivate UserService
+
+UserForm --> Admin: Show success message
+deactivate UserForm
+
+UserForm -> UserList: Refresh user list
+activate UserList
+UserList --> Admin: Display updated user list
+deactivate UserList
+deactivate UserUI
+
+== Update User ==
+
+Admin -> UserList: Click "Edit" on user
+activate UserList
+
+UserList -> UserForm: Open edit user form with user data
+activate UserForm
+
+UserForm --> Admin: Display pre-filled form
+deactivate UserForm
+
+Admin -> UserForm: Modify user details
+activate UserForm
+
+UserForm -> UserService: updateUser(userId, userData)
+activate UserService
+
+UserService -> UserAPI: PUT /api/users/{userId}
+activate UserAPI
+
+UserAPI -> CommandHandler: UpdateUserCommand
+activate CommandHandler
+
+CommandHandler -> CommandHandler: Validate email uniqueness
+
+CommandHandler -> DB: Update user record
+activate DB
+DB --> CommandHandler: User updated
+deactivate DB
+
+CommandHandler --> UserAPI: UserDto
+deactivate CommandHandler
+
+UserAPI --> UserService: 200 OK with updated data
+deactivate UserAPI
+
+UserService --> UserForm: Update successful
+deactivate UserService
+
+UserForm --> Admin: Show success message
+deactivate UserForm
+deactivate UserList
+
+== Delete User ==
+
+Admin -> UserList: Click "Delete" on user
+activate UserList
+
+UserList -> UserList: Show confirmation dialog
+
+Admin -> UserList: Confirm deletion
+
+UserList -> UserService: deleteUser(userId)
+activate UserService
+
+UserService -> UserAPI: DELETE /api/users/{userId}
+activate UserAPI
+
+UserAPI -> CommandHandler: DeleteUserCommand
+activate CommandHandler
+
+CommandHandler -> DB: Hard delete user
+activate DB
+DB --> CommandHandler: User deleted
+deactivate DB
+
+CommandHandler --> UserAPI: Success
+deactivate CommandHandler
+
+UserAPI --> UserService: 204 No Content
+deactivate UserAPI
+
+UserService --> UserList: Deletion successful
+deactivate UserService
+
+UserList -> UserList: Remove user from list
+
+UserList --> Admin: Display updated list
+deactivate UserList
+
+@enduml

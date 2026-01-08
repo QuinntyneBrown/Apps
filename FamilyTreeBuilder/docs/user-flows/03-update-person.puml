@@ -1,0 +1,52 @@
+@startuml Update Person Flow
+title Update Person Details Flow
+
+actor User
+participant "Person Profile\nPage" as UI
+participant "Person Service" as PersonSvc
+participant "Persons\nController" as PersonCtrl
+participant "UpdatePerson\nCommandHandler" as Handler
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+
+User -> UI: Navigate to person profile
+UI -> PersonSvc: getPerson(personId)
+PersonSvc -> PersonCtrl: GET /api/persons/{personId}
+PersonCtrl -> DbContext: Persons.Find(personId)\nwith TenantId filter
+DbContext -> DB: SELECT * FROM Persons\nWHERE PersonId = @id\nAND TenantId = @tenantId
+DB --> DbContext: Person entity
+DbContext --> PersonCtrl: Person
+PersonCtrl --> PersonSvc: PersonDto
+PersonSvc --> UI: Person data
+UI --> User: Display person profile
+
+User -> UI: Click "Edit" button
+UI -> UI: Enable edit mode
+User -> UI: Modify person details:\n- Name, dates, places\n- Occupation, biography\n- Other attributes
+
+User -> UI: Click "Save"
+UI -> UI: Validate changes
+UI -> PersonSvc: updatePerson(personId, updates)
+PersonSvc -> PersonCtrl: PUT /api/persons/{personId}\n{updates}
+PersonCtrl -> PersonCtrl: Validate request
+PersonCtrl -> Handler: Handle UpdatePersonDetailsCommand
+
+Handler -> DbContext: Persons.Find(personId)
+DbContext -> DB: SELECT with TenantId filter
+DB --> DbContext: Person entity
+DbContext --> Handler: Person aggregate
+
+Handler -> Handler: Update person properties
+Handler -> Handler: Track changed fields
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: UPDATE Persons SET ...\nWHERE PersonId = @id
+DB --> DbContext: Success
+Handler -> Handler: Raise PersonDetailsUpdated\ndomain event
+
+Handler --> PersonCtrl: Success
+PersonCtrl --> PersonSvc: 200 OK
+PersonSvc --> UI: Update successful
+UI -> UI: Disable edit mode
+UI --> User: Show success message\nwith updated profile
+
+@enduml

@@ -1,0 +1,261 @@
+@startuml
+title Client Management Flow
+
+actor "Freelancer" as User
+participant "Clients List Page\n(Angular)" as UI
+participant "Client Service\n(Angular)" as Service
+participant "Clients Controller\n(/api/clients)" as Controller
+participant "Command Handler\n(MediatR)" as Handler
+participant "IFreelanceProjectManagerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as DB
+
+== View Clients List ==
+User -> UI: Navigate to\nClients page
+activate UI
+
+UI -> Service: getClients()
+activate Service
+
+Service -> Controller: GET /api/clients
+activate Controller
+
+Controller -> Handler: Handle(GetClientsQuery)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> DbContext: Clients.Where(c => c.TenantId == tenantId)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT * FROM Clients\nWHERE TenantId = @tenantId
+activate DB
+DB --> DbContext: Client records
+deactivate DB
+
+DbContext --> Handler: List<Client>
+deactivate DbContext
+
+Handler --> Controller: List<ClientDto>
+deactivate Handler
+
+Controller --> Service: 200 OK\nList<ClientDto>
+deactivate Controller
+
+Service --> UI: Client data
+deactivate Service
+
+UI --> User: Display clients list\nwith filters
+deactivate UI
+
+== Add New Client ==
+User -> UI: Click "Add Client"\nbutton
+activate UI
+
+UI -> UI: Open client\nform modal
+
+User -> UI: Fill in client details:\n- Name\n- Company\n- Email\n- Phone\n- Payment terms\n- Address
+
+UI -> UI: Validate form inputs
+
+User -> UI: Click "Save"
+
+UI -> Service: createClient(clientData)
+activate Service
+
+Service -> Controller: POST /api/clients\n{clientData}
+activate Controller
+
+Controller -> Handler: Handle(CreateClientCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> Handler: Create Client entity\nwith TenantId
+
+Handler -> DbContext: Clients.Add(client)
+activate DbContext
+
+DbContext -> DB: INSERT INTO Clients\n(ClientId, Name, Company,\nEmail, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+Handler -> DbContext: SaveChangesAsync()
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: ClientDto
+deactivate Handler
+
+Controller --> Service: 201 Created\nClientDto
+deactivate Controller
+
+Service --> UI: Client created
+deactivate Service
+
+UI -> UI: Close modal
+UI -> UI: Refresh clients list
+UI --> User: Show success message\n"Client added successfully"
+deactivate UI
+
+== Update Client ==
+User -> UI: Click edit icon\non client
+activate UI
+
+UI -> UI: Open client\nform modal with\nexisting data
+
+User -> UI: Modify client details
+
+User -> UI: Click "Save"
+
+UI -> Service: updateClient(clientId, clientData)
+activate Service
+
+Service -> Controller: PUT /api/clients/{clientId}\n{clientData}
+activate Controller
+
+Controller -> Handler: Handle(UpdateClientCommand)
+activate Handler
+
+Handler -> DbContext: Clients.FindAsync(clientId)
+activate DbContext
+
+DbContext -> DB: SELECT * FROM Clients\nWHERE ClientId = @clientId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Client record
+deactivate DB
+
+DbContext --> Handler: Client entity
+deactivate DbContext
+
+Handler -> Handler: Update client properties
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+
+DbContext -> DB: UPDATE Clients\nSET Name = @name,\nCompany = @company, ...\nWHERE ClientId = @clientId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: ClientDto
+deactivate Handler
+
+Controller --> Service: 200 OK\nClientDto
+deactivate Controller
+
+Service --> UI: Client updated
+deactivate Service
+
+UI -> UI: Close modal
+UI -> UI: Refresh clients list
+UI --> User: Show success message\n"Client updated successfully"
+deactivate UI
+
+== Change Client Status ==
+User -> UI: Toggle client\nstatus (Active/Inactive)
+activate UI
+
+UI -> Service: updateClientStatus(clientId, status)
+activate Service
+
+Service -> Controller: PATCH /api/clients/{clientId}/status\n{status}
+activate Controller
+
+Controller -> Handler: Handle(UpdateClientStatusCommand)
+activate Handler
+
+Handler -> DbContext: Clients.FindAsync(clientId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Clients\nWHERE ClientId = @clientId
+activate DB
+DB --> DbContext: Client record
+deactivate DB
+DbContext --> Handler: Client entity
+deactivate DbContext
+
+Handler -> Handler: client.UpdateStatus(status)
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Clients\nSET Status = @status\nWHERE ClientId = @clientId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: Success
+deactivate Handler
+
+Controller --> Service: 200 OK
+deactivate Controller
+
+Service --> UI: Status updated
+deactivate Service
+
+UI -> UI: Update UI to\nreflect new status
+UI --> User: Show updated status
+deactivate UI
+
+== Delete Client ==
+User -> UI: Click delete icon
+activate UI
+
+UI -> UI: Show confirmation\ndialog
+
+User -> UI: Confirm deletion
+
+UI -> Service: deleteClient(clientId)
+activate Service
+
+Service -> Controller: DELETE /api/clients/{clientId}
+activate Controller
+
+Controller -> Handler: Handle(DeleteClientCommand)
+activate Handler
+
+Handler -> DbContext: Clients.FindAsync(clientId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Clients\nWHERE ClientId = @clientId
+activate DB
+DB --> DbContext: Client record
+deactivate DB
+DbContext --> Handler: Client entity
+deactivate DbContext
+
+Handler -> DbContext: Clients.Remove(client)
+activate DbContext
+DbContext -> DB: DELETE FROM Clients\nWHERE ClientId = @clientId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+Handler -> DbContext: SaveChangesAsync()
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> Controller: Success
+deactivate Handler
+
+Controller --> Service: 204 No Content
+deactivate Controller
+
+Service --> UI: Client deleted
+deactivate Service
+
+UI -> UI: Remove client from list
+UI --> User: Show success message\n"Client deleted successfully"
+deactivate UI
+
+@enduml

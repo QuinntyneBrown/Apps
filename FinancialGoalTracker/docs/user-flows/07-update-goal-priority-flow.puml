@@ -1,0 +1,137 @@
+@startuml Update Goal Priority Flow
+title Update Goal Priority User Flow
+
+actor User
+participant "Goals Dashboard" as Dashboard
+participant "Goal Detail Page" as GoalDetail
+participant "Priority Selector\nComponent" as PrioritySelector
+participant "GoalsService" as GoalsService
+participant "API" as API
+participant "GoalController" as Controller
+participant "UpdatePriorityHandler" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+== View Current Priority ==
+
+User -> Dashboard: View goals dashboard
+activate Dashboard
+Dashboard -> User: Display goal cards\nwith priority indicators (1-5 stars)
+User -> Dashboard: Click on goal card
+Dashboard -> GoalDetail: Navigate to goal detail
+deactivate Dashboard
+activate GoalDetail
+GoalDetail -> User: Display goal details\nwith current priority (stars)
+deactivate GoalDetail
+
+== Update Priority from Goal Card ==
+
+User -> Dashboard: Hover over goal card
+activate Dashboard
+Dashboard -> Dashboard: Show quick edit controls
+User -> Dashboard: Click priority stars
+Dashboard -> PrioritySelector: Show priority selector
+activate PrioritySelector
+
+PrioritySelector -> User: Display priority options:\n★☆☆☆☆ (1 - Low)\n★★☆☆☆ (2 - Below Average)\n★★★☆☆ (3 - Medium)\n★★★★☆ (4 - High)\n★★★★★ (5 - Critical)
+
+User -> PrioritySelector: Select new priority (e.g., 5 stars)
+
+PrioritySelector -> GoalsService: updatePriority(goalId, priority)
+activate GoalsService
+GoalsService -> API: PUT /api/goals/{id}/priority\n{ priority: 5 }
+activate API
+API -> Controller: PUT priority
+activate Controller
+Controller -> Handler: Send UpdatePriorityCommand
+activate Handler
+Handler -> Context: Load goal
+activate Context
+Context -> DB: SELECT * FROM Goals\nWHERE GoalId = {id}\nAND TenantId = {currentTenant}
+activate DB
+DB --> Context: Goal entity
+deactivate DB
+Context --> Handler: Goal
+deactivate Context
+
+Handler -> Handler: Validate priority (1-5)
+Handler -> Handler: Update goal.Priority
+Handler -> Context: Update goal
+activate Context
+Context -> DB: UPDATE Goals\nSET Priority = {priority}
+activate DB
+DB --> Context: Success
+deactivate DB
+Context -> DB: Emit PriorityChanged event
+DB --> Context: Event saved
+Context --> Handler: Goal updated
+deactivate Context
+Handler --> Controller: GoalDto
+deactivate Handler
+Controller --> API: 200 OK\n{ updated goal }
+deactivate Controller
+API --> GoalsService: GoalDto
+deactivate API
+GoalsService --> PrioritySelector: Priority updated
+deactivate GoalsService
+PrioritySelector -> Dashboard: Close selector
+deactivate PrioritySelector
+Dashboard -> Dashboard: Update goal card\nwith new priority stars
+Dashboard -> User: Show updated priority\nvisually on card
+deactivate Dashboard
+
+== Update Priority from Goal Detail Page ==
+
+User -> GoalDetail: Navigate to goal detail
+activate GoalDetail
+GoalDetail -> User: Display goal with\ncurrent priority selector
+User -> GoalDetail: Click priority selector
+activate PrioritySelector
+GoalDetail -> PrioritySelector: Show priority options
+PrioritySelector -> User: Display 1-5 star options\nwith descriptions
+
+User -> PrioritySelector: Select new priority
+
+PrioritySelector -> GoalsService: updatePriority(goalId, priority)
+activate GoalsService
+GoalsService -> API: PUT /api/goals/{id}/priority
+activate API
+API -> Controller: PUT priority
+activate Controller
+Controller -> Handler: Send UpdatePriorityCommand
+activate Handler
+Handler -> Context: Load and update goal
+activate Context
+Context -> DB: UPDATE Goals SET Priority
+activate DB
+DB --> Context: Success
+deactivate DB
+Context -> DB: Emit PriorityChanged event
+DB --> Context: Event saved
+Context --> Handler: Updated
+deactivate Context
+Handler --> Controller: GoalDto
+deactivate Handler
+Controller --> API: 200 OK
+deactivate Controller
+API --> GoalsService: GoalDto
+deactivate API
+GoalsService --> PrioritySelector: Priority updated
+deactivate GoalsService
+PrioritySelector -> GoalDetail: Close selector
+deactivate PrioritySelector
+GoalDetail -> GoalDetail: Refresh goal details
+GoalDetail -> User: Show success message\n"Priority updated"\nwith new star rating
+deactivate GoalDetail
+
+== Sort by Priority ==
+
+User -> Dashboard: Navigate to dashboard
+activate Dashboard
+Dashboard -> User: Display goals
+User -> Dashboard: Click "Sort by Priority"
+Dashboard -> Dashboard: Re-order goals:\n- Critical (5 stars) at top\n- High (4 stars)\n- Medium (3 stars)\n- Below Average (2 stars)\n- Low (1 star) at bottom
+Dashboard -> User: Display re-ordered goals\nwith visual priority indicators
+deactivate Dashboard
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml Activate Focus Mode Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Activate Focus Mode Flow
+
+actor User
+participant "Focus Mode\nControl Panel" as UI
+participant "Focus Mode\nStore" as Store
+participant "API" as API
+participant "External\nServices" as External
+database Database
+
+User -> UI: Click "Activate Focus Mode"
+activate UI
+UI --> User: Show configuration panel
+
+User -> UI: Select mode level\n(Deep/Moderate/Light)
+UI -> UI: Load default blocks\nfor selected level
+UI --> User: Defaults populated
+
+User -> UI: Add/remove specific\nwebsites and apps
+UI --> User: Block list updated
+
+User -> UI: Enable auto-reply\nand set message
+UI --> User: Auto-reply configured
+
+User -> UI: Click "Activate"
+UI -> Store: activateFocusMode(config)
+activate Store
+Store -> API: POST /api/focus-mode/activate
+activate API
+API -> Database: INSERT focus_mode_session
+activate Database
+Database --> API: Focus mode session created
+deactivate Database
+
+API -> External: Update integrations:\n- Set Slack status "In Focus"\n- Set Teams status "Do Not Disturb"\n- Block calendar events
+activate External
+External --> API: Status updated
+deactivate External
+
+API -> API: Apply blocking rules:\n- Block websites (browser extension)\n- Block applications (OS level)
+API --> Store: Focus mode activated
+deactivate API
+
+Store --> UI: Activation successful
+deactivate Store
+
+UI -> UI: Display status:\n- Active mode badge\n- Time remaining countdown\n- List of active blocks\n- Deactivate button
+UI --> User: Focus mode active
+deactivate UI
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml remove-item
+title Remove Item Flow
+
+actor User
+participant "Item Details Page" as DetailsPage
+participant "Remove Item Modal" as Modal
+participant "Item Service" as ItemService
+participant "API Controller\n(/api/items)" as API
+participant "RemoveItem Handler" as Handler
+database "Items Table" as ItemsDB
+
+User -> DetailsPage: View item details
+DetailsPage --> User: Display item information
+
+User -> DetailsPage: Click "Delete/Remove" button
+DetailsPage -> Modal: Show removal confirmation modal
+
+activate Modal
+Modal --> User: Display removal form:\n- Removal reason\n- Disposal method\n  (Disposed/Sold/Donated/Lost/Stolen)\n- Confirmation message
+
+User -> Modal: Select disposal method\n(e.g., "Sold", "Donated")
+User -> Modal: Enter removal reason\n(optional)
+User -> Modal: Click "Confirm Removal"
+
+Modal -> Modal: Validate form\n(disposal method required)
+
+alt Validation passes
+    Modal -> ItemService: removeItem(itemId, reason, disposalMethod)
+    ItemService -> API: DELETE /api/items/{itemId}\nAuthorization: Bearer {token}\n{reason, disposalMethod}
+
+    API -> Handler: Handle RemoveItemCommand
+    Handler -> ItemsDB: Query item by ItemId and TenantId
+    ItemsDB --> Handler: Item record
+
+    alt Item exists and user owns it
+        Handler -> Handler: Calculate ownership duration\n(today - purchaseDate)
+        Handler -> Handler: Record final value
+        Handler -> Handler: Update item status\n(e.g., Status = "Sold")
+        Handler -> Handler: Set removal metadata:\n- RemovalDate\n- RemovalReason\n- DisposalMethod
+
+        Handler -> ItemsDB: UPDATE Item\n(soft delete or status change)
+        ItemsDB --> Handler: Item updated
+
+        Handler -> Handler: Raise ItemRemoved event:\n- ItemId, UserId\n- ItemName, FinalValue\n- RemovalDate, RemovalReason\n- DisposalMethod\n- OwnershipDuration
+
+        Handler --> API: Success (204 No Content)
+        API --> ItemService: Item removed
+        ItemService --> Modal: Success
+
+        Modal -> Modal: Close modal
+        Modal -> DetailsPage: Navigate to dashboard
+        DetailsPage --> User: Show success notification:\n"Item removed from inventory"
+
+    else Item not found or unauthorized
+        Handler --> API: 404 Not Found\nor 403 Forbidden
+        API --> ItemService: Error
+        ItemService --> Modal: Removal failed
+        Modal --> User: Show error message
+    end
+
+else Validation fails
+    Modal --> User: Show validation error:\n"Disposal method required"
+end
+
+deactivate Modal
+
+@enduml

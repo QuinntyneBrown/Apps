@@ -1,0 +1,56 @@
+@startuml complete-bucket-list-item
+title Complete Bucket List Item Flow
+
+actor User
+participant "Item Detail Panel" as DetailPanel
+participant "Completion Modal" as Modal
+participant "Bucket List Service" as Service
+participant "API Controller" as API
+participant "CompleteItemCommand Handler" as Handler
+participant "IBucketListManagerContext" as DB
+participant "Celebration Component" as Celebration
+
+User -> DetailPanel: Check/Select item
+DetailPanel -> Modal: Open completion modal
+Modal --> User: Display completion form
+
+User -> Modal: Enter completion details
+User -> Modal: Add photos/notes
+User -> Modal: Rate satisfaction (1-5)
+User -> Modal: Click "Mark Complete"
+
+Modal -> Modal: Validate completion data
+Modal -> Service: completeItem(itemId, completionData)
+Service -> Service: Prepare request with auth token
+Service -> API: PUT /api/bucket-list-items/{id}/complete
+note right: Authorization: Bearer {token}
+
+API -> Handler: CompleteBucketListItemCommand
+Handler -> DB: Query item by Id (filtered by TenantId)
+DB --> Handler: BucketListItem entity
+Handler -> Handler: Validate item belongs to user's tenant
+Handler -> Handler: Update item status to Completed
+Handler -> Handler: Set completion date
+Handler -> Handler: Store satisfaction rating
+Handler -> Handler: Store completion notes
+Handler -> DB: Update(bucketListItem)
+Handler -> DB: SaveChangesAsync()
+DB --> Handler: Success
+Handler --> API: ItemCompletedResponse
+API --> Service: 200 OK + updated item
+Service --> Modal: Completion successful
+Modal -> Modal: Close modal
+Modal -> Celebration: Trigger celebration
+Celebration --> User: Show confetti animation
+Celebration --> User: Display success message
+Celebration -> Celebration: Play celebration sound (optional)
+Celebration -> DetailPanel: Trigger data refresh
+DetailPanel -> Service: getItem(itemId)
+Service -> API: GET /api/bucket-list-items/{id}
+API -> DB: Query completed item
+DB --> API: Item with completion data
+API --> Service: Item DTO
+Service --> DetailPanel: Updated item data
+DetailPanel --> User: Display completed item with badge
+
+@enduml

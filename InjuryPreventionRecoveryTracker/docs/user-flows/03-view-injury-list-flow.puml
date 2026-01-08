@@ -1,0 +1,68 @@
+@startuml View Injury List Flow
+title View Injury List Flow
+
+actor User
+participant "Injury List Page" as UI
+participant "Injury Service" as Service
+participant "API Controller" as API
+participant "Query Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "DbContext" as DB
+
+User -> UI: Navigate to Injuries page
+UI -> UI: Component initialization
+
+UI -> Service: Observable: injuries$\n= getInjuries()
+Service -> API: GET /api/injuries?\npage=1&pageSize=10
+
+API -> Handler: Handle GetInjuriesQuery
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId (from JWT)
+
+Handler -> DB: Query Injuries\n(auto-filtered by TenantId)\nwith pagination
+DB --> Handler: List<Injury>
+
+Handler -> Handler: Map to InjuryDto[]
+Handler --> API: InjuryDto[] with pagination info
+
+API --> Service: Success response\n(items, total, page, pageSize)
+Service --> UI: Observable emits data
+
+UI -> UI: async pipe subscribes\nto injuries$
+UI --> User: Display injury list
+
+User -> UI: Apply filters\n(by status, severity, date)
+UI -> Service: getInjuries(filters)
+Service -> API: GET /api/injuries?\nfilters applied
+API -> Handler: Handle filtered query
+Handler -> DB: Query with filters\n(tenant-scoped)
+DB --> Handler: Filtered results
+Handler --> API: Filtered InjuryDto[]
+API --> Service: Response
+Service --> UI: Update observable
+UI --> User: Display filtered list
+
+User -> UI: Click on injury
+UI -> UI: Navigate to injury detail
+
+note right of DB
+  Query filters applied:
+  - TenantId (automatic)
+  - Status filter
+  - Severity filter
+  - Date range
+  - Pagination
+  - Search text
+end note
+
+note left of UI
+  UI Features:
+  - Paginated list
+  - Search bar
+  - Filter dropdowns
+  - Sort options
+  - Status badges
+  - Action buttons
+end note
+
+@enduml

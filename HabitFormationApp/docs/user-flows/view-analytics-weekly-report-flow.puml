@@ -1,0 +1,115 @@
+@startuml view-analytics-weekly-report-flow
+title View Analytics and Weekly Report User Flow
+
+actor User
+participant "Navigation" as Nav
+participant "Analytics Dashboard" as Dashboard
+participant "AnalyticsService" as Service
+participant "API Gateway" as API
+participant "Analytics Controller" as Controller
+participant "Analytics Repository" as AnalyticsRepo
+participant "Completion Repository" as CompletionRepo
+participant "Streak Repository" as StreakRepo
+database "Database" as DB
+participant "Export Service" as ExportService
+
+User -> Nav: Navigate to Analytics page
+activate Nav
+Nav -> Dashboard: Load analytics dashboard
+activate Dashboard
+Dashboard --> User: Show loading skeleton
+
+Dashboard -> Service: fetchAnalyticsDashboard(userId, dateRange)
+activate Service
+Service -> API: GET /api/analytics/dashboard?userId={userId}&period=week
+activate API
+API -> Controller: getDashboard(userId, period)
+activate Controller
+
+Controller -> AnalyticsRepo: getWeeklyReport(userId)
+activate AnalyticsRepo
+AnalyticsRepo -> DB: SELECT completion data,\nstreak data, habit data\nFOR last 7 days
+activate DB
+DB --> AnalyticsRepo: Aggregated data
+deactivate DB
+
+AnalyticsRepo -> AnalyticsRepo: Calculate metrics:\n- Completion rate\n- Active streaks count\n- Most productive day\n- Best performing category
+AnalyticsRepo --> Controller: Weekly report data
+deactivate AnalyticsRepo
+
+Controller -> AnalyticsRepo: getTrends(userId, period)
+activate AnalyticsRepo
+AnalyticsRepo -> DB: SELECT completions grouped by date
+activate DB
+DB --> AnalyticsRepo: Time series data
+deactivate DB
+AnalyticsRepo --> Controller: Trends data
+deactivate AnalyticsRepo
+
+Controller -> AnalyticsRepo: getPatterns(userId)
+activate AnalyticsRepo
+AnalyticsRepo -> DB: Analyze completion patterns\n(time of day, day of week)
+activate DB
+DB --> AnalyticsRepo: Pattern data
+deactivate DB
+AnalyticsRepo --> Controller: Identified patterns
+deactivate AnalyticsRepo
+
+Controller --> API: 200 OK (Dashboard data)
+deactivate Controller
+API --> Service: Analytics data
+deactivate API
+Service --> Dashboard: Dashboard data ready
+deactivate Service
+
+Dashboard -> Dashboard: Render components:\n- Overview cards\n- Trends chart\n- Weekly report card\n- Insights carousel
+
+Dashboard --> User: Display analytics dashboard\nwith all visualizations
+deactivate Nav
+
+User -> Dashboard: Click on weekly report card
+activate Dashboard
+Dashboard -> Dashboard: Expand weekly report view
+Dashboard --> User: Show detailed report:\n- Key metrics\n- Most productive day: Wednesday\n- Best category: Fitness\n- Completion chart\n- Recommended actions
+
+User -> Dashboard: Select different time period\n(This month)
+Dashboard -> Service: fetchAnalyticsDashboard(userId, 'month')
+activate Service
+Service -> API: GET /api/analytics/dashboard?userId={userId}&period=month
+activate API
+API -> Controller: getDashboard(userId, 'month')
+activate Controller
+
+Controller -> AnalyticsRepo: getMonthlyReport(userId)
+activate AnalyticsRepo
+AnalyticsRepo -> DB: SELECT completion data\nFOR last 30 days
+activate DB
+DB --> AnalyticsRepo: Monthly data
+deactivate DB
+AnalyticsRepo --> Controller: Monthly report
+deactivate AnalyticsRepo
+
+Controller --> API: 200 OK (Monthly data)
+deactivate Controller
+API --> Service: Monthly analytics
+deactivate API
+Service --> Dashboard: Update dashboard
+deactivate Service
+
+Dashboard --> User: Display updated analytics\nfor monthly period
+
+User -> Dashboard: Click "Export Report" button
+Dashboard -> ExportService: exportReport(reportData, format='PDF')
+activate ExportService
+ExportService -> ExportService: Generate PDF with:\n- Charts as images\n- Metrics tables\n- Insights summary
+ExportService --> Dashboard: PDF file generated
+deactivate ExportService
+Dashboard --> User: Download PDF report
+
+User -> Dashboard: Click "Share" button
+Dashboard -> Dashboard: Open share dialog with options:\n- Social media\n- Email\n- Copy link
+Dashboard --> User: Display share options
+
+deactivate Dashboard
+
+@enduml

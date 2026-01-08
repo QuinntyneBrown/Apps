@@ -1,0 +1,145 @@
+@startuml itinerary-management
+title Itinerary Management Flow - Add Activity to Trip Schedule
+
+actor User
+participant "Trip Detail Page" as UI
+participant "Itinerary Component" as ItineraryUI
+participant "Add Activity Modal" as Modal
+participant "Activity Service" as ActivitySvc
+participant "Activities Controller" as ActivityCtrl
+participant "CreateActivity Command" as CreateCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to trip details
+activate UI
+
+UI -> ItineraryUI: Activate Itinerary tab
+activate ItineraryUI
+
+ItineraryUI -> ActivitySvc: getActivitiesByTrip(tripId)
+activate ActivitySvc
+
+ActivitySvc -> ActivityCtrl: GET /api/trips/{tripId}/activities
+activate ActivityCtrl
+
+ActivityCtrl -> DbContext: Activities.Where(a => a.TripId == tripId)\n.OrderBy(a => a.StartDateTime)\n(Filtered by TenantId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Activities\nWHERE TripId = ? AND TenantId = ?\nORDER BY StartDateTime
+activate DB
+DB --> DbContext: Activity records
+deactivate DB
+DbContext --> ActivityCtrl: List<Activity>
+deactivate DbContext
+
+ActivityCtrl --> ActivitySvc: 200 OK\n(List<ActivityDto>)
+deactivate ActivityCtrl
+
+ActivitySvc --> ItineraryUI: Activities data
+deactivate ActivitySvc
+
+ItineraryUI -> ItineraryUI: Group activities by day\nDisplay timeline view
+
+ItineraryUI --> User: Display daily itinerary\nwith activities
+
+User -> ItineraryUI: Click "Add Activity"
+
+ItineraryUI -> Modal: Open Add Activity Modal
+activate Modal
+
+Modal --> User: Display activity form
+
+User -> Modal: Enter activity details\n(name, type, location,\nstart time, end time,\ndescription, notes)
+
+Modal -> Modal: Validate form inputs\n(check time conflicts)
+
+User -> Modal: Click "Save"
+
+Modal -> ActivitySvc: createActivity(activityData)
+activate ActivitySvc
+
+ActivitySvc -> ActivityCtrl: POST /api/trips/{tripId}/activities
+activate ActivityCtrl
+
+ActivityCtrl -> CreateCmd: Handle CreateActivityCommand
+activate CreateCmd
+
+CreateCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> CreateCmd: TenantId
+deactivate TenantCtx
+
+CreateCmd -> CreateCmd: Validate activity times\n(no overlapping activities)
+
+CreateCmd -> DbContext: Activities.Where(a => a.TripId == tripId\n&& a.StartDateTime < endTime\n&& a.EndDateTime > startTime)
+activate DbContext
+DbContext -> DB: SELECT * FROM Activities\nWHERE TripId = ? AND TenantId = ?\nAND StartDateTime < ? AND EndDateTime > ?
+activate DB
+DB --> DbContext: Conflicting activities
+deactivate DB
+DbContext --> CreateCmd: List<Activity>
+deactivate DbContext
+
+alt No time conflicts
+    CreateCmd -> CreateCmd: Create Activity entity\n(with TenantId and TripId)
+
+    CreateCmd -> DbContext: Activities.Add(activity)
+    activate DbContext
+    DbContext -> DB: INSERT INTO Activities\n(ActivityId, TripId, Name, Type,\nLocation, StartDateTime, EndDateTime,\nTenantId, ...)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+
+    DbContext -> DbContext: SaveChanges()
+    DbContext --> CreateCmd: Activity saved
+    deactivate DbContext
+
+    CreateCmd --> ActivityCtrl: CreateActivityResponse
+    deactivate CreateCmd
+
+    ActivityCtrl --> ActivitySvc: 201 Created\n(ActivityDto)
+    deactivate ActivityCtrl
+
+    ActivitySvc --> Modal: Success
+    deactivate ActivitySvc
+
+    Modal -> Modal: Close modal
+
+    Modal --> ItineraryUI: Activity created
+    deactivate Modal
+
+    ItineraryUI -> ActivitySvc: getActivitiesByTrip(tripId)
+    activate ActivitySvc
+
+    ActivitySvc -> ActivityCtrl: GET /api/trips/{tripId}/activities
+    activate ActivityCtrl
+
+    ActivityCtrl -> DbContext: Activities.Where(a => a.TripId == tripId)\n.OrderBy(a => a.StartDateTime)
+    activate DbContext
+    DbContext -> DB: SELECT * FROM Activities\nWHERE TripId = ? AND TenantId = ?\nORDER BY StartDateTime
+    activate DB
+    DB --> DbContext: Updated activity records
+    deactivate DB
+    DbContext --> ActivityCtrl: List<Activity>
+    deactivate DbContext
+
+    ActivityCtrl --> ActivitySvc: 200 OK\n(List<ActivityDto>)
+    deactivate ActivityCtrl
+
+    ActivitySvc --> ItineraryUI: Updated activities
+    deactivate ActivitySvc
+
+    ItineraryUI -> ItineraryUI: Regroup activities by day\nUpdate timeline
+
+    ItineraryUI --> User: Display updated itinerary
+    deactivate ItineraryUI
+    deactivate UI
+else Time conflict detected
+    CreateCmd --> ActivityCtrl: ValidationException\n(Time conflict error)
+    ActivityCtrl --> ActivitySvc: 400 Bad Request\n(Conflict details)
+    ActivitySvc --> Modal: Validation error
+    Modal --> User: Display conflict message\n(suggest alternative times)
+end
+
+@enduml

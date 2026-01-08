@@ -1,0 +1,37 @@
+@startuml user-login
+title User Login Flow
+
+actor User
+participant "Login Page" as LoginUI
+participant "Auth Service" as AuthService
+participant "API Controller" as API
+participant "Auth Handler" as Handler
+participant "IBucketListManagerContext" as DB
+participant "JWT Service" as JWT
+
+User -> LoginUI: Enter username and password
+LoginUI -> LoginUI: Validate form inputs
+LoginUI -> AuthService: login(credentials)
+AuthService -> API: POST /api/auth/login
+API -> Handler: LoginCommand
+Handler -> DB: Query User by username
+DB --> Handler: User entity with hashed password
+Handler -> Handler: Validate password with PBKDF2
+alt Valid credentials
+    Handler -> JWT: Generate JWT token
+    JWT -> JWT: Create claims (userId, roles, etc.)
+    JWT --> Handler: JWT token
+    Handler --> API: LoginResponse with token
+    API --> AuthService: 200 OK + token + user info
+    AuthService -> AuthService: Store token in localStorage
+    AuthService --> LoginUI: Login success
+    LoginUI -> LoginUI: Redirect to dashboard
+    LoginUI --> User: Show dashboard
+else Invalid credentials
+    Handler --> API: 401 Unauthorized
+    API --> AuthService: Error response
+    AuthService --> LoginUI: Login failed
+    LoginUI --> User: Display error message
+end
+
+@enduml

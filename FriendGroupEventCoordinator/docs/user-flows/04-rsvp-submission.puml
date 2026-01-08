@@ -1,0 +1,135 @@
+@startuml
+title RSVP Submission Flow
+skinparam sequenceMessageAlign center
+
+actor "Event Invitee" as user
+participant "Event Detail Page\n(Angular)" as eventDetail
+participant "RSVP Form\n(Angular Component)" as rsvpForm
+participant "RSVP Service\n(Angular)" as rsvpService
+participant "API Gateway\n/api/rsvps" as api
+participant "SubmitRSVP Handler\n(MediatR)" as handler
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nRSVPs Table" as db
+
+== View Event Details ==
+user -> eventDetail: Navigate to event detail page
+activate eventDetail
+eventDetail -> rsvpService: getRSVP(userId, eventId)
+activate rsvpService
+rsvpService -> api: GET /api/rsvps?userId={id}&eventId={id}
+activate api
+api --> rsvpService: Existing RSVP or null
+deactivate api
+rsvpService --> eventDetail: RSVP data
+deactivate rsvpService
+eventDetail -> rsvpForm: Display RSVP form
+activate rsvpForm
+rsvpForm --> user: Show form with:\n- Response (Yes/No/Maybe)\n- Plus Ones count\n- Dietary Restrictions
+deactivate rsvpForm
+deactivate eventDetail
+
+== Fill RSVP Details ==
+user -> rsvpForm: Select response (Yes/No/Maybe)
+activate rsvpForm
+rsvpForm -> rsvpForm: Update form state
+
+alt Response is "Yes"
+    user -> rsvpForm: Enter number of plus ones
+    rsvpForm -> rsvpForm: Enable plus ones field
+    user -> rsvpForm: Enter dietary restrictions\n(optional text area)
+    rsvpForm -> rsvpForm: Enable dietary restrictions
+else Response is "No" or "Maybe"
+    rsvpForm -> rsvpForm: Disable plus ones\nand dietary restrictions
+end
+
+== Submit RSVP ==
+user -> rsvpForm: Click "Submit RSVP"
+rsvpForm -> rsvpForm: Validate form
+rsvpForm -> rsvpService: submitRSVP(rsvpData)
+activate rsvpService
+rsvpService -> api: POST /api/rsvps\n{userId, eventId, response,\nplusOnes, dietaryRestrictions}
+activate api
+api -> api: Authenticate user\nfrom JWT token
+api -> handler: Handle SubmitRSVPCommand
+activate handler
+
+handler -> dbContext: RSVPs.FirstOrDefault(\nr => r.UserId && r.EventId)
+activate dbContext
+dbContext -> db: SELECT * FROM RSVPs\nWHERE UserId = @userId\nAND EventId = @eventId
+activate db
+
+alt Existing RSVP Found
+    db --> dbContext: Existing RSVP record
+    deactivate db
+    dbContext --> handler: Existing RSVP entity
+    deactivate dbContext
+
+    handler -> handler: Update RSVP:\n- Response\n- PlusOnes\n- DietaryRestrictions\n- UpdatedAt timestamp
+
+    handler -> dbContext: SaveChanges()
+    activate dbContext
+    dbContext -> db: UPDATE RSVPs\nSET Response = @response,\nPlusOnes = @plusOnes,\nDietaryRestrictions = @dietary,\nUpdatedAt = @now
+    activate db
+    db --> dbContext: RSVP updated
+    deactivate db
+    dbContext --> handler: Success
+    deactivate dbContext
+
+    handler -> handler: Raise RSVPChanged\ndomain event
+
+else No Existing RSVP
+    db --> dbContext: null
+    deactivate db
+    dbContext --> handler: null
+    deactivate dbContext
+
+    handler -> handler: Create new RSVP entity\nwith provided details
+
+    handler -> dbContext: RSVPs.Add(rsvp)
+    activate dbContext
+    dbContext -> db: INSERT INTO RSVPs\n(RSVPId, UserId, EventId,\nResponse, PlusOnes,\nDietaryRestrictions, CreatedAt)
+    activate db
+    db --> dbContext: RSVP created
+    deactivate db
+    dbContext --> handler: Success
+    deactivate dbContext
+
+    handler -> handler: Raise RSVPSubmitted\ndomain event
+end
+
+handler -> dbContext: RSVPs.Where(r => r.EventId)\n.ToList()
+activate dbContext
+dbContext -> db: SELECT * FROM RSVPs\nWHERE EventId = @eventId
+activate db
+db --> dbContext: All event RSVPs
+deactivate db
+dbContext --> handler: RSVP list
+deactivate dbContext
+
+handler -> handler: Calculate headcount:\n- Yes responses\n- Total plus ones\n- Maybe responses
+
+handler --> api: SubmitRSVPResponseDto\n{success, headcount}
+deactivate handler
+
+api --> rsvpService: 200 OK\n{success, headcount}
+deactivate api
+
+rsvpService --> rsvpForm: RSVP submitted successfully
+deactivate rsvpService
+
+rsvpForm -> rsvpForm: Show success message
+rsvpForm --> eventDetail: Refresh attendee list
+activate eventDetail
+eventDetail -> rsvpService: getAttendees(eventId)
+activate rsvpService
+rsvpService -> api: GET /api/events/{id}/attendees
+activate api
+api --> rsvpService: Attendee list with RSVPs
+deactivate api
+rsvpService --> eventDetail: Attendee data
+deactivate rsvpService
+eventDetail --> user: Display updated attendee list\nand headcount
+deactivate eventDetail
+deactivate rsvpForm
+
+@enduml

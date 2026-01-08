@@ -1,0 +1,116 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "Role Management\nPage (Angular)" as UI
+participant "Role Service\n(Angular)" as RoleService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Roles Controller" as Controller
+participant "Update Role\nCommand Handler" as Handler
+participant "Role Repository" as RoleRepo
+database "Database" as DB
+
+title Update Role Flow
+
+Admin -> UI: Click "Edit"\non role
+activate UI
+
+UI -> RoleService: getRole(roleId)
+activate RoleService
+
+RoleService -> API: GET /api/roles/{roleId}
+activate API
+
+API -> Controller: GetRole request
+activate Controller
+
+Controller -> RoleRepo: FindById(roleId)
+activate RoleRepo
+
+RoleRepo -> DB: SELECT * FROM Roles\nWHERE RoleId = ?
+activate DB
+DB --> RoleRepo: Role record
+deactivate DB
+
+RoleRepo --> Controller: Role entity
+deactivate RoleRepo
+
+Controller --> API: 200 OK\n{roleId, name}
+deactivate Controller
+
+API --> RoleService: Role data
+deactivate API
+
+RoleService --> UI: Role loaded
+deactivate RoleService
+
+UI -> UI: Show edit dialog\nwith current name
+
+UI --> Admin: Display edit form
+
+Admin -> UI: Modify role name
+Admin -> UI: Click "Update"
+
+UI -> UI: Validate form\n(non-empty name)
+
+UI -> RoleService: updateRole(roleId, newName)
+activate RoleService
+
+RoleService -> Interceptor: PUT /api/roles/{roleId}\n{name: newName}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: PUT /api/roles/{roleId}\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: UpdateRole request
+activate Controller
+
+Controller -> Handler: Handle UpdateRoleCommand
+activate Handler
+
+Handler -> Handler: Validate role name\nuniqueness (if changed)
+
+alt Role Name Already Taken
+    Handler --> Controller: Validation error
+    Controller --> API: 400 Bad Request\n{error: "Role name already exists"}
+    API --> RoleService: Error response
+    RoleService --> UI: Update failed
+    UI --> Admin: Display error\nmessage
+else Valid Update
+    Handler -> RoleRepo: Update(role)
+    activate RoleRepo
+
+    RoleRepo -> DB: UPDATE Roles\nSET Name = ?\nWHERE RoleId = ?
+    activate DB
+    DB --> RoleRepo: Success
+    deactivate DB
+
+    RoleRepo --> Handler: Role updated
+    deactivate RoleRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 200 OK\n{roleId, name}
+    deactivate Controller
+
+    API --> RoleService: Success response
+    deactivate API
+
+    RoleService --> UI: Role updated
+    deactivate RoleService
+
+    UI -> UI: Refresh role list
+
+    UI --> Admin: Show success message\nand close dialog
+    deactivate UI
+end
+
+@enduml

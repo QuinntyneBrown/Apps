@@ -1,0 +1,112 @@
+@startuml
+title Critical Alert - Receive and Acknowledge Flow
+
+actor User as user
+participant "Reading Form\n(UI)" as form
+participant "Dashboard\n(UI)" as dashboard
+participant "Alert Banner\n(UI Component)" as banner
+participant "Alert Detail Modal\n(UI Component)" as modal
+participant "WebSocket Client" as ws
+participant "API Gateway" as api
+participant "Alert Service\n(Backend)" as alertService
+participant "Notification Service" as notificationService
+database "Alerts Database" as db
+
+user -> form : Records high BP reading\n185/125 mmHg
+activate form
+form -> api : POST /api/readings\n{systolic: 185, diastolic: 125}
+deactivate form
+
+activate api
+api -> alertService : Evaluate reading for alerts
+deactivate api
+
+activate alertService
+alertService -> alertService : Check against thresholds:\nSystolic >= 180 OR Diastolic >= 120\n= CRISIS LEVEL
+alertService -> alertService : Create critical alert:\nSeverity: Critical\nType: Hypertensive Crisis
+
+alertService -> db : Save alert record
+activate db
+db --> alertService : Return alert ID
+deactivate db
+
+alertService -> notificationService : Trigger notifications
+deactivate alertService
+
+activate notificationService
+notificationService -> notificationService : Generate push notification:\n"URGENT: Hypertensive Crisis Detected"
+
+notificationService -> user : Send push to mobile device\n"Your BP 185/125 requires\nimmediate medical attention"
+user -> user : Notification appears\nwith urgent sound
+
+notificationService -> ws : Push alert via WebSocket
+ws -> dashboard : Real-time alert update
+deactivate notificationService
+
+activate dashboard
+dashboard -> banner : Display critical alert banner
+deactivate dashboard
+
+activate banner
+banner -> user : Show red banner at top:\n"URGENT: Hypertensive Crisis\nBP: 185/125 mmHg\n[View Details] [Dismiss]"
+deactivate banner
+
+user -> banner : Click "View Details"
+activate banner
+banner -> modal : Open alert detail modal
+deactivate banner
+
+activate modal
+modal -> user : Display comprehensive alert info:\n- Alert severity (red, urgent icon)\n- Reading: 185/125 mmHg\n- Category: Hypertensive Crisis\n- Explanation of severity\n- Recommended actions:\n  • Seek immediate medical attention\n  • Call emergency services if symptoms\n  • Do not drive yourself\n  • Monitor symptoms closely
+deactivate modal
+
+user -> modal : Read recommendations
+user -> modal : Click "Acknowledge Alert"
+
+activate modal
+modal -> api : PUT /api/alerts/{id}/acknowledge\nAuthorization: Bearer {token}
+deactivate modal
+
+activate api
+api -> alertService : Process acknowledgment
+deactivate api
+
+activate alertService
+alertService -> db : Update alert status:\nacknowledgedAt = now\nstatus = Acknowledged
+activate db
+db --> alertService : Confirm update
+deactivate db
+
+alertService -> api : 200 OK {alert}
+activate api
+api -> modal : Return updated alert
+deactivate api
+deactivate alertService
+
+activate modal
+modal -> user : Show confirmation:\n"Alert acknowledged"
+modal -> modal : Update UI (checkmark)
+deactivate modal
+
+opt Contact Doctor
+    user -> modal : Click "Contact Doctor"
+    activate modal
+    modal -> user : Open emergency contacts:\n- Emergency services: 911\n- Doctor: (555) 123-4567\n- Emergency contact list
+    deactivate modal
+end
+
+user -> modal : Close modal
+activate modal
+modal -> banner : Update banner status
+deactivate modal
+
+activate banner
+banner -> banner : Move to acknowledged section\n(greyed out, collapsed)
+banner -> dashboard : Refresh alert count
+deactivate banner
+
+activate dashboard
+dashboard -> user : Update notification badge:\n(3 → 2 unacknowledged alerts)
+deactivate dashboard
+
+@enduml

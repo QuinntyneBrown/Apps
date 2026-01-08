@@ -1,0 +1,99 @@
+@startuml Update Reading Progress Flow
+title Update Reading Progress Flow
+
+actor User
+participant "Currently Reading Page" as ReadingUI
+participant "Progress Card" as Card
+participant "Progress Update Modal" as Modal
+participant "API Gateway" as API
+participant "Reading Controller" as Controller
+participant "Reading Manager" as Manager
+database "Database" as DB
+
+User -> ReadingUI: Navigate to /reading/current
+ReadingUI -> API: GET /api/reading/sessions?\nstatus=InProgress
+API -> Controller: GetCurrentlyReading(userId)
+Controller -> Manager: GetActiveSessionsAsync(userId)
+Manager -> DB: SELECT active sessions\nwith book details
+DB --> Manager: Reading sessions
+Manager --> Controller: Sessions with stats
+Controller --> API: 200 OK\n{currentlyReading}
+API --> ReadingUI: Session data
+ReadingUI -> Card: Display progress cards
+Card --> User: Show current progress\n(book, page X of Y, progress bar)
+
+== Quick Update Progress ==
+User -> Card: Click "Quick Update" button
+Card --> User: Show inline page input
+User -> Card: Enter current page number
+User -> Card: Press Enter or click Save
+
+Card -> Card: Validate page number\n(0 <= page <= totalPages)
+
+alt Valid Page Number
+    Card -> API: PATCH /api/reading/sessions/{id}/progress\n{currentPage: X}
+    API -> Controller: UpdateProgress(sessionId, page)
+    Controller -> Manager: UpdateProgressAsync(sessionId, currentPage)
+    Manager -> DB: SELECT session\nWHERE id={sessionId}
+    DB --> Manager: Current session data
+    Manager -> Manager: Calculate pages read\n(newPage - oldPage)
+    Manager -> Manager: Update reading pace\n(total pages / days elapsed)
+    Manager -> DB: INSERT progress_update\n{sessionId, currentPage, timestamp}
+    DB --> Manager: Update recorded
+    Manager -> DB: UPDATE reading_session\nSET currentPage={X},\nlastUpdateDate=now()
+    DB --> Manager: Session updated
+    Manager -> Manager: Recalculate stats\n(progress %, pace, ETA)
+    Manager --> Controller: ProgressUpdated\n{session, newStats}
+    Controller --> API: 200 OK\n{updatedSession}
+    API --> Card: Success with new stats
+    Card -> Card: Update progress bar
+    Card -> Card: Update stats display\n(pace, ETA, % complete)
+    Card --> User: Show updated progress\nwith animation
+else Invalid Page Number
+    Card --> User: Show validation error\n"Page must be between 0 and [total]"
+end
+
+== Detailed Progress Update ==
+User -> Card: Click "Update Progress" button
+Card -> Modal: Open ProgressUpdateModal
+Modal -> Modal: Load current session data
+Modal --> User: Display detailed form\n(current page, notes field)
+
+User -> Modal: Enter current page number
+Modal -> Modal: Show visual progress\n(pages read since last update)
+Modal -> Modal: Calculate and display\nreading pace estimate
+Modal -> Modal: Show estimated\ncompletion date
+Modal --> User: Display calculated stats
+
+User -> Modal: Add optional notes\n"Reached climax, great chapter!"
+User -> Modal: Click "Save Progress"
+
+Modal -> Modal: Validate form\n(page number required and valid)
+
+alt Valid Form
+    Modal -> API: PATCH /api/reading/sessions/{id}/progress\n{currentPage, notes}
+    API -> Controller: UpdateProgress(sessionId, data)
+    Controller -> Manager: UpdateProgressAsync(sessionId, progressData)
+    Manager -> DB: INSERT progress_update\n{sessionId, currentPage,\nnotes, timestamp}
+    DB --> Manager: Update ID
+    Manager -> DB: UPDATE reading_session\nSET currentPage, lastUpdateDate
+    DB --> Manager: Updated
+    Manager -> Manager: Update reading streak\n(if update is today)
+    Manager -> DB: UPDATE or INSERT\nreading_streak
+    DB --> Manager: Streak updated
+    Manager --> Controller: ProgressUpdated\n{session, streak}
+    Controller --> API: 200 OK\n{updatedSession}
+    API --> Modal: Success
+    Modal -> Modal: Close modal
+    Modal -> ReadingUI: Refresh currently reading
+    ReadingUI -> Card: Update progress display
+    Card --> User: Show success notification\n"Progress updated: [X] pages"
+
+    alt Milestone Reached
+        Card --> User: Show achievement\n"You're 50% through!"
+    end
+else Invalid Form
+    Modal --> User: Display validation errors
+end
+
+@enduml

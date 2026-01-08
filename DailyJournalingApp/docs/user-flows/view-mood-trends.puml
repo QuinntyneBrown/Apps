@@ -1,0 +1,115 @@
+@startuml View Mood Trends Flow
+
+actor User
+participant "Mood Dashboard\nPage" as DashboardUI
+participant "Mood Chart\nComponent" as ChartComponent
+participant "Trend Visualization\nComponent" as TrendComponent
+participant "Mood Service" as MoodService
+participant "Mood Controller" as MoodAPI
+participant "Get Mood Trends\nQuery Handler" as QueryHandler
+participant "Database" as DB
+
+User -> DashboardUI: Navigate to /mood dashboard
+activate DashboardUI
+
+DashboardUI -> ChartComponent: Initialize mood chart
+activate ChartComponent
+
+ChartComponent -> MoodService: getMoodTrends(dateRange)
+activate MoodService
+note right: Default: Last 30 days
+
+MoodService -> MoodAPI: GET /api/moods/trends?days=30
+activate MoodAPI
+
+MoodAPI -> QueryHandler: GetMoodTrendsQuery
+activate QueryHandler
+
+QueryHandler -> DB: Query mood data aggregated by date\nfiltered by TenantId
+activate DB
+note right of DB
+  Global query filter
+  automatically applies TenantId
+
+  Aggregation by date
+  with mood type counts
+end note
+DB --> QueryHandler: Aggregated mood data by date
+deactivate DB
+
+QueryHandler --> MoodAPI: MoodTrendsDto with chart data
+deactivate QueryHandler
+
+MoodAPI --> MoodService: 200 OK with trend data
+deactivate MoodAPI
+
+MoodService --> ChartComponent: Observable of trend data
+deactivate MoodService
+
+ChartComponent -> ChartComponent: Process data for chart rendering\n(format dates, group by mood type)
+
+ChartComponent --> User: Display mood chart with trends
+deactivate ChartComponent
+
+DashboardUI -> TrendComponent: Initialize trend visualization
+activate TrendComponent
+
+TrendComponent -> MoodService: getMoodStatistics(dateRange)
+activate MoodService
+
+MoodService -> MoodAPI: GET /api/moods/statistics?days=30
+activate MoodAPI
+
+MoodAPI -> QueryHandler: GetMoodStatisticsQuery
+activate QueryHandler
+
+QueryHandler -> DB: Calculate mood statistics\n(avg intensity, most common mood, etc.)
+activate DB
+DB --> QueryHandler: Mood statistics data
+deactivate DB
+
+QueryHandler --> MoodAPI: MoodStatisticsDto
+deactivate QueryHandler
+
+MoodAPI --> MoodService: 200 OK with statistics
+deactivate MoodAPI
+
+MoodService --> TrendComponent: Observable of statistics
+deactivate MoodService
+
+TrendComponent --> User: Display mood statistics\nand insights
+deactivate TrendComponent
+deactivate DashboardUI
+
+User -> ChartComponent: Change date range filter
+activate ChartComponent
+
+ChartComponent -> MoodService: getMoodTrends(newDateRange)
+activate MoodService
+
+MoodService -> MoodAPI: GET /api/moods/trends?days={days}
+activate MoodAPI
+
+MoodAPI -> QueryHandler: GetMoodTrendsQuery with new range
+activate QueryHandler
+
+QueryHandler -> DB: Query mood data for new range
+activate DB
+DB --> QueryHandler: Updated mood data
+deactivate DB
+
+QueryHandler --> MoodAPI: Updated MoodTrendsDto
+deactivate QueryHandler
+
+MoodAPI --> MoodService: 200 OK with new data
+deactivate MoodAPI
+
+MoodService --> ChartComponent: Updated observable data
+deactivate MoodService
+
+ChartComponent -> ChartComponent: Re-render chart with new data
+
+ChartComponent --> User: Display updated mood trends
+deactivate ChartComponent
+
+@enduml

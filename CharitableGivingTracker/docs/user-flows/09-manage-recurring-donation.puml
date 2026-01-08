@@ -1,0 +1,259 @@
+@startuml
+title Manage Recurring Donation - User Flow
+
+actor "User" as user
+participant "Dashboard" as dashboard
+participant "Recurring\nDonations Page" as recurring
+participant "Action Modal" as modal
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "Command Handler" as handler
+participant "RecurringDonation\nAggregate" as aggregate
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> dashboard: Navigate to dashboard
+activate dashboard
+
+dashboard -> api: GET /api/donations/recurring\n?activeOnly=true
+activate api
+api -> db: Query active recurring donations
+activate db
+db --> api: List of active recurring donations
+deactivate db
+api --> dashboard: Return recurring donations
+deactivate api
+
+dashboard --> user: Display upcoming\nrecurring donations widget:\n- Next donation dates\n- Organizations\n- Amounts
+
+user -> dashboard: Click "View All Recurring"
+
+dashboard -> recurring: Navigate to\nRecurring Donations page
+activate recurring
+
+recurring -> api: GET /api/donations/recurring
+activate api
+api -> db: Query all recurring donations\n(active, paused, cancelled)
+activate db
+db --> api: Full list of recurring donations
+deactivate db
+api --> recurring: Return all recurring donations
+deactivate api
+
+recurring --> user: Display recurring donations:\n- Active section:\n  * Organization\n  * Amount\n  * Frequency\n  * Next scheduled date\n  * Total donated so far\n  * Actions (Pause, Modify, Cancel)\n- Paused section\n- Cancelled section (collapsible)
+
+== Modify Recurring Donation ==
+
+user -> recurring: Click "Modify" on a\nrecurring donation
+
+recurring -> modal: Open modify modal
+activate modal
+
+modal -> api: GET /api/donations/recurring/{id}
+activate api
+api -> db: Query recurring donation details
+db --> api: Recurring donation data
+api --> modal: Return details
+deactivate api
+
+modal --> user: Display modify form\npre-filled with current values:\n- Amount: $100\n- Frequency: Monthly\n- End Date: (none)
+
+user -> modal: Update amount to $150
+user -> modal: Change frequency to Quarterly
+user -> modal: Optional: Set end date
+user -> modal: Click "Save Changes"
+
+modal -> validator: Validate changes
+activate validator
+
+validator -> validator: Validate amount > 0
+validator -> validator: Validate frequency
+validator -> validator: Check end date > start date
+
+alt Validation Fails
+    validator --> modal: Return validation errors
+    modal --> user: Display errors
+else Validation Succeeds
+    validator --> modal: Validation passed
+    deactivate validator
+
+    modal -> api: PUT /api/donations/recurring/{id}\n{amount: 150,\nfrequency: "Quarterly",\nendDate: null}
+    activate api
+
+    modal --> user: Show loading
+
+    api -> handler: Execute ModifyRecurringDonationCommand
+    activate handler
+
+    handler -> handler: Validate recurring donation exists
+    handler -> handler: Verify user owns it
+    handler -> handler: Validate new parameters
+
+    handler -> aggregate: Load RecurringDonation aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Update Amount = $150
+    aggregate -> aggregate: Update Frequency = Quarterly
+    aggregate -> aggregate: Recalculate NextScheduledDate\nbased on new frequency
+    aggregate -> aggregate: Update timestamp
+
+    aggregate -> db: UPDATE RecurringDonations\nSET Amount, Frequency,\nNextScheduledDate, UpdatedAt
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate --> handler: Update successful
+    deactivate aggregate
+
+    handler --> api: 200 OK\n{nextScheduledDate, projectedAnnual}
+    deactivate handler
+
+    api --> modal: Update successful
+    deactivate api
+
+    modal --> user: Display success:\n"Recurring donation updated!\nChanges apply to next donation on [date]\nNew annual projection: $600"
+
+    modal -> modal: Close modal
+    deactivate modal
+end
+
+== Pause Recurring Donation ==
+
+user -> recurring: Click "Pause" on a\nrecurring donation
+
+recurring -> modal: Open pause modal
+activate modal
+
+modal --> user: Display pause form:\n"Pause recurring donation until:"
+modal --> user: Show date picker\n(minimum tomorrow)
+
+user -> modal: Select pause until date\n(e.g., 2026-06-01)
+user -> modal: Click "Pause"
+
+modal -> validator: Validate pause date
+activate validator
+
+validator -> validator: Ensure date is future
+validator -> validator: Validate date format
+
+alt Validation Fails
+    validator --> modal: Return error
+    modal --> user: Display error:\n"Pause date must be in future"
+else Validation Succeeds
+    validator --> modal: Validation passed
+    deactivate validator
+
+    modal -> api: POST /api/donations/recurring/{id}/pause\n{pausedUntil: "2026-06-01"}
+    activate api
+
+    api -> handler: Execute PauseRecurringDonationCommand
+    activate handler
+
+    handler -> handler: Validate recurring donation exists
+    handler -> handler: Verify user owns it
+    handler -> handler: Check pausedUntil is future
+
+    handler -> aggregate: Load RecurringDonation aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Set PausedUntil = 2026-06-01
+    aggregate -> aggregate: Keep IsActive = true
+    aggregate -> aggregate: Update NextScheduledDate\nif currently before pause date
+
+    aggregate -> db: UPDATE RecurringDonations\nSET PausedUntil, UpdatedAt
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate --> handler: Pause successful
+    deactivate aggregate
+
+    handler --> api: 200 OK
+    deactivate handler
+
+    api --> modal: Pause successful
+    deactivate api
+
+    modal --> user: Display success:\n"Recurring donation paused\nuntil June 1, 2026"
+
+    modal -> modal: Close modal
+    deactivate modal
+end
+
+recurring -> recurring: Move donation to\n"Paused" section
+
+== Cancel Recurring Donation ==
+
+user -> recurring: Click "Cancel" on a\nrecurring donation
+
+recurring -> modal: Open cancel confirmation modal
+activate modal
+
+modal --> user: Display confirmation:\n"Are you sure you want to cancel\nthis recurring donation?\n\nOrganization: [Name]\nAmount: $XXX\nFrequency: [Frequency]\n\nThis action cannot be undone."
+
+user -> modal: Click "Confirm Cancel"
+
+modal -> api: DELETE /api/donations/recurring/{id}
+activate api
+
+modal --> user: Show loading
+
+api -> handler: Execute CancelRecurringDonationCommand
+activate handler
+
+handler -> handler: Validate recurring donation exists
+handler -> handler: Verify user owns it
+
+handler -> aggregate: Load RecurringDonation aggregate
+activate aggregate
+
+aggregate -> aggregate: Set IsActive = false
+aggregate -> aggregate: Set EndDate = current date
+aggregate -> aggregate: Clear NextScheduledDate
+
+aggregate -> db: UPDATE RecurringDonations\nSET IsActive = false,\nEndDate = GETDATE(),\nNextScheduledDate = NULL
+activate db
+db --> aggregate: Success
+deactivate db
+
+aggregate -> events: Publish RecurringDonationCancelled event
+activate events
+events --> aggregate: Event published
+deactivate events
+
+aggregate --> handler: Cancellation successful
+deactivate aggregate
+
+handler --> api: 204 No Content
+deactivate handler
+
+api --> modal: Cancellation successful
+deactivate api
+
+modal --> user: Display success:\n"Recurring donation cancelled"
+
+modal -> modal: Close modal
+deactivate modal
+
+recurring -> recurring: Move donation to\n"Cancelled" section
+
+recurring --> user: Show updated\nrecurring donations list
+
+== View Donation History for Recurring Schedule ==
+
+user -> recurring: Click "View History" on\na recurring donation
+
+recurring -> api: GET /api/donations\n?recurringDonationId={id}
+activate api
+api -> db: Query donations created\nfrom this recurring schedule
+db --> api: List of executed donations
+api --> recurring: Return donation history
+deactivate api
+
+recurring --> user: Display donation history\nfor this recurring schedule:\n- All past donations\n- Total amount donated\n- Number of donations made\n- Next scheduled date
+
+deactivate recurring
+deactivate dashboard
+deactivate db
+
+@enduml

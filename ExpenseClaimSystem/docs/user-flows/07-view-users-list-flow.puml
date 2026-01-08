@@ -1,0 +1,31 @@
+@startuml
+
+actor Administrator
+participant "User Management\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to\nUser Management page
+
+UI -> UI: Component initializes
+
+UI -> UserService: getAllUsers()
+UserService -> API: GET /api/users\nAuthorization: Bearer {token}
+
+API -> API: Validate JWT token\nand Admin role
+
+alt Authorized
+    API -> DB: SELECT Users\nwith Roles
+    DB --> API: List of users\n(without passwords)
+
+    API --> UserService: 200 OK\n[{userId, username,\nemail, roles[]}]
+    UserService --> UI: Users data received
+    UI --> Administrator: Display users table\nwith columns:\nusername, email,\nroles, actions
+else Unauthorized
+    API --> UserService: 401 Unauthorized\nor 403 Forbidden
+    UserService --> UI: Authorization failed
+    UI --> Administrator: Display error message\nor redirect to login
+end
+
+@enduml

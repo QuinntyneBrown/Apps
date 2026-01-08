@@ -1,0 +1,126 @@
+@startuml Categorize Goals Flow
+title Categorize Goals User Flow
+
+actor User
+participant "Category View\n(/goals/categories)" as CategoryView
+participant "Goal Detail Page" as GoalDetail
+participant "Edit Category Modal" as Modal
+participant "GoalsService" as GoalsService
+participant "API" as API
+participant "GoalController" as Controller
+participant "CategorizeGoalHandler" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+== View Goals by Category ==
+
+User -> CategoryView: Navigate to /goals/categories
+activate CategoryView
+
+CategoryView -> GoalsService: getGoalsByCategory()
+activate GoalsService
+GoalsService -> API: GET /api/goals
+activate API
+API -> Controller: GET all goals
+activate Controller
+Controller -> Handler: Send GetGoalsQuery
+activate Handler
+Handler -> Context: Query all goals
+activate Context
+Context -> DB: SELECT * FROM Goals\nWHERE TenantId = {currentTenant}
+activate DB
+DB --> Context: All goals
+deactivate DB
+Context --> Handler: List<Goal>
+deactivate Context
+Handler --> Controller: List<GoalDto>
+deactivate Handler
+Controller --> API: 200 OK\n[ goals with categories ]
+deactivate Controller
+API --> GoalsService: List<GoalDto>
+deactivate API
+GoalsService --> CategoryView: Observable<Goals[]>
+deactivate GoalsService
+
+CategoryView -> CategoryView: Group goals by category\nusing RxJS operators
+CategoryView -> CategoryView: Calculate aggregate progress\nper category
+
+CategoryView -> User: Display category cards:\n- Category name\n- Total saved across category\n- Total target across category\n- Aggregate progress bar\n- Number of goals in category\n- List of goals within each category
+deactivate CategoryView
+
+== Change Goal Category ==
+
+User -> GoalDetail: Navigate to goal detail
+activate GoalDetail
+GoalDetail -> User: Display goal details
+User -> GoalDetail: Click "Edit Category"
+GoalDetail -> Modal: Open edit category modal
+activate Modal
+
+Modal -> User: Display category selector:\n- Savings\n- Emergency Fund\n- Vacation\n- Education\n- Home Purchase\n- Retirement\n- Custom
+
+User -> Modal: Select new category
+
+alt Custom Category
+    User -> Modal: Enter custom category name
+    Modal -> Modal: Validate custom name
+end
+
+User -> Modal: Click "Save"
+Modal -> Modal: Validate selection
+
+alt Validation Success
+    Modal -> GoalsService: updateCategory(goalId, category)
+    activate GoalsService
+    GoalsService -> API: PUT /api/goals/{id}/category\n{ category: "new-category" }
+    activate API
+    API -> Controller: PUT category
+    activate Controller
+    Controller -> Handler: Send CategorizeGoalCommand
+    activate Handler
+    Handler -> Context: Load goal
+    activate Context
+    Context -> DB: SELECT * FROM Goals\nWHERE GoalId = {id}\nAND TenantId = {currentTenant}
+    activate DB
+    DB --> Context: Goal entity
+    deactivate DB
+    Context --> Handler: Goal
+    deactivate Context
+
+    Handler -> Handler: Update goal.Category
+    Handler -> Context: Update goal
+    activate Context
+    Context -> DB: UPDATE Goals\nSET Category = {category}
+    activate DB
+    DB --> Context: Success
+    deactivate DB
+    Context -> DB: Emit GoalCategorized event
+    DB --> Context: Event saved
+    Context --> Handler: Goal updated
+    deactivate Context
+    Handler --> Controller: GoalDto
+    deactivate Handler
+    Controller --> API: 200 OK\n{ updated goal }
+    deactivate Controller
+    API --> GoalsService: GoalDto
+    deactivate API
+    GoalsService --> Modal: Category updated
+    deactivate GoalsService
+    Modal -> GoalDetail: Close modal
+    deactivate Modal
+    GoalDetail -> GoalDetail: Refresh goal details
+    GoalDetail -> User: Show success message\n"Category updated"
+    deactivate GoalDetail
+else Validation Failed
+    Modal -> User: Show validation errors
+end
+
+== View Category Aggregates ==
+
+User -> CategoryView: Return to category view
+activate CategoryView
+CategoryView -> CategoryView: Refresh data
+CategoryView -> User: Display updated:\n- Recalculated category aggregates\n- Goals redistributed among categories\n- Updated progress bars
+deactivate CategoryView
+
+@enduml

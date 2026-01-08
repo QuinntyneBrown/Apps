@@ -1,0 +1,123 @@
+@startuml search-filter
+title Search and Filter Items Flow
+
+actor User
+participant "Items Dashboard\n(/items)" as Dashboard
+participant "Search Bar" as SearchBar
+participant "Filter Panel" as FilterPanel
+participant "Item Service" as ItemService
+participant "API Controller\n(/api/items)" as API
+participant "SearchItems Handler" as SearchHandler
+participant "GetItems Handler" as GetHandler
+database "Items Table" as ItemsDB
+database "Categories Table" as CategoriesDB
+database "Locations Table" as LocationsDB
+
+User -> Dashboard: Navigate to items dashboard
+activate Dashboard
+
+Dashboard -> ItemService: getCategories()
+ItemService -> API: GET /api/items/categories
+API -> CategoriesDB: Query categories
+CategoriesDB --> API: Category list
+API --> ItemService: Categories
+
+Dashboard -> ItemService: getLocations()
+ItemService -> API: GET /api/locations
+API -> LocationsDB: Query locations by TenantId
+LocationsDB --> API: Location list
+API --> ItemService: Locations
+
+Dashboard -> ItemService: getItems(initialParams)
+ItemService -> API: GET /api/items\nAuthorization: Bearer {token}\n?page=1&pageSize=20
+API -> GetHandler: Handle GetItemsByUserIdQuery
+GetHandler -> ItemsDB: Query items\n(filtered by TenantId)
+ItemsDB --> GetHandler: Initial item list
+GetHandler --> API: PaginatedResult<ItemDto>
+API --> ItemService: Items data
+ItemService --> Dashboard: Display items
+
+Dashboard --> User: Show items dashboard:\n- Grid/List view toggle\n- Search bar\n- Filter panel\n- Item cards/list\n- Summary statistics
+
+== Text Search Flow ==
+
+User -> SearchBar: Type search text\n(debounced)
+SearchBar -> SearchBar: Wait 300ms for pause
+
+SearchBar -> ItemService: searchItems(query)
+ItemService -> API: GET /api/items\n?search={query}
+
+API -> SearchHandler: Handle SearchItemsQuery
+SearchHandler -> ItemsDB: Full-text search on:\n- Name\n- Description\n- Serial number\n(filtered by TenantId)
+ItemsDB --> SearchHandler: Matching items (ranked)
+SearchHandler --> API: SearchResultDto
+API --> ItemService: Search results
+ItemService --> Dashboard: Update item display
+
+Dashboard --> User: Show filtered results\nin real-time
+
+== Filter Application Flow ==
+
+User -> FilterPanel: Click "Filter" icon
+FilterPanel --> User: Show filter options:\n- Categories (hierarchical)\n- Locations\n- Status (Active/Disposed/etc.)\n- Value range (min/max)\n- Condition\n- Purchase date range
+
+User -> FilterPanel: Select category\n(e.g., "Electronics")
+FilterPanel -> ItemService: getItems(filters)
+ItemService -> API: GET /api/items\n?categoryId={id}
+
+API -> GetHandler: Handle GetItemsByUserIdQuery\nwith filters
+GetHandler -> ItemsDB: Query items WHERE:\n- TenantId = current\n- CategoryId = selected\n(or subcategories)
+ItemsDB --> GetHandler: Filtered items
+GetHandler --> API: ItemsDto
+API --> ItemService: Filtered results
+ItemService --> Dashboard: Update display
+
+Dashboard --> User: Show filtered items\nUpdate count
+
+User -> FilterPanel: Add location filter\n(e.g., "Living Room")
+User -> FilterPanel: Set value range\n($500 - $5000)
+
+FilterPanel -> ItemService: getItems(combinedFilters)
+ItemService -> API: GET /api/items\n?categoryId={id}&locationId={id}&minValue=500&maxValue=5000
+
+API -> GetHandler: Handle query with\nmultiple filters
+GetHandler -> ItemsDB: Query items WHERE:\n- TenantId = current\n- CategoryId IN (selected + subcategories)\n- LocationId = selected\n- CurrentValue BETWEEN 500 AND 5000
+ItemsDB --> GetHandler: Filtered items
+GetHandler --> API: ItemsDto
+API --> ItemService: Results
+ItemService --> Dashboard: Update display
+
+Dashboard --> User: Show refined results\nwith all filters applied
+
+== Clear Filters ==
+
+User -> FilterPanel: Click "Clear Filters"
+FilterPanel -> ItemService: getItems(noFilters)
+ItemService -> API: GET /api/items
+API -> GetHandler: Query without filters\n(only TenantId)
+GetHandler -> ItemsDB: Query all active items
+ItemsDB --> GetHandler: All items
+GetHandler --> API: ItemsDto
+API --> ItemService: All items
+ItemService --> Dashboard: Reset display
+
+Dashboard --> User: Show all items
+
+== Sorting ==
+
+User -> Dashboard: Click sort option\n(e.g., "Value: High to Low")
+Dashboard -> ItemService: getItems(sortBy)
+ItemService -> API: GET /api/items\n?sortBy=value&sortOrder=desc
+
+API -> GetHandler: Query with sorting
+GetHandler -> ItemsDB: Query ORDER BY\nCurrentValue DESC
+ItemsDB --> GetHandler: Sorted items
+GetHandler --> API: ItemsDto
+API --> ItemService: Sorted results
+ItemService --> Dashboard: Update display
+
+Dashboard --> User: Show sorted items
+
+deactivate Dashboard
+
+@enduml

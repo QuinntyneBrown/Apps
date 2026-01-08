@@ -1,0 +1,256 @@
+@startuml
+title Learning & Development Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Learning Objectives\nPage" as LearningPage
+participant "Certificates\nPage" as CertPage
+participant "Skill Development\nPage" as SkillPage
+participant "LearningService" as LearnSvc
+participant "LearningController\n/api/learning" as API
+participant "Azure Blob Storage" as Storage
+participant "Command Handlers" as Handlers
+participant "IConferenceEventManagerContext" as DbContext
+database "Database" as DB
+
+== Set Learning Objectives ==
+
+User -> LearningPage: Navigate to Learning Objectives
+activate LearningPage
+
+LearningPage -> LearnSvc: getLearningObjectives$()
+activate LearnSvc
+
+LearnSvc -> API: GET /api/learning/objectives
+activate API
+API -> DbContext: Query learning objectives\nFiltered by TenantId
+activate DbContext
+DbContext -> DB: SELECT LearningObjectives
+activate DB
+DB --> DbContext: Objective records
+deactivate DB
+deactivate DbContext
+API --> LearnSvc: LearningObjectiveDto[]
+deactivate API
+
+LearnSvc --> LearningPage: Observable<LearningObjectiveDto[]>
+deactivate LearnSvc
+
+LearningPage -> User: Display objectives\n- Current goals\n- Progress tracking\n- Associated conferences\n- Completion status
+
+User -> LearningPage: Click "Add Objective"
+
+LearningPage -> User: Show objective form\n- Title/description\n- Target skill/knowledge\n- Target date\n- Associated conference\n- Success criteria
+
+User -> LearningPage: Fill objective details
+
+User -> LearningPage: Click "Save"
+
+LearningPage -> LearnSvc: createObjective(objectiveData)
+activate LearnSvc
+
+LearnSvc -> API: POST /api/learning/objectives\nLearningObjectiveDto
+activate API
+
+API -> Handlers: CreateLearningObjectiveCommand
+activate Handlers
+
+Handlers -> Handlers: Create LearningObjective entity\n- Generate ObjectiveId\n- Set TenantId\n- Set status = InProgress
+
+Handlers -> DbContext: Add(objective)
+activate DbContext
+DbContext -> DB: INSERT LearningObjective
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise LearningObjectiveCreated\ndomain event
+
+Handlers --> API: LearningObjectiveDto
+deactivate Handlers
+
+API --> LearnSvc: 201 Created
+deactivate API
+
+LearnSvc --> LearningPage: Objective created
+deactivate LearnSvc
+
+LearningPage -> User: Show success notification
+
+== Track Objective Progress ==
+
+User -> LearningPage: Click on objective
+
+LearningPage -> User: Show progress tracking\n- Related sessions attended\n- Skills gained\n- Notes/reflections\n- Completion percentage
+
+User -> LearningPage: Update progress\n- Add reflection notes\n- Link sessions\n- Update completion %
+
+User -> LearningPage: Click "Save Progress"
+
+LearningPage -> LearnSvc: updateObjectiveProgress(objectiveId, progress)
+activate LearnSvc
+
+LearnSvc -> API: PUT /api/learning/objectives/{id}/progress\n{completionPercentage, notes}
+activate API
+
+API -> Handlers: UpdateObjectiveProgressCommand
+activate Handlers
+
+Handlers -> DbContext: Update objective
+activate DbContext
+DbContext -> DB: UPDATE LearningObjective
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+alt Objective completed (100%)
+    Handlers -> Handlers: Mark as completed\nSet completion date
+    Handlers -> Handlers: Raise LearningObjectiveCompleted\ndomain event
+end
+
+Handlers --> API: LearningObjectiveDto
+deactivate Handlers
+
+API --> LearnSvc: 200 OK
+deactivate API
+
+LearnSvc --> LearningPage: Progress updated
+deactivate LearnSvc
+
+LearningPage -> User: Show success notification
+
+== Manage Certificates ==
+
+User -> LearningPage: Click "Certificates"
+
+LearningPage -> CertPage: Navigate to Certificates
+activate CertPage
+
+CertPage -> LearnSvc: getCertificates$()
+activate LearnSvc
+
+LearnSvc -> API: GET /api/learning/certificates
+activate API
+API -> DbContext: Query certificates
+activate DbContext
+DbContext -> DB: SELECT Certificates\nJOIN Conferences
+activate DB
+DB --> DbContext: Certificate records
+deactivate DB
+deactivate DbContext
+API --> LearnSvc: CertificateDto[]
+deactivate API
+
+LearnSvc --> CertPage: Observable<CertificateDto[]>
+deactivate LearnSvc
+
+CertPage -> User: Display certificates\n- Grid view with thumbnails\n- Conference name\n- Issue date\n- Skills/topics\n- Download/share options
+
+User -> CertPage: Click "Add Certificate"
+
+CertPage -> User: Show certificate form\n- Certificate name\n- Issuing organization\n- Conference association\n- Issue date\n- Upload certificate file
+
+User -> CertPage: Upload certificate file\n(PDF or image)
+
+User -> CertPage: Fill certificate details
+
+User -> CertPage: Click "Save"
+
+CertPage -> LearnSvc: createCertificate(certData, file)
+activate LearnSvc
+
+LearnSvc -> Storage: Upload certificate file\nBlob name: certificates/{certId}/{filename}
+activate Storage
+Storage --> LearnSvc: Blob URL
+deactivate Storage
+
+LearnSvc -> API: POST /api/learning/certificates\nCertificateDto + fileUrl
+activate API
+
+API -> Handlers: CreateCertificateCommand
+activate Handlers
+
+Handlers -> Handlers: Create Certificate entity\n- Generate CertificateId\n- Set TenantId\n- Store file URL\n- Parse skills/topics
+
+Handlers -> DbContext: Add(certificate)
+activate DbContext
+DbContext -> DB: INSERT Certificate
+activate DB
+DB --> DbContext: Success
+deactivate DB
+deactivate DbContext
+
+Handlers -> Handlers: Raise CertificateEarned\ndomain event
+
+Handlers --> API: CertificateDto
+deactivate Handlers
+
+API --> LearnSvc: 201 Created
+deactivate API
+
+LearnSvc --> CertPage: Certificate added
+deactivate LearnSvc
+
+CertPage -> User: Show success notification
+
+User -> CertPage: Click "Download Certificate"
+
+CertPage -> Storage: Request certificate file
+activate Storage
+Storage --> CertPage: File URL
+deactivate Storage
+
+CertPage -> User: Download certificate file
+
+== Monitor Skill Development ==
+
+User -> CertPage: Click "Skill Development"
+
+CertPage -> SkillPage: Navigate to Skill Development
+activate SkillPage
+
+SkillPage -> LearnSvc: getSkillDevelopment$()
+activate LearnSvc
+
+LearnSvc -> API: GET /api/learning/skills
+activate API
+API -> DbContext: Aggregate skill data\n- From sessions\n- From certificates\n- From objectives
+activate DbContext
+DbContext -> DB: Complex query:\n- GROUP BY skill\n- COUNT sessions\n- SUM completion\n- CALCULATE growth
+activate DB
+DB --> DbContext: Skill analytics
+deactivate DB
+deactivate DbContext
+
+API -> API: Calculate skill metrics:\n- Skill level (Beginner/Intermediate/Advanced)\n- Growth over time\n- Related conferences\n- Recommended next steps
+
+API --> LearnSvc: SkillDevelopmentDto[]
+deactivate API
+
+LearnSvc --> SkillPage: Observable<SkillDevelopmentDto[]>
+deactivate LearnSvc
+
+SkillPage -> User: Display skill dashboard\n- Skill categories\n- Progress bars by skill\n- Timeline of growth\n- Certificates per skill\n- Sessions per skill\n- Skill gap analysis\n- Recommendations
+
+User -> SkillPage: Click on skill category
+
+SkillPage -> User: Show detailed skill view\n- All related sessions\n- All related certificates\n- Learning path\n- Suggested conferences\n- Peer comparisons (optional)
+
+deactivate SkillPage
+deactivate CertPage
+deactivate LearningPage
+
+note over User, DB
+The Learning & Development module tracks:
+- Learning objectives with progress
+- Certificates and credentials
+- Skill development over time
+- ROI on learning investment
+- Knowledge gaps and recommendations
+end note
+
+@enduml

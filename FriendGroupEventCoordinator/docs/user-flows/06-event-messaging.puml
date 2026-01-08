@@ -1,0 +1,166 @@
+@startuml
+title Event Messaging Flow
+skinparam sequenceMessageAlign center
+
+actor "Event Participant" as user
+participant "Event Detail Page\n(Angular)" as eventDetail
+participant "Event Chat Component\n(Angular)" as chatComponent
+participant "Message Service\n(Angular)" as messageService
+participant "SignalR Hub Connection" as signalR
+participant "API Gateway\n/api/messages" as api
+participant "SendMessage Handler\n(MediatR)" as handler
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nMessages Table" as db
+participant "Notification Service\n(Background)" as notificationService
+actor "Other Participants" as others
+
+== Initialize Chat ==
+user -> eventDetail: Navigate to chat tab
+activate eventDetail
+eventDetail -> chatComponent: Initialize chat view
+activate chatComponent
+chatComponent -> messageService: connectToEventChat(eventId)
+activate messageService
+messageService -> signalR: Establish WebSocket\nconnection
+activate signalR
+signalR --> messageService: Connection established
+deactivate signalR
+messageService --> chatComponent: Connected
+deactivate messageService
+
+chatComponent -> messageService: getMessages(eventId)
+activate messageService
+messageService -> api: GET /api/messages?eventId={id}
+activate api
+api --> messageService: List of messages
+deactivate api
+messageService --> chatComponent: Message history
+deactivate messageService
+chatComponent --> user: Display chat history
+deactivate chatComponent
+deactivate eventDetail
+
+== Send Message ==
+user -> chatComponent: Type message\nand click Send
+activate chatComponent
+chatComponent -> chatComponent: Validate message\nnot empty
+chatComponent -> messageService: sendMessage(eventId, messageText)
+activate messageService
+messageService -> api: POST /api/messages\n{eventId, userId, messageText}
+activate api
+api -> api: Authenticate user\nfrom JWT token
+api -> handler: Handle SendMessageCommand
+activate handler
+
+handler -> handler: Create Message entity:\n- EventId\n- UserId\n- MessageText\n- SentAt (timestamp)
+
+handler -> dbContext: Messages.Add(message)
+activate dbContext
+dbContext -> db: INSERT INTO Messages\n(MessageId, EventId, UserId,\nMessageText, SentAt)
+activate db
+db --> dbContext: Message saved
+deactivate db
+dbContext --> handler: Message entity
+deactivate dbContext
+
+handler -> handler: Get event participants
+handler -> dbContext: Events\n.Include(e => e.Participants)\n.FirstOrDefault(e => e.EventId)
+activate dbContext
+dbContext -> db: SELECT * FROM Events\nJOIN EventParticipants\nWHERE EventId = @eventId
+activate db
+db --> dbContext: Event with participants
+deactivate db
+dbContext --> handler: Participant list
+deactivate dbContext
+
+== Broadcast Message ==
+handler -> signalR: BroadcastMessage(eventId, message)
+activate signalR
+signalR -> others: Real-time message push\nvia WebSocket
+activate others
+others -> others: Update chat UI\nwith new message
+deactivate others
+deactivate signalR
+
+== Send Notifications ==
+handler -> notificationService: QueueNotifications(\nparticipants, message)
+activate notificationService
+note right of notificationService
+  Background service sends
+  notifications to participants
+  who are not currently online
+end note
+notificationService -> notificationService: For each offline participant:\n- Create notification record\n- Queue email/push notification
+deactivate notificationService
+
+handler --> api: SendMessageResponseDto\n{messageId, sentAt}
+deactivate handler
+
+api --> messageService: 201 Created\n{messageId, sentAt}
+deactivate api
+
+messageService --> chatComponent: Message sent successfully
+deactivate messageService
+
+chatComponent -> chatComponent: Add message to\nchat display\nwith timestamp
+
+== Receive Real-time Message ==
+signalR -> messageService: onMessageReceived(message)
+activate signalR
+activate messageService
+messageService -> chatComponent: updateChat(message)
+activate chatComponent
+chatComponent -> chatComponent: Append new message\nto chat history
+chatComponent -> chatComponent: Scroll to bottom\nif user is near bottom
+chatComponent --> user: Display new message\nfrom other participant
+deactivate chatComponent
+deactivate messageService
+deactivate signalR
+deactivate chatComponent
+
+== Automated Reminder ==
+note over notificationService, others
+  System sends automated reminders
+  based on event timing and rules
+end note
+
+notificationService -> handler: SendAutomatedReminder(eventId)
+activate notificationService
+activate handler
+handler -> dbContext: Events.FirstOrDefault(e => e.EventId)
+activate dbContext
+dbContext -> db: SELECT * FROM Events\nWHERE EventId = @eventId
+activate db
+db --> dbContext: Event details
+deactivate db
+dbContext --> handler: Event entity
+deactivate dbContext
+
+handler -> handler: Create reminder message:\n"Event '{title}' is happening\ntomorrow at {time}!"
+
+handler -> dbContext: Messages.Add(systemMessage)
+activate dbContext
+dbContext -> db: INSERT INTO Messages\n(EventId, IsSystemMessage, MessageText)
+activate db
+db --> dbContext: Message saved
+deactivate db
+dbContext --> handler: System message
+deactivate dbContext
+
+handler -> signalR: BroadcastMessage(eventId, systemMessage)
+activate signalR
+signalR -> user: Push reminder notification
+activate user
+signalR -> others: Push reminder notification
+activate others
+user -> user: Receive notification
+others -> others: Receive notification
+deactivate user
+deactivate others
+deactivate signalR
+
+handler -> notificationService: Success
+deactivate handler
+deactivate notificationService
+
+@enduml

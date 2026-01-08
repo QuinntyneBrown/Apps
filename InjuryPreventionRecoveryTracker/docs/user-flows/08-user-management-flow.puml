@@ -1,0 +1,191 @@
+@startuml User Management Flow
+title User Management Flow (Admin)
+
+actor Admin
+participant "User Management Page" as UI
+participant "User Form Modal" as Modal
+participant "User Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "Password Service" as PasswordSvc
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+== View Users ==
+Admin -> UI: Navigate to User Management
+UI -> Service: Observable: users$\n= getUsers()
+Service -> API: GET /api/users\nAuthorization: Bearer {token}\n(requires Admin role)
+
+API -> API: Verify Admin role\nfrom JWT claims
+
+alt Not authorized (no Admin role)
+    API --> Service: 403 Forbidden
+    Service --> UI: Show error
+    UI --> Admin: "Access denied"
+else Authorized
+    API -> Handler: Handle GetUsersQuery
+    Handler -> DB: Query all users
+    DB --> Handler: List<User>
+
+    Handler -> Handler: Map to UserDto[]\n(exclude password & salt)
+    Handler --> API: UserDto[]
+
+    API --> Service: Success response
+    Service --> UI: Display users list
+    UI --> Admin: Show users table\nwith actions
+end
+
+== Create User ==
+Admin -> UI: Click "Add User"
+UI -> Modal: Open user form modal
+Modal --> Admin: Display form\n(username, email, password, roles)
+
+Admin -> Modal: Fill in user details
+Admin -> Modal: Submit form
+
+Modal -> Modal: Validate inputs:\n- Unique username\n- Valid email format\n- Password strength (min 8 chars)
+Modal -> Service: createUser(userDto)
+Service -> API: POST /api/users
+
+API -> Handler: Handle CreateUserCommand
+Handler -> Handler: Validate username\n& email uniqueness
+
+alt Username or email exists
+    Handler --> API: 409 Conflict
+    API --> Service: Error response
+    Service --> Modal: Show error
+    Modal --> Admin: "Username/Email already exists"
+else Valid data
+    Handler -> PasswordSvc: Hash password with salt\n(PBKDF2, 100k iterations)
+    PasswordSvc --> Handler: Hashed password & salt
+
+    Handler -> Handler: Create User entity\n(with hashed password)
+    Handler -> DB: Save user
+    DB --> Handler: User created
+
+    Handler -> Events: Publish UserCreated event
+    Handler --> API: 201 Created (UserDto)
+
+    API --> Service: Success response
+    Service --> Modal: User created
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh user list
+
+    UI -> Service: getUsers()
+    Service -> API: GET /api/users
+    API -> DB: Query users
+    DB --> API: User list
+    API --> Service: UserDto[]
+    Service --> UI: Update display
+    UI --> Admin: Show updated list\nwith new user
+end
+
+== Update User ==
+Admin -> UI: Click "Edit" on user
+UI -> Modal: Open form with user data
+Modal --> Admin: Display populated form
+
+Admin -> Modal: Modify user details\n(email, roles, etc.)
+Admin -> Modal: Submit changes
+
+Modal -> Service: updateUser(userId, userDto)
+Service -> API: PUT /api/users/{userId}
+
+API -> Handler: Handle UpdateUserCommand
+Handler -> DB: Query user by ID
+DB --> Handler: User entity
+
+alt User not found
+    Handler --> API: 404 Not Found
+    API --> Service: Error response
+    Service --> Modal: Show error
+    Modal --> Admin: "User not found"
+else User found
+    Handler -> Handler: Update user properties
+
+    alt Password changed
+        Handler -> PasswordSvc: Hash new password
+        PasswordSvc --> Handler: New hash & salt
+        Handler -> Handler: Update password & salt
+    end
+
+    Handler -> DB: Save changes
+    DB --> Handler: User updated
+
+    Handler -> Events: Publish UserUpdated event
+    Handler --> API: 200 OK (UserDto)
+
+    API --> Service: Success response
+    Service --> Modal: User updated
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh list
+    UI --> Admin: Show updated user
+end
+
+== Delete User ==
+Admin -> UI: Click "Delete" on user
+UI -> UI: Show confirmation dialog
+Admin -> UI: Confirm deletion
+
+UI -> Service: deleteUser(userId)
+Service -> API: DELETE /api/users/{userId}
+
+API -> Handler: Handle DeleteUserCommand
+Handler -> DB: Query & delete user
+DB --> Handler: User deleted
+
+Handler -> Events: Publish UserDeleted event
+Handler --> API: 204 No Content
+
+API --> Service: Success response
+Service -> UI: Refresh user list
+UI -> Service: getUsers()
+Service -> API: GET /api/users
+API -> DB: Query users
+DB --> API: Updated list
+API --> Service: UserDto[]
+Service --> UI: Update display
+UI --> Admin: Show updated list\n(user removed)
+
+== Manage User Roles ==
+Admin -> UI: Click "Manage Roles"\non user
+UI -> Modal: Open role assignment modal
+Modal -> Service: getRoles()
+Service -> API: GET /api/roles
+API -> DB: Query all roles
+DB --> API: Role list
+API --> Service: RoleDto[]
+Service --> Modal: Display role checkboxes
+
+Admin -> Modal: Select/deselect roles
+Admin -> Modal: Save changes
+
+Modal -> Service: updateUserRoles(userId, roleIds)
+Service -> API: POST /api/users/{userId}/roles
+
+API -> Handler: Handle UpdateUserRolesCommand
+Handler -> DB: Update UserRole associations
+DB --> Handler: Roles updated
+
+Handler -> Events: Publish UserRolesUpdated event
+Handler --> API: 200 OK
+
+API --> Service: Success response
+Service --> Modal: Roles updated
+Modal -> Modal: Close modal
+Modal -> UI: Refresh user display
+UI --> Admin: Show updated roles
+
+note right of Handler
+  User entity:
+  - UserId (Guid)
+  - Username (unique)
+  - Email (unique)
+  - Password (hashed)
+  - Salt (byte[])
+  - Roles (many-to-many)
+  - CreatedAt
+  - UpdatedAt
+end note
+
+@enduml

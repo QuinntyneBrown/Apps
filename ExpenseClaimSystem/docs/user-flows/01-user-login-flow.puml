@@ -1,0 +1,32 @@
+@startuml User Login Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthService
+participant "API" as API
+database "Database" as DB
+
+User -> UI: Enter username\nand password
+User -> UI: Click Login
+
+UI -> AuthService: login(credentials)
+AuthService -> API: POST /api/auth/login\n{username, password}
+
+API -> DB: Query user by username
+DB --> API: User record with\nhashed password & salt
+
+alt Valid Credentials
+    API -> API: Validate password\nagainst hash
+    API -> API: Generate JWT token\nwith claims (sub, name,\nemail, roles)
+
+    API --> AuthService: 200 OK\n{token, expiresAt, user}
+    AuthService -> AuthService: Store token in\nlocalStorage
+    AuthService --> UI: Login successful
+    UI --> User: Redirect to dashboard
+else Invalid Credentials
+    API --> AuthService: 401 Unauthorized\n{error: "Invalid username\nor password"}
+    AuthService --> UI: Login failed
+    UI --> User: Display error message
+end
+
+@enduml

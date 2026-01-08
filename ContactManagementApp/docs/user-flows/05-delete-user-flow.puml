@@ -1,0 +1,109 @@
+@startuml Delete User Flow
+title Delete User Flow
+
+actor "Administrator" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "Confirm Dialog" as Dialog
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "Users Controller\n(/api/users)" as UsersAPI
+participant "DeleteUserCommand" as Command
+database "SQL Database" as DB
+
+Admin -> UI: Click "Delete" on user row
+activate UI
+
+UI -> Dialog: Show confirmation dialog\n"Are you sure you want to delete this user?"
+activate Dialog
+
+Admin -> Dialog: Click "Confirm"
+
+Dialog --> UI: Confirmed
+deactivate Dialog
+
+UI -> UserService: deleteUser(userId)
+activate UserService
+
+UserService -> Interceptor: DELETE /api/users/{userId}
+activate Interceptor
+
+Interceptor -> Interceptor: Inject JWT token from localStorage
+Interceptor -> UsersAPI: Forward request with Authorization header
+deactivate Interceptor
+activate UsersAPI
+
+UsersAPI -> UsersAPI: Verify authentication
+
+alt Invalid Token
+    UsersAPI --> UserService: 401 Unauthorized
+    deactivate UsersAPI
+    UserService --> UI: Delete failed
+    deactivate UserService
+    UI --> Admin: Redirect to login
+    deactivate UI
+else Valid Token
+    UsersAPI -> UsersAPI: Verify Admin role in JWT claims
+
+    alt Not Admin Role
+        UsersAPI --> UserService: 403 Forbidden
+        deactivate UsersAPI
+        UserService --> UI: Delete failed
+        deactivate UserService
+        UI --> Admin: Display error: "Admin access required"
+        deactivate UI
+    else Admin Role Verified
+        UsersAPI -> Command: Execute DeleteUserCommand
+        activate Command
+
+        Command -> DB: SELECT user by ID
+        activate DB
+        DB --> Command: Return user or null
+        deactivate DB
+
+        alt User Not Found
+            Command --> UsersAPI: User not found error
+            deactivate Command
+            UsersAPI --> UserService: 404 Not Found\n{error: "User not found"}
+            deactivate UsersAPI
+            UserService --> UI: Delete failed
+            deactivate UserService
+            UI --> Admin: Display error: "User not found"
+            deactivate UI
+        else User Found
+            Command -> DB: DELETE FROM UserRoles\nWHERE userId = {userId}
+            activate DB
+            DB --> Command: User roles removed
+            deactivate DB
+
+            Command -> DB: DELETE FROM Users\nWHERE userId = {userId}
+            activate DB
+            DB --> Command: User deleted successfully
+            deactivate DB
+
+            Command --> UsersAPI: Success
+            deactivate Command
+
+            UsersAPI --> UserService: 204 No Content
+            deactivate UsersAPI
+
+            UserService --> UI: User deleted successfully
+            deactivate UserService
+
+            UI -> UI: Remove user from table
+            UI -> UI: Refresh user list
+            UI --> Admin: Show success notification\n"User deleted successfully"
+            deactivate UI
+        end
+    end
+end
+
+note right of DB
+  Hard delete implementation:
+  1. First delete from UserRoles (child table)
+  2. Then delete from Users (parent table)
+
+  This maintains referential integrity
+  while performing a hard delete.
+end note
+
+@enduml

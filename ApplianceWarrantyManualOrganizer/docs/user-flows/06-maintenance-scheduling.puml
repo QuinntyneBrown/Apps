@@ -1,0 +1,242 @@
+@startuml
+title Maintenance Scheduling Flow
+
+actor User as user
+participant "Maintenance\nReminders Page" as maintenancePage
+participant "Maintenance Service\n(Angular)" as maintenanceService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Maintenance\nScheduling Controller" as controller
+participant "Command/Query\nHandler" as handler
+participant "DB Context" as dbContext
+participant "MaintenanceSchedules\nTable" as database
+participant "Notification Service" as notificationService
+
+== View Maintenance Schedule ==
+
+user -> maintenancePage: Navigate to\nMaintenance Reminders
+activate maintenancePage
+
+maintenancePage -> maintenanceService: getMaintenanceSchedules()
+activate maintenanceService
+
+maintenanceService -> interceptor: GET /api/maintenance-scheduling\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> handler: GetMaintenanceSchedulesQuery
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: MaintenanceSchedules\n.Where(m => m.TenantId == tenantId)\n.Include(m => m.Appliance)\n.OrderBy(m => m.DueDate)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM MaintenanceSchedules\nJOIN Appliances\nWHERE TenantId = ?\nORDER BY DueDate
+activate database
+database --> dbContext: Schedule records
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<MaintenanceScheduleDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[{ scheduleId, applianceId,\ntaskName, dueDate,\nfrequency, status, ... }]
+deactivate controller
+
+interceptor --> maintenanceService: Success response
+deactivate interceptor
+
+maintenanceService --> maintenancePage: schedules$
+deactivate maintenanceService
+
+maintenancePage -> maintenancePage: Render list with\nstatus indicators\n(Upcoming, Overdue, Completed)
+maintenancePage --> user: Display maintenance\nschedule
+deactivate maintenancePage
+
+== Create Maintenance Reminder ==
+
+user -> maintenancePage: Click [Add Reminder]
+activate maintenancePage
+
+maintenancePage -> maintenancePage: Open reminder form dialog
+
+user -> maintenancePage: Select appliance
+
+user -> maintenancePage: Enter task details\n(Name, Description,\nDue Date, Frequency)
+
+user -> maintenancePage: Set recurrence\n(One-time, Monthly,\nQuarterly, Yearly)
+
+user -> maintenancePage: Enable notifications\n(optional)
+
+user -> maintenancePage: Click [Save]
+
+maintenancePage -> maintenanceService: createSchedule(scheduleData)
+activate maintenanceService
+
+maintenanceService -> interceptor: POST /api/maintenance-scheduling\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: { applianceId, taskName,\ndescription, dueDate,\nfrequency, notifyEnabled }
+activate controller
+
+controller -> handler: CreateMaintenanceScheduleCommand
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> handler: Calculate next due date\nbased on frequency
+
+handler -> dbContext: MaintenanceSchedules.Add(schedule)
+activate dbContext
+
+dbContext -> database: INSERT INTO MaintenanceSchedules
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+handler -> dbContext: SaveChangesAsync()
+activate dbContext
+
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Schedule saved
+deactivate database
+deactivate dbContext
+
+alt Notifications Enabled
+    handler -> notificationService: ScheduleReminder(schedule)
+    activate notificationService
+    notificationService --> handler: Reminder scheduled
+    deactivate notificationService
+end
+
+handler --> controller: MaintenanceScheduleDto
+deactivate handler
+
+controller --> interceptor: 201 Created
+deactivate controller
+
+interceptor --> maintenanceService: Success response
+deactivate interceptor
+
+maintenanceService --> maintenancePage: Schedule created
+deactivate maintenanceService
+
+maintenancePage -> maintenancePage: Close dialog and\nrefresh list
+maintenancePage --> user: Show updated\nschedule list
+deactivate maintenancePage
+
+== Mark Task as Complete ==
+
+user -> maintenancePage: Click [Complete]\non a task
+activate maintenancePage
+
+maintenancePage -> maintenanceService: completeTask(scheduleId)
+activate maintenanceService
+
+maintenanceService -> interceptor: PUT /api/maintenance-scheduling/{id}/complete\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: PUT request
+activate controller
+
+controller -> handler: CompleteMaintenanceTaskCommand(id)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: MaintenanceSchedules\n.Where(m => m.ScheduleId == id)\n.Where(m => m.TenantId == tenantId)\n.FirstOrDefaultAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM MaintenanceSchedules\nWHERE ScheduleId = ?\nAND TenantId = ?
+activate database
+database --> dbContext: Schedule record
+deactivate database
+deactivate dbContext
+
+handler -> handler: Mark as completed\nSet CompletedDate
+
+alt Recurring Task
+    handler -> handler: Calculate next due date
+    handler -> dbContext: Create new schedule\nfor next occurrence
+    activate dbContext
+    dbContext -> database: INSERT INTO MaintenanceSchedules\n(next occurrence)
+    activate database
+    database --> dbContext: Success
+    deactivate database
+    deactivate dbContext
+end
+
+handler -> dbContext: SaveChangesAsync()
+activate dbContext
+
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Updates saved
+deactivate database
+deactivate dbContext
+
+handler --> controller: MaintenanceScheduleDto
+deactivate handler
+
+controller --> interceptor: 200 OK
+deactivate controller
+
+interceptor --> maintenanceService: Success response
+deactivate interceptor
+
+maintenanceService --> maintenancePage: Task completed
+deactivate maintenanceService
+
+maintenancePage -> maintenancePage: Update list\nand show next occurrence
+maintenancePage --> user: Display updated\nschedule
+deactivate maintenancePage
+
+== View Overdue Tasks ==
+
+user -> maintenancePage: Filter by\n[Overdue Tasks]
+activate maintenancePage
+
+maintenancePage -> maintenanceService: getOverdueTasks()
+activate maintenanceService
+
+maintenanceService -> interceptor: GET /api/maintenance-scheduling\n?status=overdue\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request with filter
+activate controller
+
+controller -> handler: GetOverdueTasksQuery
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: MaintenanceSchedules\n.Where(m => m.TenantId == tenantId)\n.Where(m => m.DueDate < DateTime.UtcNow)\n.Where(m => m.Status != Completed)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM MaintenanceSchedules\nWHERE TenantId = ?\nAND DueDate < NOW()\nAND Status != 'Completed'
+activate database
+database --> dbContext: Overdue tasks
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<MaintenanceScheduleDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[overdue tasks]
+deactivate controller
+
+interceptor --> maintenanceService: Success response
+deactivate interceptor
+
+maintenanceService --> maintenancePage: overdue tasks$
+deactivate maintenanceService
+
+maintenancePage -> maintenancePage: Highlight overdue items\nwith urgent indicator
+maintenancePage --> user: Display overdue tasks
+deactivate maintenancePage
+
+@enduml

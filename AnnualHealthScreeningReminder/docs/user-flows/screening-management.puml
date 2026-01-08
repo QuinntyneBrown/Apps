@@ -1,0 +1,139 @@
+@startuml ScreeningManagement
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "ScreeningDashboard\n(UI Component)" as Dashboard
+participant "ScreeningScheduleForm\n(UI Component)" as ScheduleForm
+participant "ScreeningDetailView\n(UI Component)" as DetailView
+participant "Screening API\n(Controller)" as API
+participant "Screening Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== View Screenings Dashboard ==
+User -> Dashboard: Navigate to screenings
+activate Dashboard
+Dashboard -> API: GET /api/screenings
+activate API
+API -> Service: GetUserScreenings(userId)
+activate Service
+Service -> DB: QUERY screenings\nWHERE user_id = {userId}
+activate DB
+DB --> Service: Screening records
+deactivate DB
+Service -> Service: Calculate status\n(overdue, upcoming, completed)
+Service --> API: Screenings with status
+deactivate Service
+API --> Dashboard: 200 OK\n{screenings, overdueCount, upcomingCount}
+deactivate API
+Dashboard -> Dashboard: Display screening cards\nby status
+Dashboard --> User: Show dashboard with\nfiltered screenings
+deactivate Dashboard
+
+== Schedule New Screening ==
+User -> Dashboard: Click "Schedule Screening"
+activate Dashboard
+Dashboard -> ScheduleForm: Open form
+activate ScheduleForm
+ScheduleForm --> User: Display form
+deactivate Dashboard
+
+User -> ScheduleForm: Select screening type
+ScheduleForm -> API: GET /api/providers?specialization={type}
+activate API
+API -> Service: SearchProviders(specialization)
+activate Service
+Service -> DB: QUERY providers
+activate DB
+DB --> Service: Provider list
+deactivate DB
+Service --> API: Providers
+deactivate Service
+API --> ScheduleForm: 200 OK\n{providers}
+deactivate API
+ScheduleForm -> ScheduleForm: Display provider list
+
+User -> ScheduleForm: Select provider,\ndate/time, location
+User -> ScheduleForm: Submit form
+ScheduleForm -> ScheduleForm: Validate form data
+ScheduleForm -> API: POST /api/screenings\n{type, provider, date, location}
+activate API
+API -> Service: CreateScreening(data)
+activate Service
+Service -> DB: INSERT INTO screenings
+activate DB
+DB --> Service: Screening created
+deactivate DB
+Service -> Service: Schedule reminder
+Service -> Service: Calculate next due date
+Service --> API: Screening created
+deactivate Service
+API --> ScheduleForm: 201 Created\n{screening}
+deactivate API
+ScheduleForm -> ScheduleForm: Display success message
+ScheduleForm --> User: Show confirmation
+deactivate ScheduleForm
+
+== Complete Screening ==
+User -> Dashboard: Select scheduled screening
+activate Dashboard
+Dashboard -> DetailView: Open detail view
+activate DetailView
+DetailView -> API: GET /api/screenings/{id}
+activate API
+API -> Service: GetScreening(id)
+activate Service
+Service -> DB: QUERY screening\nWHERE id = {id}
+activate DB
+DB --> Service: Screening details
+deactivate DB
+Service --> API: Screening
+deactivate Service
+API --> DetailView: 200 OK\n{screening}
+deactivate API
+DetailView --> User: Show screening details
+deactivate Dashboard
+
+User -> DetailView: Click "Complete Screening"
+DetailView -> DetailView: Show results form
+User -> DetailView: Enter results,\nabnormal findings, follow-up
+User -> DetailView: Submit results
+DetailView -> API: PUT /api/screenings/{id}/complete\n{results, findings, followUp}
+activate API
+API -> Service: CompleteScreening(id, results)
+activate Service
+Service -> DB: UPDATE screenings\nSET status='Completed',\nresults={data}
+activate DB
+DB --> Service: Screening updated
+deactivate DB
+Service -> Service: Update compliance score
+Service -> Service: Schedule next screening
+Service -> Service: Generate recommendations\nif follow-up needed
+Service --> API: Screening completed
+deactivate Service
+API --> DetailView: 200 OK\n{updatedScreening}
+deactivate API
+DetailView -> DetailView: Update display
+DetailView --> User: Show completed status\nand next due date
+deactivate DetailView
+
+== View Overdue Screenings ==
+User -> Dashboard: View overdue alerts
+activate Dashboard
+Dashboard -> API: GET /api/screenings/overdue
+activate API
+API -> Service: GetOverdueScreenings(userId)
+activate Service
+Service -> DB: QUERY screenings\nWHERE status='Scheduled'\nAND next_due_date < NOW()
+activate DB
+DB --> Service: Overdue screenings
+deactivate DB
+Service -> Service: Calculate days overdue
+Service --> API: Overdue screenings
+deactivate Service
+API --> Dashboard: 200 OK\n{overdueScreenings}
+deactivate API
+Dashboard -> Dashboard: Display warning alerts\nwith urgency indicators
+Dashboard --> User: Show overdue screenings\nwith quick actions
+deactivate Dashboard
+
+@enduml

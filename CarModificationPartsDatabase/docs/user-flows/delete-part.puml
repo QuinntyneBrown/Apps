@@ -1,0 +1,61 @@
+@startuml delete-part
+title Delete Part Flow
+
+actor User
+participant "Parts Dashboard/\nPart Detail Page" as UI
+participant "Part Service\n(Angular)" as PartService
+participant "Parts Controller\n(/api/parts)" as PartsController
+participant "Delete Part\nCommand Handler" as CommandHandler
+database "CarModificationPartsDatabase\nContext" as DB
+
+User -> UI: Click Delete button on part card/row
+UI -> UI: Show confirmation dialog\n"Are you sure you want to\ndelete this part?"
+
+alt User cancels
+    User -> UI: Click Cancel
+    UI -> User: Close dialog, no action taken
+else User confirms
+    User -> UI: Click Confirm Delete
+
+    UI -> PartService: deletePart(partId)
+    PartService -> PartsController: DELETE /api/parts/{partId}
+
+    PartsController -> CommandHandler: Handle DeletePartCommand
+
+    CommandHandler -> DB: Query Part by partId\nWHERE TenantId = currentTenantId
+    DB --> CommandHandler: Return Part entity
+
+    alt Part not found
+        CommandHandler --> PartsController: 404 Not Found
+        PartsController --> PartService: Part deletion failed
+        PartService --> UI: Show error message
+        UI -> User: Display "Part not found"
+    else Part exists
+        alt Part has associated files
+            CommandHandler -> CommandHandler: Get list of associated files\n(images, documents)
+            CommandHandler -> CommandHandler: Delete files from storage
+            note right
+              Remove physical files from
+              blob storage or file system
+            end note
+        end
+
+        CommandHandler -> DB: Remove Part entity\n(hard delete including\nrelated associations)
+        DB -> DB: Delete related associations\n(e.g., part categories,\npart tags, etc.)
+        DB -> DB: Delete Part entity
+        DB --> CommandHandler: Part deleted successfully
+
+        CommandHandler --> PartsController: 204 No Content
+
+        PartsController --> PartService: Part deleted successfully
+        PartService --> UI: Part deletion successful
+        UI -> UI: Remove part from list\n(if on list view)
+        UI -> User: Display success message\n"Part deleted successfully"
+
+        alt On Part Detail Page
+            UI -> UI: Navigate back to parts list
+        end
+    end
+end
+
+@enduml

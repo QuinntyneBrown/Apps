@@ -1,0 +1,124 @@
+@startuml
+title Add Trusted Contact/Executor Flow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Contacts Page" as UI
+participant "Add Executor Modal" as Modal
+participant "Permission Manager" as PermManager
+participant "Contact Service" as Service
+participant "Notification Service" as NotifyService
+participant "API Gateway" as API
+participant "Contacts Controller" as Controller
+participant "Contact Repository" as Repository
+database "Database" as DB
+
+User -> UI: Navigate to /contacts
+activate UI
+UI --> User: Display executors dashboard
+
+User -> UI: Click "Add Executor" button
+UI -> Modal: Open AddExecutorModal
+activate Modal
+Modal --> User: Display executor form
+
+User -> Modal: Fill basic information:\n- Name\n- Email\n- Phone\n- Relationship
+
+Modal -> Modal: Validate:\n- Email format\n- Phone format\n- Required fields
+
+User -> Modal: Select "Scope of Authority":\n- All accounts\n- Specific accounts\n- Limited actions
+
+alt Specific Accounts Selected
+    Modal -> Service: getAccounts()
+    Service -> API: GET /api/accounts
+    API --> Service: Accounts list
+    Service --> Modal: Display account selector
+    User -> Modal: Select specific accounts
+end
+
+User -> Modal: Choose "Access Level":\n- Full Access\n- Limited Access\n- View-only
+
+User -> Modal: Write personal message (optional)
+User -> Modal: Check "Send notification now"
+User -> Modal: Click "Save"
+
+Modal -> Service: createExecutor(executorData)
+activate Service
+
+Service -> API: POST /api/contacts/executors\n{contactData, permissions}
+activate API
+API -> API: Validate JWT token
+
+API -> Controller: CreateExecutor(command)
+activate Controller
+
+Controller -> Repository: BeginTransaction()
+activate Repository
+
+Repository -> DB: INSERT INTO Contacts\nVALUES (...)
+activate DB
+DB --> Repository: Contact created (ID)
+deactivate DB
+
+Repository -> DB: INSERT INTO Permissions\nVALUES (contactId, accounts, level)
+activate DB
+DB --> Repository: Permissions created
+deactivate DB
+
+Repository -> Repository: CommitTransaction()
+Repository --> Controller: Executor entity with permissions
+deactivate Repository
+
+Controller --> API: 201 Created\n{executorId, executor}
+deactivate Controller
+
+API --> Service: Executor created
+deactivate API
+
+Service --> Modal: Success
+deactivate Service
+
+Modal -> Modal: Close modal
+
+alt Send Notification Enabled
+    Modal -> NotifyService: sendExecutorInvitation(executorId)
+    activate NotifyService
+
+    NotifyService -> API: POST /api/notifications/executor-invitation\n{executorId, personalMessage}
+    activate API
+
+    API -> Controller: SendInvitation(executorId)
+    activate Controller
+
+    Controller -> Controller: Generate invitation token
+    Controller -> Controller: Create notification email:\n- Role explanation\n- Acceptance link\n- Personal message
+
+    Controller -> Controller: Send email notification
+    Controller -> Controller: Send SMS notification
+
+    Controller -> Repository: LogNotification(executorId, status)
+    Repository -> DB: INSERT INTO Notifications
+    DB --> Repository: Notification logged
+    Repository --> Controller: Success
+    deactivate Repository
+
+    Controller --> API: Notification sent
+    deactivate Controller
+
+    API --> NotifyService: Success
+    deactivate API
+
+    NotifyService --> Modal: Notification sent
+    deactivate NotifyService
+end
+
+Modal -> UI: Refresh contacts list
+deactivate Modal
+
+UI -> UI: Show success message:\n"Executor added successfully"
+UI -> UI: Display new executor card\nwith "Invitation Sent" badge
+UI --> User: Show acceptance tracking
+deactivate UI
+
+@enduml

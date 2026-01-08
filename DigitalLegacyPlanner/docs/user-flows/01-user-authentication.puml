@@ -1,0 +1,69 @@
+@startuml
+title User Authentication Flow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Login Page" as UI
+participant "Auth Service" as AuthService
+participant "API Gateway" as API
+participant "Auth Controller" as AuthController
+participant "User Repository" as UserRepo
+database "Database" as DB
+
+User -> UI: Navigate to /login
+activate UI
+UI -> User: Display login form
+User -> UI: Enter username & password
+UI -> UI: Validate form inputs
+
+User -> UI: Click "Login"
+UI -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> API: POST /api/auth/login\n{username, password}
+activate API
+
+API -> AuthController: Login(credentials)
+activate AuthController
+
+AuthController -> UserRepo: GetUserByUsername(username)
+activate UserRepo
+UserRepo -> DB: SELECT * FROM Users\nWHERE Username = ?
+activate DB
+DB --> UserRepo: User record
+deactivate DB
+UserRepo --> AuthController: User entity
+deactivate UserRepo
+
+AuthController -> AuthController: Validate password hash\nPBKDF2-SHA256
+
+alt Valid Credentials
+    AuthController -> AuthController: Generate JWT token\n(userId, username, email, roles)
+
+    AuthController --> API: 200 OK\n{token, expiresAt, user}
+    deactivate AuthController
+
+    API --> AuthService: AuthResponse
+    deactivate API
+
+    AuthService -> AuthService: Store token in localStorage
+    AuthService --> UI: Login successful
+    deactivate AuthService
+
+    UI -> UI: Redirect to /dashboard
+    UI -> User: Display dashboard
+    deactivate UI
+
+else Invalid Credentials
+    AuthController --> API: 401 Unauthorized\n{error: "Invalid credentials"}
+    deactivate AuthController
+    API --> AuthService: Error response
+    deactivate API
+    AuthService --> UI: Authentication failed
+    deactivate AuthService
+    UI -> User: Display error message
+    deactivate UI
+end
+
+@enduml

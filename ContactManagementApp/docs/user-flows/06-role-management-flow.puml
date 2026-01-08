@@ -1,0 +1,163 @@
+@startuml Role Management Flow
+title Role Management Flow (Create and Delete)
+
+actor "Administrator" as Admin
+participant "Role Management\nPage (Angular)" as UI
+participant "Role Service\n(Angular)" as RoleService
+participant "HTTP Interceptor" as Interceptor
+participant "Roles Controller\n(/api/roles)" as RolesAPI
+participant "CreateRoleCommand" as CreateCmd
+participant "DeleteRoleCommand" as DeleteCmd
+database "SQL Database" as DB
+
+== Create Role Flow ==
+
+Admin -> UI: Click "Add Role" button
+activate UI
+
+UI -> UI: Show role creation form
+Admin -> UI: Enter role name
+
+Admin -> UI: Click "Create" button
+UI -> UI: Validate form\n(role name required)
+
+alt Validation Failed
+    UI --> Admin: Display validation errors
+else Validation Passed
+    UI -> RoleService: createRole(roleName)
+    activate RoleService
+
+    RoleService -> Interceptor: POST /api/roles\n{name: roleName}
+    activate Interceptor
+    Interceptor -> Interceptor: Inject JWT token
+    Interceptor -> RolesAPI: Forward with Authorization header
+    deactivate Interceptor
+    activate RolesAPI
+
+    RolesAPI -> RolesAPI: Verify Admin role
+
+    alt Not Admin
+        RolesAPI --> RoleService: 403 Forbidden
+        deactivate RolesAPI
+        RoleService --> UI: Failed
+        deactivate RoleService
+        UI --> Admin: Display error
+        deactivate UI
+    else Admin Verified
+        RolesAPI -> CreateCmd: Execute CreateRoleCommand
+        activate CreateCmd
+
+        CreateCmd -> DB: Check role name uniqueness
+        activate DB
+        DB --> CreateCmd: Return existing role or null
+        deactivate DB
+
+        alt Role Name Already Exists
+            CreateCmd --> RolesAPI: Validation error
+            deactivate CreateCmd
+            RolesAPI --> RoleService: 400 Bad Request\n{error: "Role name already exists"}
+            deactivate RolesAPI
+            RoleService --> UI: Failed
+            deactivate RoleService
+            UI --> Admin: Display error message
+            deactivate UI
+        else Role Name Available
+            CreateCmd -> DB: INSERT new role\n(roleId, name)
+            activate DB
+            DB --> CreateCmd: Role created
+            deactivate DB
+
+            CreateCmd --> RolesAPI: Return RoleDto
+            deactivate CreateCmd
+
+            RolesAPI --> RoleService: 201 Created\n{roleId, name}
+            deactivate RolesAPI
+
+            RoleService --> UI: Role created successfully
+            deactivate RoleService
+
+            UI -> UI: Close form and refresh role list
+            UI --> Admin: Show success notification
+            deactivate UI
+        end
+    end
+end
+
+== Delete Role Flow ==
+
+Admin -> UI: Click "Delete" on role row
+activate UI
+
+UI -> UI: Show confirmation dialog
+Admin -> UI: Confirm deletion
+
+UI -> RoleService: deleteRole(roleId)
+activate RoleService
+
+RoleService -> Interceptor: DELETE /api/roles/{roleId}
+activate Interceptor
+Interceptor -> Interceptor: Inject JWT token
+Interceptor -> RolesAPI: Forward with Authorization header
+deactivate Interceptor
+activate RolesAPI
+
+RolesAPI -> RolesAPI: Verify Admin role
+
+alt Not Admin
+    RolesAPI --> RoleService: 403 Forbidden
+    deactivate RolesAPI
+    RoleService --> UI: Failed
+    deactivate RoleService
+    UI --> Admin: Display error
+    deactivate UI
+else Admin Verified
+    RolesAPI -> DeleteCmd: Execute DeleteRoleCommand
+    activate DeleteCmd
+
+    DeleteCmd -> DB: SELECT role by ID
+    activate DB
+    DB --> DeleteCmd: Return role or null
+    deactivate DB
+
+    alt Role Not Found
+        DeleteCmd --> RolesAPI: Not found error
+        deactivate DeleteCmd
+        RolesAPI --> RoleService: 404 Not Found
+        deactivate RolesAPI
+        RoleService --> UI: Failed
+        deactivate RoleService
+        UI --> Admin: Display error
+        deactivate UI
+    else Role Found
+        DeleteCmd -> DB: DELETE FROM UserRoles\nWHERE roleId = {roleId}
+        activate DB
+        DB --> DeleteCmd: Role associations removed
+        deactivate DB
+
+        DeleteCmd -> DB: DELETE FROM Roles\nWHERE roleId = {roleId}
+        activate DB
+        DB --> DeleteCmd: Role deleted
+        deactivate DB
+
+        DeleteCmd --> RolesAPI: Success
+        deactivate DeleteCmd
+
+        RolesAPI --> RoleService: 204 No Content
+        deactivate RolesAPI
+
+        RoleService --> UI: Role deleted successfully
+        deactivate RoleService
+
+        UI -> UI: Refresh role list
+        UI --> Admin: Show success notification
+        deactivate UI
+    end
+end
+
+note right of DB
+  Role deletion removes the role
+  from all users automatically
+  via UserRoles table cleanup.
+end note
+
+@enduml

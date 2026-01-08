@@ -1,0 +1,507 @@
+@startuml
+title User Management Flow
+
+actor "Administrator" as Admin
+participant "Users Page\n(Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "Role Service\n(Angular)" as RoleService
+participant "Users Controller\n(/api/users)" as UserController
+participant "Roles Controller\n(/api/roles)" as RoleController
+participant "Command Handler\n(MediatR)" as Handler
+participant "Password Hashing\nService" as PasswordService
+participant "IFreelanceProjectManagerContext" as DbContext
+database "SQL Server" as DB
+
+== View Users List ==
+Admin -> UI: Navigate to\nUser Management page
+activate UI
+
+UI -> UserService: getUsers()
+activate UserService
+
+UserService -> UserController: GET /api/users
+activate UserController
+
+UserController -> Handler: Handle(GetUsersQuery)
+activate Handler
+
+Handler -> DbContext: Users.Include(u => u.Roles)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT u.*, r.*\nFROM Users u\nLEFT JOIN UserRoles ur ON u.UserId = ur.UserId\nLEFT JOIN Roles r ON ur.RoleId = r.RoleId
+activate DB
+DB --> DbContext: User records with roles
+deactivate DB
+
+DbContext --> Handler: List<User>
+deactivate DbContext
+
+Handler --> UserController: List<UserDto>\n(password excluded)
+deactivate Handler
+
+UserController --> UserService: 200 OK\nList<UserDto>
+deactivate UserController
+
+UserService --> UI: User data
+deactivate UserService
+
+UI --> Admin: Display users list\nwith roles
+deactivate UI
+
+== Create New User ==
+Admin -> UI: Click "Add User"\nbutton
+activate UI
+
+UI -> UI: Open user form modal
+
+Admin -> UI: Fill in user details:\n- Username\n- Email\n- Password\n- Confirm password\n- Select roles
+
+UI -> UI: Validate form:\n- Username unique\n- Valid email format\n- Password >= 8 chars\n- Passwords match
+
+Admin -> UI: Click "Create User"
+
+UI -> UserService: createUser(userData)
+activate UserService
+
+UserService -> UserController: POST /api/users\n{username, email,\npassword, roleIds}
+activate UserController
+
+UserController -> Handler: Handle(CreateUserCommand)
+activate Handler
+
+Handler -> DbContext: Users.AnyAsync(\nu => u.UserName == username ||\nu.Email == email)
+activate DbContext
+DbContext -> DB: SELECT COUNT(*) FROM Users\nWHERE UserName = @username\nOR Email = @email
+activate DB
+DB --> DbContext: Count result
+deactivate DB
+DbContext --> Handler: Boolean (exists check)
+deactivate DbContext
+
+alt Username or Email Already Exists
+    Handler --> UserController: 400 Bad Request\n"Username or email already exists"
+    UserController --> UserService: Error response
+    UserService --> UI: Validation error
+    UI --> Admin: Show error message
+
+else Unique Credentials
+    Handler -> PasswordService: HashPassword(password)
+    activate PasswordService
+
+    PasswordService -> PasswordService: Generate unique salt:\n32-byte random
+
+    PasswordService -> PasswordService: Hash password:\nPBKDF2 with SHA-256\n100,000 iterations
+
+    PasswordService --> Handler: {hashedPassword, salt}
+    deactivate PasswordService
+
+    Handler -> Handler: Create User entity:\n- UserId (Guid)\n- UserName\n- Email\n- Password (hashed)\n- Salt
+
+    Handler -> DbContext: Users.Add(user)
+    activate DbContext
+    DbContext -> DB: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: User created
+    deactivate DbContext
+
+    Handler -> DbContext: Get roles by IDs
+    activate DbContext
+    DbContext -> DB: SELECT * FROM Roles\nWHERE RoleId IN (@roleIds)
+    activate DB
+    DB --> DbContext: Role records
+    deactivate DB
+    DbContext --> Handler: List<Role>
+    deactivate DbContext
+
+    Handler -> Handler: Create UserRole\nassociations
+
+    Handler -> DbContext: UserRoles.AddRange(userRoles)
+    activate DbContext
+    DbContext -> DB: INSERT INTO UserRoles\n(UserId, RoleId)\nVALUES (multiple rows)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Associations created
+    deactivate DbContext
+
+    Handler -> DbContext: SaveChangesAsync()
+    activate DbContext
+    DbContext --> Handler: Changes saved
+    deactivate DbContext
+
+    Handler --> UserController: UserDto
+    deactivate Handler
+
+    UserController --> UserService: 201 Created\nUserDto
+    deactivate UserController
+
+    UserService --> UI: User created
+    deactivate UserService
+
+    UI -> UI: Close modal
+    UI -> UI: Refresh users list
+    UI --> Admin: Show success message\n"User created successfully"
+    deactivate UI
+end
+
+== Update User ==
+Admin -> UI: Click edit icon\non user
+activate UI
+
+UI -> UI: Open user edit form\nwith existing data
+
+Admin -> UI: Modify user details:\n- Email\n- Update roles
+
+Admin -> UI: Click "Save Changes"
+
+UI -> UserService: updateUser(userId, userData)
+activate UserService
+
+UserService -> UserController: PUT /api/users/{userId}\n{email, roleIds}
+activate UserController
+
+UserController -> Handler: Handle(UpdateUserCommand)
+activate Handler
+
+Handler -> DbContext: Users.Include(u => u.Roles)\n.FindAsync(userId)
+activate DbContext
+DbContext -> DB: SELECT u.*, r.*\nFROM Users u\nLEFT JOIN UserRoles ur ON u.UserId = ur.UserId\nLEFT JOIN Roles r ON ur.RoleId = r.RoleId\nWHERE u.UserId = @userId
+activate DB
+DB --> DbContext: User with roles
+deactivate DB
+DbContext --> Handler: User entity
+deactivate DbContext
+
+Handler -> Handler: Update user properties:\n- Email (if changed)
+
+Handler -> Handler: Check if email\nis unique
+
+alt Email Already Taken
+    Handler --> UserController: 400 Bad Request\n"Email already in use"
+    UserController --> UserService: Error response
+    UserService --> UI: Validation error
+    UI --> Admin: Show error message
+
+else Email Available
+    Handler -> Handler: Remove existing\nrole associations
+
+    Handler -> DbContext: UserRoles.RemoveRange(\nuser.UserRoles)
+    activate DbContext
+    DbContext -> DB: DELETE FROM UserRoles\nWHERE UserId = @userId
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Roles removed
+    deactivate DbContext
+
+    Handler -> Handler: Add new role\nassociations
+
+    Handler -> DbContext: UserRoles.AddRange(newUserRoles)
+    activate DbContext
+    DbContext -> DB: INSERT INTO UserRoles\n(UserId, RoleId)\nVALUES (multiple rows)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Roles added
+    deactivate DbContext
+
+    Handler -> DbContext: SaveChangesAsync()
+    activate DbContext
+    DbContext --> Handler: Changes saved
+    deactivate DbContext
+
+    Handler --> UserController: UserDto
+    deactivate Handler
+
+    UserController --> UserService: 200 OK\nUserDto
+    deactivate UserController
+
+    UserService --> UI: User updated
+    deactivate UserService
+
+    UI -> UI: Close modal
+    UI -> UI: Refresh users list
+    UI --> Admin: Show success message\n"User updated successfully"
+    deactivate UI
+end
+
+== Change User Password ==
+Admin -> UI: Click "Reset Password"\non user
+activate UI
+
+UI -> UI: Open password\nreset form
+
+Admin -> UI: Enter new password\nand confirm
+
+UI -> UI: Validate:\n- Password >= 8 chars\n- Passwords match
+
+Admin -> UI: Click "Reset Password"
+
+UI -> UserService: resetPassword(userId, newPassword)
+activate UserService
+
+UserService -> UserController: PATCH /api/users/{userId}/password\n{newPassword}
+activate UserController
+
+UserController -> Handler: Handle(ResetPasswordCommand)
+activate Handler
+
+Handler -> DbContext: Users.FindAsync(userId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nWHERE UserId = @userId
+activate DB
+DB --> DbContext: User record
+deactivate DB
+DbContext --> Handler: User entity
+deactivate DbContext
+
+Handler -> PasswordService: HashPassword(newPassword)
+activate PasswordService
+PasswordService -> PasswordService: Generate new salt
+PasswordService -> PasswordService: Hash with PBKDF2
+PasswordService --> Handler: {hashedPassword, newSalt}
+deactivate PasswordService
+
+Handler -> Handler: Update user:\n- Password = hashedPassword\n- Salt = newSalt
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Users\nSET Password = @password,\nSalt = @salt\nWHERE UserId = @userId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> UserController: Success
+deactivate Handler
+
+UserController --> UserService: 200 OK
+deactivate UserController
+
+UserService --> UI: Password reset
+deactivate UserService
+
+UI -> UI: Close form
+UI --> Admin: Show success message\n"Password reset successfully"
+deactivate UI
+
+== Delete User ==
+Admin -> UI: Click delete icon\non user
+activate UI
+
+UI -> UI: Show confirmation dialog:\n"Are you sure?"
+
+Admin -> UI: Confirm deletion
+
+UI -> UserService: deleteUser(userId)
+activate UserService
+
+UserService -> UserController: DELETE /api/users/{userId}
+activate UserController
+
+UserController -> Handler: Handle(DeleteUserCommand)
+activate Handler
+
+Handler -> DbContext: Users.FindAsync(userId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nWHERE UserId = @userId
+activate DB
+DB --> DbContext: User record
+deactivate DB
+DbContext --> Handler: User entity
+deactivate DbContext
+
+Handler -> DbContext: Users.Remove(user)
+activate DbContext
+DbContext -> DB: DELETE FROM UserRoles\nWHERE UserId = @userId
+activate DB
+DB --> DbContext: Cascade delete
+deactivate DB
+
+DbContext -> DB: DELETE FROM Users\nWHERE UserId = @userId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: User deleted
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> UserController: Success
+deactivate Handler
+
+UserController --> UserService: 204 No Content
+deactivate UserController
+
+UserService --> UI: User deleted
+deactivate UserService
+
+UI -> UI: Remove user from list
+UI --> Admin: Show success message\n"User deleted successfully"
+deactivate UI
+
+== Manage Roles ==
+Admin -> UI: Navigate to\n"Roles" tab
+activate UI
+
+UI -> RoleService: getRoles()
+activate RoleService
+
+RoleService -> RoleController: GET /api/roles
+activate RoleController
+
+RoleController -> Handler: Handle(GetRolesQuery)
+activate Handler
+
+Handler -> DbContext: Roles.ToListAsync()
+activate DbContext
+DbContext -> DB: SELECT * FROM Roles
+activate DB
+DB --> DbContext: Role records
+deactivate DB
+DbContext --> Handler: List<Role>
+deactivate DbContext
+
+Handler --> RoleController: List<RoleDto>
+deactivate Handler
+
+RoleController --> RoleService: 200 OK\nList<RoleDto>
+deactivate RoleController
+
+RoleService --> UI: Role data
+deactivate RoleService
+
+UI --> Admin: Display roles list
+deactivate UI
+
+== Create New Role ==
+Admin -> UI: Click "Add Role"\nbutton
+activate UI
+
+UI -> UI: Open role form modal
+
+Admin -> UI: Enter role name
+
+Admin -> UI: Click "Create Role"
+
+UI -> RoleService: createRole(roleName)
+activate RoleService
+
+RoleService -> RoleController: POST /api/roles\n{name}
+activate RoleController
+
+RoleController -> Handler: Handle(CreateRoleCommand)
+activate Handler
+
+Handler -> DbContext: Roles.AnyAsync(\nr => r.Name == name)
+activate DbContext
+DbContext -> DB: SELECT COUNT(*) FROM Roles\nWHERE Name = @name
+activate DB
+DB --> DbContext: Count result
+deactivate DB
+DbContext --> Handler: Boolean (exists)
+deactivate DbContext
+
+alt Role Already Exists
+    Handler --> RoleController: 400 Bad Request\n"Role already exists"
+    RoleController --> RoleService: Error response
+    RoleService --> UI: Validation error
+    UI --> Admin: Show error message
+
+else Unique Role Name
+    Handler -> Handler: Create Role entity:\n- RoleId (Guid)\n- Name
+
+    Handler -> DbContext: Roles.Add(role)
+    activate DbContext
+    DbContext -> DB: INSERT INTO Roles\n(RoleId, Name)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Role created
+    deactivate DbContext
+
+    Handler -> DbContext: SaveChangesAsync()
+    activate DbContext
+    DbContext --> Handler: Changes saved
+    deactivate DbContext
+
+    Handler --> RoleController: RoleDto
+    deactivate Handler
+
+    RoleController --> RoleService: 201 Created\nRoleDto
+    deactivate RoleController
+
+    RoleService --> UI: Role created
+    deactivate RoleService
+
+    UI -> UI: Close modal
+    UI -> UI: Refresh roles list
+    UI --> Admin: Show success message\n"Role created successfully"
+    deactivate UI
+end
+
+== Delete Role ==
+Admin -> UI: Click delete icon\non role
+activate UI
+
+UI -> UI: Show confirmation:\n"This will remove the role\nfrom all users"
+
+Admin -> UI: Confirm deletion
+
+UI -> RoleService: deleteRole(roleId)
+activate RoleService
+
+RoleService -> RoleController: DELETE /api/roles/{roleId}
+activate RoleController
+
+RoleController -> Handler: Handle(DeleteRoleCommand)
+activate Handler
+
+Handler -> DbContext: Roles.FindAsync(roleId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Roles\nWHERE RoleId = @roleId
+activate DB
+DB --> DbContext: Role record
+deactivate DB
+DbContext --> Handler: Role entity
+deactivate DbContext
+
+Handler -> DbContext: Roles.Remove(role)
+activate DbContext
+DbContext -> DB: DELETE FROM UserRoles\nWHERE RoleId = @roleId
+activate DB
+DB --> DbContext: Cascade delete
+deactivate DB
+
+DbContext -> DB: DELETE FROM Roles\nWHERE RoleId = @roleId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Role deleted
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> RoleController: Success
+deactivate Handler
+
+RoleController --> RoleService: 204 No Content
+deactivate RoleController
+
+RoleService --> UI: Role deleted
+deactivate RoleService
+
+UI -> UI: Remove role from list
+UI --> Admin: Show success message\n"Role deleted and removed\nfrom all users"
+deactivate UI
+
+@enduml

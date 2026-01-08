@@ -1,0 +1,57 @@
+@startuml Achievement Unlock Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Achievement Unlock Flow
+
+actor User
+participant "UI" as UI
+participant "Analytics\nStore" as Store
+participant "API" as API
+participant "WebSocket" as WS
+database Database
+
+User -> UI: Complete qualifying session
+activate UI
+UI -> API: Session completed
+activate API
+API -> Database: UPDATE session
+activate Database
+Database -> Database: Check achievement criteria
+Database -> Database: Detect achievement unlocked
+Database --> API: Achievement unlocked
+deactivate Database
+API -> WS: Emit achievement-unlocked event
+activate WS
+WS --> Store: WebSocket message
+deactivate WS
+deactivate API
+
+Store -> Store: handleAchievementUnlocked()
+activate Store
+Store -> UI: Trigger notification
+deactivate Store
+activate UI
+UI -> UI: Play confetti animation
+UI -> UI: Show achievement notification
+UI -> UI: Update achievement card\nwith glow effect
+UI --> User: Achievement unlocked!\n(with celebration)
+
+User -> UI: Click to view details
+UI -> UI: Open Achievement Detail Modal
+activate UI
+UI -> UI: Display:\n- Achievement icon (large)\n- Name and description\n- Date achieved\n- Related stats
+UI --> User: Achievement details shown
+deactivate UI
+
+User -> UI: Click "Share Achievement"
+UI --> User: Share dialog
+deactivate UI
+deactivate UI
+
+@enduml

@@ -1,0 +1,139 @@
+@startuml Set Goal User Flow
+title Set Goal and Track Progress
+
+actor User
+participant "Goals\nDashboard" as GoalsUI
+participant "Set Goal\nModal" as SetGoalModal
+participant "API Gateway" as API
+participant "Goals\nService" as GoalsService
+participant "Achievements\nService" as AchievementsService
+database "Database" as DB
+
+User -> GoalsUI: Navigate to /goals
+activate GoalsUI
+GoalsUI -> API: GET /api/goals
+activate API
+API -> GoalsService: GetUserGoals(userId)
+activate GoalsService
+GoalsService -> DB: Query active and completed goals
+activate DB
+DB --> GoalsService: Return goals list
+deactivate DB
+GoalsService --> API: Return goals with progress
+deactivate GoalsService
+API --> GoalsUI: Return goals data
+deactivate API
+
+GoalsUI -> API: GET /api/goals/suggested
+activate API
+API -> GoalsService: GetSuggestedGoals(userId)
+activate GoalsService
+GoalsService -> DB: Analyze user performance\nand suggest goals
+activate DB
+DB --> GoalsService: Return performance data
+deactivate DB
+GoalsService --> API: Return suggested goals:\n- Break 90 (current avg: 95)\n- Reach 15 handicap\n- Hit 70% fairways
+deactivate GoalsService
+API --> GoalsUI: Return suggestions
+deactivate API
+
+GoalsUI --> User: Display goals dashboard:\n- Active goals with progress bars\n- Completed goals archive\n- Suggested goals
+deactivate GoalsUI
+
+== Set New Goal ==
+User -> GoalsUI: Click "Set New Goal"
+activate GoalsUI
+GoalsUI -> SetGoalModal: Open modal
+activate SetGoalModal
+SetGoalModal --> User: Display goal creation form
+deactivate SetGoalModal
+deactivate GoalsUI
+
+User -> SetGoalModal: Select goal type: "Break 90"
+activate SetGoalModal
+SetGoalModal --> User: Show target input (default: 90)
+deactivate SetGoalModal
+
+User -> SetGoalModal: Set target: 89
+activate SetGoalModal
+SetGoalModal --> User: Update display
+deactivate SetGoalModal
+
+User -> SetGoalModal: Set deadline: 3 months
+activate SetGoalModal
+SetGoalModal -> API: GET /api/goals/forecast
+activate API
+note right: Request:\n{\n  goalType: "breakScore",\n  target: 89,\n  deadline: "2026-04-08"\n}
+API -> GoalsService: CalculateForecast(userId, goalData)
+activate GoalsService
+GoalsService -> DB: Get recent scoring trends
+activate DB
+DB --> GoalsService: Return trend data
+deactivate DB
+GoalsService --> API: Return forecast:\n- onTrack: true\n- estimatedCompletion: "2026-03-15"\n- roundsNeeded: 12
+deactivate GoalsService
+API --> SetGoalModal: Return forecast
+deactivate API
+SetGoalModal --> User: Display progress forecast
+deactivate SetGoalModal
+
+User -> SetGoalModal: Enter motivation: "Improve consistency"
+activate SetGoalModal
+SetGoalModal --> User: Update display
+deactivate SetGoalModal
+
+User -> SetGoalModal: Click "Create Goal"
+activate SetGoalModal
+SetGoalModal -> API: POST /api/goals
+activate API
+note right: Request body:\n{\n  type: "breakScore",\n  target: 89,\n  deadline: "2026-04-08",\n  motivation: "Improve consistency"\n}
+API -> GoalsService: CreateGoal(userId, goalData)
+activate GoalsService
+GoalsService -> DB: INSERT INTO Goals
+activate DB
+DB --> GoalsService: Return goal ID
+deactivate DB
+GoalsService --> API: Return created goal
+deactivate GoalsService
+API --> SetGoalModal: Return success
+deactivate API
+SetGoalModal -> GoalsUI: Close modal and refresh
+deactivate SetGoalModal
+
+activate GoalsUI
+GoalsUI -> API: GET /api/goals
+activate API
+API -> GoalsService: GetUserGoals(userId)
+activate GoalsService
+GoalsService -> DB: Query goals including new one
+activate DB
+DB --> GoalsService: Return goals
+deactivate DB
+GoalsService --> API: Return goals
+deactivate GoalsService
+API --> GoalsUI: Return updated goals
+deactivate API
+GoalsUI --> User: Display updated dashboard\nwith new goal card (0% progress)
+deactivate GoalsUI
+
+== Goal Achievement ==
+note over User, DB: Later, when user completes a round\nwith score < 90...
+
+API -> GoalsService: CheckGoalProgress(userId, roundData)
+activate GoalsService
+GoalsService -> DB: Update goal progress
+activate DB
+DB --> GoalsService: Goal achieved!
+deactivate DB
+GoalsService -> AchievementsService: UnlockAchievement(userId, "break_90")
+activate AchievementsService
+AchievementsService -> DB: INSERT INTO Achievements
+activate DB
+DB --> AchievementsService: Success
+deactivate DB
+AchievementsService --> GoalsService: Achievement unlocked
+deactivate AchievementsService
+GoalsService --> API: Goal completed with achievement
+deactivate GoalsService
+
+@enduml

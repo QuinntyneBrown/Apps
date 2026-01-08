@@ -1,0 +1,81 @@
+@startuml Share Gift Idea Flow
+autonumber
+title Share Gift Idea with Family Members Flow
+
+actor User
+participant "Idea Bank\nPage" as UI
+participant "Sharing Interface\nComponent" as ShareUI
+participant "Gift Idea Service" as Service
+participant "API Controller\n/api/gift-ideas/{ideaId}/share" as API
+participant "Sharing Handler" as Handler
+participant "Notification Service" as NotificationSvc
+database "Database" as DB
+
+User -> UI: Select gift idea card
+UI -> UI: Display idea details\nwith "Share" button
+
+User -> UI: Click "Share"
+UI -> ShareUI: Display sharing interface
+ShareUI -> Service: getFamilyMembers()
+Service -> API: GET /api/family-members
+API -> DB: Query family members\nfor current tenant
+DB --> API: List of family members
+API --> Service: 200 OK {family members}
+Service --> ShareUI: Family members loaded
+ShareUI -> ShareUI: Display family member list\nwith checkboxes
+
+User -> ShareUI: Select recipients\n(family members)
+User -> ShareUI: Click "Send"
+ShareUI -> ShareUI: Validate at least one\nrecipient selected
+
+alt Recipients Selected
+    ShareUI -> Service: shareGiftIdea(giftIdeaId, recipientUserIds)
+    Service -> API: POST /api/gift-ideas/{ideaId}/share\n{recipientUserIds: [userId1, userId2]}
+
+    API -> API: Verify authentication\nand gift idea ownership
+    API -> API: Extract user ID and tenant ID
+
+    alt User Authorized and Owns Idea
+        API -> Handler: Handle ShareGiftIdeaCommand
+        Handler -> DB: Query gift idea\nand verify ownership
+
+        alt Gift Idea Exists and Owned
+            Handler -> DB: Query recipient users\nare in same tenant
+
+            alt Recipients Valid
+                loop For each recipient
+                    Handler -> DB: INSERT SharedGiftIdea\n(GiftIdeaId, SharedWithUserId,\nSharedByUserId, SharedDate)
+                    DB --> Handler: Share record created
+
+                    Handler -> NotificationSvc: Send notification\n(email/in-app)
+                    NotificationSvc -> NotificationSvc: Create notification\n"User shared a gift idea with you"
+                    NotificationSvc --> Handler: Notification sent
+                end
+
+                Handler --> API: ShareResultDto\n{sharedWith: [users], sentCount}
+                API --> Service: 200 OK\n{message: "Idea shared successfully",\nsharedWith: [users]}
+                Service --> ShareUI: Share successful
+                ShareUI -> ShareUI: Update idea card\nwith "Shared" badge
+                ShareUI --> User: Display success message\n"Shared with X family members"
+            else Recipients Invalid or Wrong Tenant
+                Handler --> API: Validation error
+                API --> Service: 400 Bad Request\n{error: "Invalid recipients"}
+                Service --> ShareUI: Error occurred
+                ShareUI --> User: Display error message
+            end
+        else Gift Idea Not Found or Not Owned
+            Handler --> API: Not found error
+            API --> Service: 404 Not Found\n{error: "Gift idea not found"}
+            Service --> ShareUI: Error occurred
+            ShareUI --> User: Display error message
+        end
+    else Not Authorized
+        API --> Service: 401/403 Error\n{error: "Not authorized"}
+        Service --> ShareUI: Authorization failed
+        ShareUI --> User: Display authorization error
+    end
+else No Recipients Selected
+    ShareUI --> User: Display validation error\n"Please select at least one recipient"
+end
+
+@enduml

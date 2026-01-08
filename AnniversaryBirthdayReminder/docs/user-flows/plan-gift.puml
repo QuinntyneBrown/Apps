@@ -1,0 +1,47 @@
+@startuml plan-gift
+title Plan Gift User Flow
+
+actor User
+participant "Date Detail" as Detail
+participant "Gift Planner" as Planner
+participant "API" as API
+participant "Database" as DB
+
+User -> Detail: View date detail
+User -> Detail: Click "Plan Gift" tab
+Detail -> Planner: Show gift planning section
+
+Planner -> API: GET /api/dates/{dateId}/gifts
+API -> DB: Fetch gift ideas for date
+DB --> API: Return gift list
+API --> Planner: Return gift data
+Planner -> User: Display gift ideas list
+
+alt Add new gift idea
+    User -> Planner: Click "Add Gift Idea"
+    Planner -> User: Show gift form
+    User -> Planner: Enter gift details\n(Name, Price, Link, Notes)
+    User -> Planner: Set priority/budget
+    User -> Planner: Click "Save"
+    Planner -> API: POST /api/gifts
+    API -> DB: Insert gift record
+    DB --> API: Confirm insert
+    API --> Planner: Return success
+    Planner -> User: Show updated list
+end
+
+alt Mark gift as purchased
+    User -> Planner: Click "Mark Purchased"
+    Planner -> API: PUT /api/gifts/{giftId}/purchase
+    API -> DB: Update gift status
+    DB --> API: Confirm update
+    API --> Planner: Return success
+    Planner -> User: Update gift display\n(show as purchased)
+end
+
+alt Track budget
+    User -> Planner: View budget summary
+    Planner -> User: Display total spent\nvs planned budget
+end
+
+@enduml

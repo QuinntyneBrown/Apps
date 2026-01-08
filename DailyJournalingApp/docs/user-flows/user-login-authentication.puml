@@ -1,0 +1,62 @@
+@startuml User Login and Authentication Flow
+
+actor User
+participant "Login Page" as LoginUI
+participant "Auth Service" as AuthService
+participant "Auth Controller" as AuthAPI
+participant "Authentication Service" as AuthBackend
+participant "Database" as DB
+
+User -> LoginUI: Enter credentials (username, password)
+activate LoginUI
+
+LoginUI -> LoginUI: Validate form input
+
+LoginUI -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> AuthAPI: POST /api/auth/login
+activate AuthAPI
+
+AuthAPI -> AuthBackend: ValidateCredentials()
+activate AuthBackend
+
+AuthBackend -> DB: Query user by username
+activate DB
+DB --> AuthBackend: User entity with hashed password and salt
+deactivate DB
+
+AuthBackend -> AuthBackend: Hash provided password with user salt
+
+alt Credentials Valid
+    AuthBackend -> AuthBackend: Generate JWT token with claims
+
+    AuthBackend --> AuthAPI: JWT token and user info
+    deactivate AuthBackend
+
+    AuthAPI --> AuthService: 200 OK with token data
+    deactivate AuthAPI
+
+    AuthService -> AuthService: Store token in localStorage
+
+    AuthService --> LoginUI: Login successful
+    deactivate AuthService
+
+    LoginUI --> User: Redirect to dashboard
+    deactivate LoginUI
+
+else Credentials Invalid
+    AuthBackend --> AuthAPI: Invalid credentials
+    deactivate AuthBackend
+
+    AuthAPI --> AuthService: 401 Unauthorized
+    deactivate AuthAPI
+
+    AuthService --> LoginUI: Login failed
+    deactivate AuthService
+
+    LoginUI --> User: Display error message
+    deactivate LoginUI
+end
+
+@enduml

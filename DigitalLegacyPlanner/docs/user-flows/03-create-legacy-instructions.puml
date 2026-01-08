@@ -1,0 +1,115 @@
+@startuml
+title Create Legacy Instructions Flow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Instructions Page" as UI
+participant "Instruction Wizard" as Wizard
+participant "Template Library" as Templates
+participant "Instruction Service" as Service
+participant "API Gateway" as API
+participant "Instructions Controller" as Controller
+participant "Instruction Repository" as Repository
+database "Database" as DB
+
+User -> UI: Navigate to /instructions
+activate UI
+UI --> User: Display instructions dashboard\nwith accounts needing instructions
+
+User -> UI: Click "Add Instruction"
+UI -> Wizard: Open CreateInstructionWizard
+activate Wizard
+
+== Step 1: Select Account ==
+Wizard --> User: Display account selection
+Wizard -> Service: getAccountsWithoutInstructions()
+Service -> API: GET /api/accounts/incomplete
+API --> Service: Accounts list
+Service --> Wizard: Populate account dropdown
+
+User -> Wizard: Select account
+Wizard -> Wizard: Click "Next"
+
+== Step 2: Choose Preferred Action ==
+Wizard --> User: Display action options:\n- Close Account\n- Memorialize\n- Preserve\n- Transfer
+
+User -> Wizard: Select "Memorialize"
+Wizard -> Wizard: Show action description\nand platform policies
+
+User -> Wizard: Browse templates (optional)
+Wizard -> Templates: loadTemplates(action, platform)
+activate Templates
+Templates -> API: GET /api/templates?action=memorialize&platform={platform}
+API --> Templates: Template list
+Templates --> Wizard: Display template options
+deactivate Templates
+
+User -> Wizard: Select template (optional)
+Wizard -> Wizard: Load template content
+Wizard -> Wizard: Click "Next"
+
+== Step 3: Detailed Instructions ==
+Wizard --> User: Display action-specific form
+
+alt Memorialize Action
+    User -> Wizard: Configure memorialization:\n- Allow comments\n- Display profile\n- Custom memorial message
+end
+
+User -> Wizard: Add detailed step-by-step instructions
+Wizard -> Wizard: Rich text editor with:\n- Numbered steps\n- Checklists\n- Formatting
+
+User -> Wizard: Add beneficiary assignments (optional)
+User -> Wizard: Click "Next"
+
+== Step 4: Review & Save ==
+Wizard --> User: Display instruction preview
+User -> Wizard: Review all details
+User -> Wizard: Click "Save Instruction"
+
+Wizard -> Wizard: Validate instruction data
+Wizard -> Service: createInstruction(instructionData)
+activate Service
+
+Service -> API: POST /api/instructions\n{accountId, action, steps, settings}
+activate API
+API -> API: Validate JWT token
+
+API -> Controller: CreateInstruction(command)
+activate Controller
+
+Controller -> Repository: AddAsync(instruction)
+activate Repository
+Repository -> DB: INSERT INTO Instructions\nVALUES (...)
+activate DB
+DB --> Repository: Instruction created (ID)
+deactivate DB
+
+Repository -> DB: UPDATE Accounts\nSET HasInstructions = true\nWHERE Id = accountId
+activate DB
+DB --> Repository: Account updated
+deactivate DB
+
+Repository --> Controller: Instruction entity
+deactivate Repository
+
+Controller --> API: 201 Created\n{instructionId, instruction}
+deactivate Controller
+
+API --> Service: Success
+deactivate API
+
+Service -> Service: Update local state
+Service --> Wizard: Instruction created
+deactivate Service
+
+Wizard -> Wizard: Close wizard
+Wizard -> UI: Refresh instructions list
+deactivate Wizard
+
+UI -> UI: Show success message:\n"Instruction created successfully"
+UI -> UI: Update completion progress
+UI --> User: Display new instruction card
+deactivate UI
+
+@enduml

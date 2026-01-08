@@ -1,0 +1,130 @@
+@startuml Create User Flow
+title Create User Flow
+
+actor Administrator
+participant "User Management\nPage" as UserMgmt
+participant "Create User\nDialog" as Dialog
+participant "User Service\n(Angular)" as UserService
+participant "API Controller\n/api/users" as UserAPI
+participant "CreateUser\nCommand Handler" as Handler
+participant "IHouseholdBudgetManagerContext" as DbContext
+participant "Password Hashing\nService" as HashService
+database "SQL Server" as DB
+
+Administrator -> UserMgmt: Navigate to user management
+activate UserMgmt
+
+UserMgmt -> UserService: getAllUsers()
+activate UserService
+UserService -> UserAPI: GET /api/users
+activate UserAPI
+UserAPI -> DbContext: Users.Include(u => u.Roles).ToList()
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nJOIN UserRoles\nJOIN Roles
+activate DB
+DB --> DbContext: User list with roles
+deactivate DB
+DbContext --> UserAPI: User entities
+deactivate DbContext
+UserAPI --> UserService: UserDto[]
+deactivate UserAPI
+UserService --> UserMgmt: Users list
+deactivate UserService
+
+UserMgmt --> Administrator: Display users table
+
+Administrator -> UserMgmt: Click "Create User"
+UserMgmt -> Dialog: Open create user dialog
+activate Dialog
+
+Dialog --> Administrator: Show create user form\n(username, email, password fields)
+
+Administrator -> Dialog: Enter username
+Dialog -> Dialog: Validate username:\n- Non-empty\n- Format
+
+Administrator -> Dialog: Enter email
+Dialog -> Dialog: Validate email:\n- Non-empty\n- Valid email format
+
+Administrator -> Dialog: Enter password
+Dialog -> Dialog: Validate password:\n- Minimum 8 characters\n- Contains uppercase\n- Contains lowercase\n- Contains number
+
+Administrator -> Dialog: Click "Create"
+
+Dialog -> UserService: createUser({username, email, password})
+activate UserService
+
+UserService -> UserAPI: POST /api/users\n{username, email, password}
+activate UserAPI
+
+UserAPI -> Handler: Handle(CreateUserCommand)
+activate Handler
+
+Handler -> Handler: Validate command:\n- Username not empty\n- Email valid format\n- Password meets requirements
+
+Handler -> DbContext: Check username uniqueness\nUsers.Any(u => u.UserName == username)
+activate DbContext
+DbContext -> DB: SELECT COUNT(*) FROM Users\nWHERE UserName = ?
+activate DB
+DB --> DbContext: Count result
+deactivate DB
+DbContext --> Handler: Boolean (exists or not)
+deactivate DbContext
+
+alt Username Already Exists
+    Handler --> UserAPI: 400 Bad Request\n{error: "Username already exists"}
+    UserAPI --> UserService: Error response
+    UserService --> Dialog: Show error message
+    Dialog --> Administrator: Display "Username already exists"
+else Username Available
+    Handler -> DbContext: Check email uniqueness\nUsers.Any(u => u.Email == email)
+    activate DbContext
+    DbContext -> DB: SELECT COUNT(*) FROM Users\nWHERE Email = ?
+    activate DB
+    DB --> DbContext: Count result
+    deactivate DB
+    DbContext --> Handler: Boolean
+    deactivate DbContext
+
+    alt Email Already Exists
+        Handler --> UserAPI: 400 Bad Request\n{error: "Email already exists"}
+        UserAPI --> UserService: Error response
+        UserService --> Dialog: Show error message
+        Dialog --> Administrator: Display "Email already exists"
+    else Email Available
+        Handler -> HashService: HashPassword(password)
+        activate HashService
+        HashService -> HashService: Generate unique 32-byte salt
+        HashService -> HashService: Apply PBKDF2 with SHA-256\n100,000 iterations
+        HashService --> Handler: {hashedPassword, salt}
+        deactivate HashService
+
+        Handler -> Handler: Create User entity:\n- UserId = new Guid()\n- UserName\n- Email\n- Password (hashed)\n- Salt
+
+        Handler -> DbContext: Users.Add(newUser)
+        activate DbContext
+        DbContext -> DB: INSERT INTO Users\nVALUES (userId, username, email,\nhashedPassword, salt)
+        activate DB
+        DB --> DbContext: Success
+        deactivate DB
+        DbContext --> Handler: User created
+        deactivate DbContext
+
+        Handler -> Handler: Raise UserCreated event
+
+        Handler --> UserAPI: 201 Created\n{userId, username, email}
+        deactivate Handler
+        UserAPI --> UserService: User created successfully
+        deactivate UserAPI
+        UserService --> Dialog: Success response
+        deactivate UserService
+
+        Dialog --> Administrator: Display "User created successfully"
+        deactivate Dialog
+
+        UserMgmt -> UserMgmt: Refresh user list
+        UserMgmt --> Administrator: Display updated users table\nwith new user
+        deactivate UserMgmt
+    end
+end
+
+@enduml

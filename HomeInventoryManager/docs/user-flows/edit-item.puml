@@ -1,0 +1,89 @@
+@startuml edit-item
+title Edit Item Flow
+
+actor User
+participant "Item Details Page" as DetailsPage
+participant "Edit Item Page\n(/items/:id/edit)" as EditPage
+participant "Item Service" as ItemService
+participant "API Controller\n(/api/items)" as API
+participant "UpdateItem Handler" as Handler
+database "Items Table" as ItemsDB
+database "ItemPhotos Table" as PhotosDB
+
+User -> DetailsPage: View item details
+DetailsPage --> User: Display item information
+
+User -> DetailsPage: Click "Edit" button
+DetailsPage -> EditPage: Navigate to edit page
+
+activate EditPage
+EditPage -> ItemService: getItem(itemId)
+ItemService -> API: GET /api/items/{itemId}\nAuthorization: Bearer {token}
+API -> ItemsDB: Query item by ItemId and TenantId
+ItemsDB --> API: Item data
+API -> PhotosDB: Query photos for item
+PhotosDB --> API: Photo list
+API --> ItemService: ItemDto with photos
+ItemService --> EditPage: Item data
+
+EditPage --> User: Show pre-populated form
+
+User -> EditPage: Modify fields\n(name, description, value, etc.)
+User -> EditPage: Update photos\n(add new or remove existing)
+
+alt Adding new photos
+    EditPage -> ItemService: uploadPhotos(files)
+    ItemService -> API: POST /api/photos
+    API --> ItemService: New photo URLs
+    ItemService --> EditPage: Photos uploaded
+end
+
+alt Removing photos
+    EditPage -> ItemService: deletePhoto(photoId)
+    ItemService -> API: DELETE /api/photos/{photoId}
+    API -> PhotosDB: DELETE photo record
+    PhotosDB --> API: Deleted
+    API --> ItemService: Success
+end
+
+User -> EditPage: Click "Save Changes"
+EditPage -> EditPage: Validate form
+
+alt Validation passes
+    EditPage -> ItemService: updateItem(itemId, changes)
+    ItemService -> API: PUT /api/items/{itemId}\nAuthorization: Bearer {token}\n{updatedFields}
+
+    API -> Handler: Handle UpdateItemCommand
+    Handler -> ItemsDB: Query existing item\n(verify ownership and TenantId)
+    ItemsDB --> Handler: Current item data
+
+    alt Item exists and user owns it
+        Handler -> Handler: Track changed fields\n(previousValues vs newValues)
+        Handler -> Handler: Update item properties
+        Handler -> Handler: Update UpdatedAt timestamp
+        Handler -> ItemsDB: UPDATE Item record
+        ItemsDB --> Handler: Item updated
+
+        Handler -> Handler: Raise ItemUpdated event\n(with change tracking)
+        Handler --> API: Updated ItemDto
+        API --> ItemService: 200 OK\n{updatedItem}
+        ItemService --> EditPage: Success
+
+        EditPage --> User: Show success notification\n"Item updated"
+        EditPage -> DetailsPage: Redirect to item details
+        DetailsPage --> User: Display updated information
+
+    else Item not found or unauthorized
+        Handler --> API: 404 Not Found\nor 403 Forbidden
+        API --> ItemService: Error
+        ItemService --> EditPage: Update failed
+        EditPage --> User: Show error message
+    end
+
+else Validation fails
+    EditPage --> User: Show validation errors
+end
+
+deactivate EditPage
+
+@enduml

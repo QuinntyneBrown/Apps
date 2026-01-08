@@ -1,0 +1,203 @@
+@startuml
+title User Management (Admin) Flow - Camping Trip Planner
+
+actor Admin as admin
+participant "User Management Page" as adminPage
+participant "User Service" as userService
+participant "Role Service" as roleService
+participant "User Controller" as userController
+participant "Role Controller" as roleController
+participant "Create User\nCommand Handler" as createUserHandler
+participant "Add Role\nCommand Handler" as addRoleHandler
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+
+admin -> adminPage: Navigate to\nUser Management
+activate adminPage
+
+adminPage -> userService: getAllUsers()
+activate userService
+userService -> userController: GET /api/users
+activate userController
+userController -> dbContext: Query users
+activate dbContext
+dbContext -> db: SELECT u.*, r.*\nFROM Users u\nLEFT JOIN UserRoles ur ON u.UserId = ur.UserId\nLEFT JOIN Roles r ON ur.RoleId = r.RoleId\nWHERE u.TenantId = @tenantId
+activate db
+db --> dbContext: User records with roles
+deactivate db
+deactivate dbContext
+userController --> userService: 200 OK {users[]}
+deactivate userController
+userService --> adminPage: Observable<User[]>
+deactivate userService
+
+adminPage -> roleService: getAllRoles()
+activate roleService
+roleService -> roleController: GET /api/roles
+activate roleController
+roleController -> dbContext: Query roles
+activate dbContext
+dbContext -> db: SELECT * FROM Roles\nWHERE TenantId = @tenantId
+activate db
+db --> dbContext: Role records
+deactivate db
+deactivate dbContext
+roleController --> roleService: 200 OK {roles[]}
+deactivate roleController
+roleService --> adminPage: Observable<Role[]>
+deactivate roleService
+
+adminPage -> adminPage: Render user list\nwith role information
+adminPage -> admin: Display user\nmanagement page
+deactivate adminPage
+
+== Admin Creates New User ==
+
+admin -> adminPage: Click "Create User"
+activate adminPage
+adminPage -> admin: Display user form
+deactivate adminPage
+
+admin -> adminPage: Enter user details:\n- Username\n- Email\n- Password
+activate adminPage
+adminPage -> adminPage: Validate form:\n- Email format\n- Password strength\n- Unique username/email
+
+adminPage -> userService: createUser(userData)
+activate userService
+userService -> userController: POST /api/users\n{username, email, password}
+activate userController
+userController -> createUserHandler: Handle CreateUserCommand
+activate createUserHandler
+
+createUserHandler -> createUserHandler: Hash password\nwith salt
+
+createUserHandler -> dbContext: Check email uniqueness
+activate dbContext
+dbContext -> db: SELECT COUNT(*) FROM Users\nWHERE Email = @email\nAND TenantId = @tenantId
+activate db
+db --> dbContext: Count
+deactivate db
+deactivate dbContext
+
+alt Email Already Exists
+    createUserHandler --> userController: Validation error
+    userController --> userService: 400 Bad Request
+    userService --> adminPage: Error: Email exists
+    adminPage -> admin: Display error message
+else Email Unique
+    createUserHandler -> dbContext: Create user
+    activate dbContext
+    dbContext -> db: INSERT INTO Users\n(UserId, Username, Email,\nPassword, Salt, TenantId)
+    activate db
+    db --> dbContext: User created
+    deactivate db
+
+    createUserHandler -> dbContext: SaveChangesAsync()
+    dbContext -> db: COMMIT transaction
+    db --> dbContext: Success
+    deactivate db
+    deactivate dbContext
+
+    createUserHandler --> userController: User created
+    deactivate createUserHandler
+    userController --> userService: 201 Created {user}
+    deactivate userController
+    userService --> adminPage: User created successfully
+    deactivate userService
+
+    adminPage -> adminPage: Refresh user list
+    adminPage -> admin: Show success message
+end
+deactivate adminPage
+
+== Admin Assigns Role to User ==
+
+admin -> adminPage: Click "Add Role"\non user row
+activate adminPage
+adminPage -> admin: Display role selection
+deactivate adminPage
+
+admin -> adminPage: Select role to assign
+activate adminPage
+adminPage -> userService: addRoleToUser(userId, roleId)
+activate userService
+userService -> userController: POST /api/users/{userId}/roles\n{roleId}
+activate userController
+userController -> addRoleHandler: Handle AddRoleToUserCommand
+activate addRoleHandler
+addRoleHandler -> dbContext: Add user role
+activate dbContext
+dbContext -> db: INSERT INTO UserRoles\n(UserId, RoleId)\nON CONFLICT DO NOTHING
+activate db
+db --> dbContext: Role assigned
+deactivate db
+
+addRoleHandler -> dbContext: SaveChangesAsync()
+dbContext -> db: COMMIT transaction
+db --> dbContext: Success
+deactivate db
+deactivate dbContext
+
+addRoleHandler --> userController: Role assigned
+deactivate addRoleHandler
+userController --> userService: 200 OK
+deactivate userController
+userService --> adminPage: Role added successfully
+deactivate userService
+
+adminPage -> adminPage: Update user roles\nin UI
+adminPage -> admin: Show updated roles
+deactivate adminPage
+
+== Admin Deletes User ==
+
+admin -> adminPage: Click "Delete"\non user row
+activate adminPage
+adminPage -> admin: Confirm deletion
+deactivate adminPage
+
+admin -> adminPage: Confirm
+activate adminPage
+adminPage -> userService: deleteUser(userId)
+activate userService
+userService -> userController: DELETE /api/users/{userId}
+activate userController
+userController -> dbContext: Delete user and relations
+activate dbContext
+dbContext -> db: DELETE FROM UserRoles\nWHERE UserId = @userId
+activate db
+db --> dbContext: Roles removed
+deactivate db
+
+dbContext -> db: DELETE FROM Users\nWHERE UserId = @userId\nAND TenantId = @tenantId
+activate db
+db --> dbContext: User deleted
+deactivate db
+
+dbContext -> db: COMMIT transaction
+db --> dbContext: Success
+deactivate db
+deactivate dbContext
+
+userController --> userService: 204 No Content
+deactivate userController
+userService --> adminPage: User deleted
+deactivate userService
+
+adminPage -> adminPage: Remove user from list
+adminPage -> admin: Show deletion confirmation
+deactivate adminPage
+
+note right of adminPage
+  Admin features:
+  - View all users
+  - Create new users
+  - Update user profiles
+  - Delete users
+  - Manage roles
+  - Assign/remove roles
+  - View role permissions
+  - Password reset
+end note
+
+@enduml

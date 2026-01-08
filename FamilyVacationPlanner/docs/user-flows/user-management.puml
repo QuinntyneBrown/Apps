@@ -1,0 +1,191 @@
+@startuml user-management
+title User Management Flow - Admin Creates User and Assigns Roles
+
+actor Admin
+participant "User Management Page" as UI
+participant "Add User Modal" as Modal
+participant "User Service" as UserSvc
+participant "Users Controller" as UserCtrl
+participant "CreateUser Command" as CreateCmd
+participant "AddRoleToUser Command" as AddRoleCmd
+participant "Password Service" as PwdSvc
+participant "IFamilyVacationPlannerContext" as DbContext
+database "SQL Server" as DB
+
+Admin -> UI: Navigate to User Management
+activate UI
+
+UI -> UserSvc: getAllUsers()
+activate UserSvc
+
+UserSvc -> UserCtrl: GET /api/users\n(Authorization: Bearer token)
+activate UserCtrl
+
+note right: Admin role required
+
+UserCtrl -> DbContext: Users.Include(u => u.Roles)
+activate DbContext
+DbContext -> DB: SELECT Users.*, Roles.*\nFROM Users\nLEFT JOIN UserRoles ON Users.UserId = UserRoles.UserId\nLEFT JOIN Roles ON UserRoles.RoleId = Roles.RoleId
+activate DB
+DB --> DbContext: User and Role records
+deactivate DB
+DbContext --> UserCtrl: List<User> with Roles
+deactivate DbContext
+
+UserCtrl -> UserCtrl: Map to List<UserDto>\n(exclude password)
+
+UserCtrl --> UserSvc: 200 OK\n(List<UserDto>)
+deactivate UserCtrl
+
+UserSvc --> UI: Users data
+deactivate UserSvc
+
+UI --> Admin: Display users table\n(username, email, roles)
+
+Admin -> UI: Click "Add User"
+
+UI -> Modal: Open Add User Modal
+activate Modal
+
+Modal -> UserSvc: getAllRoles()
+activate UserSvc
+
+UserSvc -> UserCtrl: GET /api/roles
+activate UserCtrl
+
+UserCtrl -> DbContext: Roles.ToList()
+activate DbContext
+DbContext -> DB: SELECT * FROM Roles
+activate DB
+DB --> DbContext: Role records
+deactivate DB
+DbContext --> UserCtrl: List<Role>
+deactivate DbContext
+
+UserCtrl --> UserSvc: 200 OK\n(List<RoleDto>)
+deactivate UserCtrl
+
+UserSvc --> Modal: Available roles
+deactivate UserSvc
+
+Modal --> Admin: Display user form\n(with role selection)
+
+Admin -> Modal: Enter user details\n(username, email, password)
+
+Modal -> Modal: Validate inputs\n(unique username/email,\npassword strength)
+
+Admin -> Modal: Select roles
+
+Admin -> Modal: Click "Create"
+
+Modal -> UserSvc: createUser(userData, selectedRoles)
+activate UserSvc
+
+UserSvc -> UserCtrl: POST /api/users
+activate UserCtrl
+
+UserCtrl -> CreateCmd: Handle CreateUserCommand
+activate CreateCmd
+
+CreateCmd -> CreateCmd: Validate uniqueness
+
+CreateCmd -> DbContext: Users.Any(u => u.UserName == username\n|| u.Email == email)
+activate DbContext
+DbContext -> DB: SELECT COUNT(*) FROM Users\nWHERE UserName = ? OR Email = ?
+activate DB
+DB --> DbContext: Count
+deactivate DB
+DbContext --> CreateCmd: Boolean
+deactivate DbContext
+
+alt Username/Email already exists
+    CreateCmd --> UserCtrl: ValidationException
+    UserCtrl --> UserSvc: 400 Bad Request
+    UserSvc --> Modal: Validation error
+    Modal --> Admin: Display error message
+else Unique username and email
+    CreateCmd -> PwdSvc: HashPassword(password)
+    activate PwdSvc
+    PwdSvc -> PwdSvc: Generate unique salt\n(32 bytes)
+    PwdSvc -> PwdSvc: Hash with PBKDF2-SHA256\n(100,000 iterations)
+    PwdSvc --> CreateCmd: HashedPassword, Salt
+    deactivate PwdSvc
+
+    CreateCmd -> CreateCmd: Create User entity\n(with hashed password)
+
+    CreateCmd -> DbContext: Users.Add(user)
+    activate DbContext
+    DbContext -> DB: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt, ...)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext -> DbContext: SaveChanges()
+    DbContext --> CreateCmd: User saved
+    deactivate DbContext
+
+    CreateCmd --> UserCtrl: CreateUserResponse\n(UserId)
+    deactivate CreateCmd
+
+    UserCtrl --> UserSvc: 201 Created\n(UserDto)
+    deactivate UserCtrl
+
+    == Assign Roles to User ==
+
+    loop For each selected role
+        UserSvc -> UserCtrl: POST /api/users/{userId}/roles\n(roleId)
+        activate UserCtrl
+
+        UserCtrl -> AddRoleCmd: Handle AddRoleToUserCommand
+        activate AddRoleCmd
+
+        AddRoleCmd -> DbContext: UserRoles.Add(userRole)
+        activate DbContext
+        DbContext -> DB: INSERT INTO UserRoles\n(UserId, RoleId)
+        activate DB
+        DB --> DbContext: Success
+        deactivate DB
+        DbContext -> DbContext: SaveChanges()
+        DbContext --> AddRoleCmd: Role added
+        deactivate DbContext
+
+        AddRoleCmd --> UserCtrl: Success
+        deactivate AddRoleCmd
+
+        UserCtrl --> UserSvc: 200 OK
+        deactivate UserCtrl
+    end
+
+    UserSvc --> Modal: User created successfully
+    deactivate UserSvc
+
+    Modal -> Modal: Close modal
+
+    Modal --> UI: User created
+    deactivate Modal
+
+    UI -> UserSvc: getAllUsers()
+    activate UserSvc
+
+    UserSvc -> UserCtrl: GET /api/users
+    activate UserCtrl
+
+    UserCtrl -> DbContext: Users.Include(u => u.Roles)
+    activate DbContext
+    DbContext -> DB: SELECT Users.*, Roles.*
+    activate DB
+    DB --> DbContext: Updated records
+    deactivate DB
+    DbContext --> UserCtrl: List<User>
+    deactivate DbContext
+
+    UserCtrl --> UserSvc: 200 OK\n(List<UserDto>)
+    deactivate UserCtrl
+
+    UserSvc --> UI: Updated users
+    deactivate UserSvc
+
+    UI --> Admin: Display updated users table
+    deactivate UI
+end
+
+@enduml

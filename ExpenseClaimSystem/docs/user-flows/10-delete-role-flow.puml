@@ -1,0 +1,31 @@
+@startuml
+
+actor Administrator
+participant "Role Management\nPage" as UI
+participant "Role Service" as RoleService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to role list\nor role details
+Administrator -> UI: Click Delete button\nfor specific role
+
+UI -> UI: Show confirmation dialog
+
+alt Confirmed
+    UI -> RoleService: deleteRole(roleId)
+    RoleService -> API: DELETE /api/roles/{roleId}
+
+    API -> DB: DELETE FROM UserRole\nWHERE RoleId\n(remove from all users)
+    DB --> API: Role associations removed
+
+    API -> DB: DELETE FROM Role\nWHERE RoleId
+    DB --> API: Role deleted
+
+    API --> RoleService: 204 No Content
+    RoleService --> UI: Role deleted successfully
+    UI --> Administrator: Show success message\nand refresh role list
+else Cancelled
+    UI --> Administrator: Return to role list\n(no changes)
+end
+
+@enduml

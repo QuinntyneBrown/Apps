@@ -1,0 +1,244 @@
+@startuml
+title Digital Will Compilation Flow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Will Dashboard" as UI
+participant "Compilation Wizard" as Wizard
+participant "Will Service" as Service
+participant "PDF Generator" as PDFGen
+participant "API Gateway" as API
+participant "Will Controller" as Controller
+participant "Will Repository" as Repository
+database "Database" as DB
+
+User -> UI: Navigate to /will
+activate UI
+
+UI -> Service: getWillStatus()
+activate Service
+Service -> API: GET /api/will/status
+API -> Controller: GetWillStatus(userId)
+activate Controller
+Controller -> Repository: GetWillData(userId)
+activate Repository
+Repository -> DB: SELECT * FROM DigitalWills\nWHERE UserId = ?
+activate DB
+DB --> Repository: Will data (if exists)
+deactivate DB
+Repository --> Controller: Will status
+deactivate Repository
+Controller --> API: Status and coverage %
+deactivate Controller
+API --> Service: Will status
+deactivate Service
+Service --> UI: Will data
+
+UI --> User: Display will dashboard:\n- Coverage progress\n- Version history\n- Export options
+deactivate UI
+
+User -> UI: Click "Create/Update Will"
+UI -> Wizard: Open WillCompilationWizard
+activate Wizard
+
+== Step 1: Account Coverage Review ==
+Wizard --> User: Display account coverage review
+
+Wizard -> Service: getAccountCoverage()
+activate Service
+Service -> API: GET /api/accounts/coverage
+API --> Service: Accounts with instructions status
+Service --> Wizard: Account coverage data
+deactivate Service
+
+Wizard -> Wizard: Display:\n- Accounts with instructions ✓\n- Accounts missing instructions ⚠\n- Coverage percentage
+
+User -> Wizard: Review coverage
+User -> Wizard: Click "Next"
+
+== Step 2: Beneficiary Assignments ==
+Wizard --> User: Display beneficiary assignment review
+
+Wizard -> Service: getBeneficiaryAssignments()
+activate Service
+Service -> API: GET /api/beneficiaries/assignments
+API --> Service: All beneficiary assignments
+Service --> Wizard: Beneficiary data
+deactivate Service
+
+Wizard -> Wizard: Display matrix:\n- Accounts × Beneficiaries\n- Access levels\n- Distribution rules
+
+User -> Wizard: Review and adjust assignments
+User -> Wizard: Click "Next"
+
+== Step 3: Instruction Compilation ==
+Wizard --> User: Display all legacy instructions
+
+Wizard -> Service: getInstructions()
+activate Service
+Service -> API: GET /api/instructions
+API --> Service: All instructions
+Service --> Wizard: Instructions data
+deactivate Service
+
+Wizard -> Wizard: Group instructions by:\n- Account\n- Action type\n- Priority
+
+User -> Wizard: Review instructions
+User -> Wizard: Add additional notes (optional)
+User -> Wizard: Click "Next"
+
+== Step 4: Legal Information ==
+Wizard --> User: Display legal information section
+
+User -> Wizard: Add ethical will content:\n- Personal wishes\n- Values and beliefs\n- Family messages
+
+User -> Wizard: Compose final messages:\n- Individual recipients\n- Delivery conditions\n- Encryption settings
+
+User -> Wizard: Review legal disclaimers
+User -> Wizard: Click "Next"
+
+== Step 5: Review & Finalize ==
+Wizard --> User: Display complete will preview
+
+Wizard -> Wizard: Compile sections:\n1. Account Inventory Summary\n2. Beneficiary Directory\n3. Legacy Instructions\n4. Ethical Will\n5. Final Messages\n6. Legal Information
+
+User -> Wizard: Review complete will
+User -> Wizard: Click "Finalize Will"
+
+Wizard -> Service: finalizeWill(willData)
+activate Service
+
+Service -> API: POST /api/will/finalize\n{accountSummary, beneficiaries, instructions, ethicalWill, messages}
+activate API
+API -> API: Validate JWT token
+
+API -> Controller: FinalizeWill(command)
+activate Controller
+
+Controller -> Repository: BeginTransaction()
+activate Repository
+
+Repository -> DB: SELECT MAX(Version) FROM DigitalWills\nWHERE UserId = ?
+activate DB
+DB --> Repository: Current version number
+deactivate DB
+
+Repository -> Repository: Calculate new version: Current + 1
+
+Repository -> DB: INSERT INTO DigitalWills\nVALUES (userId, version, content, status='Draft', ...)
+activate DB
+DB --> Repository: Will created (ID)
+deactivate DB
+
+Repository -> DB: INSERT INTO WillSections\nVALUES (willId, sectionType, content)
+activate DB
+DB --> Repository: Sections created
+deactivate DB
+
+Repository -> DB: INSERT INTO WillHistory\nVALUES (willId, 'Created', timestamp, userId)
+activate DB
+DB --> Repository: History logged
+deactivate DB
+
+Repository -> Repository: CommitTransaction()
+Repository --> Controller: Will entity
+deactivate Repository
+
+Controller --> API: 201 Created\n{willId, version}
+deactivate Controller
+
+API --> Service: Will finalized
+deactivate API
+
+Service --> Wizard: Success
+deactivate Service
+
+Wizard -> Wizard: Close wizard
+Wizard -> UI: Navigate to will dashboard
+deactivate Wizard
+
+activate UI
+UI -> UI: Show success message:\n"Will compiled successfully"
+UI --> User: Display will details:\n- Version number\n- Creation date\n- Coverage summary
+deactivate UI
+
+== Export to PDF ==
+User -> UI: Click "Export to PDF"
+activate UI
+
+UI -> Service: exportWillToPDF(willId)
+activate Service
+
+Service -> API: GET /api/will/{willId}/export
+activate API
+
+API -> Controller: ExportWill(willId)
+activate Controller
+
+Controller -> Repository: GetWillWithAllSections(willId)
+activate Repository
+Repository -> DB: SELECT * FROM DigitalWills w\nJOIN WillSections s ON w.Id = s.WillId\nWHERE w.Id = ?
+activate DB
+DB --> Repository: Complete will data
+deactivate DB
+Repository --> Controller: Will with sections
+deactivate Repository
+
+Controller -> PDFGen: GeneratePDF(willData)
+activate PDFGen
+PDFGen -> PDFGen: Format will document:\n- Title page\n- Table of contents\n- All sections\n- Legal disclaimers\n- Signature pages
+PDFGen --> Controller: PDF bytes
+deactivate PDFGen
+
+Controller -> Repository: LogWillExport(willId)
+Repository -> DB: INSERT INTO WillExports
+DB --> Repository: Export logged
+deactivate Repository
+
+Controller --> API: PDF file
+deactivate Controller
+
+API --> Service: PDF download
+deactivate API
+
+Service --> UI: PDF file
+deactivate Service
+
+UI -> User: Download will.pdf
+deactivate UI
+
+== Optional: Share with Attorney ==
+User -> UI: Click "Share with Attorney"
+activate UI
+
+UI -> Wizard: Open share dialog
+activate Wizard
+User -> Wizard: Enter attorney email
+User -> Wizard: Add message
+User -> Wizard: Click "Send"
+
+Wizard -> Service: shareWithAttorney(willId, email, message)
+activate Service
+Service -> API: POST /api/will/{willId}/share\n{email, message}
+API -> Controller: ShareWill(command)
+activate Controller
+Controller -> Controller: Generate secure view link
+Controller -> Controller: Send email with link
+Controller -> Repository: LogWillShare(willId, email)
+Repository -> DB: INSERT INTO WillShares
+DB --> Repository: Share logged
+Repository --> Controller: Success
+deactivate Repository
+Controller --> API: Shared successfully
+deactivate Controller
+API --> Service: Success
+deactivate API
+Service --> Wizard: Email sent
+deactivate Service
+Wizard --> UI: "Will shared with attorney"
+deactivate Wizard
+UI --> User: Confirmation message
+deactivate UI
+
+@enduml

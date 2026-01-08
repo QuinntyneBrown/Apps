@@ -1,0 +1,72 @@
+@startuml Generate Weekly Report Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Generate Weekly Report Flow
+
+actor User
+participant "Reports\nDashboard" as UI
+participant "Generate\nModal" as Modal
+participant "Reports Store" as Store
+participant "API" as API
+participant "Background\nJob Queue" as Queue
+database Database
+
+User -> UI: Click "Generate Weekly Report"
+activate UI
+UI -> Modal: Open modal
+activate Modal
+Modal --> User: Show configuration form
+
+User -> Modal: Select week\n(start date)
+Modal -> Modal: Validate: must be Monday
+Modal --> User: Week selected
+
+User -> Modal: Click "Generate"
+Modal -> Store: generateWeeklyReport(config)
+activate Store
+Store -> API: POST /api/reports/weekly
+activate API
+API -> Queue: Enqueue report generation job
+activate Queue
+Queue --> API: Job queued
+deactivate Queue
+API --> Store: Job ID
+deactivate API
+Store --> Modal: Generation started
+deactivate Store
+
+Modal -> UI: Close modal
+deactivate Modal
+UI -> UI: Show loading indicator:\n"Generating report...\nThis may take a moment"
+UI --> User: In progress message
+
+Queue -> Database: Fetch sessions for week
+activate Database
+Database --> Queue: Session data
+Queue -> Database: Calculate metrics:\n- Total sessions\n- Focus minutes\n- Average score\n- Daily breakdown
+Database --> Queue: Calculated data
+deactivate Database
+
+Queue -> Database: INSERT weekly_report record
+activate Database
+Database --> Queue: Report created
+deactivate Database
+
+Queue -> API: Emit report-ready event
+activate API
+API -> UI: WebSocket notification
+deactivate API
+
+UI -> UI: Hide loading indicator
+UI -> UI: Show success notification:\n"Your weekly report is ready!"
+UI -> UI: Add new report to list
+UI --> User: Report available
+deactivate UI
+
+@enduml

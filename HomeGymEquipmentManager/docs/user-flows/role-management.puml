@@ -1,0 +1,133 @@
+@startuml
+title Role Management Flow - Assign Role to User
+
+actor Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "Users Controller\n(/api/users)" as UserController
+participant "Add Role to User\nCommand Handler" as AddRoleHandler
+database "Database\n(SQL Server)" as DB
+
+== View User with Roles ==
+
+Admin -> UI: Click on user\nto view details
+activate UI
+
+UI -> UserService: getUserById(userId)
+activate UserService
+
+UserService -> UserController: GET /api/users/{userId}
+activate UserController
+note right: Requires Admin role
+
+UserController -> DB: SELECT User\nWHERE UserId = {id}
+activate DB
+DB --> UserController: User entity
+deactivate DB
+
+UserController -> DB: SELECT Roles\nfor UserId
+activate DB
+DB --> UserController: User's roles
+deactivate DB
+
+UserController -> UserController: Map to UserDto\nwith roles array
+
+UserController --> UserService: 200 OK\n{user with roles}
+deactivate UserController
+
+UserService --> UI: User details
+deactivate UserService
+
+UI --> Admin: Display user info\nand current roles
+deactivate UI
+
+== Assign Role to User ==
+
+Admin -> UI: Click "Add Role"\nfor user
+activate UI
+
+UI -> UI: Show available\nroles dropdown
+
+Admin -> UI: Select role from list
+
+Admin -> UI: Click "Assign"
+
+UI -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+
+UserService -> UserController: POST /api/users/{userId}/roles\n{roleId}
+activate UserController
+
+UserController -> AddRoleHandler: Handle(AddRoleToUserCommand)
+activate AddRoleHandler
+
+AddRoleHandler -> DB: Check if user exists
+activate DB
+DB --> AddRoleHandler: User found
+deactivate DB
+
+AddRoleHandler -> DB: Check if role exists
+activate DB
+DB --> AddRoleHandler: Role found
+deactivate DB
+
+AddRoleHandler -> DB: Check if UserRole\nalready exists
+activate DB
+
+alt Role Already Assigned
+    DB --> AddRoleHandler: UserRole exists
+    deactivate DB
+
+    AddRoleHandler --> AddRoleHandler: Idempotent operation\n(no error)
+
+    AddRoleHandler --> UserController: Success (no change)
+    deactivate AddRoleHandler
+
+    UserController --> UserService: 200 OK
+    deactivate UserController
+
+    UserService --> UI: Role already assigned
+    deactivate UserService
+
+    UI --> Admin: Show info message
+    deactivate UI
+
+else Role Not Yet Assigned
+    DB --> AddRoleHandler: UserRole not found
+    deactivate DB
+
+    AddRoleHandler -> DB: INSERT UserRole\n(UserId, RoleId)
+    activate DB
+    DB --> AddRoleHandler: Role assigned
+    deactivate DB
+
+    AddRoleHandler -> AddRoleHandler: Raise UserRoleAdded\ndomain event
+
+    AddRoleHandler --> UserController: Success
+    deactivate AddRoleHandler
+
+    UserController --> UserService: 200 OK
+    deactivate UserController
+
+    UserService --> UI: Role assigned
+    deactivate UserService
+
+    UI -> UserService: Refresh user details
+    activate UserService
+
+    UserService -> UserController: GET /api/users/{userId}
+    activate UserController
+    UserController -> DB: Query user with roles
+    activate DB
+    DB --> UserController: Updated data
+    deactivate DB
+    UserController --> UserService: User with roles
+    deactivate UserController
+    UserService --> UI: Updated user
+    deactivate UserService
+
+    UI --> Admin: Show updated roles\nfor user
+    deactivate UI
+end
+
+@enduml

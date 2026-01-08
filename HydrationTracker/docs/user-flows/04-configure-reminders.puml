@@ -1,0 +1,194 @@
+@startuml
+title Configure Reminders Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "Reminders Config\nPage" as RemindersPage
+participant "ReminderService" as Service
+participant "RemindersController\n/api/reminders" as API
+participant "GetRemindersQuery\nHandler" as GetHandler
+participant "CreateReminderCommand\nHandler" as CreateHandler
+participant "UpdateReminderCommand\nHandler" as UpdateHandler
+participant "DeleteReminderCommand\nHandler" as DeleteHandler
+participant "ITenantContext" as TenantCtx
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Click "Reminders" link
+activate Dashboard
+Dashboard -> RemindersPage: Navigate to reminders page
+activate RemindersPage
+deactivate Dashboard
+
+RemindersPage -> Service: getReminders()
+activate Service
+Service -> API: GET /api/reminders
+activate API
+API -> GetHandler: Execute(GetRemindersQuery)
+activate GetHandler
+GetHandler -> DB: Reminders.ToListAsync()
+activate DB
+DB -> Database: Query reminders\n(filtered by TenantId)
+activate Database
+Database --> DB: Reminder records
+deactivate Database
+DB --> GetHandler: List<Reminder>
+deactivate DB
+GetHandler --> API: List<ReminderDTO>
+deactivate GetHandler
+API --> Service: 200 OK with reminders
+deactivate API
+Service --> RemindersPage: Reminder list
+deactivate Service
+
+RemindersPage -> User: Display reminders list\n(time, frequency, enabled status)
+deactivate RemindersPage
+
+== Add New Reminder ==
+
+User -> RemindersPage: Click "Add Reminder" button
+activate RemindersPage
+RemindersPage -> User: Display reminder form
+deactivate RemindersPage
+
+User -> RemindersPage: Set reminder time\n(e.g., 09:00 AM)
+activate RemindersPage
+deactivate RemindersPage
+
+User -> RemindersPage: Select frequency\n(Daily, Hourly, Custom)
+activate RemindersPage
+deactivate RemindersPage
+
+User -> RemindersPage: Set interval (if applicable)
+activate RemindersPage
+deactivate RemindersPage
+
+User -> RemindersPage: Toggle enabled/disabled
+activate RemindersPage
+deactivate RemindersPage
+
+User -> RemindersPage: Click "Save Reminder"
+activate RemindersPage
+RemindersPage -> Service: createReminder(reminderData)
+activate Service
+Service -> API: POST /api/reminders\n{time, frequency, enabled}
+activate API
+API -> CreateHandler: Execute(CreateReminderCommand)
+activate CreateHandler
+CreateHandler -> TenantCtx: Get current TenantId
+activate TenantCtx
+TenantCtx --> CreateHandler: TenantId (from JWT)
+deactivate TenantCtx
+CreateHandler -> CreateHandler: Create Reminder entity\n(with TenantId)
+CreateHandler -> DB: Reminders.Add(reminder)
+activate DB
+DB -> Database: INSERT INTO Reminders
+activate Database
+Database --> DB: Success
+deactivate Database
+DB -> DB: SaveChangesAsync()
+DB --> CreateHandler: Reminder saved
+deactivate DB
+CreateHandler --> API: CreateReminderResponse
+deactivate CreateHandler
+API --> Service: 201 Created
+deactivate API
+Service --> RemindersPage: Success
+deactivate Service
+RemindersPage -> RemindersPage: Refresh reminders list
+RemindersPage -> User: Display success message
+deactivate RemindersPage
+
+== Update Existing Reminder ==
+
+User -> RemindersPage: Click "Edit" on reminder
+activate RemindersPage
+RemindersPage -> User: Display edit form\n(pre-filled with values)
+deactivate RemindersPage
+
+User -> RemindersPage: Modify reminder settings
+activate RemindersPage
+deactivate RemindersPage
+
+User -> RemindersPage: Click "Update Reminder"
+activate RemindersPage
+RemindersPage -> Service: updateReminder(reminderId, data)
+activate Service
+Service -> API: PUT /api/reminders/{id}
+activate API
+API -> UpdateHandler: Execute(UpdateReminderCommand)
+activate UpdateHandler
+UpdateHandler -> DB: Reminders.FindAsync(reminderId)
+activate DB
+DB -> Database: Query reminder\n(filtered by TenantId)
+activate Database
+Database --> DB: Reminder record
+deactivate Database
+DB --> UpdateHandler: Reminder entity
+deactivate DB
+UpdateHandler -> UpdateHandler: Update reminder properties
+UpdateHandler -> DB: SaveChangesAsync()
+activate DB
+DB -> Database: UPDATE Reminders
+activate Database
+Database --> DB: Success
+deactivate Database
+DB --> UpdateHandler: Changes saved
+deactivate DB
+UpdateHandler --> API: Success
+deactivate UpdateHandler
+API --> Service: 200 OK
+deactivate API
+Service --> RemindersPage: Success
+deactivate Service
+RemindersPage -> RemindersPage: Refresh reminders list
+RemindersPage -> User: Display success message
+deactivate RemindersPage
+
+== Delete Reminder ==
+
+User -> RemindersPage: Click "Delete" on reminder
+activate RemindersPage
+RemindersPage -> User: Show confirmation dialog
+deactivate RemindersPage
+
+User -> RemindersPage: Confirm deletion
+activate RemindersPage
+RemindersPage -> Service: deleteReminder(reminderId)
+activate Service
+Service -> API: DELETE /api/reminders/{id}
+activate API
+API -> DeleteHandler: Execute(DeleteReminderCommand)
+activate DeleteHandler
+DeleteHandler -> DB: Reminders.FindAsync(reminderId)
+activate DB
+DB -> Database: Query reminder\n(filtered by TenantId)
+activate Database
+Database --> DB: Reminder record
+deactivate Database
+DB --> DeleteHandler: Reminder entity
+deactivate DB
+DeleteHandler -> DB: Reminders.Remove(reminder)
+activate DB
+DB -> Database: DELETE FROM Reminders
+activate Database
+Database --> DB: Success
+deactivate Database
+DB -> DB: SaveChangesAsync()
+DB --> DeleteHandler: Changes saved
+deactivate DB
+DeleteHandler --> API: Success
+deactivate DeleteHandler
+API --> Service: 204 No Content
+deactivate API
+Service --> RemindersPage: Success
+deactivate Service
+RemindersPage -> RemindersPage: Refresh reminders list
+RemindersPage -> User: Display success message
+deactivate RemindersPage
+
+@enduml

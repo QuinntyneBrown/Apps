@@ -1,0 +1,67 @@
+@startuml album-creation
+actor User
+participant "Albums Gallery View" as AlbumsView
+participant "Create Album Modal" as Modal
+participant "Album Service" as AlbumService
+participant "API Gateway" as API
+participant "Album Controller" as AlbumController
+database "Album Database" as DB
+
+User -> AlbumsView: Navigate to Albums
+AlbumsView -> AlbumService: getAlbums()
+AlbumService -> API: GET /api/albums
+API -> AlbumController: getAlbums()
+AlbumController -> DB: SELECT * FROM albums\nWHERE userId = currentUserId
+DB --> AlbumController: Albums list
+AlbumController --> API: 200 OK {albums[]}
+API --> AlbumService: Albums data
+AlbumService --> AlbumsView: Display albums
+AlbumsView --> User: Show albums gallery
+
+User -> AlbumsView: Click "Create Album" button
+AlbumsView -> Modal: Open create album modal
+Modal --> User: Show album creation form
+
+User -> Modal: Enter album details:\n- Name (required)\n- Description (optional)\n- Privacy level (Private/FamilyOnly/Public)\n- Theme/category
+
+Modal -> Modal: Validate form:\n- Name not empty\n- Name length < 100 chars
+
+alt Form is valid
+    User -> Modal: Click "Create" button
+    Modal -> AlbumService: createAlbum(albumDto)
+    AlbumService -> API: POST /api/albums
+    API -> AlbumController: createAlbum(createAlbumDto)
+
+    AlbumController -> DB: INSERT INTO albums\n(userId, name, description,\nprivacyLevel, theme)
+    DB --> AlbumController: New album record\nwith generated ID
+
+    AlbumController --> API: 201 Created\n{album: Album}
+    API --> AlbumService: Album created
+    AlbumService --> Modal: Creation successful
+    Modal -> Modal: Close modal
+    Modal -> AlbumsView: Refresh albums list
+    AlbumsView -> AlbumService: getAlbums()
+    AlbumService -> API: GET /api/albums
+    API -> AlbumController: getAlbums()
+    AlbumController -> DB: SELECT albums
+    DB --> AlbumController: Updated albums list
+    AlbumController --> API: 200 OK {albums[]}
+    API --> AlbumService: Albums data
+    AlbumService --> AlbumsView: Display updated gallery
+    AlbumsView --> User: Show notification:\n"Album '{name}' created"
+
+    User -> AlbumsView: Click on new album
+    AlbumsView -> AlbumsView: Navigate to album detail view
+    AlbumsView --> User: Show empty album:\n"Add photos to your album"
+
+else Form is invalid
+    Modal --> User: Show validation errors:\n- "Album name is required"\n- "Name too long (max 100 chars)"
+end
+
+alt Album creation fails
+    API --> AlbumService: 400 Bad Request\nor 500 Server Error
+    AlbumService --> Modal: Creation failed
+    Modal --> User: Show error message:\n"Failed to create album.\nPlease try again."
+end
+
+@enduml

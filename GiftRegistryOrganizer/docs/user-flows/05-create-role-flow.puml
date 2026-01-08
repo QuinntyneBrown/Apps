@@ -1,0 +1,85 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "Role Management\nPage (Angular)" as UI
+participant "Role Service\n(Angular)" as RoleService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Roles Controller" as Controller
+participant "Create Role\nCommand Handler" as Handler
+participant "Role Repository" as RoleRepo
+database "Database" as DB
+
+title Create Role Flow
+
+Admin -> UI: Click "Create Role"
+activate UI
+
+UI -> UI: Show create\nrole dialog
+
+Admin -> UI: Enter role name
+Admin -> UI: Click "Save"
+
+UI -> UI: Validate form\n(non-empty name)
+
+UI -> RoleService: createRole(roleName)
+activate RoleService
+
+RoleService -> Interceptor: POST /api/roles\n{name: roleName}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: POST /api/roles\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: CreateRole request
+activate Controller
+
+Controller -> Handler: Handle CreateRoleCommand
+activate Handler
+
+Handler -> Handler: Validate role\nname uniqueness
+
+alt Role Name Already Exists
+    Handler --> Controller: Validation error
+    Controller --> API: 400 Bad Request\n{error: "Role name already exists"}
+    API --> RoleService: Error response
+    RoleService --> UI: Creation failed
+    UI --> Admin: Display error\nmessage
+else Valid Role Name
+    Handler -> RoleRepo: Add(role)
+    activate RoleRepo
+
+    RoleRepo -> DB: INSERT INTO Roles\n(RoleId, Name)
+    activate DB
+    DB --> RoleRepo: Success
+    deactivate DB
+
+    RoleRepo --> Handler: Role created
+    deactivate RoleRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 201 Created\n{roleId, name}
+    deactivate Controller
+
+    API --> RoleService: Success response
+    deactivate API
+
+    RoleService --> UI: Role created
+    deactivate RoleService
+
+    UI -> UI: Refresh role list
+
+    UI --> Admin: Show success\nmessage and close dialog
+    deactivate UI
+end
+
+@enduml

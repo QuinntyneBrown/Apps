@@ -1,0 +1,96 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Users Controller" as Controller
+participant "Delete User\nCommand Handler" as Handler
+participant "User Repository" as UserRepo
+database "Database" as DB
+
+title Delete User Flow
+
+Admin -> UI: Click "Delete"\nbutton for user
+activate UI
+
+UI -> UI: Show confirmation\ndialog
+
+Admin -> UI: Confirm deletion
+
+UI -> UserService: deleteUser(userId)
+activate UserService
+
+UserService -> Interceptor: DELETE /api/users/{userId}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: DELETE /api/users/{userId}\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: DeleteUser request
+activate Controller
+
+Controller -> Handler: Handle DeleteUserCommand
+activate Handler
+
+Handler -> UserRepo: FindById(userId)
+activate UserRepo
+
+UserRepo -> DB: SELECT * FROM Users\nWHERE UserId = ?
+activate DB
+DB --> UserRepo: User record
+deactivate DB
+
+UserRepo --> Handler: User entity
+deactivate UserRepo
+
+alt User Not Found
+    Handler --> Controller: Not found error
+    Controller --> API: 404 Not Found\n{error: "User not found"}
+    API --> UserService: Error response
+    UserService --> UI: Deletion failed
+    UI --> Admin: Display error\nmessage
+else User Found
+    Handler -> UserRepo: Delete(userId)
+    activate UserRepo
+
+    UserRepo -> DB: DELETE FROM UserRoles\nWHERE UserId = ?
+    activate DB
+    DB --> UserRepo: Roles removed
+    deactivate DB
+
+    UserRepo -> DB: DELETE FROM Users\nWHERE UserId = ?
+    activate DB
+    DB --> UserRepo: User deleted
+    deactivate DB
+
+    UserRepo --> Handler: Success
+    deactivate UserRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 204 No Content
+    deactivate Controller
+
+    API --> UserService: Success response
+    deactivate API
+
+    UserService --> UI: User deleted
+    deactivate UserService
+
+    UI -> UI: Remove user from\nlist display
+
+    UI --> Admin: Show success\nmessage
+    deactivate UI
+end
+
+@enduml

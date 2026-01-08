@@ -1,0 +1,53 @@
+@startuml Update Application Status Flow
+title Update Application Status Flow - JobSearchOrganizer
+
+actor User
+participant "Application Detail" as Detail
+participant "Status Dialog" as Dialog
+participant "Application Service" as Service
+participant "API Gateway" as API
+participant "Application Controller" as Controller
+participant "IJobSearchOrganizerContext" as Context
+participant "Database" as DB
+
+User -> Detail: Click "Update Status"
+Detail -> Dialog: Open status update dialog
+
+Dialog -> Service: getValidStatusTransitions(currentStatus)
+Service --> Dialog: Available next statuses
+Dialog -> User: Display status options
+
+User -> Dialog: Select new status
+User -> Dialog: Enter contact name (optional)
+User -> Dialog: Add status notes
+User -> Dialog: Set next steps
+User -> Dialog: Click "Update"
+
+Dialog -> Dialog: Validate status transition
+
+alt Valid Transition
+    Dialog -> Service: updateStatus(applicationId, data)
+    Service -> API: PUT /api/applications/{id}/status
+    API -> Controller: UpdateApplicationStatusCommand
+    Controller -> Context: Applications.FindAsync(id)
+    Context -> DB: SELECT * FROM Applications WHERE Id = @id
+    DB --> Context: Application
+    Context --> Controller: Application entity
+
+    Controller -> Controller: Validate status transition
+    Controller -> Controller: Update status and add history
+    Controller -> Context: SaveChangesAsync()
+    Context -> DB: UPDATE Applications, INSERT StatusHistory
+    DB --> Context: Success
+
+    Controller --> API: 200 OK + Updated application
+    API --> Service: Updated data
+    Service --> Dialog: Success
+    Dialog -> User: Show success notification
+    Dialog -> Detail: Refresh application data
+    Detail -> User: Display updated timeline
+else Invalid Transition
+    Dialog -> User: Show "Invalid status transition" error
+end
+
+@enduml

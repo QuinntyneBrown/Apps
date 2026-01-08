@@ -1,0 +1,223 @@
+@startuml
+title Manual Library Flow
+
+actor User as user
+participant "Manual Library\nPage" as libraryPage
+participant "Manual Service\n(Angular)" as manualService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Manual Library\nController" as controller
+participant "Command/Query\nHandler" as handler
+participant "DB Context" as dbContext
+participant "Manuals Table" as database
+participant "Blob Storage\n(PDF Files)" as blobStorage
+
+== View Manual Library ==
+
+user -> libraryPage: Navigate to\nManual Library
+activate libraryPage
+
+libraryPage -> manualService: getManuals()
+activate manualService
+
+manualService -> interceptor: GET /api/manual-library\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> handler: GetManualsQuery
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: Manuals.Where(m => m.TenantId == tenantId)\n.Include(m => m.Appliance)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Manuals\nJOIN Appliances\nWHERE TenantId = ?
+activate database
+database --> dbContext: Manual records
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<ManualDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[{ manualId, applianceId,\nfileName, fileUrl,\nuploadDate, ... }]
+deactivate controller
+
+interceptor --> manualService: Success response
+deactivate interceptor
+
+manualService --> libraryPage: manuals$
+deactivate manualService
+
+libraryPage -> libraryPage: Render list with\nsearch and filter
+libraryPage --> user: Display manuals
+deactivate libraryPage
+
+== Upload Manual ==
+
+user -> libraryPage: Click [Upload Manual]
+activate libraryPage
+
+libraryPage -> libraryPage: Open upload dialog
+
+user -> libraryPage: Select appliance
+
+user -> libraryPage: Choose PDF file\n(Browse file system)
+
+libraryPage -> libraryPage: Validate file\n(PDF, size < 50MB)
+
+user -> libraryPage: Enter manual details\n(Title, Version,\nManufacturer)
+
+user -> libraryPage: Click [Upload]
+
+libraryPage -> libraryPage: Show upload progress
+
+libraryPage -> manualService: uploadManual(manualData, file)
+activate manualService
+
+manualService -> blobStorage: Upload PDF file
+activate blobStorage
+blobStorage --> manualService: fileUrl
+deactivate blobStorage
+
+manualService -> interceptor: POST /api/manual-library\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: { applianceId, title,\nversion, manufacturer,\nfileUrl, fileName }
+activate controller
+
+controller -> handler: CreateManualCommand
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: Manuals.Add(manual)
+activate dbContext
+
+dbContext -> database: INSERT INTO Manuals
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+handler -> dbContext: SaveChangesAsync()
+activate dbContext
+
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Manual saved
+deactivate database
+deactivate dbContext
+
+handler --> controller: ManualDto
+deactivate handler
+
+controller --> interceptor: 201 Created
+deactivate controller
+
+interceptor --> manualService: Success response
+deactivate interceptor
+
+manualService --> libraryPage: Manual uploaded
+deactivate manualService
+
+libraryPage -> libraryPage: Close dialog and\nrefresh list
+libraryPage --> user: Show success message\nand updated list
+deactivate libraryPage
+
+== View/Download Manual ==
+
+user -> libraryPage: Click on manual\nor [Download] button
+activate libraryPage
+
+libraryPage -> manualService: getManualUrl(manualId)
+activate manualService
+
+manualService -> interceptor: GET /api/manual-library/{id}/url\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> handler: GetManualUrlQuery(manualId)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: Manuals\n.Where(m => m.ManualId == id)\n.Where(m => m.TenantId == tenantId)\n.FirstOrDefaultAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Manuals\nWHERE ManualId = ?\nAND TenantId = ?
+activate database
+database --> dbContext: Manual record
+deactivate database
+deactivate dbContext
+
+handler -> blobStorage: Generate SAS token\nfor secure access
+activate blobStorage
+blobStorage --> handler: Signed URL
+deactivate blobStorage
+
+handler --> controller: { fileUrl with SAS token }
+deactivate handler
+
+controller --> interceptor: 200 OK\n{ fileUrl }
+deactivate controller
+
+interceptor --> manualService: Success response
+deactivate interceptor
+
+manualService --> libraryPage: Signed URL
+deactivate manualService
+
+libraryPage -> libraryPage: Open PDF in new tab\nor trigger download
+libraryPage --> user: Display/Download\nmanual PDF
+deactivate libraryPage
+
+== Search Manuals ==
+
+user -> libraryPage: Enter search term\n(by appliance, brand,\nmodel, or manual title)
+activate libraryPage
+
+libraryPage -> manualService: searchManuals(searchTerm)
+activate manualService
+
+manualService -> interceptor: GET /api/manual-library\n?search=term\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request with search
+activate controller
+
+controller -> handler: SearchManualsQuery(searchTerm)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: Manuals\n.Where(m => m.TenantId == tenantId)\n.Where(m => m.Title.Contains(search) ||\nm.Appliance.Name.Contains(search) ||\nm.Appliance.Brand.Contains(search))\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Manuals\nWHERE TenantId = ?\nAND (Title LIKE ? OR ...)?
+activate database
+database --> dbContext: Filtered manuals
+deactivate database
+deactivate dbContext
+
+handler --> controller: Filtered List<ManualDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[filtered manuals]
+deactivate controller
+
+interceptor --> manualService: Success response
+deactivate interceptor
+
+manualService --> libraryPage: filtered manuals$
+deactivate manualService
+
+libraryPage -> libraryPage: Update list view
+libraryPage --> user: Display search results
+deactivate libraryPage
+
+@enduml

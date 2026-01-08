@@ -1,0 +1,144 @@
+@startuml Add Role to User Flow
+title Add Role to User Flow
+
+actor Administrator
+participant "User Management\nPage" as UserMgmt
+participant "User Details\nDialog" as Dialog
+participant "User Service\n(Angular)" as UserService
+participant "Role Service\n(Angular)" as RoleService
+participant "API Controller\n/api/users" as UserAPI
+participant "API Controller\n/api/roles" as RoleAPI
+participant "AddRoleToUser\nCommand Handler" as Handler
+participant "IHouseholdBudgetManagerContext" as DbContext
+database "SQL Server" as DB
+
+Administrator -> UserMgmt: View users list
+activate UserMgmt
+
+UserMgmt --> Administrator: Display users table
+
+Administrator -> UserMgmt: Click on user to manage
+UserMgmt -> Dialog: Open user details dialog
+activate Dialog
+
+Dialog -> UserService: getUserById(userId)
+activate UserService
+UserService -> UserAPI: GET /api/users/{userId}
+activate UserAPI
+UserAPI -> DbContext: Users\n.Include(u => u.Roles)\n.FirstOrDefault(u => u.UserId == id)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nJOIN UserRoles\nJOIN Roles\nWHERE UserId = ?
+activate DB
+DB --> DbContext: User with current roles
+deactivate DB
+DbContext --> UserAPI: User entity
+deactivate DbContext
+UserAPI --> UserService: UserDto with roles
+deactivate UserAPI
+UserService --> Dialog: User data
+deactivate UserService
+
+Dialog -> RoleService: getAllRoles()
+activate RoleService
+RoleService -> RoleAPI: GET /api/roles
+activate RoleAPI
+RoleAPI -> DbContext: Roles.ToList()
+activate DbContext
+DbContext -> DB: SELECT * FROM Roles
+activate DB
+DB --> RoleAPI: All roles
+deactivate DB
+DbContext --> RoleAPI: Role entities
+deactivate DbContext
+RoleAPI --> RoleService: RoleDto[]
+deactivate RoleAPI
+RoleService --> Dialog: All available roles
+deactivate RoleService
+
+Dialog -> Dialog: Filter roles:\nShow only roles not\nalready assigned to user
+
+Dialog --> Administrator: Display user details\nwith current roles\nand available roles dropdown
+
+Administrator -> Dialog: Select role from dropdown
+Administrator -> Dialog: Click "Add Role"
+
+Dialog -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+
+UserService -> UserAPI: POST /api/users/{userId}/roles\n{roleId}
+activate UserAPI
+
+UserAPI -> Handler: Handle(AddRoleToUserCommand)
+activate Handler
+
+Handler -> DbContext: Users\n.Include(u => u.Roles)\n.FirstOrDefault(u => u.UserId == id)
+activate DbContext
+DbContext -> DB: SELECT * FROM Users\nJOIN UserRoles\nWHERE UserId = ?
+activate DB
+DB --> DbContext: User with roles
+deactivate DB
+DbContext --> Handler: User entity
+deactivate DbContext
+
+alt User Not Found
+    Handler --> UserAPI: 404 Not Found\n{error: "User not found"}
+    UserAPI --> UserService: Error response
+    UserService --> Dialog: Show error
+    Dialog --> Administrator: Display "User not found"
+else User Found
+    Handler -> DbContext: Roles.FirstOrDefault(r => r.RoleId == id)
+    activate DbContext
+    DbContext -> DB: SELECT * FROM Roles\nWHERE RoleId = ?
+    activate DB
+    DB --> DbContext: Role entity
+    deactivate DB
+    DbContext --> Handler: Role entity
+    deactivate DbContext
+
+    alt Role Not Found
+        Handler --> UserAPI: 404 Not Found\n{error: "Role not found"}
+        UserAPI --> UserService: Error response
+        UserService --> Dialog: Show error
+        Dialog --> Administrator: Display "Role not found"
+    else Role Found
+        Handler -> Handler: Check if user already has role\nuser.Roles.Contains(role)
+
+        alt User Already Has Role
+            Handler --> UserAPI: 200 OK (idempotent)\n{message: "User already has role"}
+            UserAPI --> UserService: Success (no change)
+            UserService --> Dialog: Show message
+            Dialog --> Administrator: Display "User already has this role"
+        else User Does Not Have Role
+            Handler -> Handler: Add role to user's roles\nuser.Roles.Add(role)
+
+            Handler -> DbContext: SaveChanges()
+            activate DbContext
+            DbContext -> DB: INSERT INTO UserRoles\nVALUES (userId, roleId)
+            activate DB
+            DB --> DbContext: Success
+            deactivate DB
+            DbContext --> Handler: Changes saved
+            deactivate DbContext
+
+            Handler -> Handler: Raise RoleAddedToUser event
+
+            Handler --> UserAPI: 200 OK\n{userId, roleId, roleName}
+            deactivate Handler
+            UserAPI --> UserService: Role added successfully
+            deactivate UserAPI
+            UserService --> Dialog: Success response
+            deactivate UserService
+
+            Dialog -> Dialog: Refresh user roles list\nRemove role from available dropdown
+
+            Dialog --> Administrator: Display "Role added successfully"\nShow updated roles list
+            deactivate Dialog
+
+            UserMgmt -> UserMgmt: Refresh users table
+            UserMgmt --> Administrator: Display updated users table
+            deactivate UserMgmt
+        end
+    end
+end
+
+@enduml

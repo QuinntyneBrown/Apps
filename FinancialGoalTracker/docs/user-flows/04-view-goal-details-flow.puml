@@ -1,0 +1,113 @@
+@startuml View Goal Details Flow
+title View Goal Details User Flow
+
+actor User
+participant "Goals Dashboard" as Dashboard
+participant "Goal Detail Page\n(/goals/{id})" as GoalDetail
+participant "GoalsService" as GoalsService
+participant "ContributionsService" as ContribService
+participant "MilestonesService" as MilestoneService
+participant "API" as API
+participant "Controllers" as Controller
+participant "Handlers" as Handler
+participant "IFinancialGoalTrackerContext" as Context
+database "SQL Server" as DB
+
+User -> Dashboard: Click on Goal Card
+activate Dashboard
+Dashboard -> GoalDetail: Navigate to /goals/{id}
+deactivate Dashboard
+activate GoalDetail
+
+GoalDetail -> GoalDetail: Initialize component\nCreate multiple observables
+
+par Parallel Data Loading
+    GoalDetail -> GoalsService: getGoalById(id)
+    activate GoalsService
+    GoalsService -> API: GET /api/goals/{id}
+    activate API
+    API -> Controller: GET goal by id
+    activate Controller
+    Controller -> Handler: Send GetGoalByIdQuery
+    activate Handler
+    Handler -> Context: goals.FindAsync(id)
+    activate Context
+    Context -> DB: SELECT * FROM Goals\nWHERE GoalId = {id}\nAND TenantId = {currentTenant}
+    activate DB
+    DB --> Context: Goal entity
+    deactivate DB
+    Context --> Handler: Goal
+    deactivate Context
+    Handler --> Controller: GoalDto
+    deactivate Handler
+    Controller --> API: 200 OK\n{ goalId, name, target, current, ... }
+    deactivate Controller
+    API --> GoalsService: GoalDto
+    deactivate API
+    GoalsService --> GoalDetail: Observable<Goal>
+    deactivate GoalsService
+else
+    GoalDetail -> ContribService: getContributions(goalId)
+    activate ContribService
+    ContribService -> API: GET /api/goals/{id}/contributions
+    activate API
+    API -> Controller: GET contributions
+    activate Controller
+    Controller -> Handler: Send GetContributionsQuery
+    activate Handler
+    Handler -> Context: contributions.Where(goalId == id)
+    activate Context
+    Context -> DB: SELECT * FROM Contributions\nWHERE GoalId = {id}\nORDER BY ContributionDate DESC
+    activate DB
+    DB --> Context: List of contributions
+    deactivate DB
+    Context --> Handler: List<Contribution>
+    deactivate Context
+    Handler --> Controller: List<ContributionDto>
+    deactivate Handler
+    Controller --> API: 200 OK\n[ contributions ]
+    deactivate Controller
+    API --> ContribService: List<ContributionDto>
+    deactivate API
+    ContribService --> GoalDetail: Observable<Contributions[]>
+    deactivate ContribService
+else
+    GoalDetail -> MilestoneService: getMilestones(goalId)
+    activate MilestoneService
+    MilestoneService -> API: GET /api/goals/{id}/milestones
+    activate API
+    API -> Controller: GET milestones
+    activate Controller
+    Controller -> Handler: Send GetMilestonesQuery
+    activate Handler
+    Handler -> Context: milestones.Where(goalId == id)
+    activate Context
+    Context -> DB: SELECT * FROM Milestones\nWHERE GoalId = {id}\nORDER BY TargetAmount
+    activate DB
+    DB --> Context: List of milestones
+    deactivate DB
+    Context --> Handler: List<Milestone>
+    deactivate Context
+    Handler --> Controller: List<MilestoneDto>
+    deactivate Handler
+    Controller --> API: 200 OK\n[ milestones (25%, 50%, 75%, 100%) ]
+    deactivate Controller
+    API --> MilestoneService: List<MilestoneDto>
+    deactivate API
+    MilestoneService --> GoalDetail: Observable<Milestones[]>
+    deactivate MilestoneService
+end
+
+GoalDetail -> GoalDetail: Combine observables\nusing combineLatest or forkJoin
+
+GoalDetail -> User: Display comprehensive view:\n- Goal name and description\n- Progress bar with percentage\n- Target vs current amount\n- Deadline countdown\n- Priority stars\n- Status badge\n- Milestone checkpoints (with checkmarks)\n- Contribution history timeline\n- Contribution chart over time\n- Quick contribution buttons\n- Add Contribution button\n- Edit Goal button
+
+User -> GoalDetail: View contribution history
+GoalDetail -> User: Display timeline with:\n- Each contribution amount and date\n- Source of contribution\n- Type badge (one-time/recurring)
+
+User -> GoalDetail: View milestone tracker
+GoalDetail -> User: Show milestone checkpoints:\n- 25% milestone (checked if achieved)\n- 50% milestone (checked if achieved)\n- 75% milestone (checked if achieved)\n- 100% target (goal complete)\n- Achievement dates for reached milestones
+
+deactivate GoalDetail
+
+@enduml

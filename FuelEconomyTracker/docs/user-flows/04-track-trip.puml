@@ -1,0 +1,222 @@
+@startuml Track Trip Flow
+
+title Track Trip Flow
+
+actor User
+participant "Trip Dashboard" as Dashboard
+participant "Start Trip Modal" as StartModal
+participant "Active Trip View" as ActiveView
+participant "Complete Trip Modal" as CompleteModal
+participant "Trip Controller" as TripAPI
+participant "Trip Service" as TripService
+participant "Weather Service" as WeatherService
+database "Database" as DB
+
+== Navigate to Trip Dashboard ==
+User -> Dashboard: Navigate to /trips
+activate Dashboard
+Dashboard -> TripAPI: GET /api/trips/active?vehicleId={id}
+activate TripAPI
+TripAPI -> DB: Query active trip for vehicle
+activate DB
+DB --> TripAPI: Active trip or null
+deactivate DB
+TripAPI --> Dashboard: Active trip status
+deactivate TripAPI
+
+alt Active Trip Exists
+    Dashboard --> User: Show active trip indicator with elapsed time
+else No Active Trip
+    Dashboard --> User: Show "Start Trip" button prominently
+end
+
+Dashboard -> TripAPI: GET /api/trips/recent?vehicleId={id}&limit=5
+activate TripAPI
+TripAPI -> DB: Query recent trips
+activate DB
+DB --> TripAPI: Recent trip list
+deactivate DB
+TripAPI --> Dashboard: Recent trips with stats
+deactivate TripAPI
+Dashboard --> User: Display recent trips list and monthly stats
+deactivate Dashboard
+
+== Start New Trip ==
+User -> Dashboard: Click "Start Trip" button
+activate Dashboard
+Dashboard --> User: Open Start Trip Modal
+
+activate StartModal
+StartModal -> TripAPI: GET /api/vehicles/{vehicleId}/current-odometer
+activate TripAPI
+TripAPI -> DB: Query last recorded odometer
+activate DB
+DB --> TripAPI: Last odometer reading
+deactivate DB
+TripAPI --> StartModal: Suggested odometer value
+deactivate TripAPI
+
+StartModal -> WeatherService: GET /api/weather/current?location={location}
+activate WeatherService
+WeatherService --> StartModal: Current weather conditions
+deactivate WeatherService
+
+StartModal --> User: Show form with vehicle, purpose selector, odometer, weather
+
+User -> StartModal: Select trip purpose and enter odometer
+User -> StartModal: Click "Start Tracking"
+
+StartModal -> TripAPI: POST /api/trips
+activate TripAPI
+TripAPI -> TripService: CreateTrip(tripData)
+activate TripService
+TripService -> DB: INSERT trip record
+activate DB
+DB --> TripService: Trip created with ID
+deactivate DB
+TripService --> TripAPI: Created trip
+deactivate TripService
+TripAPI --> StartModal: 201 Created + trip details
+deactivate TripAPI
+
+StartModal --> Dashboard: Close modal
+deactivate StartModal
+Dashboard -> ActiveView: Navigate to /trips/active
+deactivate Dashboard
+
+== Monitor Active Trip ==
+activate ActiveView
+ActiveView -> TripAPI: GET /api/trips/{tripId}
+activate TripAPI
+TripAPI -> DB: Query trip details
+activate DB
+DB --> TripAPI: Trip record
+deactivate DB
+TripAPI --> ActiveView: Trip details
+deactivate TripAPI
+
+ActiveView --> User: Display trip timer, estimated miles, fuel level
+
+loop Every 30 seconds
+    ActiveView -> ActiveView: Update elapsed time
+    alt GPS Tracking Enabled
+        ActiveView -> ActiveView: Update estimated miles from GPS
+    end
+end
+
+User -> ActiveView: Click "Complete Trip" button
+ActiveView --> User: Open Complete Trip Modal
+deactivate ActiveView
+
+== Complete Trip ==
+activate CompleteModal
+CompleteModal -> TripAPI: GET /api/trips/{tripId}
+activate TripAPI
+TripAPI -> DB: Query trip data
+activate DB
+DB --> TripAPI: Trip start data
+deactivate DB
+TripAPI --> CompleteModal: Trip start information
+deactivate TripAPI
+
+alt GPS Available
+    CompleteModal -> CompleteModal: Calculate estimated ending odometer
+    CompleteModal --> User: Show auto-filled ending odometer
+else GPS Not Available
+    CompleteModal --> User: Show empty ending odometer field
+end
+
+CompleteModal --> User: Show form with ending odometer, driving conditions, notes
+
+User -> CompleteModal: Enter ending odometer and driving conditions
+User -> CompleteModal: Click "Save Trip"
+
+CompleteModal -> CompleteModal: Validate ending odometer > starting odometer
+
+alt Validation Fails
+    CompleteModal --> User: Show validation error
+else Validation Passes
+    CompleteModal -> TripAPI: PUT /api/trips/{tripId}/complete
+    activate TripAPI
+    TripAPI -> TripService: CompleteTrip(tripId, completionData)
+    activate TripService
+
+    TripService -> DB: BEGIN TRANSACTION
+    activate DB
+    TripService -> DB: UPDATE trip record with end data
+    TripService -> DB: Calculate trip duration and miles
+
+    TripService -> DB: Query fuel purchases for MPG estimation
+    TripService -> TripService: Estimate MPG based on trip data
+    TripService -> DB: UPDATE trip with calculated MPG
+
+    TripService -> DB: UPDATE vehicle last_odometer_reading
+    TripService -> DB: COMMIT TRANSACTION
+    DB --> TripService: Transaction successful
+    deactivate DB
+
+    TripService --> TripAPI: Completed trip with statistics
+    deactivate TripService
+    TripAPI --> CompleteModal: 200 OK + trip summary
+    deactivate TripAPI
+
+    CompleteModal --> User: Show trip summary with MPG and stats
+    deactivate CompleteModal
+    CompleteModal -> Dashboard: Navigate back to trip dashboard
+end
+
+== View Trip History ==
+User -> Dashboard: Navigate to /trips/history
+activate Dashboard
+Dashboard -> TripAPI: GET /api/trips?vehicleId={id}&page=1
+activate TripAPI
+TripAPI -> DB: Query trip history with pagination
+activate DB
+DB --> TripAPI: Trip records
+deactivate DB
+TripAPI --> Dashboard: Paginated trip list
+deactivate TripAPI
+Dashboard --> User: Display filterable trip history
+
+User -> Dashboard: Apply filters by purpose or date range
+Dashboard -> TripAPI: GET /api/trips?purpose={purpose}&startDate={date}
+activate TripAPI
+TripAPI -> DB: Query with filters
+activate DB
+DB --> TripAPI: Filtered trips
+deactivate DB
+TripAPI --> Dashboard: Filtered results
+deactivate TripAPI
+Dashboard --> User: Update display with filtered trips
+deactivate Dashboard
+
+== Edit Trip ==
+User -> Dashboard: Click Edit on trip
+activate Dashboard
+Dashboard -> TripAPI: GET /api/trips/{tripId}
+activate TripAPI
+TripAPI -> DB: Query trip data
+activate DB
+DB --> TripAPI: Trip record
+deactivate DB
+TripAPI --> Dashboard: Trip data for editing
+deactivate TripAPI
+Dashboard --> User: Show edit form
+
+User -> Dashboard: Modify trip details and save
+Dashboard -> TripAPI: PUT /api/trips/{tripId}
+activate TripAPI
+TripAPI -> TripService: UpdateTrip(tripId, updatedData)
+activate TripService
+TripService -> DB: UPDATE trip record
+activate DB
+DB --> TripService: Update successful
+deactivate DB
+TripService --> TripAPI: Updated trip
+deactivate TripService
+TripAPI --> Dashboard: 200 OK
+deactivate TripAPI
+Dashboard --> User: Show success message
+deactivate Dashboard
+
+@enduml

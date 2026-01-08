@@ -1,0 +1,93 @@
+@startuml
+title Event Creation Flow
+skinparam sequenceMessageAlign center
+
+actor "Organizer" as user
+participant "Dashboard\n(Angular)" as dashboard
+participant "Create Event Modal\n(Angular)" as modal
+participant "Event Service\n(Angular)" as eventService
+participant "API Gateway\n/api/events" as api
+participant "CreateEvent Handler\n(MediatR)" as handler
+participant "ITenantContext" as tenantContext
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nEvents Table" as db
+
+== Open Create Event Modal ==
+user -> dashboard: Click "Create Event"
+activate dashboard
+dashboard -> modal: Open modal dialog
+activate modal
+modal --> user: Display event form
+deactivate modal
+deactivate dashboard
+
+== Fill Event Details ==
+user -> modal: Enter event details:\n- Title\n- Date & Time\n- Location\n- Budget\n- Description
+activate modal
+modal -> modal: Validate form fields
+
+== Submit Event ==
+user -> modal: Click "Create Event"
+modal -> eventService: createEvent(eventData)
+activate eventService
+eventService -> api: POST /api/events\n{title, dateTime, location,\nbudget, description}
+activate api
+api -> api: Authenticate user\nfrom JWT token
+api -> handler: Handle CreateEventCommand
+activate handler
+
+handler -> tenantContext: GetTenantId()
+activate tenantContext
+tenantContext --> handler: tenantId (Guid)
+deactivate tenantContext
+
+handler -> handler: Create Event entity\nwith TenantId\nStatus = Proposed\nOrganizerId = Current User
+
+handler -> dbContext: Events.Add(event)
+activate dbContext
+dbContext -> db: INSERT INTO Events\n(EventId, TenantId, Title,\nDateTime, Location, Budget,\nStatus, OrganizerId)
+activate db
+db --> dbContext: Event created
+deactivate db
+dbContext --> handler: Event entity saved
+deactivate dbContext
+
+handler -> handler: Raise EventProposed\ndomain event
+
+handler --> api: CreateEventResponseDto\n{eventId, title, status}
+deactivate handler
+
+api --> eventService: 201 Created\n{eventId, title, status}
+deactivate api
+
+eventService --> modal: Event created successfully
+deactivate eventService
+
+modal -> modal: Close modal dialog
+modal --> dashboard: Refresh events list
+activate dashboard
+dashboard -> eventService: getEvents()
+activate eventService
+eventService -> api: GET /api/events
+activate api
+api -> handler: Handle GetEventsQuery
+activate handler
+handler -> dbContext: Events.Where(e => e.TenantId)\n.ToList()
+activate dbContext
+dbContext -> db: SELECT * FROM Events\nWHERE TenantId = @tenantId
+activate db
+db --> dbContext: Event list
+deactivate db
+dbContext --> handler: Event entities
+deactivate dbContext
+handler --> api: EventDto[]
+deactivate handler
+api --> eventService: 200 OK\nEvent list
+deactivate api
+eventService --> dashboard: Event list
+deactivate eventService
+dashboard --> user: Display updated\nevents list with new event
+deactivate dashboard
+deactivate modal
+
+@enduml

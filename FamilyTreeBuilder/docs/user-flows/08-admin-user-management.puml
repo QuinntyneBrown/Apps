@@ -1,0 +1,103 @@
+@startuml Admin User Management Flow
+title Admin User Management Flow
+
+actor Admin
+participant "User Management\nPage" as UI
+participant "User Service" as UserSvc
+participant "Users\nController" as UserCtrl
+participant "Command\nHandler" as Handler
+participant "Password\nHashing Service" as PassSvc
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+
+== View All Users ==
+Admin -> UI: Navigate to "User Management"
+UI -> UserSvc: getAllUsers()
+UserSvc -> UserCtrl: GET /api/users
+UserCtrl -> DbContext: Users.Include(Roles)\n.ToListAsync()
+DbContext -> DB: SELECT Users\nLEFT JOIN UserRoles\nLEFT JOIN Roles
+DB --> DbContext: User entities with roles
+DbContext --> UserCtrl: User list
+UserCtrl --> UserSvc: UserDto[]\n(passwords excluded)
+UserSvc --> UI: Users data
+UI --> Admin: Display users table
+
+== Create New User ==
+Admin -> UI: Click "Add User"
+UI -> UI: Display create user form
+Admin -> UI: Enter user details:\n- Username*\n- Email*\n- Password* (min 8 chars)
+Admin -> UI: Click "Create"
+
+UI -> UI: Validate form
+UI -> UserSvc: createUser(userData)
+UserSvc -> UserCtrl: POST /api/users\n{username, email, password}
+UserCtrl -> Handler: Handle CreateUserCommand
+Handler -> Handler: Validate uniqueness\n(username, email)
+Handler -> PassSvc: HashPassword(password)
+PassSvc -> PassSvc: Generate unique salt
+PassSvc -> PassSvc: Hash with PBKDF2\n(100k iterations)
+PassSvc --> Handler: {hashedPassword, salt}
+
+Handler -> Handler: Create User entity
+Handler -> DbContext: Users.Add(user)
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: INSERT INTO Users\n(UserId, Username, Email,\nPassword, Salt)
+DB --> DbContext: Success
+
+Handler --> UserCtrl: UserId (Guid)
+UserCtrl --> UserSvc: 201 Created\n{userId}
+UserSvc --> UI: User created
+UI -> UI: Close form
+UI -> UI: Refresh users table
+UI --> Admin: Show success message
+
+== Assign Role to User ==
+Admin -> UI: Select user
+Admin -> UI: Click "Assign Role"
+UI -> UI: Display role selection
+Admin -> UI: Select role from list
+Admin -> UI: Click "Assign"
+
+UI -> UserSvc: assignRole(userId, roleId)
+UserSvc -> UserCtrl: POST /api/users/{userId}/roles\n{roleId}
+UserCtrl -> Handler: Handle AssignRoleCommand
+Handler -> DbContext: Users.Find(userId)
+Handler -> DbContext: Roles.Find(roleId)
+DbContext -> DB: SELECT queries
+DB --> DbContext: User and Role entities
+Handler -> Handler: Add role to user
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: INSERT INTO UserRoles\n(UserId, RoleId)
+DB --> DbContext: Success
+
+Handler --> UserCtrl: 200 OK
+UserCtrl --> UserSvc: Success
+UserSvc --> UI: Role assigned
+UI -> UI: Refresh user details
+UI --> Admin: Show updated roles
+
+== Delete User ==
+Admin -> UI: Select user
+Admin -> UI: Click "Delete"
+UI -> UI: Show confirmation dialog
+Admin -> UI: Confirm deletion
+
+UI -> UserSvc: deleteUser(userId)
+UserSvc -> UserCtrl: DELETE /api/users/{userId}
+UserCtrl -> Handler: Handle DeleteUserCommand
+Handler -> DbContext: Users.Find(userId)
+DbContext -> DB: SELECT User
+DB --> DbContext: User entity
+Handler -> DbContext: Users.Remove(user)
+Handler -> DbContext: SaveChangesAsync()
+DbContext -> DB: DELETE FROM UserRoles\nWHERE UserId = @id
+DbContext -> DB: DELETE FROM Users\nWHERE UserId = @id
+DB --> DbContext: Success
+
+Handler --> UserCtrl: 200 OK
+UserCtrl --> UserSvc: Success
+UserSvc --> UI: User deleted
+UI -> UI: Refresh users table
+UI --> Admin: Show success message
+
+@enduml

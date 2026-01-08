@@ -1,0 +1,76 @@
+@startuml User Login Flow
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "User" as User
+participant "Login Page\n(Angular)" as UI
+participant "Auth Service\n(Angular)" as AuthService
+participant "API Gateway" as API
+participant "Auth Controller" as AuthController
+participant "Token Service" as TokenService
+participant "User Repository" as UserRepo
+database "Database" as DB
+
+title User Login Flow
+
+User -> UI: Enter username\nand password
+activate UI
+
+UI -> UI: Validate form\ninputs
+
+User -> UI: Click Login
+UI -> AuthService: login(username, password)
+activate AuthService
+
+AuthService -> API: POST /api/auth/login\n{username, password}
+activate API
+
+API -> AuthController: Login request
+activate AuthController
+
+AuthController -> UserRepo: FindByUsername(username)
+activate UserRepo
+
+UserRepo -> DB: SELECT * FROM Users\nWHERE Username = ?
+activate DB
+DB --> UserRepo: User record
+deactivate DB
+
+UserRepo --> AuthController: User entity
+deactivate UserRepo
+
+AuthController -> AuthController: Validate password\n(PBKDF2 + Salt)
+
+alt Valid Credentials
+    AuthController -> TokenService: GenerateToken(user)
+    activate TokenService
+
+    TokenService -> TokenService: Create JWT claims\n(sub, name, email, roles)
+    TokenService -> TokenService: Sign token with\nHS256 + secret key
+
+    TokenService --> AuthController: JWT Token
+    deactivate TokenService
+
+    AuthController --> API: 200 OK\n{token, expiresAt, user}
+    deactivate AuthController
+
+    API --> AuthService: Success response
+    deactivate API
+
+    AuthService -> AuthService: Store token in\nlocalStorage
+
+    AuthService --> UI: Login successful
+    deactivate AuthService
+
+    UI -> UI: Redirect to\nDashboard
+    UI --> User: Show Dashboard
+    deactivate UI
+
+else Invalid Credentials
+    AuthController --> API: 401 Unauthorized\n{error: "Invalid username or password"}
+    API --> AuthService: Error response
+    AuthService --> UI: Login failed
+    UI --> User: Display error\nmessage
+end
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml View Person Profile Flow
+title View Person Profile and Details Flow
+
+actor User
+participant "Person List/\nSearch Page" as ListUI
+participant "Person Profile\nPage" as ProfileUI
+participant "Person Service" as PersonSvc
+participant "Relationship\nService" as RelSvc
+participant "Persons\nController" as PersonCtrl
+participant "Relationships\nController" as RelCtrl
+participant "IFamilyTreeBuilder\nContext" as DbContext
+database "Database" as DB
+
+User -> ListUI: Browse family members\nor search for person
+ListUI --> User: Display person cards
+
+User -> ListUI: Click on person card\n"View Profile"
+ListUI -> ProfileUI: Navigate to person/{personId}
+ProfileUI -> ProfileUI: Show loading indicator
+
+par Load Person Details and Relationships in Parallel
+    ProfileUI -> PersonSvc: getPerson(personId)
+    PersonSvc -> PersonCtrl: GET /api/persons/{personId}
+    PersonCtrl -> DbContext: Persons\n.Where(PersonId, TenantId)\n.FirstOrDefaultAsync()
+    DbContext -> DB: SELECT * FROM Persons\nWHERE PersonId = @id\nAND TenantId = @tenantId
+    DB --> DbContext: Person entity
+    DbContext --> PersonCtrl: Person
+    PersonCtrl --> PersonSvc: PersonDto with:\n- Full name, dates\n- Birth/death places\n- Occupation, biography\n- Living status
+    PersonSvc --> ProfileUI: Person data
+else
+    ProfileUI -> RelSvc: getPersonRelationships(personId)
+    RelSvc -> RelCtrl: GET /api/relationships/person/{personId}
+    RelCtrl -> DbContext: Relationships\n.Where(Person1Id == id\nOR Person2Id == id)\n.Include(Persons)\n.ToListAsync()
+    DbContext -> DB: SELECT * FROM Relationships r\nJOIN Persons p1\nJOIN Persons p2\nWHERE (r.Person1Id = @id\nOR r.Person2Id = @id)\nAND r.TenantId = @tenantId
+    DB --> DbContext: Relationship entities\nwith related persons
+    DbContext --> RelCtrl: Relationship list
+    RelCtrl --> RelSvc: RelationshipDto[] with:\n- Parents\n- Spouses\n- Children\n- Siblings
+    RelSvc --> ProfileUI: Relationships data
+end
+
+ProfileUI -> ProfileUI: Organize data by sections
+ProfileUI -> ProfileUI: Build family relationships tree
+ProfileUI -> ProfileUI: Calculate age and life span
+ProfileUI -> ProfileUI: Hide loading indicator
+
+ProfileUI -> ProfileUI: Render profile sections:\n- Header (name, photo, dates)\n- Vital statistics\n- Family relationships\n- Life events timeline\n- Biography\n- Edit button (if permitted)
+
+ProfileUI --> User: Display complete\nperson profile
+
+alt User wants to view related person
+    User -> ProfileUI: Click on related person\n(parent/spouse/child)
+    ProfileUI -> ProfileUI: Navigate to new\nperson's profile
+    ProfileUI -> PersonSvc: getPerson(newPersonId)
+    note right: Process repeats\nfor new person
+else User wants to edit person
+    User -> ProfileUI: Click "Edit" button
+    ProfileUI -> ProfileUI: Navigate to edit mode
+    note right: See Update Person\nDetails Flow
+else User wants to add relationship
+    User -> ProfileUI: Click "Add Relationship"
+    ProfileUI -> ProfileUI: Show relationship form
+    note right: See Establish\nRelationship Flow
+end
+
+@enduml

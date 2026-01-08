@@ -1,0 +1,66 @@
+@startuml
+title User Login Flow - Camping Trip Planner
+
+actor User as user
+participant "Login Page" as ui
+participant "Auth Service" as authService
+participant "Auth Controller" as authController
+participant "Auth Service\n(Backend)" as authServiceBackend
+participant "ICampingTripPlannerContext" as dbContext
+database "SQL Server" as db
+
+user -> ui: Navigate to login page
+activate ui
+ui -> user: Display login form
+deactivate ui
+
+user -> ui: Enter credentials\n(email, password)
+activate ui
+ui -> ui: Validate form inputs
+ui -> authService: login(email, password)
+activate authService
+
+authService -> authController: POST /api/auth/login\n{email, password}
+activate authController
+
+authController -> authServiceBackend: AuthenticateUser(email, password)
+activate authServiceBackend
+
+authServiceBackend -> dbContext: Query user by email
+activate dbContext
+dbContext -> db: SELECT * FROM Users\nWHERE Email = @email\nAND TenantId = @tenantId
+activate db
+db --> dbContext: User record
+deactivate db
+deactivate dbContext
+
+authServiceBackend -> authServiceBackend: Verify password hash\nwith stored salt
+
+alt Password Valid
+    authServiceBackend -> authServiceBackend: Generate JWT token\nwith user claims\n(userId, email, roles, tenantId)
+    authServiceBackend --> authController: {token, user}
+    deactivate authServiceBackend
+
+    authController --> authService: 200 OK\n{token, user}
+    deactivate authController
+
+    authService -> authService: Store token in\nlocal storage
+    authService -> authService: Store user info\nin BehaviorSubject
+    authService --> ui: Login successful
+    deactivate authService
+
+    ui -> user: Redirect to Dashboard
+    deactivate ui
+
+else Password Invalid
+    authServiceBackend --> authController: Authentication failed
+    deactivate authServiceBackend
+    authController --> authService: 401 Unauthorized
+    deactivate authController
+    authService --> ui: Login failed
+    deactivate authService
+    ui -> user: Display error message
+    deactivate ui
+end
+
+@enduml

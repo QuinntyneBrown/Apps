@@ -1,0 +1,119 @@
+@startuml contribution-logging
+title Partner Contribution Logging Flow
+
+actor Partner
+participant "Contribution Tracker" as UI
+participant "Contribution Service" as ContribSvc
+participant "Contributions Controller" as Controller
+participant "LogContributionCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+Partner -> UI: Navigate to Contribution Tracker
+activate UI
+
+UI -> ContribSvc: getGoals()
+activate ContribSvc
+ContribSvc --> UI: Active goals list
+deactivate ContribSvc
+
+UI --> Partner: Display goals with\ncontribution tracking
+
+Partner -> UI: Select goal
+
+UI -> ContribSvc: getContributions(goalId)
+activate ContribSvc
+ContribSvc --> UI: Contribution history
+deactivate ContribSvc
+
+UI --> Partner: Display contribution\nhistory for both partners
+
+Partner -> UI: Click "Log Contribution"
+
+UI -> UI: Show contribution form
+
+Partner -> UI: Enter contribution details:\n- Type (Time/Money/Effort)\n- Amount/Duration\n- Description\n- Date (default: today)
+
+Partner -> UI: Click "Submit"
+
+UI -> UI: Validate form inputs
+UI -> ContribSvc: logContribution(goalId, contributionData)
+activate ContribSvc
+
+ContribSvc -> Controller: POST /api/contributions
+note right: Authorization: Bearer {token}\nPartner ID from JWT claims
+activate Controller
+
+Controller -> Command: LogContributionCommand\n(goalId, type, amount,\ndescription, partnerId)
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @goalId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Validate goal exists\nand is active
+
+Command -> Command: Extract PartnerId\nfrom JWT claims
+
+Command -> Command: Create Contribution entity\n- ContributionId\n- GoalId\n- PartnerId\n- Type\n- Amount\n- Description\n- Timestamp = Now
+
+Command -> DbContext: Query for contribution stats
+activate DbContext
+DbContext -> DB: SELECT SUM(Amount), COUNT(*)\nFROM Contributions\nWHERE GoalId = @goalId\nGROUP BY PartnerId
+activate DB
+DB --> DbContext: Contribution statistics
+deactivate DB
+DbContext --> Command: Stats by partner
+deactivate DbContext
+
+Command -> Command: Calculate updated\ncontribution balance
+
+Command -> Command: Raise PartnerContributionLogged\nevent
+
+Command -> DbContext: Contributions.Add(contribution)
+activate DbContext
+DbContext -> DB: INSERT INTO Contributions\n(ContributionId, GoalId,\nPartnerId, Type, Amount,\nDescription, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'PartnerContributionLogged',\nAggregateId: GoalId,\nData, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: LogContributionResponse\n(ContributionId,\nUpdatedBalance,\nPartnerStats)
+deactivate Command
+
+Controller --> ContribSvc: 201 Created
+deactivate Controller
+
+ContribSvc --> UI: Contribution logged successfully
+deactivate ContribSvc
+
+UI -> UI: Add entry to\ncontribution history
+UI -> UI: Update contribution\nbalance display
+UI -> UI: Update partner\ncomparison chart
+UI --> Partner: Show success message\n"Contribution logged successfully"
+deactivate UI
+
+note over Partner, DB
+The PartnerContributionLogged event may trigger:
+- Partner balance updates
+- Contribution visualization refresh
+- Achievement checks (e.g., "Equal Contributors")
+- Partner notifications
+- Activity feed updates
+- Fairness metrics calculation
+end note
+
+@enduml

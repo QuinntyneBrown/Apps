@@ -1,0 +1,90 @@
+@startuml milestone-creation
+title Milestone Creation Flow
+
+actor User
+participant "Milestones View" as UI
+participant "Milestone Service" as MilestoneSvc
+participant "Goals Controller" as Controller
+participant "CreateMilestoneCommand" as Command
+participant "ICouplesGoalTrackerContext" as DbContext
+database "SQL Server" as DB
+
+User -> UI: Navigate to Goal Milestones
+activate UI
+
+UI -> UI: Display existing milestones\nfor selected goal
+
+User -> UI: Click "Add Milestone"
+
+UI -> UI: Show Add Milestone form
+
+User -> UI: Enter milestone details:\n- Title\n- Target Date\n- Description (optional)
+
+User -> UI: Click "Create"
+
+UI -> UI: Validate form inputs
+UI -> MilestoneSvc: createMilestone(goalId, milestoneData)
+activate MilestoneSvc
+
+MilestoneSvc -> Controller: POST /api/goals/{id}/milestones
+note right: Authorization: Bearer {token}
+activate Controller
+
+Controller -> Command: CreateMilestoneCommand
+activate Command
+
+Command -> DbContext: Query Goals table
+activate DbContext
+DbContext -> DB: SELECT * FROM Goals\nWHERE GoalId = @goalId\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Goal entity
+deactivate DB
+DbContext --> Command: Goal
+deactivate DbContext
+
+Command -> Command: Validate goal exists\nand is not completed
+
+Command -> DbContext: Query Milestones for order
+activate DbContext
+DbContext -> DB: SELECT MAX(Order)\nFROM Milestones\nWHERE GoalId = @goalId
+activate DB
+DB --> DbContext: Max order value
+deactivate DB
+DbContext --> Command: Next order number
+deactivate DbContext
+
+Command -> Command: Create Milestone entity\n- MilestoneId\n- GoalId\n- Title\n- TargetDate\n- Order (sequential)\n- Status = 'Pending'
+
+Command -> Command: Raise MilestoneCreated event
+
+Command -> DbContext: Milestones.Add(milestone)
+activate DbContext
+DbContext -> DB: INSERT INTO Milestones\n(MilestoneId, GoalId,\nTitle, TargetDate, Order,\nStatus, CreatedAt)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DB: INSERT INTO DomainEvents\n(EventType: 'MilestoneCreated',\nAggregateId, Data, Timestamp)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChangesAsync()
+DbContext --> Command: Success
+deactivate DbContext
+
+Command --> Controller: CreateMilestoneResponse\n(MilestoneId, Order)
+deactivate Command
+
+Controller --> MilestoneSvc: 201 Created
+deactivate Controller
+
+MilestoneSvc --> UI: Milestone created successfully
+deactivate MilestoneSvc
+
+UI -> UI: Add milestone to timeline
+UI -> UI: Reorder milestones display
+UI --> User: Show success message\n"Milestone added successfully"
+deactivate UI
+
+@enduml

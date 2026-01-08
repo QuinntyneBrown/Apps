@@ -1,0 +1,247 @@
+@startuml
+title User Management Flow (Admin)
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor Admin
+participant "Admin Dashboard" as AdminDash
+participant "User Management\nPage" as UserMgmt
+participant "UserService" as UserService
+participant "RoleService" as RoleService
+participant "UsersController\n/api/users" as UsersAPI
+participant "RolesController\n/api/roles" as RolesAPI
+participant "GetUsersQuery\nHandler" as GetUsersHandler
+participant "CreateUserCommand\nHandler" as CreateHandler
+participant "UpdateUserCommand\nHandler" as UpdateHandler
+participant "DeleteUserCommand\nHandler" as DeleteHandler
+participant "AddRoleToUserCommand\nHandler" as AddRoleHandler
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+Admin -> AdminDash: Click "User Management" link
+activate AdminDash
+AdminDash -> UserMgmt: Navigate to user management page
+activate UserMgmt
+deactivate AdminDash
+
+== Load Users List ==
+
+UserMgmt -> UserService: getUsers()
+activate UserService
+UserService -> UsersAPI: GET /api/users
+activate UsersAPI
+UsersAPI -> GetUsersHandler: Execute(GetUsersQuery)
+activate GetUsersHandler
+GetUsersHandler -> DB: Users.Include(u => u.Roles)\n.ToListAsync()
+activate DB
+DB -> Database: Query users with roles\n(filtered by TenantId)
+activate Database
+Database --> DB: List of User records with roles
+deactivate Database
+DB --> GetUsersHandler: List<User> with roles
+deactivate DB
+GetUsersHandler --> UsersAPI: List<UserDTO> (without passwords)
+deactivate GetUsersHandler
+UsersAPI --> UserService: 200 OK with users
+deactivate UsersAPI
+UserService --> UserMgmt: Users list
+deactivate UserService
+
+UserMgmt -> RoleService: getRoles()
+activate RoleService
+RoleService -> RolesAPI: GET /api/roles
+activate RolesAPI
+RolesAPI -> DB: Roles.ToListAsync()
+activate DB
+DB -> Database: Query all roles
+activate Database
+Database --> DB: Role records
+deactivate Database
+DB --> RolesAPI: List<Role>
+deactivate DB
+RolesAPI --> RoleService: List<RoleDTO>
+deactivate RolesAPI
+RoleService --> UserMgmt: Available roles
+deactivate RoleService
+
+UserMgmt -> Admin: Display users list with:\n- Username, Email\n- Assigned roles\n- Edit/Delete actions
+deactivate UserMgmt
+
+== Create New User ==
+
+Admin -> UserMgmt: Click "Add User" button
+activate UserMgmt
+UserMgmt -> Admin: Show user creation form
+deactivate UserMgmt
+
+Admin -> UserMgmt: Enter user details:\n- Username\n- Email\n- Password\n- Select roles
+activate UserMgmt
+UserMgmt -> UserMgmt: Validate form inputs
+deactivate UserMgmt
+
+Admin -> UserMgmt: Click "Create User"
+activate UserMgmt
+
+UserMgmt -> UserService: createUser(userData)
+activate UserService
+UserService -> UsersAPI: POST /api/users\n{username, email, password, roleIds}
+activate UsersAPI
+UsersAPI -> CreateHandler: Execute(CreateUserCommand)
+activate CreateHandler
+
+CreateHandler -> CreateHandler: Hash password with\nunique salt (PBKDF2)
+
+CreateHandler -> CreateHandler: Create User entity\n(UserId, Username, Email, HashedPassword, Salt)
+
+CreateHandler -> DB: Users.Add(user)
+activate DB
+DB -> Database: INSERT INTO Users
+activate Database
+Database --> DB: User created
+deactivate Database
+DB --> CreateHandler: User saved
+deactivate DB
+
+loop For each selected role
+    CreateHandler -> DB: UserRoles.Add(new UserRole\n{UserId, RoleId})
+    activate DB
+    DB -> Database: INSERT INTO UserRoles
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    DB --> CreateHandler: Role assigned
+    deactivate DB
+end
+
+CreateHandler -> DB: SaveChangesAsync()
+activate DB
+DB --> CreateHandler: All changes saved
+deactivate DB
+
+CreateHandler --> UsersAPI: CreateUserResponse
+deactivate CreateHandler
+UsersAPI --> UserService: 201 Created
+deactivate UsersAPI
+UserService --> UserMgmt: Success
+deactivate UserService
+
+UserMgmt -> UserMgmt: Refresh users list
+UserMgmt -> Admin: Display success message\n"User created successfully"
+deactivate UserMgmt
+
+== Update User ==
+
+Admin -> UserMgmt: Click "Edit" on user
+activate UserMgmt
+UserMgmt -> Admin: Show edit form\n(pre-filled with user data)
+deactivate UserMgmt
+
+Admin -> UserMgmt: Modify user details\n(email, roles, etc.)
+activate UserMgmt
+deactivate UserMgmt
+
+Admin -> UserMgmt: Click "Update User"
+activate UserMgmt
+
+UserMgmt -> UserService: updateUser(userId, userData)
+activate UserService
+UserService -> UsersAPI: PUT /api/users/{userId}\n{email, roleIds}
+activate UsersAPI
+UsersAPI -> UpdateHandler: Execute(UpdateUserCommand)
+activate UpdateHandler
+
+UpdateHandler -> DB: Users.Include(u => u.Roles)\n.FirstOrDefaultAsync(u => u.UserId == userId)
+activate DB
+DB -> Database: Query user with roles
+activate Database
+Database --> DB: User record
+deactivate Database
+DB --> UpdateHandler: User entity
+deactivate DB
+
+UpdateHandler -> UpdateHandler: Update user properties\n(email, etc.)
+
+UpdateHandler -> DB: UserRoles.RemoveRange(\noldRoles)
+activate DB
+DB -> Database: DELETE FROM UserRoles
+activate Database
+Database --> DB: Old roles removed
+deactivate Database
+deactivate DB
+
+loop For each new role
+    UpdateHandler -> DB: UserRoles.Add(newRole)
+    activate DB
+    DB -> Database: INSERT INTO UserRoles
+    activate Database
+    Database --> DB: Success
+    deactivate Database
+    deactivate DB
+end
+
+UpdateHandler -> DB: SaveChangesAsync()
+activate DB
+DB --> UpdateHandler: Changes saved
+deactivate DB
+
+UpdateHandler --> UsersAPI: Success
+deactivate UpdateHandler
+UsersAPI --> UserService: 200 OK
+deactivate UsersAPI
+UserService --> UserMgmt: Success
+deactivate UserService
+
+UserMgmt -> UserMgmt: Refresh users list
+UserMgmt -> Admin: Display success message
+deactivate UserMgmt
+
+== Delete User ==
+
+Admin -> UserMgmt: Click "Delete" on user
+activate UserMgmt
+UserMgmt -> Admin: Show confirmation dialog\n"Are you sure?"
+deactivate UserMgmt
+
+Admin -> UserMgmt: Confirm deletion
+activate UserMgmt
+
+UserMgmt -> UserService: deleteUser(userId)
+activate UserService
+UserService -> UsersAPI: DELETE /api/users/{userId}
+activate UsersAPI
+UsersAPI -> DeleteHandler: Execute(DeleteUserCommand)
+activate DeleteHandler
+
+DeleteHandler -> DB: Users.FindAsync(userId)
+activate DB
+DB -> Database: Query user
+activate Database
+Database --> DB: User record
+deactivate Database
+DB --> DeleteHandler: User entity
+deactivate DB
+
+DeleteHandler -> DB: Users.Remove(user)
+activate DB
+DB -> Database: DELETE FROM Users\n(cascade deletes UserRoles)
+activate Database
+Database --> DB: User deleted
+deactivate Database
+DB -> DB: SaveChangesAsync()
+DB --> DeleteHandler: Changes saved
+deactivate DB
+
+DeleteHandler --> UsersAPI: Success
+deactivate DeleteHandler
+UsersAPI --> UserService: 204 No Content
+deactivate UsersAPI
+UserService --> UserMgmt: Success
+deactivate UserService
+
+UserMgmt -> UserMgmt: Refresh users list
+UserMgmt -> Admin: Display success message\n"User deleted"
+deactivate UserMgmt
+
+@enduml

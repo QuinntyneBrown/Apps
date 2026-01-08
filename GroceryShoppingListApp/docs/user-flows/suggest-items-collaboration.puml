@@ -1,0 +1,224 @@
+@startuml
+title Suggest Items - Collaboration User Flow
+
+actor "Shared User\n(Alice)" as Alice
+participant "ListDetail\nComponent" as ListUI
+participant "SuggestionCard\nComponent" as SuggestionCard
+participant "Redux Store" as Redux
+participant "API\n/api/lists/{id}/suggestions" as API
+database "Database" as DB
+participant "WebSocket\nService" as WS
+actor "List Owner\n(Bob)" as Bob
+participant "Owner's UI" as OwnerUI
+participant "Notification\nService" as NotifService
+
+== Shared User Suggests Item ==
+
+Alice -> ListUI: Open shared list
+activate ListUI
+
+ListUI -> API: GET /api/lists/{listId}/permissions
+activate API
+API -> DB: Check Alice's permission level
+activate DB
+DB --> API: Permission: "edit"\n(can suggest items)
+deactivate DB
+API --> ListUI: 200 OK\n{ canEdit: true, canSuggest: true }
+deactivate API
+
+ListUI --> Alice: Display list with\n"Suggest Item" button\n(limited permissions)
+
+Alice -> ListUI: Click "Suggest Item" button
+
+ListUI --> Alice: Show suggestion form:\n(similar to add item,\nbut labeled "Suggest")
+
+Alice -> ListUI: Enter item details:\n- Name: "Organic Milk"\n- Quantity: 1 gallon\n- Reason: "Healthier option"
+
+Alice -> ListUI: Click "Send Suggestion"
+
+ListUI -> Redux: Dispatch suggestItem(listId, {\n  name, quantity, unit,\n  reason, category\n})
+activate Redux
+
+Redux --> ListUI: Processing...
+
+Redux -> API: POST /api/lists/{listId}/suggestions\n{\n  itemName: "Organic Milk",\n  quantity: 1,\n  unit: "gallon",\n  reason: "Healthier option",\n  category: "Dairy",\n  suggestedBy: aliceId\n}
+activate API
+
+API -> DB: INSERT INTO item_suggestions\n(suggestion_id, list_id,\nitem_name, quantity, unit,\nreason, suggested_by,\nstatus, suggested_at)\nVALUES ({id}, {listId},\n'Organic Milk', 1, 'gallon',\n'Healthier option', {aliceId},\n'pending', NOW())
+activate DB
+DB --> API: Suggestion created
+deactivate DB
+
+API -> WS: Broadcast suggestion to\nlist members
+activate WS
+WS --> OwnerUI: WebSocket message:\n{\n  type: 'suggestion.created',\n  suggestion: {...},\n  user: 'Alice'\n}
+deactivate WS
+
+API -> NotifService: Send notification to owner
+activate NotifService
+NotifService --> Bob: Push notification:\n"Alice suggested: Organic Milk\nfor Weekly Groceries"
+deactivate NotifService
+
+API --> Redux: 201 Created\n{\n  suggestionId,\n  itemName, quantity,\n  status: 'pending',\n  suggestedBy: 'Alice',\n  suggestedAt\n}
+deactivate API
+
+Redux -> Redux: Add suggestion to:\ncollaboration.suggestions.byListId
+
+Redux --> ListUI: Success
+deactivate Redux
+
+ListUI --> Alice: Show success notification:\n"Suggestion sent to Bob"
+
+ListUI --> Alice: Display suggestion\nwith "Pending" badge
+
+deactivate ListUI
+
+== List Owner Receives and Reviews ==
+
+activate OwnerUI
+
+WS --> OwnerUI: Real-time notification
+
+OwnerUI -> OwnerUI: Show badge:\n"1 new suggestion"
+
+Bob -> OwnerUI: Click "View Suggestions"
+
+OwnerUI -> API: GET /api/lists/{listId}/suggestions
+activate API
+
+API -> DB: SELECT * FROM item_suggestions\nWHERE list_id = {listId}\nAND status = 'pending'\nORDER BY suggested_at DESC
+activate DB
+DB --> API: Pending suggestions
+deactivate DB
+
+API --> OwnerUI: 200 OK\n[{\n  suggestionId,\n  itemName: "Organic Milk",\n  quantity: 1, unit: "gallon",\n  reason: "Healthier option",\n  suggestedBy: "Alice",\n  suggestedAt: "5 minutes ago"\n}]
+deactivate API
+
+OwnerUI -> SuggestionCard: Display suggestions
+activate SuggestionCard
+
+SuggestionCard --> Bob: Show suggestion card:\n┌────────────────────────┐\n│ Alice suggested:       │\n│ Organic Milk (1 gallon)│\n│ "Healthier option"     │\n│                        │\n│ [Approve] [Reject]     │\n└────────────────────────┘
+
+== Owner Approves Suggestion ==
+
+Bob -> SuggestionCard: Click "Approve" button
+
+SuggestionCard -> Redux: Dispatch approveSuggestion(\n  suggestionId\n)
+activate Redux
+
+Redux --> SuggestionCard: Processing...
+
+Redux -> API: PUT /api/suggestions/{id}/approve
+activate API
+
+API -> DB: BEGIN TRANSACTION
+activate DB
+
+API -> DB: UPDATE item_suggestions\nSET status = 'approved',\n    approved_at = NOW(),\n    approved_by = {bobId}
+DB --> API: Updated
+
+API -> DB: INSERT INTO list_items\n(item_id, list_id, name,\nquantity, unit, category,\nstatus, added_at, added_by)\nSELECT gen_uuid(), list_id,\n       item_name, quantity,\n       unit, category,\n       'pending', NOW(), {bobId}\nFROM item_suggestions\nWHERE suggestion_id = {id}
+DB --> API: Item added to list
+
+API -> DB: COMMIT
+deactivate DB
+
+API -> WS: Broadcast approval
+activate WS
+WS --> ListUI: WebSocket message:\n{\n  type: 'suggestion.approved',\n  suggestionId,\n  newItem: {...}\n}
+deactivate WS
+
+API -> NotifService: Notify Alice
+activate NotifService
+NotifService --> Alice: Push notification:\n"Bob approved your suggestion:\nOrganic Milk added to list"
+deactivate NotifService
+
+API --> Redux: 200 OK\n{\n  suggestionId,\n  status: 'approved',\n  newItemId\n}
+deactivate API
+
+Redux -> Redux: Update state:\n- Mark suggestion as approved\n- Add new item to items
+
+Redux --> SuggestionCard: Success
+deactivate Redux
+
+SuggestionCard --> Bob: Update card:\n✓ Approved\n"Added to list"
+
+deactivate SuggestionCard
+
+activate ListUI
+ListUI -> ListUI: Real-time update:\nAdd "Organic Milk" to list
+
+ListUI --> Alice: Item appears in list\nwith notification:\n"✓ Your suggestion was approved!"
+
+deactivate ListUI
+deactivate OwnerUI
+
+== Owner Rejects Suggestion ==
+
+alt Bob rejects instead
+
+    Bob -> SuggestionCard: Click "Reject" button
+    activate SuggestionCard
+
+    SuggestionCard --> Bob: Show optional\nreject reason dialog
+
+    Bob -> SuggestionCard: [Optional] Enter reason:\n"Already have regular milk"
+
+    SuggestionCard -> Redux: Dispatch rejectSuggestion(\n  suggestionId,\n  reason\n)
+    activate Redux
+
+    Redux -> API: PUT /api/suggestions/{id}/reject
+    activate API
+
+    API -> DB: UPDATE item_suggestions\nSET status = 'rejected',\n    rejected_at = NOW(),\n    rejected_by = {bobId},\n    rejection_reason = {reason}
+    activate DB
+    DB --> API: Updated
+    deactivate DB
+
+    API -> WS: Broadcast rejection
+    activate WS
+    WS --> ListUI: WebSocket message:\n{\n  type: 'suggestion.rejected',\n  suggestionId, reason\n}
+    deactivate WS
+
+    API -> NotifService: Notify Alice
+    activate NotifService
+    NotifService --> Alice: Push notification:\n"Bob declined your suggestion:\nOrganic Milk\nReason: Already have regular milk"
+    deactivate NotifService
+
+    API --> Redux: 200 OK
+    deactivate API
+
+    Redux --> SuggestionCard: Success
+    deactivate Redux
+
+    SuggestionCard --> Bob: Update card:\n✗ Rejected
+
+    deactivate SuggestionCard
+
+    activate ListUI
+    ListUI --> Alice: Notification:\n"✗ Suggestion declined\nReason: Already have regular milk"
+    deactivate ListUI
+
+end
+
+== View Suggestion History ==
+
+Bob -> OwnerUI: Click "View All Suggestions"\n(including approved/rejected)
+activate OwnerUI
+
+OwnerUI -> API: GET /api/lists/{listId}/suggestions/history
+activate API
+
+API -> DB: SELECT * FROM item_suggestions\nWHERE list_id = {listId}\nORDER BY suggested_at DESC
+activate DB
+DB --> API: All suggestions
+deactivate DB
+
+API --> OwnerUI: 200 OK with history
+deactivate API
+
+OwnerUI --> Bob: Display timeline:\n✓ Organic Milk - Approved (Alice)\n✗ Soda - Rejected (Charlie)\n✓ Bread - Approved (Alice)
+
+deactivate OwnerUI
+
+@enduml

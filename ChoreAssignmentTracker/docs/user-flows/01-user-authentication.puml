@@ -1,0 +1,64 @@
+@startuml User Authentication Flow
+
+title User Authentication Flow
+
+actor User
+participant "Login Page" as UI
+participant "Auth Controller" as AuthAPI
+participant "Auth Service" as AuthService
+participant "User Repository" as UserRepo
+database "SQL Server" as DB
+
+== User Login ==
+User -> UI: Enter username & password
+UI -> UI: Validate form fields
+UI -> AuthAPI: POST /api/auth/login\n{username, password}
+
+AuthAPI -> AuthService: ValidateCredentials(username, password)
+AuthService -> UserRepo: GetUserByUsername(username)
+UserRepo -> DB: SELECT * FROM Users\nWHERE UserName = @username
+DB --> UserRepo: User data with salt & hashed password
+UserRepo --> AuthService: User entity
+
+AuthService -> AuthService: Hash password with user's salt
+AuthService -> AuthService: Compare hashed passwords
+
+alt Credentials Valid
+    AuthService --> AuthAPI: User validated
+
+    AuthAPI -> AuthService: GenerateJWT(user)
+    AuthService -> AuthService: Create JWT claims:\n- sub (userId)\n- name (username)\n- email\n- roles
+    AuthService -> AuthService: Sign token with secret key
+    AuthService -> AuthService: Set expiration (24 hours)
+    AuthService --> AuthAPI: JWT token
+
+    AuthAPI --> UI: 200 OK\n{token, expiresAt, user}
+    UI -> UI: Store token in localStorage
+    UI -> UI: Set auth header interceptor
+    UI --> User: Redirect to Dashboard
+
+else Credentials Invalid
+    AuthService --> AuthAPI: Invalid credentials
+    AuthAPI --> UI: 401 Unauthorized\n{error: "Invalid username or password"}
+    UI --> User: Display error message
+end
+
+== Subsequent API Requests ==
+User -> UI: Navigate to protected page
+UI -> AuthAPI: GET /api/chores\nAuthorization: Bearer {token}
+
+AuthAPI -> AuthAPI: Validate JWT token:\n- Check signature\n- Check expiration\n- Extract claims
+
+alt Token Valid
+    AuthAPI -> AuthAPI: Set user context from claims
+    AuthAPI -> AuthAPI: Execute request
+    AuthAPI --> UI: 200 OK with data
+    UI --> User: Display content
+
+else Token Invalid/Expired
+    AuthAPI --> UI: 401 Unauthorized
+    UI -> UI: Clear stored token
+    UI --> User: Redirect to Login
+end
+
+@enduml

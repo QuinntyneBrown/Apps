@@ -1,0 +1,112 @@
+@startuml Create Budget Flow
+title Create Budget Flow
+
+actor User
+participant "Budget Dashboard" as Dashboard
+participant "Create Budget\nWizard" as Wizard
+participant "Budget Service\n(Angular)" as BudgetService
+participant "API Controller\n/api/budgets" as BudgetAPI
+participant "CreateBudget\nCommand Handler" as CreateHandler
+participant "IHouseholdBudgetManagerContext" as DbContext
+participant "AllocateCategory\nCommand Handler" as AllocateHandler
+database "SQL Server" as DB
+
+User -> Dashboard: Click "Create New Budget"
+activate Dashboard
+
+Dashboard -> Wizard: Open wizard
+activate Wizard
+
+== Step 1: Period Setup ==
+Wizard --> User: Show period setup form
+User -> Wizard: Select month/year, enter budget period name
+Wizard -> Wizard: Store period data
+
+== Step 2: Total Budget ==
+Wizard --> User: Show total budget input
+User -> Wizard: Enter total budget amount
+Wizard -> Wizard: Validate amount > 0
+
+== Step 3: Category Allocation ==
+Wizard --> User: Show category allocation interface\nwith sliders and pie chart
+User -> Wizard: Allocate amounts to categories\n(drag sliders, enter amounts)
+Wizard -> Wizard: Update pie chart in real-time\nCalculate percentages\nShow unallocated amount
+
+== Step 4: Review & Create ==
+Wizard --> User: Show review screen with summary
+User -> Wizard: Click "Create Budget"
+
+Wizard -> BudgetService: createBudget(budgetData)
+activate BudgetService
+
+BudgetService -> BudgetAPI: POST /api/budgets\n{period, startDate, endDate, totalBudget}
+activate BudgetAPI
+
+BudgetAPI -> CreateHandler: Handle(CreateBudgetCommand)
+activate CreateHandler
+
+CreateHandler -> DbContext: Households.Find(householdId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Households WHERE HouseholdId = ?
+activate DB
+DB --> DbContext: Household record
+deactivate DB
+DbContext --> CreateHandler: Household entity
+deactivate DbContext
+
+CreateHandler -> CreateHandler: Validate household exists\nValidate total budget > 0\nValidate date range\nCheck only one active budget
+
+CreateHandler -> DbContext: Budgets.Add(newBudget)
+activate DbContext
+DbContext -> DB: INSERT INTO Budgets VALUES (...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> CreateHandler: Budget created
+deactivate DbContext
+
+CreateHandler -> CreateHandler: Raise BudgetCreated event
+
+CreateHandler --> BudgetAPI: 201 Created\n{budgetId}
+deactivate CreateHandler
+BudgetAPI --> BudgetService: Budget created response
+deactivate BudgetAPI
+
+== Allocate Categories ==
+loop For each category allocation
+    BudgetService -> BudgetAPI: POST /api/budgets/{budgetId}/categories\n{categoryId, allocatedAmount}
+    activate BudgetAPI
+
+    BudgetAPI -> AllocateHandler: Handle(AllocateCategoryBudgetCommand)
+    activate AllocateHandler
+
+    AllocateHandler -> AllocateHandler: Validate budget exists and is active\nValidate allocation > 0\nCheck total allocations <= total budget\nCalculate percentage
+
+    AllocateHandler -> DbContext: CategoryAllocations.Add(allocation)
+    activate DbContext
+    DbContext -> DB: INSERT INTO CategoryAllocations VALUES (...)
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> AllocateHandler: Allocation created
+    deactivate DbContext
+
+    AllocateHandler -> AllocateHandler: Raise BudgetCategoryAllocated event
+
+    AllocateHandler --> BudgetAPI: 201 Created\n{allocationId}
+    deactivate AllocateHandler
+    BudgetAPI --> BudgetService: Allocation created
+    deactivate BudgetAPI
+end
+
+BudgetService --> Wizard: Budget created successfully
+deactivate BudgetService
+
+Wizard --> User: Show success message
+deactivate Wizard
+
+Dashboard -> Dashboard: Redirect to /budget/dashboard
+Dashboard --> User: Display budget dashboard\nwith new active budget
+deactivate Dashboard
+
+@enduml

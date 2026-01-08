@@ -1,0 +1,37 @@
+@startuml
+
+actor Administrator
+participant "Role Management\nPage" as UI
+participant "Role Service" as RoleService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to\nCreate Role page
+Administrator -> UI: Enter role name
+Administrator -> UI: Click Create
+
+UI -> UI: Validate form\n(non-empty role name)
+
+alt Form Valid
+    UI -> RoleService: createRole(roleName)
+    RoleService -> API: POST /api/roles\n{name}
+
+    API -> API: Validate role name\nuniqueness
+
+    alt Unique Role Name
+        API -> DB: INSERT Role\n(roleId GUID, name)
+        DB --> API: Role created
+
+        API --> RoleService: 201 Created\n{roleId, name}
+        RoleService --> UI: Role created successfully
+        UI --> Administrator: Show success message\nand redirect to role list
+    else Duplicate Role Name
+        API --> RoleService: 400 Bad Request\n{error: "Role name\nalready exists"}
+        RoleService --> UI: Creation failed
+        UI --> Administrator: Display error message
+    end
+else Form Invalid
+    UI --> Administrator: Display validation errors
+end
+
+@enduml

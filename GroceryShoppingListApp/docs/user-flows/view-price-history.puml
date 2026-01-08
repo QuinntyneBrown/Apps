@@ -1,0 +1,189 @@
+@startuml
+title View Price History User Flow
+
+actor User
+participant "ItemCard\nComponent" as ItemCard
+participant "PriceHistoryChart\nComponent" as Chart
+participant "StorePriceComparison\nComponent" as Comparison
+participant "Redux Store" as Redux
+participant "API\n/api/price-tracking" as API
+database "Database" as DB
+
+== Access Price History ==
+
+User -> ItemCard: Click on item\n"Apples"
+activate ItemCard
+
+ItemCard --> User: Show item details\nwith "View Price History"
+
+User -> ItemCard: Click "View Price History"
+
+ItemCard -> Chart: Navigate to price\nhistory page
+activate Chart
+
+Chart -> Redux: Dispatch fetchPriceHistory(\n  "Apples",\n  timeRange: "6M"\n)
+activate Redux
+
+Redux --> Chart: Loading state
+
+Chart --> User: Show loading skeleton
+
+Redux -> API: GET /api/price-tracking/history\n?itemName=Apples\n&timeRange=6M\n&userId={userId}
+activate API
+
+API -> DB: SELECT item_name, price, store,\n       purchased_at,\n       unit, quantity\nFROM price_history\nWHERE user_id = {userId}\nAND item_name ILIKE '%Apples%'\nAND purchased_at >= NOW() - INTERVAL '6 months'\nORDER BY purchased_at ASC
+activate DB
+DB --> API: Price records (48 entries)
+deactivate DB
+
+API -> DB: Calculate statistics:\n- Average price\n- Lowest price & date\n- Highest price & date\n- Price trend (linear regression)
+activate DB
+DB --> API: Statistics calculated
+deactivate DB
+
+API -> DB: Get current prices by store:\nSELECT store,\n       price,\n       MAX(purchased_at) as last_updated\nFROM price_history\nWHERE item_name ILIKE '%Apples%'\nAND user_id = {userId}\nAND purchased_at >= NOW() - INTERVAL '30 days'\nGROUP BY store, price\nORDER BY last_updated DESC
+activate DB
+DB --> API: Current store prices
+deactivate DB
+
+API --> Redux: 200 OK\n{\n  itemName: "Apples",\n  records: [\n    { date, price, store, unit },\n    ...\n  ],\n  statistics: {\n    average: 3.95,\n    lowest: { price: 3.49, date, store },\n    highest: { price: 4.50, date, store },\n    trend: "decreasing"\n  },\n  currentPrices: [\n    { store: "Walmart", price: 3.89 },\n    { store: "Target", price: 4.25 },\n    { store: "Kroger", price: 3.99 }\n  ]\n}
+deactivate API
+
+Redux -> Redux: Update store:\npriceTracking.priceHistory.byItem["Apples"]
+
+Redux --> Chart: Data ready
+deactivate Redux
+
+Chart -> Chart: Render line chart:\n- X-axis: Time (6 months)\n- Y-axis: Price ($)\n- Multiple lines (one per store)\n- Data points for each purchase
+
+Chart --> User: Display interactive chart:\n┌────────────────────────────┐\n│ Price Chart (6 months)     │\n│ $5.00 ┌─────────────────┐  │\n│       │ ─── Walmart     │  │\n│ $4.50 │ ─── Target      │  │\n│       │ ─── Kroger      │  │\n│ $4.00 │     •           │  │\n│       │  •     •        │  │\n│ $3.50 │           •     │  │\n│       └─────────────────┘  │\n│   Jan Feb Mar Apr May Jun  │\n└────────────────────────────┘
+
+== Interact with Chart ==
+
+User -> Chart: Hover over data point
+activate Chart
+
+Chart --> User: Show tooltip:\n┌─────────────────────┐\n│ Walmart             │\n│ $3.89 per lb        │\n│ April 15, 2026      │\n│ ↓ 5% from average   │\n└─────────────────────┘
+
+User -> Chart: Click on data point
+
+Chart --> User: Show detailed purchase:\n┌─────────────────────┐\n│ Purchase Details    │\n│ Item: Apples        │\n│ Store: Walmart      │\n│ Price: $3.89/lb     │\n│ Quantity: 2 lbs     │\n│ Total: $7.78        │\n│ Date: Apr 15, 2026  │\n│                     │\n│ [View Receipt]      │\n└─────────────────────┘
+
+deactivate Chart
+
+== View Statistics ==
+
+Chart -> Chart: Display statistics panel
+activate Chart
+
+Chart --> User: Show summary:\n┌────────────────────────────┐\n│ Statistics (6 months)      │\n│                            │\n│ Average: $3.95/lb          │\n│                            │\n│ Lowest:                    │\n│   $3.49 (Walmart)          │\n│   April 15, 2026           │\n│                            │\n│ Highest:                   │\n│   $4.50 (Target)           │\n│   February 8, 2026         │\n│                            │\n│ Current Trend: ↓           │\n│ Decreasing (-8% vs avg)    │\n│                            │\n│ Total Purchases: 24        │\n│ Stores Visited: 3          │\n└────────────────────────────┘
+
+deactivate Chart
+
+== Change Time Range ==
+
+User -> Chart: Click time range:\n"1 Year"
+activate Chart
+
+Chart -> Redux: Dispatch fetchPriceHistory(\n  "Apples",\n  timeRange: "1Y"\n)
+activate Redux
+
+Redux -> API: GET with timeRange=1Y
+activate API
+API -> DB: Query 1 year of data
+activate DB
+DB --> API: Extended records
+deactivate DB
+API --> Redux: Data for 1 year
+deactivate API
+
+Redux --> Chart: Updated data
+deactivate Redux
+
+Chart -> Chart: Re-render chart with\n1 year timeline
+
+Chart --> User: Updated chart showing\n12 months of price data
+
+deactivate Chart
+
+== Compare Stores ==
+
+User -> Chart: Scroll to store comparison
+activate Chart
+
+Chart -> Comparison: Display current prices
+activate Comparison
+
+Comparison --> User: Show comparison table:\n┌─────────────────────────────┐\n│ Current Prices (Apples)     │\n├─────────────────────────────┤\n│ Store      Price   Diff     │\n├─────────────────────────────┤\n│ ✓ Walmart  $3.89   Best     │\n│   Target   $4.25   +$0.36   │\n│             (9% more)       │\n│   Kroger   $3.99   +$0.10   │\n│             (3% more)       │\n├─────────────────────────────┤\n│ Last updated: 2 days ago    │\n└─────────────────────────────┘
+
+User -> Comparison: Click "Walmart" row
+
+Comparison --> User: Show store details:\n┌─────────────────────────────┐\n│ Walmart - Price History     │\n│                             │\n│ Current: $3.89/lb           │\n│ Average (6M): $3.92/lb      │\n│ Trend: ↓ Stable/Decreasing  │\n│                             │\n│ Your purchases at Walmart:  │\n│ • 8 times in 6 months       │\n│ • Average: $3.87/lb         │\n│                             │\n│ [Get Directions]            │\n│ [View All Items from Store] │\n└─────────────────────────────┘
+
+deactivate Comparison
+deactivate Chart
+
+== Set Price Alert ==
+
+User -> Chart: Click "Set Price Alert"
+activate Chart
+
+Chart --> User: Show alert dialog:\n┌─────────────────────────────┐\n│ Set Price Alert             │\n│                             │\n│ Item: Apples                │\n│                             │\n│ Notify me when price:       │\n│ [•] Drops below: $3.50      │\n│ [ ] Increases above: $____  │\n│ [ ] Changes by: ____%       │\n│                             │\n│ Stores to monitor:          │\n│ [✓] Walmart                 │\n│ [✓] Target                  │\n│ [✓] Kroger                  │\n│ [ ] All stores              │\n│                             │\n│ [Cancel]  [Set Alert]       │\n└─────────────────────────────┘
+
+User -> Chart: Configure alert:\n- Drops below $3.50\n- Monitor all stores
+
+User -> Chart: Click "Set Alert"
+
+Chart -> Redux: Dispatch setUpPriceAlert({\n  itemName: "Apples",\n  condition: "below",\n  threshold: 3.50,\n  stores: ["Walmart", "Target", "Kroger"]\n})
+activate Redux
+
+Redux -> API: POST /api/price-tracking/alerts\n{\n  itemName: "Apples",\n  condition: "below",\n  threshold: 3.50,\n  stores: [...],\n  userId\n}
+activate API
+
+API -> DB: INSERT INTO price_alerts\n(alert_id, user_id, item_name,\nalert_type, threshold_price,\nstores, status, created_at)\nVALUES ({id}, {userId}, 'Apples',\n'price_drop', 3.50,\n'{Walmart,Target,Kroger}',\n'active', NOW())
+activate DB
+DB --> API: Alert created
+deactivate DB
+
+API --> Redux: 201 Created\n{ alertId, status: 'active' }
+deactivate API
+
+Redux -> Redux: Add alert to\npriceTracking.alerts.all
+
+Redux --> Chart: Success
+deactivate Redux
+
+Chart --> User: Show confirmation:\n"✓ Price alert set!\nYou'll be notified when\nApples drop below $3.50"
+
+deactivate Chart
+
+== Export Data ==
+
+User -> Chart: Click "Export" button
+activate Chart
+
+Chart --> User: Show export options:\n┌─────────────────────────────┐\n│ Export Price History        │\n│                             │\n│ Format:                     │\n│ [•] CSV                     │\n│ [ ] Excel (XLSX)            │\n│ [ ] PDF Report              │\n│ [ ] Chart Image (PNG)       │\n│                             │\n│ Data range:                 │\n│ [•] Current view (6 months) │\n│ [ ] All data                │\n│ [ ] Custom range            │\n│                             │\n│ [Cancel]  [Export]          │\n└─────────────────────────────┘
+
+User -> Chart: Select "CSV" & "All data"
+User -> Chart: Click "Export"
+
+Chart -> API: GET /api/price-tracking/export\n?itemName=Apples\n&format=csv\n&range=all
+activate API
+
+API -> DB: Fetch all price data
+activate DB
+DB --> API: All records
+deactivate DB
+
+API -> API: Generate CSV:\nDate,Store,Price,Unit,Quantity
+
+API --> Chart: 200 OK\nContent-Type: text/csv\nContent-Disposition: attachment;\n  filename="apples-price-history.csv"
+deactivate API
+
+Chart -> Chart: Trigger browser download
+
+Chart --> User: Download file:\n"apples-price-history.csv"
+
+deactivate Chart
+
+@enduml

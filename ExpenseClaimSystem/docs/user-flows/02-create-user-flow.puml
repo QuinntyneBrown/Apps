@@ -1,0 +1,40 @@
+@startuml
+
+actor Administrator
+participant "User Management\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to\nCreate User page
+Administrator -> UI: Enter username, email,\nand password
+Administrator -> UI: Click Create
+
+UI -> UI: Validate form\n(email format, password\nminimum 8 chars)
+
+alt Form Valid
+    UI -> UserService: createUser(userData)
+    UserService -> API: POST /api/users\n{username, email, password}
+
+    API -> API: Validate username\nand email uniqueness
+
+    alt Unique Credentials
+        API -> API: Generate unique\n32-byte salt
+        API -> API: Hash password\nwith salt (PBKDF2)
+
+        API -> DB: INSERT User\n(username, email,\nhashed password, salt)
+        DB --> API: User created\nwith userId (GUID)
+
+        API --> UserService: 201 Created\n{userId, username, email}
+        UserService --> UI: User created successfully
+        UI --> Administrator: Show success message\nand redirect to user list
+    else Duplicate Username/Email
+        API --> UserService: 400 Bad Request\n{error: "Username or\nemail already exists"}
+        UserService --> UI: Creation failed
+        UI --> Administrator: Display error message
+    end
+else Form Invalid
+    UI --> Administrator: Display validation errors
+end
+
+@enduml

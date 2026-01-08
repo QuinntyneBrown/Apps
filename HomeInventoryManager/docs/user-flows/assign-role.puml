@@ -1,0 +1,121 @@
+@startuml assign-role
+title Assign Role to User Flow
+
+actor Admin
+participant "User Management\nPage" as UserPage
+participant "User Details\nPanel" as UserPanel
+participant "Role Assignment\nModal" as RoleModal
+participant "User Service" as UserService
+participant "API Controller\n(/api/users)" as API
+participant "AddUserRole Handler" as AddHandler
+participant "RemoveUserRole Handler" as RemoveHandler
+database "Users Table" as UsersDB
+database "Roles Table" as RolesDB
+database "UserRoles Table" as UserRolesDB
+
+Admin -> UserPage: Navigate to user management
+activate UserPage
+
+UserPage -> UserService: getUsers()
+UserService -> API: GET /api/users\nAuthorization: Bearer {token}\n(Admin role required)
+API -> UsersDB: Query all users with roles
+UsersDB --> API: User list with role assignments
+API --> UserService: UsersDto
+UserService --> UserPage: Display users
+
+UserPage --> Admin: Show user list with\ncurrent roles
+
+Admin -> UserPage: Select user to manage
+UserPage -> UserPanel: Show user details
+
+activate UserPanel
+UserPanel -> UserService: getRoles()
+UserService -> API: GET /api/roles\nAuthorization: Bearer {token}
+API -> RolesDB: Query all roles
+RolesDB --> API: Role list (Admin, User)
+API --> UserService: RolesDto
+UserService --> UserPanel: Available roles
+
+UserPanel --> Admin: Display:\n- User information\n- Current roles (badges)\n- Available roles\n- "Assign Role" button
+
+== Add Role to User ==
+
+Admin -> UserPanel: Click "Assign Role"
+UserPanel -> RoleModal: Show role selection modal
+
+activate RoleModal
+RoleModal --> Admin: Display available roles\n(not already assigned)
+
+Admin -> RoleModal: Select role\n(e.g., "Admin")
+Admin -> RoleModal: Click "Assign"
+
+RoleModal -> UserService: addRoleToUser(userId, roleId)
+UserService -> API: POST /api/users/{userId}/roles\nAuthorization: Bearer {token}\n{roleId}
+
+API -> AddHandler: Handle AddUserRoleCommand
+
+AddHandler -> UsersDB: Verify user exists
+UsersDB --> AddHandler: User exists
+
+AddHandler -> RolesDB: Verify role exists
+RolesDB --> AddHandler: Role exists
+
+alt User and role exist
+    AddHandler -> UserRolesDB: Check if role already assigned
+    UserRolesDB --> AddHandler: Assignment check
+
+    alt Role not already assigned
+        AddHandler -> UserRolesDB: INSERT UserRole record\n{UserId, RoleId}
+        UserRolesDB --> AddHandler: Role assigned
+
+        AddHandler --> API: Success (200 OK)
+        API --> UserService: Role added
+        UserService --> RoleModal: Success
+
+        RoleModal -> RoleModal: Close modal
+        RoleModal -> UserPanel: Refresh user details
+        UserPanel --> Admin: Show success notification:\n"Role assigned to user"
+        UserPanel --> Admin: Display updated role badges
+
+    else Role already assigned
+        AddHandler --> API: 200 OK (idempotent)
+        API --> UserService: Already assigned
+        UserService --> RoleModal: No change needed
+        RoleModal --> Admin: Role already assigned
+    end
+
+else User or role not found
+    AddHandler --> API: 404 Not Found
+    API --> UserService: Error
+    UserService --> RoleModal: Assignment failed
+    RoleModal --> Admin: Show error message
+end
+
+deactivate RoleModal
+
+== Remove Role from User ==
+
+Admin -> UserPanel: Click X on role badge
+UserPanel -> UserPanel: Show confirmation dialog
+
+Admin -> UserPanel: Confirm removal
+
+UserPanel -> UserService: removeRoleFromUser(userId, roleId)
+UserService -> API: DELETE /api/users/{userId}/roles/{roleId}\nAuthorization: Bearer {token}
+
+API -> RemoveHandler: Handle RemoveUserRoleCommand
+
+RemoveHandler -> UserRolesDB: DELETE UserRole\nWHERE UserId = {id}\nAND RoleId = {id}
+UserRolesDB --> RemoveHandler: Role removed (or not found)
+
+RemoveHandler --> API: Success (204 No Content)
+API --> UserService: Role removed
+UserService --> UserPanel: Success
+
+UserPanel --> Admin: Show success notification:\n"Role removed from user"
+UserPanel --> Admin: Display updated role badges
+
+deactivate UserPanel
+deactivate UserPage
+
+@enduml
