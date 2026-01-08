@@ -1,0 +1,103 @@
+@startuml Assign Chore Flow
+
+title Assign Chore to Family Member Flow
+
+actor Parent
+participant "Chore Details" as UI
+participant "Assign Dialog" as Dialog
+participant "Chore Controller" as ChoreAPI
+participant "AssignChoreCommand" as Command
+participant "Chore Repository" as ChoreRepo
+participant "Member Repository" as MemberRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+participant "Notification Service" as NotifyService
+
+== Initiate Assignment ==
+Parent -> UI: View chore details
+UI --> Parent: Display chore info
+Parent -> UI: Click "Assign Chore" button
+
+UI -> ChoreAPI: GET /api/households/{householdId}/members
+ChoreAPI -> MemberRepo: GetMembersByHousehold(householdId)
+MemberRepo -> DB: SELECT * FROM HouseholdMembers\nWHERE HouseholdId = @householdId
+DB --> MemberRepo: List of members
+MemberRepo --> ChoreAPI: Members list
+ChoreAPI --> UI: 200 OK {members}
+
+UI -> Dialog: Open assignment dialog
+Dialog --> Parent: Display family members list
+
+== Select Assignee ==
+Parent -> Dialog: Select family member
+Dialog -> Dialog: Highlight selected member
+
+Dialog -> Dialog: Calculate suggested due date\nbased on chore frequency:\n- OneTime: +3 days\n- Daily: Today\n- Weekly: +7 days\n- BiWeekly: +14 days\n- Monthly: +30 days
+
+Dialog --> Parent: Show suggested due date
+
+alt Parent Adjusts Due Date
+    Parent -> Dialog: Modify due date
+    Dialog -> Dialog: Validate date is in future
+end
+
+opt Set Priority Level
+    Parent -> Dialog: Set priority (Low/Medium/High)
+end
+
+== Submit Assignment ==
+Parent -> Dialog: Click "Assign"
+
+Dialog -> ChoreAPI: POST /api/chores/{choreId}/assign\n{\n  assignedTo: memberId,\n  assignedBy: parentId,\n  dueDate,\n  priority\n}
+
+ChoreAPI -> Command: Handle AssignChoreCommand
+Command -> ChoreRepo: GetChoreById(choreId)
+ChoreRepo -> DB: SELECT * FROM Chores\nWHERE ChoreId = @choreId
+DB --> ChoreRepo: Chore data
+ChoreRepo --> Command: Chore entity
+
+Command -> MemberRepo: GetMemberById(memberId)
+MemberRepo -> DB: SELECT * FROM HouseholdMembers\nWHERE MemberId = @memberId
+DB --> MemberRepo: Member data
+MemberRepo --> Command: Member entity
+
+Command -> Command: Validate:\n- Chore exists and is active\n- Member belongs to household\n- Due date is valid
+
+alt Validation Passes
+    Command -> Command: Create Assignment:\n- AssignmentId (Guid)\n- ChoreId\n- AssignedTo\n- AssignedBy\n- DueDate\n- Status: Pending
+
+    Command -> ChoreRepo: SaveAssignment(assignment)
+    ChoreRepo -> DB: INSERT INTO ChoreAssignments
+    DB --> ChoreRepo: AssignmentId
+
+    Command -> Events: Publish ChoreAssigned event\n{\n  assignmentId,\n  choreId,\n  assignedTo,\n  assignedBy,\n  dueDate,\n  assignmentMethod: "Manual"\n}
+
+    Events -> NotifyService: Send assignment notification
+
+    NotifyService -> NotifyService: Create notification:\n"You've been assigned [ChoreName]!\nDue: [DueDate]\nPoints: [PointValue]"
+
+    NotifyService -> DB: INSERT INTO Notifications
+    NotifyService -> NotifyService: Send push notification\nto assignee's device
+
+    Command --> ChoreAPI: Success with AssignmentId
+    ChoreAPI --> Dialog: 201 Created {assignmentId, assignment}
+
+    Dialog -> Dialog: Show success message:\n"[MemberName] has been assigned\nto [ChoreName]"
+    Dialog -> UI: Close dialog and refresh
+    UI -> UI: Update chore card to show:\n- Assignee name\n- Due date\n- Status badge
+    UI --> Parent: Display updated chore
+
+else Validation Fails
+    Command --> ChoreAPI: Validation error
+    ChoreAPI --> Dialog: 400 Bad Request {errors}
+    Dialog --> Parent: Display error message
+end
+
+== Assignee Receives Notification ==
+NotifyService -> Parent: Notification sent to [MemberName]
+note right
+    Assignee will see notification
+    in their mobile app or dashboard
+end note
+
+@enduml
