@@ -1,0 +1,169 @@
+@startuml View Fuel History Flow
+
+title View Fuel History Flow
+
+actor User
+participant "Fuel History Page" as HistoryPage
+participant "Fuel Purchase Controller" as FuelAPI
+participant "Fuel Purchase Service" as FuelService
+database "Database" as DB
+
+== Load Fuel History ==
+User -> HistoryPage: Navigate to /vehicles/{vehicleId}/fuel-purchases
+activate HistoryPage
+
+HistoryPage -> FuelAPI: GET /api/fuel-purchases?vehicleId={id}&page=1
+activate FuelAPI
+FuelAPI -> FuelService: GetFuelPurchases(vehicleId, filters, pagination)
+activate FuelService
+FuelService -> DB: Query fuel purchases with JOIN on stations
+activate DB
+DB --> FuelService: Purchase records with station info
+deactivate DB
+FuelService -> FuelService: Calculate MPG for each purchase
+FuelService -> FuelService: Apply color coding based on vehicle average
+FuelService --> FuelAPI: Paginated purchase list with statistics
+deactivate FuelService
+FuelAPI --> HistoryPage: 200 OK + purchases + pagination metadata
+deactivate FuelAPI
+
+HistoryPage -> FuelAPI: GET /api/vehicles/{vehicleId}/fuel-stats/summary
+activate FuelAPI
+FuelAPI -> DB: Query aggregated statistics
+activate DB
+DB --> FuelAPI: Current avg MPG, monthly stats, best MPG
+deactivate DB
+FuelAPI --> HistoryPage: Summary statistics
+deactivate FuelAPI
+
+HistoryPage --> User: Display summary cards and purchase list
+deactivate HistoryPage
+
+== Apply Filters ==
+User -> HistoryPage: Click filter toggle
+activate HistoryPage
+HistoryPage --> User: Show filter panel
+
+User -> HistoryPage: Select date range, fuel grade, station
+HistoryPage -> FuelAPI: GET /api/fuel-purchases?vehicleId={id}&startDate={start}&endDate={end}&fuelGrade={grade}
+activate FuelAPI
+FuelAPI -> FuelService: GetFuelPurchases with filters
+activate FuelService
+FuelService -> DB: Query with WHERE conditions
+activate DB
+DB --> FuelService: Filtered results
+deactivate DB
+FuelService --> FuelAPI: Filtered purchase list
+deactivate FuelService
+FuelAPI --> HistoryPage: Updated purchase list
+deactivate FuelAPI
+HistoryPage --> User: Update list display with filtered results
+deactivate HistoryPage
+
+== View Purchase Details ==
+User -> HistoryPage: Click on a purchase item
+activate HistoryPage
+HistoryPage -> FuelAPI: GET /api/fuel-purchases/{purchaseId}
+activate FuelAPI
+FuelAPI -> FuelService: GetFuelPurchaseById(purchaseId)
+activate FuelService
+FuelService -> DB: Query purchase with all details
+activate DB
+DB --> FuelService: Complete purchase record
+deactivate DB
+FuelService -> DB: Get vehicle average MPG for comparison
+activate DB
+DB --> FuelService: Vehicle statistics
+deactivate DB
+FuelService --> FuelAPI: Purchase details with comparisons
+deactivate FuelService
+FuelAPI --> HistoryPage: Purchase details
+deactivate FuelAPI
+HistoryPage --> User: Navigate to details page with full information
+deactivate HistoryPage
+
+== Edit Purchase ==
+User -> HistoryPage: Click Edit on purchase
+activate HistoryPage
+HistoryPage -> FuelAPI: GET /api/fuel-purchases/{purchaseId}
+activate FuelAPI
+FuelAPI -> DB: Query purchase data
+activate DB
+DB --> FuelAPI: Purchase record
+deactivate DB
+FuelAPI --> HistoryPage: Purchase data for editing
+deactivate FuelAPI
+HistoryPage --> User: Display edit form with pre-filled data
+
+User -> HistoryPage: Modify fields and click Save
+HistoryPage -> FuelAPI: PUT /api/fuel-purchases/{purchaseId}
+activate FuelAPI
+FuelAPI -> FuelService: UpdateFuelPurchase(purchaseId, updatedData)
+activate FuelService
+FuelService -> DB: UPDATE fuel_purchase record
+activate DB
+DB --> FuelService: Update successful
+deactivate DB
+FuelService -> DB: Recalculate vehicle statistics
+activate DB
+deactivate DB
+FuelService --> FuelAPI: Updated purchase
+deactivate FuelService
+FuelAPI --> HistoryPage: 200 OK + updated purchase
+deactivate FuelAPI
+HistoryPage --> User: Show success message and refresh list
+deactivate HistoryPage
+
+== Delete Purchase ==
+User -> HistoryPage: Click Delete on purchase
+activate HistoryPage
+HistoryPage --> User: Show confirmation dialog
+
+alt User Confirms Deletion
+    User -> HistoryPage: Confirm delete
+    HistoryPage -> FuelAPI: DELETE /api/fuel-purchases/{purchaseId}
+    activate FuelAPI
+    FuelAPI -> FuelService: DeleteFuelPurchase(purchaseId)
+    activate FuelService
+    FuelService -> DB: DELETE FROM fuel_purchase
+    activate DB
+    DB --> FuelService: Deletion successful
+    deactivate DB
+    FuelService -> DB: Recalculate vehicle statistics
+    activate DB
+    deactivate DB
+    FuelService --> FuelAPI: Deletion confirmed
+    deactivate FuelService
+    FuelAPI --> HistoryPage: 204 No Content
+    deactivate FuelAPI
+    HistoryPage --> User: Remove item from list with animation
+    HistoryPage --> User: Show success message
+else User Cancels
+    User -> HistoryPage: Cancel
+    HistoryPage --> User: Close dialog
+end
+deactivate HistoryPage
+
+== Export Data ==
+User -> HistoryPage: Click Export button
+activate HistoryPage
+HistoryPage --> User: Show export options
+
+User -> HistoryPage: Select format and date range
+HistoryPage -> FuelAPI: GET /api/fuel-purchases/export?format=csv&startDate={start}&endDate={end}
+activate FuelAPI
+FuelAPI -> FuelService: ExportFuelPurchases(vehicleId, format, filters)
+activate FuelService
+FuelService -> DB: Query purchases for export
+activate DB
+DB --> FuelService: All matching purchases
+deactivate DB
+FuelService -> FuelService: Format data as CSV/PDF
+FuelService --> FuelAPI: Export file
+deactivate FuelService
+FuelAPI --> HistoryPage: File download
+deactivate FuelAPI
+HistoryPage --> User: Trigger file download
+deactivate HistoryPage
+
+@enduml
