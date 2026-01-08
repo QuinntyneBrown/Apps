@@ -1,0 +1,141 @@
+@startuml Event Creation Flow
+title Event Creation Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Calendar Page" as CalendarPage
+participant "Event Service" as EventService
+participant "Events Controller" as EventsController
+participant "ITenantContext" as TenantContext
+participant "Conflict Detector\nService" as ConflictService
+participant "Notification Service" as NotificationService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> CalendarPage: Click "Create Event" button
+activate CalendarPage
+CalendarPage --> User: Display event creation form
+
+User -> CalendarPage: Enter event details:\n- Title\n- Date/Time\n- Location\n- Description\n- Event Type\n- Attendees (family members)
+
+CalendarPage -> CalendarPage: Validate form:\n- Title not empty\n- Valid date/time\n- Start time before end time
+
+CalendarPage -> EventService: createEvent(eventData)
+activate EventService
+
+EventService -> EventsController: POST /api/events
+activate EventsController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "title": "string",
+    "startTime": "datetime",
+    "endTime": "datetime",
+    "location": "string",
+    "description": "string",
+    "eventType": "enum",
+    "attendeeIds": ["guid", ...]
+  }
+end note
+
+EventsController -> TenantContext: GetCurrentTenantId()
+activate TenantContext
+note right
+  Extract from JWT claims
+  or HTTP header
+end note
+TenantContext --> EventsController: TenantId (Guid)
+deactivate TenantContext
+
+EventsController -> DbContext: Create Event entity
+activate DbContext
+note right
+  Event created with:
+  - EventId (new Guid)
+  - TenantId
+  - CreatedBy (from JWT)
+  - All provided details
+end note
+
+DbContext -> DB: INSERT INTO Events\n(EventId, TenantId, Title,\nStartTime, EndTime, Location,\nDescription, EventType, CreatedBy)
+activate DB
+DB --> DbContext: Event created
+deactivate DB
+
+DbContext -> DB: INSERT INTO EventAttendees\n(EventId, FamilyMemberId)\nfor each attendee
+activate DB
+DB --> DbContext: Attendees added
+deactivate DB
+deactivate DbContext
+
+EventsController -> ConflictService: DetectConflicts(eventId)
+activate ConflictService
+note right
+  Triggers EventCreated
+  domain event
+end note
+
+ConflictService -> DbContext: Query overlapping events\nfor attendees
+activate DbContext
+DbContext -> DB: SELECT * FROM Events e\nJOIN EventAttendees ea\nWHERE ea.FamilyMemberId IN (attendees)\nAND StartTime < @endTime\nAND EndTime > @startTime
+activate DB
+DB --> DbContext: Overlapping events (if any)
+deactivate DB
+deactivate DbContext
+
+alt Conflicts detected
+    ConflictService -> DbContext: Create ScheduleConflict records
+    activate DbContext
+    DbContext -> DB: INSERT INTO ScheduleConflicts
+    activate DB
+    DB --> DbContext: Conflicts recorded
+    deactivate DB
+    deactivate DbContext
+
+    ConflictService --> EventsController: Conflicts found
+    deactivate ConflictService
+
+    EventsController -> NotificationService: NotifyConflicts(eventId, conflicts)
+    activate NotificationService
+    NotificationService --> EventsController: Notifications scheduled
+    deactivate NotificationService
+
+else No conflicts
+    ConflictService --> EventsController: No conflicts
+    deactivate ConflictService
+end
+
+EventsController -> NotificationService: NotifyAttendees(eventId)
+activate NotificationService
+note right
+  Send event invitations
+  to all attendees
+end note
+NotificationService -> DbContext: Create event reminders
+activate DbContext
+DbContext -> DB: INSERT INTO EventReminders\n(1 day, 1 hour, 15 min)
+activate DB
+DB --> DbContext: Reminders scheduled
+deactivate DB
+deactivate DbContext
+NotificationService --> EventsController: Invitations sent
+deactivate NotificationService
+
+EventsController --> EventService: 201 Created\n{eventId, title, startTime,\nendTime, hasConflicts}
+deactivate EventsController
+
+EventService --> CalendarPage: Event created
+deactivate EventService
+
+CalendarPage -> CalendarPage: Refresh calendar view
+CalendarPage -> CalendarPage: Sync event to calendar
+
+alt Has conflicts
+    CalendarPage --> User: Display success with\nconflict warning
+else No conflicts
+    CalendarPage --> User: Display success message
+end
+
+deactivate CalendarPage
+
+@enduml
