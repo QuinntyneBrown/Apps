@@ -1,0 +1,66 @@
+@startuml Health Profile Management
+skinparam backgroundColor #FFFFFF
+
+actor User
+participant "ProfileForm\n(UI Component)" as ProfileForm
+participant "Profile API\n(Controller)" as API
+participant "Profile Service\n(Business Logic)" as Service
+database "Database" as DB
+
+== Create/Update Health Profile ==
+User -> ProfileForm: Enter health information\n(age, gender, medical history)
+activate ProfileForm
+ProfileForm -> ProfileForm: Validate form data
+
+User -> ProfileForm: Add risk factors
+ProfileForm -> ProfileForm: Update risk factors list
+
+User -> ProfileForm: Add family history
+ProfileForm -> ProfileForm: Update family history tree
+
+User -> ProfileForm: Submit profile
+ProfileForm -> API: POST/PUT /api/profiles\n{healthData, riskFactors, familyHistory}
+activate API
+
+API -> API: Validate request
+API -> Service: CreateOrUpdateProfile(data)
+activate Service
+
+Service -> Service: Process health data
+Service -> Service: Calculate risk scores
+Service -> DB: SAVE health_profiles
+activate DB
+DB --> Service: Profile saved
+deactivate DB
+
+Service -> Service: Trigger recommendations update
+Service --> API: Profile updated
+deactivate Service
+
+API --> ProfileForm: 200 OK\n{profile, impactSummary}
+deactivate API
+
+ProfileForm -> ProfileForm: Display success message
+ProfileForm -> ProfileForm: Show ScreeningImpact\n(How profile affects recommendations)
+ProfileForm --> User: Show updated profile\nand screening recommendations
+deactivate ProfileForm
+
+== View Screening Impact ==
+User -> ProfileForm: View screening impact
+activate ProfileForm
+ProfileForm -> API: GET /api/profiles/{id}/impact
+activate API
+API -> Service: GetScreeningImpact(profileId)
+activate Service
+Service -> DB: QUERY recommendations\nbased on profile
+activate DB
+DB --> Service: Recommendations data
+deactivate DB
+Service --> API: Impact analysis
+deactivate Service
+API --> ProfileForm: 200 OK\n{affectedScreenings}
+deactivate API
+ProfileForm --> User: Display how profile\naffects recommendations
+deactivate ProfileForm
+
+@enduml
