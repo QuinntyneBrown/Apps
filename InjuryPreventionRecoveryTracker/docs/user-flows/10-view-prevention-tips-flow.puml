@@ -1,0 +1,127 @@
+@startuml View Prevention Tips Flow
+title View Prevention Tips Flow
+
+actor User
+participant "Prevention Tips Page" as UI
+participant "Tips Service" as Service
+participant "API Controller" as API
+participant "Query Handler" as Handler
+participant "DbContext" as DB
+participant "Azure AI Service" as AI
+
+== View Tips Library ==
+User -> UI: Navigate to Prevention Tips
+UI -> Service: Observable: tips$\n= getPreventionTips()
+Service -> API: GET /api/prevention-tips?\ncategory=all
+
+API -> Handler: Handle GetPreventionTipsQuery
+Handler -> DB: Query prevention tips
+DB --> Handler: List<PreventionTip>
+
+Handler -> Handler: Map to PreventionTipDto[]
+Handler --> API: PreventionTipDto[]
+
+API --> Service: Success response
+Service --> UI: Display tips library
+UI --> User: Show categorized tips\n(exercise, nutrition, lifestyle)
+
+== Filter Tips by Category ==
+User -> UI: Select category filter\n(e.g., "Exercise")
+UI -> Service: getPreventionTips(category)
+Service -> API: GET /api/prevention-tips?\ncategory=exercise
+
+API -> Handler: Handle filtered query
+Handler -> DB: Query tips by category
+DB --> Handler: Filtered tips
+Handler --> API: PreventionTipDto[]
+API --> Service: Response
+Service --> UI: Update display
+UI --> User: Show filtered tips
+
+== View Tip Details ==
+User -> UI: Click on a tip
+UI -> UI: Expand tip details
+UI --> User: Show full content:\n- Description\n- Benefits\n- How-to instructions\n- Related videos/images
+
+== Search Tips ==
+User -> UI: Enter search query
+UI -> Service: searchPreventionTips(query)
+Service -> API: GET /api/prevention-tips/search?\nq={query}
+
+API -> Handler: Handle search query
+Handler -> DB: Full-text search\non tips content
+DB --> Handler: Matching tips
+Handler --> API: PreventionTipDto[]
+API --> Service: Response
+Service --> UI: Display results
+UI --> User: Show matching tips
+
+== Get Personalized Tips (AI) ==
+User -> UI: Click "Get Personalized Tips"
+UI -> Service: getPersonalizedTips()
+Service -> API: GET /api/prevention-tips/personalized
+
+API -> Handler: Handle personalized query
+Handler -> DB: Query user's injury history\n(tenant-scoped)
+DB --> Handler: User injury data
+
+Handler -> AI: Request personalized tips\nbased on injury patterns
+AI -> AI: Analyze injury types,\nfrequency, severity
+AI --> Handler: Personalized recommendations
+
+Handler -> Handler: Format recommendations\nwith tip IDs
+Handler --> API: PersonalizedTipDto[]
+
+API --> Service: Success response
+Service --> UI: Display personalized section
+UI --> User: Show AI-generated\nrecommendations
+
+== Save Favorite Tips ==
+User -> UI: Click "Favorite" on tip
+UI -> Service: addFavoriteTip(tipId)
+Service -> API: POST /api/users/favorites/tips\n{ tipId: "guid" }
+
+API -> Handler: Handle AddFavoriteTipCommand
+Handler -> DB: Create UserFavoriteTip\nassociation
+DB --> Handler: Favorite saved
+
+Handler --> API: 201 Created
+API --> Service: Success
+Service -> UI: Update favorite icon
+UI --> User: Show filled favorite icon
+
+== View Favorite Tips ==
+User -> UI: Navigate to "My Favorites"
+UI -> Service: getFavoriteTips()
+Service -> API: GET /api/users/favorites/tips
+
+API -> Handler: Handle query
+Handler -> DB: Query user's favorite tips
+DB --> Handler: List<PreventionTip>
+Handler --> API: PreventionTipDto[]
+API --> Service: Response
+Service --> UI: Display favorites
+UI --> User: Show saved tips
+
+note right of AI
+  Azure AI Integration:
+  - Analyze injury patterns
+  - Identify risk factors
+  - Generate personalized tips
+  - Consider injury types
+  - Factor in recovery stage
+  - Suggest preventive exercises
+end note
+
+note left of UI
+  UI Features:
+  - Category filters
+  - Search functionality
+  - Favorite/bookmark tips
+  - Share tips
+  - Print-friendly view
+  - Video tutorials
+  - Related tips suggestions
+end note
+
+@enduml
