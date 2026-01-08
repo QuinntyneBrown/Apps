@@ -1,0 +1,92 @@
+@startuml add-photos-to-album
+actor User
+participant "Album Detail View" as AlbumView
+participant "Photo Selector Modal" as Selector
+participant "Album Service" as AlbumService
+participant "Photo Service" as PhotoService
+participant "API Gateway" as API
+participant "Album Controller" as AlbumController
+database "Album Database" as AlbumDB
+database "Photo Database" as PhotoDB
+
+User -> AlbumView: Navigate to album
+AlbumView -> AlbumService: getAlbumById(albumId)
+AlbumService -> API: GET /api/albums/{id}
+API -> AlbumController: getAlbumById(id)
+AlbumController -> AlbumDB: SELECT * FROM albums\nWHERE id = albumId
+AlbumDB --> AlbumController: Album details
+AlbumController -> PhotoDB: SELECT photos\nWHERE albumId = albumId
+PhotoDB --> AlbumController: Album photos
+AlbumController --> API: 200 OK\n{album, photos[]}
+API --> AlbumService: Album data
+AlbumService --> AlbumView: Display album
+AlbumView --> User: Show album with\ncurrent photos
+
+User -> AlbumView: Click "Add Photos" button
+AlbumView -> Selector: Open photo selector
+Selector -> PhotoService: getPhotos(filters)
+PhotoService -> API: GET /api/photos
+API -> PhotoService: All user photos
+Selector -> Selector: Filter out photos\nalready in album
+Selector --> User: Display available photos\nin grid view
+
+User -> Selector: Browse and select photos\n(multi-select with checkboxes)
+Selector --> User: Show selected count:\n"X photos selected"
+
+alt User selects photos and confirms
+    User -> Selector: Click "Add to Album" button
+    Selector -> AlbumService: addPhotosToAlbum(albumId, photoIds[])
+    AlbumService -> API: POST /api/albums/{id}/photos
+    API -> AlbumController: addPhotosToAlbum(id, photoIds)
+
+    loop For each photo ID
+        AlbumController -> AlbumDB: INSERT INTO album_photos\n(albumId, photoId)
+        AlbumDB --> AlbumController: Success
+    end
+
+    AlbumController -> AlbumDB: UPDATE albums\nSET photoCount = photoCount + X\nWHERE id = albumId
+    AlbumDB --> AlbumController: Updated
+
+    AlbumController --> API: 200 OK\n{photosAdded: count}
+    API --> AlbumService: Photos added successfully
+    AlbumService --> Selector: Addition complete
+    Selector -> Selector: Close modal
+    Selector -> AlbumView: Refresh album view
+
+    AlbumView -> AlbumService: getAlbumById(albumId)
+    AlbumService -> API: GET /api/albums/{id}
+    API -> AlbumController: getAlbumById(id)
+    AlbumController -> AlbumDB: SELECT album
+    AlbumController -> PhotoDB: SELECT photos\nWHERE albumId = albumId
+    PhotoDB --> AlbumController: Updated photos list
+    AlbumController --> API: 200 OK {album, photos[]}
+    API --> AlbumService: Updated album data
+    AlbumService --> AlbumView: Display updated album
+    AlbumView --> User: Show notification:\n"X photos added to album"\n+ Updated photo grid
+
+    note right of AlbumView
+        Album photo count badge
+        updates automatically
+    end note
+
+else User cancels
+    User -> Selector: Click "Cancel" button
+    Selector -> Selector: Close modal
+    Selector -> AlbumView: Return without changes
+    AlbumView --> User: Show original album view
+end
+
+alt Adding photos fails
+    API --> AlbumService: 400 Bad Request\nor 500 Server Error
+    AlbumService --> Selector: Addition failed
+    Selector --> User: Show error message:\n"Failed to add photos.\nPlease try again."
+end
+
+== Alternative: Drag and Drop ==
+
+User -> AlbumView: Drag photos from library\nand drop onto album
+AlbumView -> AlbumService: addPhotosToAlbum(albumId, photoIds[])
+note right: Same API flow as above
+AlbumView --> User: Show success notification
+
+@enduml
