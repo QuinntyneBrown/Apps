@@ -1,0 +1,69 @@
+@startuml Update Recipient Preferences Flow
+autonumber
+title Update Recipient Preferences Flow
+
+actor User
+participant "Recipient Details\nPage" as UI
+participant "Preference Manager\nComponent" as PrefMgr
+participant "Recipient Service" as Service
+participant "API Controller\n/api/recipients/{recipientId}" as API
+participant "Recipient Handler" as Handler
+database "Database" as DB
+
+User -> UI: Select recipient from list
+UI -> Service: getRecipient(recipientId)
+Service -> API: GET /api/recipients/{recipientId}
+API -> Handler: Handle GetRecipientQuery
+Handler -> DB: Query recipient with preferences
+DB --> Handler: Recipient data
+Handler --> API: RecipientDto
+API --> Service: 200 OK {recipient data}
+Service --> UI: Recipient loaded
+UI -> PrefMgr: Display current preferences\n(tags, interests, sizes)
+
+User -> PrefMgr: Edit preferences\n(add/remove tags, update interests,\nenter sizes)
+PrefMgr -> PrefMgr: Validate preference data
+
+alt Validation Successful
+    PrefMgr -> Service: updateRecipientPreferences(recipientId, preferences)
+    Service -> API: PUT /api/recipients/{recipientId}\n{preferences, tags, interests, sizes}
+
+    API -> API: Verify authentication\nand tenant ownership
+    API -> API: Extract tenant ID from JWT
+
+    alt User Authorized
+        API -> Handler: Handle UpdateRecipientCommand
+        Handler -> DB: Query recipient by ID and TenantId
+
+        alt Recipient Exists and Owned by Tenant
+            Handler -> DB: UPDATE Recipient preferences
+            Handler -> DB: DELETE existing tags
+            Handler -> DB: INSERT new tags
+            Handler -> DB: UPDATE interests
+            Handler -> DB: UPDATE sizes\n(shirt, pants, shoes, etc.)
+            DB --> Handler: Preferences updated
+
+            Handler -> DB: Query updated recipient\nwith all preferences
+            DB --> Handler: Complete recipient data
+
+            Handler --> API: RecipientDto with updated preferences
+            API --> Service: 200 OK\n{recipientId, updatedPreferences}
+            Service --> UI: Preferences updated successfully
+            UI -> UI: Refresh preference display
+            UI --> User: Display success message\nand updated preference card
+        else Recipient Not Found or Not Owned
+            Handler --> API: Not found error
+            API --> Service: 404 Not Found\n{error: "Recipient not found"}
+            Service --> UI: Error occurred
+            UI --> User: Display error message
+        end
+    else Not Authorized
+        API --> Service: 401/403 Error\n{error: "Not authorized"}
+        Service --> UI: Authorization failed
+        UI --> User: Display authorization error
+    end
+else Validation Failed
+    PrefMgr --> User: Display validation errors
+end
+
+@enduml
