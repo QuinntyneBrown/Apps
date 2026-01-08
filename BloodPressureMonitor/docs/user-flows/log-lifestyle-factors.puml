@@ -1,0 +1,176 @@
+@startuml
+title Log Daily Lifestyle Factors Flow
+
+actor User as user
+participant "Dashboard\n(UI)" as dashboard
+participant "Lifestyle Dashboard\n(UI)" as lifestylePage
+participant "Lifestyle Service\n(Frontend)" as lifestyleService
+participant "API Gateway" as api
+participant "Lifestyle Controller\n(Backend)" as controller
+participant "Correlation Service\n(Backend)" as correlationService
+database "Lifestyle Database" as lifestyleDb
+database "Readings Database" as readingsDb
+
+user -> dashboard : Opens app in evening
+activate dashboard
+dashboard -> user : Show "Log Today's Factors" prompt
+deactivate dashboard
+
+user -> dashboard : Click "Lifestyle Tracking"
+activate dashboard
+dashboard -> lifestylePage : Navigate to lifestyle page
+deactivate dashboard
+
+activate lifestylePage
+lifestylePage -> api : GET /api/lifestyle/today\nAuthorization: Bearer {token}
+deactivate lifestylePage
+
+activate api
+api -> controller : Fetch today's logged factors
+deactivate api
+
+activate controller
+controller -> lifestyleDb : Query factors for today
+activate lifestyleDb
+lifestyleDb --> controller : Return partial data:\n- Sleep: 7 hours (logged earlier)
+deactivate lifestyleDb
+
+controller -> api : 200 OK {todaysFactors}
+activate api
+api -> lifestylePage : Return today's data
+deactivate api
+deactivate controller
+
+activate lifestylePage
+lifestylePage -> user : Display dashboard with:\n- Quick log cards\n- Previously logged: Sleep (7h)\n- Not logged: Sodium, Exercise,\n  Stress, Alcohol, Caffeine
+deactivate lifestylePage
+
+user -> lifestylePage : Click "Sodium" card
+activate lifestylePage
+lifestylePage -> user : Show sodium entry form:\n- Manual mg input\n- Common foods database\n- Target: 2300mg
+deactivate lifestylePage
+
+user -> lifestylePage : Enter 2800mg
+activate lifestylePage
+lifestylePage -> lifestylePage : Calculate vs target:\n+500mg over (22% over limit)
+lifestylePage -> user : Show warning:\n"Above recommended limit"\n(red indicator)
+deactivate lifestylePage
+
+user -> lifestylePage : Click "Save"
+activate lifestylePage
+lifestylePage -> lifestyleService : Submit sodium entry
+deactivate lifestylePage
+
+activate lifestyleService
+lifestyleService -> api : POST /api/lifestyle/sodium\nAuthorization: Bearer {token}\n{value: 2800, date: today}
+deactivate lifestyleService
+
+activate api
+api -> controller : Save sodium entry
+deactivate api
+
+activate controller
+controller -> lifestyleDb : Insert sodium record
+activate lifestyleDb
+lifestyleDb --> controller : Confirm save
+deactivate lifestyleDb
+
+controller -> api : 201 Created
+activate api
+api -> lifestylePage : Success
+deactivate api
+deactivate controller
+
+activate lifestylePage
+lifestylePage -> user : Update sodium card:\nLogged: 2800mg (red)
+deactivate lifestylePage
+
+user -> lifestylePage : Click "Exercise" card
+activate lifestylePage
+lifestylePage -> user : Show exercise form:\n- Type dropdown\n- Duration slider\n- Intensity selector
+deactivate lifestylePage
+
+user -> lifestylePage : Select type: Cardio\nDuration: 30 minutes\nIntensity: Moderate
+activate lifestylePage
+lifestylePage -> lifestyleService : Submit exercise entry
+deactivate lifestylePage
+
+activate lifestyleService
+lifestyleService -> api : POST /api/lifestyle/exercise\nAuthorization: Bearer {token}\n{type: "Cardio", duration: 30,\nintensity: "Moderate"}
+deactivate lifestyleService
+
+activate api
+api -> controller : Save exercise entry
+deactivate api
+
+activate controller
+controller -> lifestyleDb : Insert exercise record
+activate lifestyleDb
+lifestyleDb --> controller : Confirm save
+deactivate lifestyleDb
+
+controller -> api : 201 Created
+activate api
+api -> lifestylePage : Success
+deactivate api
+deactivate controller
+
+activate lifestylePage
+lifestylePage -> user : Update exercise card:\nLogged: Cardio 30min (green)
+deactivate lifestylePage
+
+user -> lifestylePage : Click "Stress" card
+activate lifestylePage
+lifestylePage -> user : Show stress tracker:\n- Slider (1-10) with emojis\n- Trigger tags\n- Notes textarea
+deactivate lifestylePage
+
+user -> lifestylePage : Set slider to 6 (Moderate)\nSelect trigger: "Work"\nAdd note: "Deadline pressure"
+activate lifestylePage
+lifestylePage -> lifestyleService : Submit stress entry
+deactivate lifestylePage
+
+activate lifestyleService
+lifestyleService -> api : POST /api/lifestyle/stress\nAuthorization: Bearer {token}\n{level: 6, triggers: ["Work"],\nnotes: "Deadline pressure"}
+deactivate lifestyleService
+
+activate api
+api -> controller : Save stress entry
+deactivate api
+
+activate controller
+controller -> lifestyleDb : Insert stress record
+activate lifestyleDb
+lifestyleDb --> controller : Confirm save
+deactivate lifestyleDb
+
+controller -> correlationService : Trigger correlation update
+activate correlationService
+correlationService -> lifestyleDb : Query recent lifestyle data
+activate lifestyleDb
+lifestyleDb --> correlationService : Return 30-day data
+deactivate lifestyleDb
+
+correlationService -> readingsDb : Query recent BP readings
+activate readingsDb
+readingsDb --> correlationService : Return 30-day readings
+deactivate readingsDb
+
+correlationService -> correlationService : Calculate correlations:\n- Sodium: +0.72 (strong)\n- Exercise: -0.54 (moderate)\n- Stress: +0.68 (strong)
+
+correlationService -> controller : Updated correlations
+deactivate correlationService
+
+controller -> api : 201 Created {correlations}
+activate api
+api -> lifestylePage : Success with insights
+deactivate api
+deactivate controller
+
+activate lifestylePage
+lifestylePage -> user : Update stress card:\nLogged: Level 6 (yellow)
+lifestylePage -> lifestylePage : Refresh correlation insights
+lifestylePage -> user : Show updated insights:\n"High sodium linked to +8mmHg"\n"Exercise reduces BP by -6mmHg"\n"Stress strongly correlated with elevated BP"
+lifestylePage -> user : Display completion summary:\n"Today's factors logged:\nSodium, Exercise, Stress, Sleep"
+deactivate lifestylePage
+
+@enduml
