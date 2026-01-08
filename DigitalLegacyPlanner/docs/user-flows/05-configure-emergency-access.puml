@@ -1,0 +1,127 @@
+@startuml
+title Configure Emergency Access (Dead Man's Switch) Flow
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Emergency Dashboard" as UI
+participant "Configure Modal" as Modal
+participant "Timeline Preview" as Timeline
+participant "Emergency Service" as Service
+participant "API Gateway" as API
+participant "Emergency Controller" as Controller
+participant "Emergency Repository" as Repository
+database "Database" as DB
+
+User -> UI: Navigate to /emergency
+activate UI
+UI --> User: Display emergency protocol dashboard\nwith current status
+
+User -> UI: Click "Configure Emergency Access"
+UI -> Modal: Open ConfigureEmergencyModal
+activate Modal
+Modal --> User: Display configuration form
+
+== Configuration Settings ==
+User -> Modal: Select "Activation Trigger":\n- Inactivity\n- Manual request
+
+alt Inactivity Selected
+    User -> Modal: Set "Inactivity threshold":\n30-90 days
+    Modal -> Modal: Show countdown explanation
+end
+
+User -> Modal: Set "Waiting period before release":\nDays after trigger
+
+User -> Modal: Select "Notification recipients":\nFrom trusted contacts list
+Modal -> Service: getExecutors()
+Service -> API: GET /api/contacts/executors
+API --> Service: Executors list
+Service --> Modal: Populate recipient selector
+
+User -> Modal: Choose multiple recipients
+
+User -> Modal: Select "Access package contents":\n- All accounts\n- Instructions only\n- Specific accounts
+
+alt Specific Accounts
+    Modal -> Service: getAccounts()
+    Service -> API: GET /api/accounts
+    API --> Service: Accounts list
+    Service --> Modal: Show account selector
+    User -> Modal: Select accounts for emergency package
+end
+
+Modal -> Timeline: generatePreview(config)
+activate Timeline
+Timeline --> Modal: Display visual timeline:\n- Inactivity starts\n- Warning notifications (7d, 3d, 1d)\n- Waiting period\n- Access granted
+deactivate Timeline
+
+User -> Modal: Review timeline preview
+
+User -> Modal: Click "Test Notification" (optional)
+Modal -> Service: sendTestNotification()
+Service -> API: POST /api/emergency/test-notification
+API --> Service: Test email/SMS sent
+Service --> Modal: "Test notification sent"
+
+User -> Modal: Click "Save Configuration"
+
+Modal -> Service: saveEmergencyConfig(configData)
+activate Service
+
+Service -> API: POST /api/emergency/configure\n{trigger, threshold, waitPeriod, recipients, contents}
+activate API
+API -> API: Validate JWT token
+
+API -> Controller: ConfigureEmergencyAccess(command)
+activate Controller
+
+Controller -> Repository: BeginTransaction()
+activate Repository
+
+Repository -> DB: INSERT OR UPDATE EmergencyConfig\nVALUES (userId, trigger, threshold, ...)
+activate DB
+DB --> Repository: Config saved (ID)
+deactivate DB
+
+Repository -> DB: INSERT INTO EmergencyRecipients\nVALUES (configId, executorId, ...)
+activate DB
+DB --> Repository: Recipients saved
+deactivate DB
+
+Repository -> DB: INSERT INTO EmergencyPackageContents\nVALUES (configId, accountIds, ...)
+activate DB
+DB --> Repository: Package contents saved
+deactivate DB
+
+Repository -> DB: INSERT INTO ActivityLog\nVALUES (userId, 'EmergencyConfigured', timestamp)
+activate DB
+DB --> Repository: Activity logged
+deactivate DB
+
+Repository -> Repository: CommitTransaction()
+Repository --> Controller: Emergency config entity
+deactivate Repository
+
+Controller -> Controller: Schedule next activity check\n(based on threshold)
+
+Controller --> API: 200 OK\n{configId, nextCheckDate}
+deactivate Controller
+
+API --> Service: Configuration saved
+deactivate API
+
+Service -> Service: Update local state
+Service --> Modal: Success
+deactivate Service
+
+Modal -> Modal: Close modal
+Modal -> UI: Refresh dashboard
+deactivate Modal
+
+UI -> UI: Show success message:\n"Emergency access configured"
+UI -> UI: Update status card:\n- Show active protocol\n- Display next check date\n- Show countdown timer
+UI -> UI: Enable "Confirm Activity" button
+UI --> User: Display configured protocol details
+deactivate UI
+
+@enduml
