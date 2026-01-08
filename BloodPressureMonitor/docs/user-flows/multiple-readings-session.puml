@@ -1,0 +1,109 @@
+@startuml
+title Multiple Readings Session Flow
+
+actor User as user
+participant "Dashboard\n(UI)" as dashboard
+participant "Multi-Reading Form\n(UI Component)" as form
+participant "Reading Service\n(Frontend)" as readingService
+participant "API Gateway" as api
+participant "Reading Controller\n(Backend)" as controller
+database "Readings Database" as db
+
+user -> dashboard : Click "Record Multiple Readings"
+activate dashboard
+dashboard -> form : Open multi-reading session
+deactivate dashboard
+
+activate form
+form -> user : Display session interface\nwith 2 reading cards
+form -> user : Show instructions:\n"Take 2-3 readings, 1-2 minutes apart"
+deactivate form
+
+user -> form : Enter Reading 1\n(Systolic: 125, Diastolic: 82, Pulse: 74)
+activate form
+form -> form : Validate values
+form -> form : Calculate live average:\n125/82, Pulse 74
+form -> user : Display average (green indicator)
+deactivate form
+
+note over user : User waits 1-2 minutes
+
+user -> form : Enter Reading 2\n(Systolic: 122, Diastolic: 80, Pulse: 72)
+activate form
+form -> form : Validate values
+form -> form : Calculate live average:\n123.5/81, Pulse 73
+form -> form : Calculate variance:\nLow variance (green)
+form -> user : Update average display
+deactivate form
+
+opt Optional Third Reading
+    note over user : User waits 1-2 minutes
+
+    user -> form : Click "Add Reading"
+    activate form
+    form -> user : Show Reading 3 card
+    deactivate form
+
+    user -> form : Enter Reading 3\n(Systolic: 121, Diastolic: 79, Pulse: 71)
+    activate form
+    form -> form : Validate values
+    form -> form : Calculate live average:\n122.7/80.3, Pulse 72.3
+    form -> form : Check variance: Low (green)
+    form -> user : Update average display
+    deactivate form
+end
+
+user -> form : Set shared context (Resting)
+user -> form : Set shared arm (Left)
+user -> form : Click "Save Session"
+
+activate form
+form -> form : Validate all readings
+form -> readingService : Submit session data\n(all individual readings + average)
+deactivate form
+
+activate readingService
+readingService -> api : POST /api/readings/session\nAuthorization: Bearer {token}\n{readings: [], average: {}, metadata: {}}
+deactivate readingService
+
+activate api
+api -> controller : Forward session request
+deactivate api
+
+activate controller
+controller -> controller : Validate session data
+
+loop For Each Reading
+    controller -> db : Insert individual reading
+    activate db
+    db --> controller : Return reading ID
+    deactivate db
+end
+
+controller -> controller : Calculate final average
+controller -> db : Insert average reading\n(marked as session average)
+activate db
+db --> controller : Return average reading ID
+deactivate db
+
+controller -> controller : Link all readings to session
+
+controller -> api : 201 Created\n{sessionId, readings, average, variance}
+activate api
+api -> readingService : Return session result
+deactivate api
+
+activate readingService
+readingService -> form : Update UI with success
+deactivate readingService
+
+activate form
+form -> user : Show success message:\n"Session saved!\nAverage: 122.7/80.3 mmHg\nVariance: Low"
+form -> dashboard : Refresh dashboard
+deactivate form
+
+activate dashboard
+dashboard -> user : Update with session readings
+deactivate dashboard
+
+@enduml
