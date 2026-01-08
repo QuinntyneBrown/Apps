@@ -1,0 +1,56 @@
+@startuml Create Task Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Create Task Flow
+
+actor User
+participant "Task List\nPage" as UI
+participant "Task Form" as Form
+participant "Task Store" as Store
+participant "API" as API
+database Database
+
+User -> UI: Click "New Task" button
+activate UI
+UI -> Form: Navigate to create page
+activate Form
+Form --> UI: Display form
+
+User -> Form: Fill in title (required)
+Form --> User: Title entered
+
+User -> Form: Add description,\npriority, estimated sessions,\ndue date, tags, project
+Form --> User: Fields updated
+
+User -> Form: Click "Save" button
+Form -> Form: Validate inputs
+alt Validation passes
+    Form -> Store: createTask(taskData)
+    activate Store
+    Store -> API: POST /api/tasks
+    activate API
+    API -> Database: INSERT task record
+    activate Database
+    Database --> API: Task created
+    deactivate Database
+    API --> Store: Task data
+    deactivate API
+
+    Store --> Form: Task created successfully
+    deactivate Store
+    Form -> UI: Show success message
+    Form -> UI: Redirect to task detail page
+    UI --> User: Task detail displayed
+else Validation fails
+    Form --> User: Show validation errors
+end
+deactivate Form
+deactivate UI
+
+@enduml
