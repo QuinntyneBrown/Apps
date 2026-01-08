@@ -1,0 +1,108 @@
+@startuml View Journal Entries Flow
+
+actor User
+participant "Entry List\nPage" as ListUI
+participant "Entry List\nComponent" as ListComponent
+participant "Entry Service" as EntryService
+participant "Journal Entries\nController" as EntryAPI
+participant "Get Entries\nQuery Handler" as QueryHandler
+participant "Database" as DB
+
+User -> ListUI: Navigate to /entries
+activate ListUI
+
+ListUI -> ListComponent: Initialize component
+activate ListComponent
+
+ListComponent -> EntryService: getEntries()
+activate EntryService
+
+EntryService -> EntryAPI: GET /api/journal-entries
+activate EntryAPI
+
+EntryAPI -> QueryHandler: GetJournalEntriesQuery
+activate QueryHandler
+
+QueryHandler -> DB: Query entries filtered by TenantId
+activate DB
+note right of DB
+  Global query filter
+  automatically applies TenantId
+end note
+DB --> QueryHandler: List of journal entries
+deactivate DB
+
+QueryHandler --> EntryAPI: List of EntryDto
+deactivate QueryHandler
+
+EntryAPI --> EntryService: 200 OK with entries
+deactivate EntryAPI
+
+EntryService --> ListComponent: Observable of entries
+deactivate EntryService
+
+ListComponent --> User: Display entry list
+deactivate ListComponent
+
+User -> ListComponent: Enter search term
+activate ListComponent
+
+ListComponent -> ListComponent: Filter entries by search term\n(client-side filtering)
+
+ListComponent --> User: Display filtered results
+deactivate ListComponent
+
+User -> ListComponent: Click tag filter
+activate ListComponent
+
+ListComponent -> EntryService: getEntriesByTag(tagName)
+activate EntryService
+
+EntryService -> EntryAPI: GET /api/journal-entries?tag={tagName}
+activate EntryAPI
+
+EntryAPI -> QueryHandler: GetJournalEntriesByTagQuery
+activate QueryHandler
+
+QueryHandler -> DB: Query entries by tag and TenantId
+activate DB
+DB --> QueryHandler: Filtered entries
+deactivate DB
+
+QueryHandler --> EntryAPI: List of EntryDto
+deactivate QueryHandler
+
+EntryAPI --> EntryService: 200 OK with filtered entries
+deactivate EntryAPI
+
+EntryService --> ListComponent: Observable of filtered entries
+deactivate EntryService
+
+ListComponent --> User: Display filtered entries by tag
+deactivate ListComponent
+
+User -> ListComponent: Click favorite icon on entry
+activate ListComponent
+
+ListComponent -> EntryService: toggleFavorite(entryId)
+activate EntryService
+
+EntryService -> EntryAPI: PUT /api/journal-entries/{entryId}/favorite
+activate EntryAPI
+
+EntryAPI -> DB: Update entry favorite status
+activate DB
+DB --> EntryAPI: Success
+deactivate DB
+
+EntryAPI --> EntryService: 200 OK
+deactivate EntryAPI
+
+EntryService --> ListComponent: Favorite updated
+deactivate EntryService
+
+ListComponent --> User: Update favorite icon state
+deactivate ListComponent
+deactivate ListUI
+
+@enduml
