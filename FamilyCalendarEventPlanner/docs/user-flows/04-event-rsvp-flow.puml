@@ -1,0 +1,159 @@
+@startuml Event RSVP Flow
+title Event RSVP Flow - FamilyCalendarEventPlanner
+
+actor "Family Member" as User
+participant "Event Details\nPage" as EventPage
+participant "RSVP Service" as RSVPService
+participant "Events Controller" as EventsController
+participant "Notification Service" as NotificationService
+participant "IFamilyCalendarEventPlannerContext" as DbContext
+database "SQL Server" as DB
+
+User -> EventPage: View event invitation
+activate EventPage
+
+EventPage -> RSVPService: getEventDetails(eventId)
+activate RSVPService
+RSVPService -> EventsController: GET /api/events/{eventId}
+activate EventsController
+
+EventsController -> DbContext: Query event with attendees
+activate DbContext
+DbContext -> DB: SELECT * FROM Events e\nLEFT JOIN EventAttendees ea\nLEFT JOIN FamilyMembers fm\nWHERE e.EventId = @eventId\nAND e.TenantId = @tenantId
+activate DB
+DB --> DbContext: Event details with attendees
+deactivate DB
+deactivate DbContext
+
+EventsController --> RSVPService: 200 OK\n{event details, attendees, RSVPs}
+deactivate EventsController
+
+RSVPService --> EventPage: Event data
+deactivate RSVPService
+
+EventPage --> User: Display event details\nwith RSVP options
+
+== Respond to RSVP ==
+User -> EventPage: Select RSVP response:\n- Accept\n- Decline\n- Maybe
+
+User -> EventPage: (Optional) Add notes or\ndietary restrictions
+
+EventPage -> RSVPService: submitRSVP(eventId, response, notes)
+activate RSVPService
+
+RSVPService -> EventsController: POST /api/events/{eventId}/rsvp
+activate EventsController
+note right
+  Authorization: Bearer {token}
+  Request Body:
+  {
+    "familyMemberId": "guid",
+    "rsvpStatus": "Accept|Decline|Maybe",
+    "notes": "string",
+    "dietaryRestrictions": "string"
+  }
+end note
+
+EventsController -> DbContext: Query existing RSVP
+activate DbContext
+DbContext -> DB: SELECT * FROM EventRSVPs\nWHERE EventId = @eventId\nAND FamilyMemberId = @memberId
+activate DB
+
+alt RSVP exists
+    DB --> DbContext: Existing RSVP record
+    deactivate DB
+
+    EventsController -> DbContext: Update RSVP
+    activate DB
+    DbContext -> DB: UPDATE EventRSVPs SET\nRSVPStatus = @status,\nNotes = @notes,\nDietaryRestrictions = @restrictions,\nResponseTimestamp = GETUTCDATE()\nWHERE EventId = @eventId\nAND FamilyMemberId = @memberId
+    DB --> DbContext: RSVP updated
+    deactivate DB
+
+else RSVP does not exist
+    DB --> DbContext: No record found
+    deactivate DB
+
+    EventsController -> DbContext: Create new RSVP
+    activate DB
+    DbContext -> DB: INSERT INTO EventRSVPs\n(EventId, FamilyMemberId,\nRSVPStatus, Notes,\nDietaryRestrictions,\nResponseTimestamp)
+    DB --> DbContext: RSVP created
+    deactivate DB
+end
+
+deactivate DbContext
+
+EventsController -> DbContext: Trigger EventRSVPReceived event
+activate DbContext
+note right
+  Domain event for
+  tracking and analytics
+end note
+DbContext --> EventsController: Event published
+deactivate DbContext
+
+EventsController -> NotificationService: NotifyEventCreator(eventId, rsvp)
+activate NotificationService
+note right
+  Notify event creator
+  of RSVP response
+end note
+
+NotificationService -> DbContext: Get event creator
+activate DbContext
+DbContext -> DB: SELECT CreatedBy FROM Events\nWHERE EventId = @eventId
+activate DB
+DB --> DbContext: Creator information
+deactivate DB
+deactivate DbContext
+
+NotificationService -> NotificationService: Send notification:\n"{Name} has {status}\nyour event invitation"
+
+NotificationService --> EventsController: Notification sent
+deactivate NotificationService
+
+EventsController -> DbContext: Update attendance headcount
+activate DbContext
+DbContext -> DB: SELECT COUNT(*)\nFROM EventRSVPs\nWHERE EventId = @eventId\nAND RSVPStatus = 'Accept'
+activate DB
+DB --> DbContext: Accepted count
+deactivate DB
+deactivate DbContext
+
+EventsController --> RSVPService: 200 OK\n{rsvpId, status, headcount}
+deactivate EventsController
+
+RSVPService --> EventPage: RSVP submitted
+deactivate RSVPService
+
+EventPage -> EventPage: Update UI with\nRSVP status
+
+EventPage --> User: Display confirmation:\n"Your response has been recorded"
+deactivate EventPage
+
+== View RSVP Summary (Event Creator) ==
+User -> EventPage: Navigate to event as creator
+activate EventPage
+
+EventPage -> RSVPService: getRSVPSummary(eventId)
+activate RSVPService
+RSVPService -> EventsController: GET /api/events/{eventId}/rsvps
+activate EventsController
+
+EventsController -> DbContext: Query all RSVPs for event
+activate DbContext
+DbContext -> DB: SELECT fm.Name,\ner.RSVPStatus, er.Notes,\ner.DietaryRestrictions,\ner.ResponseTimestamp\nFROM EventRSVPs er\nJOIN FamilyMembers fm\nON er.FamilyMemberId = fm.FamilyMemberId\nWHERE er.EventId = @eventId
+activate DB
+DB --> DbContext: RSVP list
+deactivate DB
+deactivate DbContext
+
+EventsController --> RSVPService: 200 OK\n{rsvps, acceptedCount,\ndeclinedCount, maybeCount}
+deactivate EventsController
+
+RSVPService --> EventPage: RSVP summary
+deactivate RSVPService
+
+EventPage --> User: Display attendee list\nwith responses and notes
+deactivate EventPage
+
+@enduml
