@@ -1,0 +1,130 @@
+@startuml
+title Expense Sharing Flow
+skinparam sequenceMessageAlign center
+
+actor "Event Organizer" as user
+participant "Event Detail Page\n(Angular)" as eventDetail
+participant "Expense Form\n(Angular Component)" as expenseForm
+participant "Expense Service\n(Angular)" as expenseService
+participant "API Gateway\n/api/expenses" as api
+participant "AddExpense Handler\n(MediatR)" as handler
+participant "Split Calculator\n(Domain Service)" as calculator
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nExpenses & Splits Tables" as db
+
+== View Event Expenses ==
+user -> eventDetail: Navigate to expenses tab
+activate eventDetail
+eventDetail -> expenseService: getExpenses(eventId)
+activate expenseService
+expenseService -> api: GET /api/expenses?eventId={id}
+activate api
+api --> expenseService: List of expenses
+deactivate api
+expenseService --> eventDetail: Expense data
+deactivate expenseService
+eventDetail --> user: Display expenses list\nand balances
+deactivate eventDetail
+
+== Add New Expense ==
+user -> eventDetail: Click "Add Expense"
+activate eventDetail
+eventDetail -> expenseForm: Open expense form
+activate expenseForm
+expenseForm --> user: Show form:\n- Description\n- Amount\n- Paid by (dropdown)\n- Split type (Equal/Custom)\n- Participants (multi-select)
+deactivate expenseForm
+deactivate eventDetail
+
+== Fill Expense Details ==
+user -> expenseForm: Enter description\n(e.g., "Restaurant dinner")
+activate expenseForm
+user -> expenseForm: Enter amount ($150.00)
+user -> expenseForm: Select who paid\n(current user)
+user -> expenseForm: Select split type\n(Equal split)
+user -> expenseForm: Select participants\nto split between
+expenseForm -> expenseForm: Show preview:\n"Each person owes $X"
+
+== Submit Expense ==
+user -> expenseForm: Click "Add Expense"
+expenseForm -> expenseForm: Validate:\n- Amount > 0\n- At least one participant
+expenseForm -> expenseService: addExpense(expenseData)
+activate expenseService
+expenseService -> api: POST /api/expenses\n{eventId, description, amount,\npaidById, splitType, participantIds[]}
+activate api
+api -> api: Authenticate user\nfrom JWT token
+api -> handler: Handle AddExpenseCommand
+activate handler
+
+handler -> handler: Create Expense entity:\n- EventId\n- Description\n- Amount\n- PaidById\n- CreatedAt
+
+handler -> dbContext: Expenses.Add(expense)
+activate dbContext
+dbContext -> db: INSERT INTO Expenses\n(ExpenseId, EventId, Description,\nAmount, PaidById, CreatedAt)
+activate db
+db --> dbContext: Expense created
+deactivate db
+dbContext --> handler: Expense entity saved
+deactivate dbContext
+
+== Calculate Splits ==
+handler -> calculator: CalculateSplits(expense,\nparticipantIds, splitType)
+activate calculator
+
+alt Split Type: Equal
+    calculator -> calculator: Calculate equal share:\namount / participant count
+    calculator -> calculator: Create split for each participant:\n{participantId, shareAmount}
+else Split Type: Custom
+    calculator -> calculator: Use custom amounts\nprovided by user
+    calculator -> calculator: Validate:\nsum of shares = total amount
+end
+
+calculator --> handler: List of ExpenseSplit entities
+deactivate calculator
+
+== Save Splits ==
+handler -> dbContext: ExpenseSplits.AddRange(splits)
+activate dbContext
+dbContext -> db: INSERT INTO ExpenseSplits\n(ExpenseId, UserId, ShareAmount)\nFOR EACH split
+activate db
+db --> dbContext: Splits created
+deactivate db
+dbContext --> handler: Splits saved
+deactivate dbContext
+
+== Calculate Balances ==
+handler -> dbContext: ExpenseSplits.Where(s => s.Expense.EventId)\n.Include(Payments)\n.ToList()
+activate dbContext
+dbContext -> db: SELECT * FROM ExpenseSplits\nJOIN Expenses ON...\nLEFT JOIN Payments ON...\nWHERE EventId = @eventId
+activate db
+db --> dbContext: All splits and payments
+deactivate db
+dbContext --> handler: Expense splits with payments
+deactivate dbContext
+
+handler -> handler: Calculate per-user balances:\nFor each user:\n- Total owed (sum of splits)\n- Total paid out\n- Total received (payments)\n- Net balance (owed - paid - received)
+
+handler --> api: AddExpenseResponseDto\n{expenseId, balances[]}
+deactivate handler
+
+api --> expenseService: 201 Created\n{expenseId, balances}
+deactivate api
+
+expenseService --> expenseForm: Expense added successfully
+deactivate expenseService
+
+expenseForm -> expenseForm: Show success message\nand close form
+expenseForm --> eventDetail: Refresh expenses view
+activate eventDetail
+eventDetail -> expenseService: getExpenses(eventId)
+activate expenseService
+expenseService -> api: GET /api/expenses?eventId={id}
+activate api
+api --> expenseService: Updated expenses and balances
+deactivate api
+expenseService --> eventDetail: Expense data with balances
+deactivate expenseService
+eventDetail --> user: Display updated:\n- Expenses list\n- Individual balances\n- Who owes whom
+deactivate eventDetail
+deactivate expenseForm
+
+@enduml
