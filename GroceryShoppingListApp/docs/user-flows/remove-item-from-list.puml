@@ -1,0 +1,161 @@
+@startuml
+title Remove Item from List User Flow
+
+actor User
+participant "ItemCard\nComponent" as ItemCard
+participant "Redux Store" as Redux
+participant "Toast\nNotification" as Toast
+participant "API\n/api/items/{id}" as API
+database "Database" as DB
+
+== Mobile: Swipe to Delete ==
+
+User -> ItemCard: Swipe left on item
+activate ItemCard
+
+ItemCard --> User: Show delete button\nwith red background
+
+User -> ItemCard: Continue swipe or\ntap delete button
+
+ItemCard --> User: Show confirmation dialog:\n"Remove Apples from list?"
+
+User -> ItemCard: Tap "Remove"
+
+ItemCard -> Redux: Dispatch removeItem(itemId, {\n  reason: 'user_removed'\n})
+activate Redux
+
+Redux --> ItemCard: Optimistic update:\n- Fade out item\n- Slide out animation
+
+ItemCard --> User: Item fades out\nand disappears
+
+Redux --> Toast: Show undo notification
+activate Toast
+Toast --> User: Show toast (5 seconds):\n"Item removed" [Undo]
+deactivate Toast
+
+Redux -> API: DELETE /api/items/{itemId}\n{\n  reason: 'user_removed',\n  softDelete: true\n}
+activate API
+
+note right of API
+  Soft delete allows for
+  undo and analytics
+end note
+
+API -> DB: UPDATE list_items\nSET status = 'removed',\n    removed_at = NOW(),\n    removed_by = {userId},\n    removal_reason = 'user_removed'\nWHERE item_id = {itemId}
+activate DB
+DB --> API: Item soft-deleted
+deactivate DB
+
+API -> DB: UPDATE shopping_lists\nSET updated_at = NOW()\nWHERE list_id = {listId}
+activate DB
+DB --> API: List updated
+deactivate DB
+
+API --> Redux: 200 OK\n{ itemId, status: 'removed' }
+deactivate API
+
+Redux -> Redux: Remove item from:\n- items.byId\n- byList[listId]\n- Update item count
+
+Redux --> ItemCard: Deletion confirmed
+deactivate Redux
+
+deactivate ItemCard
+
+== Desktop: Click Delete Button ==
+
+User -> ItemCard: Click delete icon\nor press Delete key
+activate ItemCard
+
+ItemCard --> User: Show confirmation dialog:\n"Are you sure you want to\nremove Apples (2 lbs)?"
+
+User -> ItemCard: Click "Yes, Remove"
+
+ItemCard -> Redux: Dispatch removeItem(itemId)
+activate Redux
+
+note over Redux, API
+  Same flow as swipe delete
+end note
+
+Redux --> ItemCard: Processing...
+ItemCard --> User: Item removed with\nslide-out animation
+
+Redux -> API: DELETE /api/items/{itemId}
+activate API
+API -> DB: Soft delete item
+activate DB
+DB --> API: Success
+deactivate DB
+API --> Redux: 200 OK
+deactivate API
+
+Redux --> Toast: Show undo option
+activate Toast
+Toast --> User: "Item removed" [Undo]
+deactivate Toast
+
+deactivate Redux
+deactivate ItemCard
+
+== Undo Removal ==
+
+User -> Toast: Click "Undo" button\n(within 5 seconds)
+activate Toast
+
+Toast -> Redux: Dispatch undoRemoval(itemId)
+activate Redux
+
+Redux --> Toast: Processing...
+Toast -> Toast: Dismiss notification
+deactivate Toast
+
+Redux -> API: POST /api/items/{itemId}/restore
+activate API
+
+API -> DB: UPDATE list_items\nSET status = 'pending',\n    removed_at = NULL,\n    removed_by = NULL,\n    removal_reason = NULL\nWHERE item_id = {itemId}
+activate DB
+DB --> API: Item restored
+deactivate DB
+
+API --> Redux: 200 OK\n{ itemId, status: 'pending' }
+deactivate API
+
+Redux -> Redux: Restore item to:\n- items.byId\n- byList[listId]
+
+Redux --> ItemCard: Item restored
+deactivate Redux
+
+activate ItemCard
+ItemCard --> User: Show restored item\nwith slide-in animation
+ItemCard --> User: Show notification:\n"Item restored"
+deactivate ItemCard
+
+== Timeout: Permanent Deletion ==
+
+note over Toast, DB
+  If user doesn't undo within
+  5 seconds, keep soft-delete
+  (can be purged later by cleanup job)
+end note
+
+Toast -> Toast: Timer expires (5 seconds)
+activate Toast
+Toast -> Toast: Dismiss notification
+deactivate Toast
+
+note right of DB
+  Soft-deleted items remain in DB
+  for analytics and history, but
+  are hidden from normal queries
+end note
+
+== Alternative: Cancel Deletion ==
+
+User -> ItemCard: Click "Cancel" in\nconfirmation dialog
+activate ItemCard
+
+ItemCard --> User: Close dialog,\nno action taken
+
+deactivate ItemCard
+
+@enduml
