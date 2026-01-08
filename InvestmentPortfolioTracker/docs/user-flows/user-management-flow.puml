@@ -1,0 +1,125 @@
+@startuml user-management-flow
+title User Management Flow (Admin)
+
+actor Admin
+participant "User Management Page" as UserPage
+participant "User Service" as UserService
+participant "Create User Modal" as CreateModal
+participant "API Controller\n/api/users" as UserController
+participant "CreateUser\nCommand Handler" as CreateHandler
+participant "User Aggregate" as User
+participant "Password Hashing Service" as PasswordService
+participant "IInvestmentPortfolioTrackerContext" as DbContext
+database "SQL Server" as Database
+
+== View Users ==
+Admin -> UserPage: Navigate to /admin/users
+UserPage -> UserService: getUsers()
+UserService -> UserController: GET /api/users\nAuthorization: Bearer <token>
+
+UserController -> UserController: Verify Admin role
+UserController -> DbContext: Query Users DbSet
+DbContext -> Database: SELECT UserId, UserName, Email\nFROM Users
+Database --> DbContext: User records (without passwords)
+DbContext --> UserController: List<User>
+
+UserController --> UserService: 200 OK + User list
+UserService --> UserPage: List of users with roles
+UserPage --> Admin: Display user table
+
+== Create New User ==
+Admin -> UserPage: Click "Create User"
+UserPage -> CreateModal: Open modal dialog
+CreateModal --> Admin: Display form
+
+Admin -> CreateModal: Enter username
+Admin -> CreateModal: Enter email
+Admin -> CreateModal: Enter password
+Admin -> CreateModal: Select roles (checkboxes)
+Admin -> CreateModal: Click "Create"
+
+CreateModal -> CreateModal: Validate form\n(email format, password length >= 8)
+CreateModal -> UserService: createUser(userData)
+UserService -> UserController: POST /api/users\n{username, email, password, roleIds}
+
+UserController -> CreateHandler: Handle CreateUserCommand
+CreateHandler -> CreateHandler: Validate username uniqueness
+CreateHandler -> CreateHandler: Validate email uniqueness
+
+alt Validation Passed
+    CreateHandler -> PasswordService: HashPassword(password)
+    PasswordService -> PasswordService: Generate unique 32-byte salt
+    PasswordService -> PasswordService: Apply PBKDF2 with SHA-256\n(100,000 iterations)
+    PasswordService --> CreateHandler: {hashedPassword, salt}
+
+    CreateHandler -> User: Create new User(\nusername, email,\nhashedPassword, salt)
+    User --> CreateHandler: User aggregate
+
+    CreateHandler -> DbContext: Users.Add(user)
+    CreateHandler -> DbContext: SaveChangesAsync()
+    DbContext -> Database: INSERT INTO Users\n(UserId, UserName, Email,\nPassword, Salt)
+    Database --> DbContext: Success
+
+    alt Roles Assigned
+        CreateHandler -> DbContext: UserRoles.Add(userRole)
+        CreateHandler -> DbContext: SaveChangesAsync()
+        DbContext -> Database: INSERT INTO UserRoles\n(UserId, RoleId)
+        Database --> DbContext: Success
+    end
+
+    DbContext --> CreateHandler: User created
+    CreateHandler --> UserController: 201 Created + UserDto
+    UserController --> UserService: User created successfully
+    UserService --> CreateModal: Success response
+    CreateModal -> CreateModal: Close modal
+    CreateModal -> UserPage: Refresh user list
+    UserPage --> Admin: Display updated user table\nwith new user
+else Validation Failed
+    CreateHandler --> UserController: 400 Bad Request\n{error: "Email already exists"}
+    UserController --> UserService: Validation error
+    UserService --> CreateModal: Error response
+    CreateModal --> Admin: Display error message
+end
+
+== Assign Role to User ==
+Admin -> UserPage: Select user
+Admin -> UserPage: Click "Manage Roles"
+UserPage -> UserPage: Show role assignment dialog
+Admin -> UserPage: Select role to add
+Admin -> UserPage: Click "Add Role"
+
+UserPage -> UserService: addRoleToUser(userId, roleId)
+UserService -> UserController: POST /api/users/{userId}/roles\n{roleId}
+
+UserController -> DbContext: UserRoles.Add(new UserRole)
+UserController -> DbContext: SaveChangesAsync()
+DbContext -> Database: INSERT INTO UserRoles\n(UserId, RoleId)
+Database --> DbContext: Success
+DbContext --> UserController: Role added
+
+UserController --> UserService: 200 OK
+UserService --> UserPage: Role assigned
+UserPage --> Admin: Update user's role list
+
+== Delete User ==
+Admin -> UserPage: Select user
+Admin -> UserPage: Click "Delete"
+UserPage -> UserPage: Show confirmation dialog
+Admin -> UserPage: Confirm deletion
+
+UserPage -> UserService: deleteUser(userId)
+UserService -> UserController: DELETE /api/users/{userId}
+
+UserController -> DbContext: Users.Remove(user)
+UserController -> DbContext: SaveChangesAsync()
+DbContext -> Database: DELETE FROM UserRoles\nWHERE UserId = @userId
+DbContext -> Database: DELETE FROM Users\nWHERE UserId = @userId
+Database --> DbContext: Success
+DbContext --> UserController: User deleted
+
+UserController --> UserService: 204 No Content
+UserService --> UserPage: User deleted
+UserPage -> UserPage: Remove user from list
+UserPage --> Admin: Display updated user table
+
+@enduml
