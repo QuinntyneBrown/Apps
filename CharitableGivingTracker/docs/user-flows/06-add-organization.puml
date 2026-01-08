@@ -1,0 +1,166 @@
+@startuml
+title Add Organization - User Flow
+
+actor "User" as user
+participant "Organizations\nPage" as orgs
+participant "Add Organization\nForm" as form
+participant "Frontend\nValidation" as validator
+participant "API Gateway" as api
+participant "AddCharity\nCommand Handler" as addHandler
+participant "VerifyCharity\nCommand Handler" as verifyHandler
+participant "Organization\nAggregate" as aggregate
+participant "IRS API" as irs
+participant "Database" as db
+participant "Event Bus" as events
+
+user -> orgs: Click "Add Organization"
+activate orgs
+
+orgs -> form: Open add organization form
+activate form
+
+form --> user: Display form fields:\n- Organization Name*\n- EIN* (XX-XXXXXXX)\n- Charity Type*\n- Website\n- Contact Email\n- Contact Phone\n- Mission
+
+user -> form: Enter organization name
+user -> form: Enter EIN (XX-XXXXXXX format)
+user -> form: Select charity type
+user -> form: Fill optional fields\n(website, contact info, mission)
+user -> form: Click "Add & Verify"
+
+form -> validator: Validate form data
+activate validator
+
+validator -> validator: Check required fields
+validator -> validator: Validate EIN format\n(9 digits, XX-XXXXXXX)
+validator -> validator: Validate email format
+validator -> validator: Validate URL format
+validator -> validator: Check name length < 200 chars
+
+alt Validation Fails
+    validator --> form: Return validation errors
+    form --> user: Display error messages:\n"Invalid EIN format" or\n"Email format invalid"
+else Validation Succeeds
+    validator --> form: Validation passed
+    deactivate validator
+
+    form -> api: POST /api/organizations\n{name, ein, charityType,\nwebsite, contactEmail,\ncontactPhone, mission}
+    activate api
+
+    form --> user: Show loading spinner:\n"Adding organization..."
+
+    api -> addHandler: Execute AddCharityCommand
+    activate addHandler
+
+    addHandler -> addHandler: Validate name and EIN
+    addHandler -> addHandler: Check for duplicate EIN
+
+    addHandler -> aggregate: Create Organization aggregate
+    activate aggregate
+
+    aggregate -> aggregate: Set OrganizationId (GUID)
+    aggregate -> aggregate: Set UserId from context
+    aggregate -> aggregate: Store organization details
+    aggregate -> aggregate: Set IsVerified = false initially
+    aggregate -> aggregate: Set timestamps
+
+    aggregate -> db: INSERT INTO Organizations
+    activate db
+    db --> aggregate: Success
+    deactivate db
+
+    aggregate -> events: Publish CharityAdded event
+    activate events
+    events --> aggregate: Event published
+    deactivate events
+
+    aggregate --> addHandler: Return OrganizationId
+    deactivate aggregate
+
+    addHandler --> api: 201 Created\n{organizationId}
+    deactivate addHandler
+
+    api --> form: Organization created
+
+    form --> user: Show success message:\n"Organization added!"
+
+    note right of form
+      Automatically trigger
+      verification process
+    end note
+
+    form -> api: POST /api/organizations/{id}/verify
+    activate api
+
+    form --> user: Show verification status:\n"Verifying with IRS..."
+
+    api -> verifyHandler: Execute VerifyCharityCommand
+    activate verifyHandler
+
+    verifyHandler -> verifyHandler: Validate OrganizationId exists
+
+    verifyHandler -> irs: Call IRS EIN verification API\nGET /api/ein/{ein}
+    activate irs
+
+    alt IRS Verification Succeeds
+        irs --> verifyHandler: Return verification result:\n{verified: true,\ntaxExempt: true,\norganizationName: "..."}
+        deactivate irs
+
+        verifyHandler -> aggregate: Update Organization
+        activate aggregate
+
+        aggregate -> aggregate: Set IsVerified = true
+        aggregate -> aggregate: Set TaxExemptStatus = true
+        aggregate -> aggregate: Set VerificationSource = IRS
+        aggregate -> aggregate: Set VerifiedDate = now
+
+        aggregate -> db: UPDATE Organizations\nSET IsVerified, TaxExemptStatus,\nVerificationSource, VerifiedDate
+        activate db
+        db --> aggregate: Success
+        deactivate db
+
+        aggregate -> events: Publish CharityVerified event
+        activate events
+        events --> aggregate: Event published
+        deactivate events
+
+        aggregate --> verifyHandler: Verification successful
+        deactivate aggregate
+
+        verifyHandler --> api: 200 OK\n{verified: true,\ntaxExempt: true}
+        deactivate verifyHandler
+
+        api --> form: Verification successful
+        deactivate api
+
+        form --> user: Display verification badge:\n"501(c)(3) Verified\nTax-deductible donations enabled"
+
+    else IRS Verification Fails
+        irs --> verifyHandler: Verification failed:\n{verified: false}
+        deactivate irs
+
+        verifyHandler --> api: 200 OK\n{verified: false,\nmessage: "Unable to verify"}
+        deactivate verifyHandler
+        api --> form: Verification failed
+        deactivate api
+
+        form --> user: Display warning:\n"Could not verify 501(c)(3) status.\nDonations may not be tax-deductible."
+    end
+
+    form -> form: Close form
+    deactivate form
+
+    orgs -> api: GET /api/organizations
+    activate api
+    api -> db: Query user's organizations
+    db --> api: Organizations list
+    api --> orgs: Return organizations
+    deactivate api
+
+    orgs -> orgs: Add new organization to list
+    orgs -> orgs: Display verification badge
+
+    orgs --> user: Show updated organizations list\nwith new organization
+    deactivate orgs
+end
+
+@enduml
