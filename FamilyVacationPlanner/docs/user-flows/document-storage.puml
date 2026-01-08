@@ -1,0 +1,171 @@
+@startuml document-storage
+title Document Storage Flow - Upload Trip Documents
+
+actor User
+participant "Trip Detail Page" as UI
+participant "Documents Component" as DocsUI
+participant "Upload Modal" as Modal
+participant "Document Service" as DocSvc
+participant "Documents Controller" as DocCtrl
+participant "UploadDocument Command" as UploadCmd
+participant "ITenantContext" as TenantCtx
+participant "IFamilyVacationPlannerContext" as DbContext
+participant "Azure Blob Storage" as BlobStorage
+database "SQL Server" as DB
+
+User -> UI: Navigate to trip details
+activate UI
+
+UI -> DocsUI: Activate Documents tab
+activate DocsUI
+
+DocsUI -> DocSvc: getDocumentsByTrip(tripId)
+activate DocSvc
+
+DocSvc -> DocCtrl: GET /api/trips/{tripId}/documents
+activate DocCtrl
+
+DocCtrl -> DbContext: Documents.Where(d => d.TripId == tripId)\n(Filtered by TenantId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Documents\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Document records
+deactivate DB
+DbContext --> DocCtrl: List<Document>
+deactivate DbContext
+
+DocCtrl --> DocSvc: 200 OK\n(List<DocumentDto>)
+deactivate DocCtrl
+
+DocSvc --> DocsUI: Documents data
+deactivate DocSvc
+
+DocsUI --> User: Display documents list\n(passports, tickets, confirmations)
+
+User -> DocsUI: Click "Upload Document"
+
+DocsUI -> Modal: Open Upload Modal
+activate Modal
+
+Modal --> User: Display upload form
+
+User -> Modal: Select file\n(PDF, image, etc.)
+
+Modal -> Modal: Validate file\n(type, size limits)
+
+User -> Modal: Enter document details\n(name, category, description)
+
+User -> Modal: Click "Upload"
+
+Modal -> DocSvc: uploadDocument(file, metadata)
+activate DocSvc
+
+DocSvc -> DocCtrl: POST /api/trips/{tripId}/documents\n(multipart/form-data)
+activate DocCtrl
+
+DocCtrl -> UploadCmd: Handle UploadDocumentCommand
+activate UploadCmd
+
+UploadCmd -> TenantCtx: GetTenantId()
+activate TenantCtx
+TenantCtx --> UploadCmd: TenantId
+deactivate TenantCtx
+
+UploadCmd -> UploadCmd: Generate unique blob name\n(GUID + file extension)
+
+UploadCmd -> BlobStorage: UploadAsync(containerName, blobName, stream)
+activate BlobStorage
+note right: Container: trip-documents-{tenantId}
+
+BlobStorage -> BlobStorage: Store file in blob
+
+BlobStorage --> UploadCmd: Blob URL
+deactivate BlobStorage
+
+UploadCmd -> UploadCmd: Create Document entity\n(with TenantId, TripId, BlobUrl)
+
+UploadCmd -> DbContext: Documents.Add(document)
+activate DbContext
+DbContext -> DB: INSERT INTO Documents\n(DocumentId, TripId, Name, Category,\nBlobUrl, FileSize, MimeType, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+
+DbContext -> DbContext: SaveChanges()
+DbContext --> UploadCmd: Document saved
+deactivate DbContext
+
+UploadCmd --> DocCtrl: UploadDocumentResponse
+deactivate UploadCmd
+
+DocCtrl --> DocSvc: 201 Created\n(DocumentDto)
+deactivate DocCtrl
+
+DocSvc --> Modal: Upload success
+deactivate DocSvc
+
+Modal -> Modal: Close modal
+
+Modal --> DocsUI: Document uploaded
+deactivate Modal
+
+DocsUI -> DocSvc: getDocumentsByTrip(tripId)
+activate DocSvc
+
+DocSvc -> DocCtrl: GET /api/trips/{tripId}/documents
+activate DocCtrl
+
+DocCtrl -> DbContext: Documents.Where(d => d.TripId == tripId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Documents\nWHERE TripId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Updated documents
+deactivate DB
+DbContext --> DocCtrl: List<Document>
+deactivate DbContext
+
+DocCtrl --> DocSvc: 200 OK\n(List<DocumentDto>)
+deactivate DocCtrl
+
+DocSvc --> DocsUI: Updated documents
+deactivate DocSvc
+
+DocsUI --> User: Display updated list
+
+== Download Document ==
+
+User -> DocsUI: Click "Download" on document
+
+DocsUI -> DocSvc: downloadDocument(documentId)
+activate DocSvc
+
+DocSvc -> DocCtrl: GET /api/documents/{documentId}/download
+activate DocCtrl
+
+DocCtrl -> DbContext: Documents.Find(documentId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Documents\nWHERE DocumentId = ? AND TenantId = ?
+activate DB
+DB --> DbContext: Document record
+deactivate DB
+DbContext --> DocCtrl: Document entity
+deactivate DbContext
+
+DocCtrl -> BlobStorage: GetBlobSasUri(blobUrl, expiryTime)
+activate BlobStorage
+BlobStorage --> DocCtrl: Temporary SAS URL\n(valid for 1 hour)
+deactivate BlobStorage
+
+DocCtrl --> DocSvc: 200 OK\n(Download URL)
+deactivate DocCtrl
+
+DocSvc -> DocSvc: Initiate file download
+
+DocSvc --> DocsUI: Download started
+deactivate DocSvc
+
+DocsUI --> User: File downloading
+deactivate DocsUI
+deactivate UI
+
+@enduml
