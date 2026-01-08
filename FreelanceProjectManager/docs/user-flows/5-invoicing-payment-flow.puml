@@ -1,0 +1,441 @@
+@startuml
+title Invoicing and Payment Flow
+
+actor "Freelancer" as User
+participant "Invoicing Page\n(Angular)" as UI
+participant "Invoice Service\n(Angular)" as InvoiceService
+participant "Invoices Controller\n(/api/invoices)" as InvoiceController
+participant "Payments Controller\n(/api/payments)" as PaymentController
+participant "Command Handler\n(MediatR)" as Handler
+participant "IFreelanceProjectManagerContext" as DbContext
+participant "ITenantContext" as TenantContext
+database "SQL Server" as DB
+
+== View Invoices List ==
+User -> UI: Navigate to\nInvoicing page
+activate UI
+
+UI -> InvoiceService: getInvoices(filters)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: GET /api/invoices?\nstatus={status}
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(GetInvoicesQuery)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> DbContext: Invoices.Include(i => i.Client)\n.Include(i => i.Project)\n.Where(i => i.TenantId == tenantId)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT i.*, c.*, p.*\nFROM Invoices i\nJOIN Clients c ON i.ClientId = c.ClientId\nJOIN Projects p ON i.ProjectId = p.ProjectId\nWHERE i.TenantId = @tenantId
+activate DB
+DB --> DbContext: Invoice records
+deactivate DB
+
+DbContext --> Handler: List<Invoice>
+deactivate DbContext
+
+Handler -> Handler: Calculate totals:\n- Total invoiced\n- Total paid\n- Outstanding balance
+
+Handler --> InvoiceController: InvoicesResponseDto\n{invoices, summary}
+deactivate Handler
+
+InvoiceController --> InvoiceService: 200 OK\nInvoicesResponseDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Invoice data
+deactivate InvoiceService
+
+UI --> User: Display invoices\nwith status indicators
+deactivate UI
+
+== Create Invoice from Time Entries ==
+User -> UI: Click "New Invoice"\nbutton
+activate UI
+
+UI -> UI: Open invoice\ncreation wizard
+
+UI -> UI: Step 1: Select project/client
+
+User -> UI: Select project
+
+UI -> InvoiceService: getUninvoicedTimeEntries(projectId)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: GET /api/invoices/uninvoiced-time?\nprojectId={projectId}
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(GetUninvoicedTimeQuery)
+activate Handler
+
+Handler -> DbContext: TimeEntries.Where(\nte => te.ProjectId == projectId &&\nte.IsBillable == true &&\nte.InvoiceId == null)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT * FROM TimeEntries\nWHERE ProjectId = @projectId\nAND IsBillable = 1\nAND InvoiceId IS NULL\nAND TenantId = @tenantId
+activate DB
+DB --> DbContext: Unbilled time entries
+deactivate DB
+
+DbContext --> Handler: List<TimeEntry>
+deactivate DbContext
+
+Handler -> Handler: Calculate totals:\n- Total hours\n- Hourly rate from project\n- Subtotal
+
+Handler --> InvoiceController: UninvoicedTimeDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 200 OK\nUninvoicedTimeDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Unbilled time data
+deactivate InvoiceService
+
+UI -> UI: Step 2: Show time entries\nwith selection checkboxes
+
+User -> UI: Select time entries\nto include
+
+UI -> UI: Calculate invoice total
+
+UI -> UI: Step 3: Invoice details:\n- Invoice number (auto)\n- Issue date\n- Due date\n- Notes/terms\n- Tax rate
+
+User -> UI: Fill in details\nand click "Create Invoice"
+
+UI -> InvoiceService: createInvoice(invoiceData)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: POST /api/invoices\n{projectId, clientId,\ntimeEntryIds, amount,\ndueDate, notes}
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(CreateInvoiceCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> Handler: Generate invoice number:\n"INV-{year}-{sequence}"
+
+Handler -> Handler: Create Invoice entity:\n- Status = "Draft"\n- IssueDate = Today\n- TenantId\n- Amount\n- Tax
+
+Handler -> DbContext: Invoices.Add(invoice)
+activate DbContext
+DbContext -> DB: INSERT INTO Invoices\n(InvoiceId, InvoiceNumber,\nClientId, ProjectId, Amount,\nStatus, IssueDate, DueDate,\nTenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Invoice created
+deactivate DbContext
+
+Handler -> Handler: Link time entries\nto invoice
+
+Handler -> DbContext: Update time entries:\nset InvoiceId
+activate DbContext
+DbContext -> DB: UPDATE TimeEntries\nSET InvoiceId = @invoiceId\nWHERE TimeEntryId IN (@ids)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Entries linked
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> InvoiceController: InvoiceDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 201 Created\nInvoiceDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Invoice created
+deactivate InvoiceService
+
+UI -> UI: Close wizard
+UI -> UI: Navigate to\ninvoice detail page
+UI --> User: Show invoice\nwith "Draft" status
+deactivate UI
+
+== Create Invoice from Milestone ==
+User -> UI: On completed milestone,\nclick "Create Invoice"
+activate UI
+
+UI -> InvoiceService: createInvoiceFromMilestone(milestoneId)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: POST /api/invoices/from-milestone\n{milestoneId}
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(CreateInvoiceFromMilestoneCommand)
+activate Handler
+
+Handler -> DbContext: Milestones.Include(m => m.Project)\n.Include(m => m.Project.Client)\n.FindAsync(milestoneId)
+activate DbContext
+DbContext -> DB: SELECT m.*, p.*, c.*\nFROM Milestones m\nJOIN Projects p ON m.ProjectId = p.ProjectId\nJOIN Clients c ON p.ClientId = c.ClientId\nWHERE m.MilestoneId = @milestoneId
+activate DB
+DB --> DbContext: Milestone with relations
+deactivate DB
+DbContext --> Handler: Milestone entity
+deactivate DbContext
+
+Handler -> Handler: Create Invoice:\n- Amount = milestone.Amount\n- Description = milestone.Name\n- Status = "Draft"
+
+Handler -> DbContext: Invoices.Add(invoice)
+activate DbContext
+DbContext -> DB: INSERT INTO Invoices
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Invoice created
+deactivate DbContext
+
+Handler -> Handler: Link milestone to invoice
+
+Handler -> DbContext: milestone.InvoiceId = invoiceId
+activate DbContext
+DbContext -> DB: UPDATE Milestones\nSET InvoiceId = @invoiceId\nWHERE MilestoneId = @milestoneId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Linked
+deactivate DbContext
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> InvoiceController: InvoiceDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 201 Created\nInvoiceDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Invoice created
+deactivate InvoiceService
+
+UI --> User: Show invoice details
+deactivate UI
+
+== Send Invoice to Client ==
+User -> UI: On invoice detail,\nclick "Send Invoice"
+activate UI
+
+UI -> UI: Show confirmation:\n"Mark as sent?"
+
+User -> UI: Confirm
+
+UI -> InvoiceService: sendInvoice(invoiceId)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: PATCH /api/invoices/{invoiceId}/send
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(SendInvoiceCommand)
+activate Handler
+
+Handler -> DbContext: Invoices.FindAsync(invoiceId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Invoices\nWHERE InvoiceId = @invoiceId
+activate DB
+DB --> DbContext: Invoice record
+deactivate DB
+DbContext --> Handler: Invoice entity
+deactivate DbContext
+
+Handler -> Handler: invoice.Send():\n- Status = "Sent"\n- SentDate = Now
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Invoices\nSET Status = 'Sent',\nSentDate = @date\nWHERE InvoiceId = @invoiceId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+note right of Handler
+  Email invoice to client
+  via domain event
+  Generate PDF attachment
+end note
+
+Handler --> InvoiceController: InvoiceDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 200 OK\nInvoiceDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Invoice sent
+deactivate InvoiceService
+
+UI -> UI: Update invoice status
+UI --> User: Show success message\n"Invoice sent to client"
+deactivate UI
+
+== Record Payment ==
+User -> UI: On invoice detail,\nclick "Record Payment"
+activate UI
+
+UI -> UI: Open payment form:\n- Payment amount\n- Payment date\n- Payment method\n- Reference/notes
+
+User -> UI: Fill in payment details
+
+User -> UI: Click "Save Payment"
+
+UI -> InvoiceService: recordPayment(invoiceId, paymentData)
+activate InvoiceService
+
+InvoiceService -> PaymentController: POST /api/payments\n{invoiceId, amount,\ndate, method, reference}
+activate PaymentController
+
+PaymentController -> Handler: Handle(RecordPaymentCommand)
+activate Handler
+
+Handler -> TenantContext: GetTenantId()
+activate TenantContext
+TenantContext --> Handler: Current TenantId
+deactivate TenantContext
+
+Handler -> DbContext: Invoices.FindAsync(invoiceId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Invoices\nWHERE InvoiceId = @invoiceId
+activate DB
+DB --> DbContext: Invoice record
+deactivate DB
+DbContext --> Handler: Invoice entity
+deactivate DbContext
+
+Handler -> Handler: Validate payment amount\n<= invoice amount
+
+Handler -> Handler: Create Payment entity:\n- InvoiceId\n- Amount\n- PaymentDate\n- Method\n- TenantId
+
+Handler -> DbContext: Payments.Add(payment)
+activate DbContext
+DbContext -> DB: INSERT INTO Payments\n(PaymentId, InvoiceId,\nAmount, PaymentDate,\nMethod, TenantId, ...)
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Payment created
+deactivate DbContext
+
+Handler -> Handler: Calculate total payments\nfor invoice
+
+alt Full Payment
+    Handler -> Handler: invoice.MarkAsPaid():\n- Status = "Paid"\n- PaidDate = PaymentDate
+
+else Partial Payment
+    Handler -> Handler: invoice.Status = "PartiallyPaid"
+
+end
+
+Handler -> DbContext: SaveChangesAsync()
+activate DbContext
+DbContext -> DB: UPDATE Invoices\nSET Status = @status,\nPaidDate = @date\nWHERE InvoiceId = @invoiceId
+activate DB
+DB --> DbContext: Success
+deactivate DB
+DbContext --> Handler: Changes saved
+deactivate DbContext
+
+Handler --> PaymentController: PaymentDto
+deactivate Handler
+
+PaymentController --> InvoiceService: 201 Created\nPaymentDto
+deactivate PaymentController
+
+InvoiceService --> UI: Payment recorded
+deactivate InvoiceService
+
+UI -> UI: Close form
+UI -> UI: Update invoice status\nand payment history
+UI --> User: Show payment\nin invoice details
+deactivate UI
+
+== Track Overdue Invoices ==
+User -> UI: Navigate to\n"Overdue" tab
+activate UI
+
+UI -> InvoiceService: getOverdueInvoices()
+activate InvoiceService
+
+InvoiceService -> InvoiceController: GET /api/invoices?\nstatus=overdue
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(GetOverdueInvoicesQuery)
+activate Handler
+
+Handler -> DbContext: Invoices.Where(\ni => i.TenantId == tenantId &&\ni.Status == "Sent" &&\ni.DueDate < DateTime.UtcNow)\n.ToListAsync()
+activate DbContext
+
+DbContext -> DB: SELECT * FROM Invoices\nWHERE TenantId = @tenantId\nAND Status = 'Sent'\nAND DueDate < GETUTCDATE()
+activate DB
+DB --> DbContext: Overdue invoices
+deactivate DB
+
+DbContext --> Handler: List<Invoice>
+deactivate DbContext
+
+Handler -> Handler: Calculate:\n- Days overdue\n- Total overdue amount
+
+Handler --> InvoiceController: OverdueInvoicesDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 200 OK\nOverdueInvoicesDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Overdue invoice data
+deactivate InvoiceService
+
+UI --> User: Display overdue invoices\nwith warning indicators\nand days overdue
+deactivate UI
+
+== Generate Revenue Report ==
+User -> UI: Click "Revenue Report"\nbutton
+activate UI
+
+UI -> UI: Open report filters:\n- Date range\n- Client filter\n- Project filter
+
+User -> UI: Select filters and\nclick "Generate"
+
+UI -> InvoiceService: getRevenueReport(filters)
+activate InvoiceService
+
+InvoiceService -> InvoiceController: GET /api/invoices/revenue-report?\nstartDate={date}&endDate={date}
+activate InvoiceController
+
+InvoiceController -> Handler: Handle(GetRevenueReportQuery)
+activate Handler
+
+Handler -> DbContext: Complex query:\nInvoices, Payments, Clients
+activate DbContext
+DbContext -> DB: SELECT i.*, p.*, c.*\nFROM Invoices i\nLEFT JOIN Payments p ON i.InvoiceId = p.InvoiceId\nJOIN Clients c ON i.ClientId = c.ClientId\nWHERE i.TenantId = @tenantId\nAND i.IssueDate BETWEEN @start AND @end\nGROUP BY Client, Status
+activate DB
+DB --> DbContext: Aggregated revenue data
+deactivate DB
+DbContext --> Handler: Report data
+deactivate DbContext
+
+Handler -> Handler: Calculate:\n- Total invoiced\n- Total paid\n- Outstanding balance\n- Revenue by client\n- Revenue by status\n- Average payment time
+
+Handler --> InvoiceController: RevenueReportDto
+deactivate Handler
+
+InvoiceController --> InvoiceService: 200 OK\nRevenueReportDto
+deactivate InvoiceController
+
+InvoiceService --> UI: Revenue report data
+deactivate InvoiceService
+
+UI -> UI: Display report:\n- Revenue charts\n- Payment trends\n- Client breakdown\n- Export options
+
+UI --> User: Show revenue report
+deactivate UI
+
+@enduml
