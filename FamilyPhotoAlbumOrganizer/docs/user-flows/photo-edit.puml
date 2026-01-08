@@ -1,0 +1,69 @@
+@startuml photo-edit
+actor User
+participant "Photo Detail View" as DetailView
+participant "Photo Editor" as Editor
+participant "Photo Service" as PhotoService
+participant "API Gateway" as API
+participant "Photo Controller" as PhotoController
+participant "Image Processor" as ImageProcessor
+database "Photo Database" as DB
+database "Blob Storage" as BlobStorage
+
+User -> DetailView: View photo in detail
+DetailView --> User: Display full-resolution photo
+
+User -> DetailView: Click "Edit" button
+DetailView -> Editor: Open photo editor
+Editor -> Editor: Load photo for editing
+Editor --> User: Display editor interface\nwith tools and preview
+
+User -> Editor: Apply edits:\n- Crop with aspect ratio\n- Rotate/flip\n- Apply filters (B&W, Vintage, etc.)\n- Adjust brightness/contrast\n- Adjust saturation/temperature
+
+Editor -> Editor: Real-time preview\nof all changes
+
+User -> Editor: View before/after comparison
+Editor --> User: Show original vs edited\nside-by-side
+
+alt User wants to save edits
+    User -> Editor: Click "Save" button
+    Editor -> Editor: Prepare edit operations\nas JSON payload
+
+    Editor -> PhotoService: editPhoto(photoId, edits)
+    PhotoService -> API: POST /api/photos/{id}/edit
+    API -> PhotoController: editPhoto(id, edits)
+
+    PhotoController -> ImageProcessor: Apply edit operations\n(crop, rotate, filters, etc.)
+    ImageProcessor -> ImageProcessor: Process image\n(non-destructive)
+    ImageProcessor -> BlobStorage: Upload edited version
+    BlobStorage --> ImageProcessor: New file URL
+
+    PhotoController -> DB: INSERT edited photo record\n(link to original)
+    PhotoController -> DB: UPDATE original photo\n(set isEdited = true)
+    DB --> PhotoController: Success
+
+    PhotoController --> API: 200 OK\n{photo: EditedPhoto}
+    API --> PhotoService: Edit successful
+    PhotoService --> Editor: Save complete
+    Editor -> DetailView: Return to detail view\nwith edited photo
+    DetailView --> User: Show edited photo\n(original preserved)
+
+    note right of DetailView
+        User can restore original
+        at any time
+    end note
+
+else User cancels edits
+    User -> Editor: Click "Cancel" button
+    Editor -> Editor: Discard all changes
+    Editor -> DetailView: Return to detail view
+    DetailView --> User: Show original photo
+end
+
+alt Edit operation fails
+    API --> PhotoService: 500 Error\n"Unable to save edits"
+    PhotoService -> Editor: Show error message
+    Editor --> User: Display error:\n"Unable to save edits.\nPlease try again."
+    User -> Editor: Can retry or cancel
+end
+
+@enduml
