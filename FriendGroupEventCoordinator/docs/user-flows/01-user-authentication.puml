@@ -1,0 +1,69 @@
+@startuml
+title User Authentication Flow
+skinparam sequenceMessageAlign center
+
+actor User as user
+participant "Login Page\n(Angular)" as ui
+participant "Auth Service\n(Angular)" as authService
+participant "API Gateway\n/api/auth" as api
+participant "Auth Handler\n(MediatR)" as handler
+participant "IFriendGroupEventCoordinatorContext" as dbContext
+database "SQL Server\nUsers Table" as db
+
+== User Login ==
+user -> ui: Enter username/password
+activate ui
+ui -> ui: Validate form fields
+ui -> authService: login(credentials)
+activate authService
+authService -> api: POST /api/auth/login\n{username, password}
+activate api
+api -> handler: Handle LoginCommand
+activate handler
+handler -> dbContext: Users.FirstOrDefault(u => u.Username)
+activate dbContext
+dbContext -> db: SELECT * FROM Users\nWHERE Username = @username
+activate db
+db --> dbContext: User record
+deactivate db
+dbContext --> handler: User entity
+deactivate dbContext
+
+alt User Found
+    handler -> handler: Hash password with salt
+    handler -> handler: Compare hashed passwords
+
+    alt Password Matches
+        handler -> handler: Generate JWT token\nwith user claims
+        handler --> api: LoginResponseDto\n{token, userId, username}
+        deactivate handler
+        api --> authService: 200 OK\n{token, userId, username}
+        deactivate api
+        authService -> authService: Store token\nin localStorage
+        authService --> ui: Login successful
+        deactivate authService
+        ui -> ui: Navigate to\nDashboard
+        ui --> user: Show Dashboard
+        deactivate ui
+    else Password Mismatch
+        handler --> api: 401 Unauthorized\n{error: "Invalid credentials"}
+        deactivate handler
+        api --> authService: 401 Unauthorized
+        deactivate api
+        authService --> ui: Login failed
+        deactivate authService
+        ui --> user: Display error message
+        deactivate ui
+    end
+else User Not Found
+    handler --> api: 401 Unauthorized\n{error: "Invalid credentials"}
+    deactivate handler
+    api --> authService: 401 Unauthorized
+    deactivate api
+    authService --> ui: Login failed
+    deactivate authService
+    ui --> user: Display error message
+    deactivate ui
+end
+
+@enduml
