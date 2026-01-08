@@ -1,0 +1,163 @@
+@startuml
+title Warranty Tracking Flow
+
+actor User as user
+participant "Warranty Tracking\nPage" as warrantyPage
+participant "Warranty Service\n(Angular)" as warrantyService
+participant "HTTP Interceptor\n(JWT)" as interceptor
+participant "Warranty Tracking\nController" as controller
+participant "Command/Query\nHandler" as handler
+participant "DB Context" as dbContext
+participant "Warranties Table" as database
+
+== View Warranty List ==
+
+user -> warrantyPage: Navigate to\nWarranty Tracking
+activate warrantyPage
+
+warrantyPage -> warrantyService: getWarranties()
+activate warrantyService
+
+warrantyService -> interceptor: GET /api/warranty-tracking\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request
+activate controller
+
+controller -> handler: GetWarrantiesQuery
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> dbContext: Warranties.Where(w => w.TenantId == tenantId)\n.Include(w => w.Appliance)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Warranties\nJOIN Appliances\nWHERE TenantId = ?
+activate database
+database --> dbContext: Warranty records
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<WarrantyDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[{ warrantyId, applianceId,\nstartDate, endDate,\nstatus, ... }]
+deactivate controller
+
+interceptor --> warrantyService: Success response
+deactivate interceptor
+
+warrantyService --> warrantyPage: warranties$
+deactivate warrantyService
+
+warrantyPage -> warrantyPage: Render list with\nstatus indicators\n(Active, Expiring, Expired)
+warrantyPage --> user: Display warranties
+deactivate warrantyPage
+
+== Add/Update Warranty ==
+
+user -> warrantyPage: Click [Add/Edit Warranty]
+activate warrantyPage
+
+warrantyPage -> warrantyPage: Open form dialog
+
+user -> warrantyPage: Enter warranty details\n(Appliance, Start Date,\nEnd Date, Coverage Terms,\nProvider, Document)
+
+user -> warrantyPage: Click [Save]
+
+warrantyPage -> warrantyService: createWarranty(warrantyData)
+activate warrantyService
+
+warrantyService -> interceptor: POST /api/warranty-tracking\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: { applianceId, startDate,\nendDate, coverageTerms,\nprovider, documentUrl }
+activate controller
+
+controller -> handler: CreateWarrantyCommand
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+
+handler -> handler: Calculate warranty status\n(Active/Expired)
+
+handler -> dbContext: Warranties.Add(warranty)
+activate dbContext
+
+dbContext -> database: INSERT INTO Warranties
+activate database
+database --> dbContext: Success
+deactivate database
+deactivate dbContext
+
+handler -> dbContext: SaveChangesAsync()
+activate dbContext
+
+dbContext -> database: COMMIT
+activate database
+database --> dbContext: Warranty saved
+deactivate database
+deactivate dbContext
+
+handler --> controller: WarrantyDto
+deactivate handler
+
+controller --> interceptor: 201 Created
+deactivate controller
+
+interceptor --> warrantyService: Success response
+deactivate interceptor
+
+warrantyService --> warrantyPage: Warranty created
+deactivate warrantyService
+
+warrantyPage -> warrantyPage: Close dialog and\nrefresh list
+warrantyPage --> user: Show updated\nwarranty list
+deactivate warrantyPage
+
+== Check Warranty Expiration ==
+
+user -> warrantyPage: View expiring warranties\n(30 days filter)
+activate warrantyPage
+
+warrantyPage -> warrantyService: getExpiringWarranties(30)
+activate warrantyService
+
+warrantyService -> interceptor: GET /api/warranty-tracking\n?expiringInDays=30\n+ Authorization header
+activate interceptor
+
+interceptor -> controller: GET request with filter
+activate controller
+
+controller -> handler: GetExpiringWarrantiesQuery(30)
+activate handler
+
+handler -> handler: Extract TenantId from JWT
+handler -> handler: Calculate expiration date range
+
+handler -> dbContext: Warranties\n.Where(w => w.TenantId == tenantId)\n.Where(w => w.EndDate <= DateTime.UtcNow.AddDays(30))\n.Where(w => w.EndDate > DateTime.UtcNow)\n.ToListAsync()
+activate dbContext
+
+dbContext -> database: SELECT * FROM Warranties\nWHERE TenantId = ?\nAND EndDate BETWEEN\nNOW() AND NOW() + 30
+activate database
+database --> dbContext: Expiring warranties
+deactivate database
+deactivate dbContext
+
+handler --> controller: List<WarrantyDto>
+deactivate handler
+
+controller --> interceptor: 200 OK\n[expiring warranties]
+deactivate controller
+
+interceptor --> warrantyService: Success response
+deactivate interceptor
+
+warrantyService --> warrantyPage: expiring warranties$
+deactivate warrantyService
+
+warrantyPage -> warrantyPage: Highlight expiring items\nwith warning indicator
+warrantyPage --> user: Display expiring\nwarranties
+deactivate warrantyPage
+
+@enduml
