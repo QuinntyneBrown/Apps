@@ -1,0 +1,129 @@
+@startuml Amend Budget Flow
+title Amend Budget Flow
+
+actor User
+participant "Budget Overview\nPage" as Overview
+participant "Amend Budget\nDialog" as Dialog
+participant "Budget Service\n(Angular)" as BudgetService
+participant "API Controller\n/api/budgets" as BudgetAPI
+participant "AmendBudget\nCommand Handler" as Handler
+participant "IHouseholdBudgetManagerContext" as DbContext
+database "SQL Server" as DB
+
+User -> Overview: View budget details
+activate Overview
+
+Overview -> BudgetService: getBudgetById(budgetId)
+activate BudgetService
+BudgetService -> BudgetAPI: GET /api/budgets/{budgetId}
+activate BudgetAPI
+BudgetAPI -> DbContext: Budgets.Include(c => c.Categories)\n.FirstOrDefault(b => b.BudgetId == id)
+activate DbContext
+DbContext -> DB: SELECT * FROM Budgets\nJOIN CategoryAllocations
+activate DB
+DB --> DbContext: Budget with categories
+deactivate DB
+DbContext --> BudgetAPI: Budget entity
+deactivate DbContext
+BudgetAPI --> BudgetService: BudgetDto
+deactivate BudgetAPI
+BudgetService --> Overview: Budget data
+deactivate BudgetService
+
+Overview --> User: Display budget overview\nwith category allocations
+
+User -> Overview: Click "Amend Budget"
+Overview -> Dialog: Open amend dialog
+activate Dialog
+
+Dialog --> User: Show amend budget form
+
+User -> Dialog: Select category to modify
+Dialog --> User: Show current allocation amount
+
+User -> Dialog: Enter new allocation amount
+Dialog -> Dialog: Calculate percentage change\nfrom current allocation
+
+alt Change > 10%
+    Dialog --> User: Show "Approval Required" indicator
+    User -> Dialog: Enter amendment reason\n(required)
+else Change <= 10%
+    Dialog --> User: Amendment reason optional
+    User -> Dialog: Optionally enter reason
+end
+
+Dialog -> Dialog: Calculate impact on budget:\n- New total allocated\n- Remaining budget\n- Affected percentages
+
+Dialog --> User: Show impact preview
+
+User -> Dialog: Click "Confirm Amendment"
+
+Dialog -> BudgetService: amendBudget(budgetId, categoryId, newAmount, reason)
+activate BudgetService
+
+BudgetService -> BudgetAPI: PUT /api/budgets/{budgetId}/categories/{categoryId}\n{newAmount, reason}
+activate BudgetAPI
+
+BudgetAPI -> Handler: Handle(AmendBudgetCommand)
+activate Handler
+
+Handler -> DbContext: Budgets.Include(c => c.Categories)\n.FirstOrDefault(b => b.BudgetId == id)
+activate DbContext
+DbContext -> DB: SELECT * FROM Budgets\nJOIN CategoryAllocations
+activate DB
+DB --> DbContext: Budget with categories
+deactivate DB
+DbContext --> Handler: Budget entity
+deactivate DbContext
+
+Handler -> Handler: Validate budget exists\nValidate category exists\nValidate new amount > 0
+
+Handler -> Handler: Calculate percentage change\nCheck if approval required (> 10%)
+
+alt Approval Required
+    Handler -> Handler: Set approval status = Pending\nStore approverId if provided
+    Handler -> Handler: Create approval request
+
+    Handler -> DbContext: Update category allocation\nCreate approval record
+    activate DbContext
+    DbContext -> DB: UPDATE CategoryAllocations\nINSERT INTO BudgetApprovals
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Updated
+    deactivate DbContext
+
+    Handler -> Handler: Raise BudgetAmendmentRequested event
+
+    Handler --> BudgetAPI: 200 OK\n{status: "Pending Approval"}
+    deactivate Handler
+    BudgetAPI --> BudgetService: Amendment pending approval
+    deactivate BudgetAPI
+    BudgetService --> Dialog: Show pending approval message
+    deactivate BudgetService
+    Dialog --> User: Display "Amendment submitted for approval"
+else No Approval Required
+    Handler -> DbContext: Update category allocation
+    activate DbContext
+    DbContext -> DB: UPDATE CategoryAllocations\nSET AllocatedAmount = ?,\nPercentageOfTotal = ?
+    activate DB
+    DB --> DbContext: Success
+    deactivate DB
+    DbContext --> Handler: Updated
+    deactivate DbContext
+
+    Handler -> Handler: Raise BudgetAmendmentMade event
+
+    Handler --> BudgetAPI: 200 OK\n{status: "Updated"}
+    BudgetAPI --> BudgetService: Amendment successful
+    BudgetService --> Dialog: Success response
+    Dialog --> User: Display "Budget updated successfully"
+end
+
+deactivate Dialog
+
+Overview -> Overview: Refresh budget data
+Overview --> User: Display updated budget\nwith new allocations
+deactivate Overview
+
+@enduml
