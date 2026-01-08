@@ -1,0 +1,307 @@
+@startuml Generate Report Flow
+
+title Generate Report Flow
+
+actor User
+participant "Reports Dashboard" as Dashboard
+participant "Report Builder" as Builder
+participant "Report View" as ReportView
+participant "Report Controller" as ReportAPI
+participant "Report Service" as ReportService
+participant "Export Service" as ExportService
+database "Database" as DB
+
+== Load Reports Dashboard ==
+User -> Dashboard: Navigate to /reports
+activate Dashboard
+
+Dashboard -> ReportAPI: GET /api/reports/quick-reports
+activate ReportAPI
+ReportAPI -> DB: Query metadata for quick reports
+activate DB
+DB --> ReportAPI: Available quick reports
+deactivate DB
+ReportAPI --> Dashboard: Quick report options
+deactivate ReportAPI
+
+Dashboard -> ReportAPI: GET /api/reports/scheduled
+activate ReportAPI
+ReportAPI -> DB: Query user scheduled reports
+activate DB
+DB --> ReportAPI: Scheduled reports list
+deactivate DB
+ReportAPI --> Dashboard: Scheduled reports
+deactivate ReportAPI
+
+Dashboard --> User: Display quick reports, custom builder, and scheduled reports
+deactivate Dashboard
+
+== Generate Weekly Report ==
+User -> Dashboard: Click "This Week" quick report
+activate Dashboard
+
+Dashboard -> ReportAPI: GET /api/reports/weekly?vehicleId={id}
+activate ReportAPI
+ReportAPI -> ReportService: GenerateWeeklyReport(vehicleId)
+activate ReportService
+
+ReportService -> DB: Query week start and end dates
+activate DB
+ReportService -> DB: Query fuel purchases for week
+ReportService -> DB: Query trips for week
+ReportService -> DB: Query MPG calculations
+ReportService -> DB: Query previous week data for comparison
+DB --> ReportService: All weekly data
+deactivate DB
+
+ReportService -> ReportService: Calculate summary stats
+ReportService -> ReportService: Identify best and worst fillups
+ReportService -> ReportService: Calculate week-over-week changes
+ReportService -> ReportService: Generate automated insights
+
+ReportService --> ReportAPI: Complete weekly report
+deactivate ReportService
+ReportAPI --> Dashboard: Weekly report data
+deactivate ReportAPI
+
+Dashboard -> ReportView: Navigate to /reports/weekly/view
+deactivate Dashboard
+
+activate ReportView
+ReportView --> User: Display formatted weekly report
+deactivate ReportView
+
+== Generate Annual Report ==
+User -> Dashboard: Click "This Year" quick report
+activate Dashboard
+
+Dashboard -> ReportAPI: GET /api/reports/annual?vehicleId={id}&year={year}
+activate ReportAPI
+ReportAPI -> ReportService: GenerateAnnualReport(vehicleId, year)
+activate ReportService
+
+ReportService -> DB: Query year start and end dates
+activate DB
+ReportService -> DB: Query all fuel purchases for year
+ReportService -> DB: Query all trips for year
+ReportService -> DB: Query monthly aggregated data
+ReportService -> DB: Query achievements and milestones
+ReportService -> DB: Query cost breakdowns
+ReportService -> DB: Query previous year for comparison
+DB --> ReportService: Complete annual data
+deactivate DB
+
+ReportService -> ReportService: Calculate total miles driven
+ReportService -> ReportService: Calculate total fuel cost
+ReportService -> ReportService: Calculate average MPG by month
+ReportService -> ReportService: Identify best and worst months
+ReportService -> ReportService: Calculate year-over-year changes
+ReportService -> ReportService: Generate top insights
+ReportService -> ReportService: Compile achievements list
+
+ReportService --> ReportAPI: Complete annual report
+deactivate ReportService
+ReportAPI --> Dashboard: Annual report data
+deactivate ReportAPI
+
+Dashboard -> ReportView: Navigate to /reports/annual/view
+deactivate Dashboard
+
+activate ReportView
+ReportView --> User: Display comprehensive annual report
+deactivate ReportView
+
+== Build Custom Report ==
+User -> Dashboard: Click "Custom Report Builder"
+activate Dashboard
+Dashboard -> Builder: Open custom report builder
+deactivate Dashboard
+
+activate Builder
+Builder --> User: Display report configuration form
+
+User -> Builder: Select date range
+User -> Builder: Check desired metrics
+User -> Builder: Select vehicle
+User -> Builder: Choose grouping option
+User -> Builder: Select export format
+
+Builder --> User: Show report preview
+
+User -> Builder: Click "Generate Report"
+
+Builder -> Builder: Validate selections
+
+alt Validation Fails
+    Builder --> User: Show validation errors
+else Validation Passes
+    Builder -> ReportAPI: POST /api/reports/custom
+    activate ReportAPI
+    ReportAPI -> ReportService: GenerateCustomReport(reportConfig)
+    activate ReportService
+
+    ReportService -> DB: Query data based on filters
+    activate DB
+    DB --> ReportService: Filtered data
+    deactivate DB
+
+    ReportService -> ReportService: Apply grouping logic
+    ReportService -> ReportService: Calculate aggregations
+    ReportService -> ReportService: Generate visualizations data
+    ReportService -> ReportService: Create insights
+
+    alt Export Format is PDF
+        ReportService -> ExportService: GeneratePDF(reportData)
+        activate ExportService
+        ExportService -> ExportService: Format data for PDF
+        ExportService -> ExportService: Create charts and graphs
+        ExportService -> ExportService: Apply professional styling
+        ExportService --> ReportService: PDF file
+        deactivate ExportService
+    else Export Format is CSV
+        ReportService -> ExportService: GenerateCSV(reportData)
+        activate ExportService
+        ExportService -> ExportService: Format data as CSV
+        ExportService -> ExportService: Create proper column headers
+        ExportService --> ReportService: CSV file
+        deactivate ExportService
+    else Export Format is Excel
+        ReportService -> ExportService: GenerateExcel(reportData)
+        activate ExportService
+        ExportService -> ExportService: Format data for Excel
+        ExportService -> ExportService: Create multiple sheets
+        ExportService -> ExportService: Add charts and formatting
+        ExportService --> ReportService: Excel file
+        deactivate ExportService
+    end
+
+    ReportService -> DB: Store report metadata
+    activate DB
+    DB --> ReportService: Report saved
+    deactivate DB
+
+    ReportService --> ReportAPI: Generated report
+    deactivate ReportService
+    ReportAPI --> Builder: Report file and metadata
+    deactivate ReportAPI
+
+    Builder --> User: Trigger file download
+    Builder --> User: Show success message
+    deactivate Builder
+end
+
+== Schedule Recurring Report ==
+User -> Dashboard: Click "Create Schedule"
+activate Dashboard
+Dashboard --> User: Open schedule configuration form
+
+User -> Dashboard: Select report type
+User -> Dashboard: Choose frequency
+User -> Dashboard: Select delivery method
+User -> Dashboard: Set start date
+
+Dashboard --> User: Show sample preview
+
+User -> Dashboard: Click "Create Schedule"
+
+Dashboard -> ReportAPI: POST /api/reports/schedules
+activate ReportAPI
+ReportAPI -> ReportService: CreateReportSchedule(scheduleConfig)
+activate ReportService
+
+ReportService -> DB: INSERT report_schedule record
+activate DB
+DB --> ReportService: Schedule created
+deactivate DB
+
+ReportService -> ReportService: Calculate next run date
+ReportService -> DB: Store next run date
+activate DB
+deactivate DB
+
+ReportService --> ReportAPI: Created schedule
+deactivate ReportService
+ReportAPI --> Dashboard: 201 Created + schedule details
+deactivate ReportAPI
+
+Dashboard --> User: Show success message
+Dashboard --> User: Add to scheduled reports list
+deactivate Dashboard
+
+== View and Export Report ==
+User -> ReportView: Click "Download PDF"
+activate ReportView
+
+ReportView -> ReportAPI: GET /api/reports/{reportId}/export?format=pdf
+activate ReportAPI
+ReportAPI -> ExportService: ExportReport(reportId, format)
+activate ExportService
+
+ExportService -> DB: Query report data
+activate DB
+DB --> ExportService: Report data
+deactivate DB
+
+ExportService -> ExportService: Generate PDF with branding
+ExportService -> ExportService: Include charts and visualizations
+ExportService -> ExportService: Add table of contents
+
+ExportService --> ReportAPI: PDF file
+deactivate ExportService
+ReportAPI --> ReportView: File download
+deactivate ReportAPI
+
+ReportView --> User: Trigger PDF download
+deactivate ReportView
+
+alt User Shares Report
+    User -> ReportView: Click "Share" button
+    activate ReportView
+    ReportView --> User: Show sharing options
+
+    User -> ReportView: Select email or social media
+    ReportView -> ReportAPI: POST /api/reports/{reportId}/share
+    activate ReportAPI
+    ReportAPI -> ReportAPI: Generate shareable link
+    ReportAPI --> ReportView: Share URL
+    deactivate ReportAPI
+    ReportView --> User: Copy link or send via selected method
+    deactivate ReportView
+end
+
+== Manage Scheduled Reports ==
+User -> Dashboard: Click on scheduled report
+activate Dashboard
+Dashboard --> User: Show schedule details
+
+alt Edit Schedule
+    User -> Dashboard: Click "Edit"
+    Dashboard --> User: Open edit form
+    User -> Dashboard: Modify parameters
+    User -> Dashboard: Save changes
+    Dashboard -> ReportAPI: PUT /api/reports/schedules/{scheduleId}
+    activate ReportAPI
+    ReportAPI -> DB: UPDATE schedule
+    activate DB
+    DB --> ReportAPI: Update successful
+    deactivate DB
+    ReportAPI --> Dashboard: Updated schedule
+    deactivate ReportAPI
+    Dashboard --> User: Show success message
+else Delete Schedule
+    User -> Dashboard: Click "Delete"
+    Dashboard --> User: Confirm deletion
+    User -> Dashboard: Confirm
+    Dashboard -> ReportAPI: DELETE /api/reports/schedules/{scheduleId}
+    activate ReportAPI
+    ReportAPI -> DB: DELETE schedule
+    activate DB
+    DB --> ReportAPI: Deletion successful
+    deactivate DB
+    ReportAPI --> Dashboard: 204 No Content
+    deactivate ReportAPI
+    Dashboard --> User: Remove from list
+end
+deactivate Dashboard
+
+@enduml
