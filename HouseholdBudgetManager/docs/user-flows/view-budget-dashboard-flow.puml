@@ -1,0 +1,108 @@
+@startuml View Budget Dashboard Flow
+title View Budget Dashboard Flow
+
+actor User
+participant "Budget Dashboard\nPage" as Dashboard
+participant "Budget Service\n(Angular)" as BudgetService
+participant "API Controller\n/api/budgets" as BudgetAPI
+participant "GetActiveBudget\nQuery Handler" as Handler
+participant "IHouseholdBudgetManagerContext" as DbContext
+database "SQL Server" as DB
+participant "Chart Components" as Charts
+
+User -> Dashboard: Navigate to /budget/dashboard
+activate Dashboard
+
+Dashboard -> BudgetService: getActiveBudget()
+activate BudgetService
+
+BudgetService -> BudgetAPI: GET /api/budgets/active
+activate BudgetAPI
+
+BudgetAPI -> Handler: Handle(GetActiveBudgetQuery)
+activate Handler
+
+Handler -> DbContext: Budgets\n.Include(b => b.Categories)\n.FirstOrDefault(b => b.Status == Active\n&& b.HouseholdId == householdId)
+activate DbContext
+DbContext -> DB: SELECT * FROM Budgets\nJOIN CategoryAllocations\nWHERE Status = 'Active'\nAND HouseholdId = ?
+activate DB
+DB --> DbContext: Budget with categories
+deactivate DB
+DbContext --> Handler: Budget entity
+deactivate DbContext
+
+Handler -> Handler: Calculate metrics:\n- Total budgeted\n- Total spent\n- Remaining budget\n- Category statuses\n  (Healthy/Warning/Exceeded)
+
+Handler -> DbContext: Query expenses for spending data
+activate DbContext
+DbContext -> DB: SELECT CategoryId, SUM(Amount)\nFROM Expenses\nWHERE BudgetId = ?\nGROUP BY CategoryId
+activate DB
+DB --> DbContext: Category spending totals
+deactivate DB
+DbContext --> Handler: Spending data
+deactivate DbContext
+
+Handler -> Handler: Update category spent amounts\nCalculate percentages\nDetermine health status per category
+
+Handler --> BudgetAPI: BudgetDto with complete metrics
+deactivate Handler
+BudgetAPI --> BudgetService: 200 OK\n{budget, categories, metrics}
+deactivate BudgetAPI
+
+BudgetService --> Dashboard: Observable<BudgetDto>
+deactivate BudgetService
+
+Dashboard -> Dashboard: Use async pipe to subscribe
+
+== Render Dashboard Components ==
+
+Dashboard -> Charts: Update BudgetGauge\n(spent/budget ratio)
+activate Charts
+Charts -> Charts: Calculate gauge percentage\nSet color (green/yellow/red)\nAnimate gauge
+Charts --> Dashboard: Gauge rendered
+deactivate Charts
+
+Dashboard -> Charts: Update CategoryProgressBars
+activate Charts
+Charts -> Charts: For each category:\n- Calculate progress percentage\n- Set color based on status\n- Display spent/allocated amounts
+Charts --> Dashboard: Progress bars rendered
+deactivate Charts
+
+Dashboard -> Charts: Update AllocationChart\n(Pie/Donut chart)
+activate Charts
+Charts -> Charts: Create chart segments\nfor each category\nSet colors and labels\nAdd percentages
+Charts --> Dashboard: Allocation chart rendered
+deactivate Charts
+
+Dashboard -> Dashboard: Render summary cards:\n- Total budgeted\n- Total spent\n- Remaining budget\n- Number of categories
+
+Dashboard -> Dashboard: Identify exceeded categories
+
+alt Has Exceeded Categories
+    Dashboard -> Dashboard: Display alert banners\nfor exceeded categories
+end
+
+Dashboard -> Dashboard: Render category list\nwith allocations and spending
+
+Dashboard --> User: Display complete\nbudget dashboard
+deactivate Dashboard
+
+== User Interactions ==
+
+User -> Dashboard: Click on category
+activate Dashboard
+Dashboard --> User: Highlight category in charts\nShow category details
+deactivate Dashboard
+
+User -> Dashboard: Click "Export"
+activate Dashboard
+Dashboard -> Dashboard: Generate budget report\n(PDF/Excel)
+Dashboard --> User: Download report file
+deactivate Dashboard
+
+User -> Dashboard: Click "Amend Budget"
+activate Dashboard
+Dashboard -> Dashboard: Navigate to amend budget flow
+deactivate Dashboard
+
+@enduml
