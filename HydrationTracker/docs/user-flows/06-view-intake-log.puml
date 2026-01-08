@@ -1,0 +1,179 @@
+@startuml
+title View Intake Log Flow
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+
+actor User
+participant "Dashboard\nComponent" as Dashboard
+participant "Intake Log\nPage" as LogPage
+participant "IntakeService" as Service
+participant "IntakesController\n/api/intakes" as API
+participant "GetIntakesQuery\nHandler" as GetHandler
+participant "DeleteIntakeCommand\nHandler" as DeleteHandler
+participant "UpdateIntakeCommand\nHandler" as UpdateHandler
+participant "IHydrationTrackerContext" as DB
+database "SQL Server\nDatabase" as Database
+
+autonumber
+
+User -> Dashboard: Click "View History" or\n"Intake Log" link
+activate Dashboard
+Dashboard -> LogPage: Navigate to intake log page
+activate LogPage
+deactivate Dashboard
+
+== Initial Load with Default Filters ==
+
+LogPage -> LogPage: Set default filters\n(Last 7 days, All beverages)
+
+LogPage -> Service: getIntakes(filters)
+activate Service
+Service -> API: GET /api/intakes?\nstartDate=xxx&endDate=xxx\n&beverageType=all\n&pageSize=50
+activate API
+API -> GetHandler: Execute(GetIntakesQuery)
+activate GetHandler
+GetHandler -> DB: Intakes.Where(i => i.Timestamp >= start\n&& i.Timestamp <= end)\n.OrderByDescending(i => i.Timestamp)\n.ToListAsync()
+activate DB
+DB -> Database: Query intakes with filters\n(filtered by TenantId, date range)
+activate Database
+Database --> DB: List of Intake records
+deactivate Database
+DB --> GetHandler: List<Intake> entities
+deactivate DB
+GetHandler --> API: List<IntakeDTO> with pagination info
+deactivate GetHandler
+API --> Service: 200 OK with intake list
+deactivate API
+Service --> LogPage: Intake records
+deactivate Service
+
+LogPage -> LogPage: Group intakes by date
+LogPage -> LogPage: Calculate daily totals
+
+LogPage -> User: Display intake log with:
+note right
+- Date range selector
+- Beverage type filter
+- Grouped entries by day
+- Daily total for each day
+- Individual entry details (time, type, amount)
+- Edit/Delete buttons per entry
+end note
+deactivate LogPage
+
+== Apply Filters ==
+
+User -> LogPage: Change date range or\nbeverage type filter
+activate LogPage
+LogPage -> Service: getIntakes(updatedFilters)
+activate Service
+Service -> API: GET /api/intakes?filters...
+activate API
+API -> GetHandler: Execute(GetIntakesQuery)
+activate GetHandler
+GetHandler -> DB: Intakes.Where(filters)
+activate DB
+DB -> Database: Query with updated filters
+activate Database
+Database --> DB: Filtered records
+deactivate Database
+DB --> GetHandler: List<Intake>
+deactivate DB
+GetHandler --> API: List<IntakeDTO>
+deactivate GetHandler
+API --> Service: 200 OK
+deactivate API
+Service --> LogPage: Filtered intakes
+deactivate Service
+LogPage -> User: Display filtered results
+deactivate LogPage
+
+== Edit Intake Entry ==
+
+User -> LogPage: Click "Edit" on intake entry
+activate LogPage
+LogPage -> User: Show edit dialog\n(pre-filled with values)
+deactivate LogPage
+
+User -> LogPage: Modify amount, type, or time
+activate LogPage
+deactivate LogPage
+
+User -> LogPage: Click "Update"
+activate LogPage
+LogPage -> Service: updateIntake(intakeId, data)
+activate Service
+Service -> API: PUT /api/intakes/{id}\n{amount, beverageType, timestamp}
+activate API
+API -> UpdateHandler: Execute(UpdateIntakeCommand)
+activate UpdateHandler
+UpdateHandler -> DB: Intakes.FindAsync(intakeId)
+activate DB
+DB -> Database: Query intake\n(filtered by TenantId)
+activate Database
+Database --> DB: Intake record
+deactivate Database
+DB --> UpdateHandler: Intake entity
+deactivate DB
+UpdateHandler -> UpdateHandler: Update properties
+UpdateHandler -> DB: SaveChangesAsync()
+activate DB
+DB -> Database: UPDATE Intakes
+activate Database
+Database --> DB: Success
+deactivate Database
+DB --> UpdateHandler: Changes saved
+deactivate DB
+UpdateHandler --> API: Success
+deactivate UpdateHandler
+API --> Service: 200 OK
+deactivate API
+Service --> LogPage: Success
+deactivate Service
+LogPage -> LogPage: Refresh intake list
+LogPage -> User: Display success message\nand updated list
+deactivate LogPage
+
+== Delete Intake Entry ==
+
+User -> LogPage: Click "Delete" on entry
+activate LogPage
+LogPage -> User: Show confirmation dialog
+deactivate LogPage
+
+User -> LogPage: Confirm deletion
+activate LogPage
+LogPage -> Service: deleteIntake(intakeId)
+activate Service
+Service -> API: DELETE /api/intakes/{id}
+activate API
+API -> DeleteHandler: Execute(DeleteIntakeCommand)
+activate DeleteHandler
+DeleteHandler -> DB: Intakes.FindAsync(intakeId)
+activate DB
+DB -> Database: Query intake\n(filtered by TenantId)
+activate Database
+Database --> DB: Intake record
+deactivate Database
+DB --> DeleteHandler: Intake entity
+deactivate DB
+DeleteHandler -> DB: Intakes.Remove(intake)
+activate DB
+DB -> Database: DELETE FROM Intakes
+activate Database
+Database --> DB: Success
+deactivate Database
+DB -> DB: SaveChangesAsync()
+DB --> DeleteHandler: Changes saved
+deactivate DB
+DeleteHandler --> API: Success
+deactivate DeleteHandler
+API --> Service: 204 No Content
+deactivate API
+Service --> LogPage: Success
+deactivate Service
+LogPage -> LogPage: Refresh intake list
+LogPage -> User: Display success message\nand updated list
+deactivate LogPage
+
+@enduml
