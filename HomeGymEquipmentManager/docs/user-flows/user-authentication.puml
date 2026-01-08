@@ -1,0 +1,72 @@
+@startuml
+title User Authentication Flow
+
+actor User
+participant "Login Page\n(Angular)" as UI
+participant "Auth Service\n(Angular)" as AuthService
+participant "Auth Controller\n(/api/auth)" as AuthController
+participant "Login Command\nHandler" as LoginHandler
+participant "Password Hash\nService" as HashService
+participant "JWT Token\nService" as JWTService
+database "Database\n(SQL Server)" as DB
+
+User -> UI: Enter username\nand password
+activate UI
+
+UI -> UI: Validate form inputs
+UI -> AuthService: login(credentials)
+activate AuthService
+
+AuthService -> AuthController: POST /api/auth/login\n{username, password}
+activate AuthController
+
+AuthController -> LoginHandler: Handle(LoginCommand)
+activate LoginHandler
+
+LoginHandler -> DB: Query User by Username
+activate DB
+DB --> LoginHandler: User entity\n(with hashed password & salt)
+deactivate DB
+
+LoginHandler -> HashService: VerifyPassword(password,\nhash, salt)
+activate HashService
+HashService -> HashService: Hash input password\nwith stored salt
+HashService --> LoginHandler: Password valid: true/false
+deactivate HashService
+
+alt Password Valid
+    LoginHandler -> JWTService: GenerateToken(userId,\nusername, email, roles)
+    activate JWTService
+    JWTService -> JWTService: Create JWT claims:\n- sub (userId)\n- name (username)\n- email\n- roles\n- tenant_id\n- exp (24h)
+    JWTService --> LoginHandler: JWT token string
+    deactivate JWTService
+
+    LoginHandler --> AuthController: LoginResponse\n{token, expiresAt, user}
+    deactivate LoginHandler
+
+    AuthController --> AuthService: 200 OK\n{token, expiresAt, user}
+    deactivate AuthController
+
+    AuthService -> AuthService: Store token in\nlocalStorage
+    AuthService --> UI: Login successful
+    deactivate AuthService
+
+    UI -> UI: Redirect to Dashboard
+    UI --> User: Show Dashboard
+    deactivate UI
+
+else Password Invalid
+    LoginHandler --> AuthController: Unauthorized error
+    deactivate LoginHandler
+
+    AuthController --> AuthService: 401 Unauthorized\n{error: "Invalid credentials"}
+    deactivate AuthController
+
+    AuthService --> UI: Login failed
+    deactivate AuthService
+
+    UI --> User: Display error message
+    deactivate UI
+end
+
+@enduml
