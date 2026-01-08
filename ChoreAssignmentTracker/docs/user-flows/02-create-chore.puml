@@ -1,0 +1,95 @@
+@startuml Create Chore Flow
+
+title Create Chore Flow
+
+actor Parent
+participant "Chores Page" as UI
+participant "Create Chore Form" as Form
+participant "Chore Controller" as ChoreAPI
+participant "CreateChoreCommand" as Command
+participant "Chore Repository" as ChoreRepo
+database "SQL Server" as DB
+participant "Event Bus" as Events
+
+== Navigate to Create Chore ==
+Parent -> UI: Click "Add Chore" button
+UI -> Form: Open create chore modal/page
+Form --> Parent: Display empty form
+
+== Fill Chore Details ==
+Parent -> Form: Enter chore name
+Form -> Form: Validate required field
+
+Parent -> Form: Enter description
+Form -> Form: Validate required field
+
+Parent -> Form: Select category\n(Cleaning, Cooking, Outdoor, etc.)
+Form -> Form: Update icon display
+
+Parent -> Form: Set estimated duration\n(using slider, in minutes)
+Form -> Form: Update duration display
+
+Parent -> Form: Select difficulty level\n(Easy, Medium, Hard)
+Form -> Form: Calculate point value:\n- Easy: 1-5 points\n- Medium: 6-10 points\n- Hard: 11-20 points
+Form --> Parent: Show calculated points
+
+alt Parent Overrides Points
+    Parent -> Form: Manually adjust points
+    Form -> Form: Validate points within\ndifficulty range
+end
+
+Parent -> Form: Select frequency\n(OneTime, Daily, Weekly, BiWeekly, Monthly)
+
+opt Add Optional Details
+    Parent -> Form: Add instructions (textarea)
+    Parent -> Form: Upload reference photo
+    Form -> Form: Validate image size/format
+end
+
+Form -> Form: Display chore card preview
+
+== Submit Chore ==
+Parent -> Form: Click "Create Chore"
+Form -> Form: Validate all required fields
+
+alt Validation Successful
+    Form -> ChoreAPI: POST /api/chores\n{\n  choreName,\n  description,\n  category,\n  estimatedDuration,\n  difficultyLevel,\n  pointValue,\n  frequency,\n  instructions,\n  imageUrl\n}
+
+    ChoreAPI -> Command: Handle CreateChoreCommand
+    Command -> Command: Validate business rules:\n- Name unique in household\n- Duration 0 < x < 480 minutes\n- Points within difficulty range
+
+    alt Validation Passes
+        Command -> ChoreRepo: Save(chore)
+        ChoreRepo -> DB: INSERT INTO Chores
+        DB --> ChoreRepo: ChoreId (Guid)
+        ChoreRepo --> Command: Chore created
+
+        Command -> Events: Publish ChoreCreated event\n{\n  choreId,\n  choreName,\n  category,\n  pointValue,\n  createdBy\n}
+
+        Command --> ChoreAPI: Success with ChoreId
+        ChoreAPI --> Form: 201 Created\n{choreId, chore}
+
+        Form -> Form: Show success notification
+        Form -> UI: Close form and refresh list
+        UI --> Parent: Display new chore in list
+
+        Form -> Form: Show assignment prompt:\n"Assign this chore now?"
+
+        alt Parent Chooses to Assign
+            Form --> Parent: Open assign dialog
+            note right: Continues to Assign Chore Flow
+        else Parent Declines
+            Form --> Parent: Return to chore list
+        end
+
+    else Validation Fails
+        Command --> ChoreAPI: Validation error
+        ChoreAPI --> Form: 400 Bad Request\n{errors}
+        Form --> Parent: Display validation errors
+    end
+
+else Form Validation Fails
+    Form --> Parent: Highlight invalid fields\nShow error messages
+end
+
+@enduml
