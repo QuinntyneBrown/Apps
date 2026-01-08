@@ -1,0 +1,142 @@
+@startuml View Statistics User Flow
+title View Statistics Dashboard
+
+actor User
+participant "Statistics\nDashboard" as StatsUI
+participant "Radar Chart\nComponent" as RadarChart
+participant "Trend Chart\nComponent" as TrendChart
+participant "API Gateway" as API
+participant "Statistics\nService" as StatsService
+database "Database" as DB
+
+User -> StatsUI: Navigate to /statistics
+activate StatsUI
+StatsUI -> API: GET /api/statistics/summary?period=30d
+activate API
+API -> StatsService: GetStatisticsSummary(userId, "30d")
+activate StatsService
+StatsService -> DB: Query rounds from last 30 days\nand calculate statistics
+activate DB
+DB --> StatsService: Return aggregated data
+deactivate DB
+StatsService --> API: Return statistics:\n- scoringAverage: 92.5\n- fairwaysHit: 65%\n- greensInRegulation: 45%\n- averagePutts: 32.1\n- totalBirdies: 12\n- trend: "improving"
+deactivate StatsService
+API --> StatsUI: Return summary data
+deactivate API
+
+StatsUI -> API: GET /api/statistics/scoring-trend?period=30d
+activate API
+API -> StatsService: GetScoringTrend(userId, "30d")
+activate StatsService
+StatsService -> DB: Query scores over time
+activate DB
+DB --> StatsService: Return time series data
+deactivate DB
+StatsService --> API: Return trend data points
+deactivate StatsService
+API --> StatsUI: Return trend data
+deactivate API
+
+StatsUI -> API: GET /api/statistics/radar-data?period=30d
+activate API
+API -> StatsService: GetRadarChartData(userId, "30d")
+activate StatsService
+StatsService -> DB: Query all key metrics
+activate DB
+DB --> StatsService: Return metrics
+deactivate DB
+StatsService -> DB: Query peer averages for comparison
+activate DB
+DB --> StatsService: Return peer data
+deactivate DB
+StatsService --> API: Return radar chart data:\n- driving\n- iron play\n- short game\n- putting\n- course management
+deactivate StatsService
+API --> StatsUI: Return radar data
+deactivate API
+
+StatsUI -> API: GET /api/statistics/strengths-weaknesses?period=30d
+activate API
+API -> StatsService: AnalyzeStrengthsWeaknesses(userId, "30d")
+activate StatsService
+StatsService -> DB: Analyze performance metrics
+activate DB
+DB --> StatsService: Return analysis
+deactivate DB
+StatsService --> API: Return analysis:\nStrengths:\n- Putting (top 20%)\n- Consistent scoring\nWeaknesses:\n- Fairway accuracy (bottom 30%)\n- GIR (below average)
+deactivate StatsService
+API --> StatsUI: Return analysis
+deactivate API
+
+StatsUI -> TrendChart: Render scoring trend
+activate TrendChart
+TrendChart --> StatsUI: Display line chart
+deactivate TrendChart
+
+StatsUI -> RadarChart: Render performance radar
+activate RadarChart
+RadarChart --> StatsUI: Display radar chart with\nuser vs peer overlay
+deactivate RadarChart
+
+StatsUI --> User: Display complete dashboard:\n- Period selector (7d, 30d, 90d, Year, All)\n- Scoring average (large display)\n- Key metrics grid (fairways, GIR, putts, birdies)\n- Scoring trend chart\n- Radar chart with peer comparison\n- Strengths & weaknesses panel\n- Practice recommendations
+deactivate StatsUI
+
+== Change Time Period ==
+User -> StatsUI: Select "90 days" period
+activate StatsUI
+StatsUI -> API: GET /api/statistics/summary?period=90d
+activate API
+API -> StatsService: GetStatisticsSummary(userId, "90d")
+activate StatsService
+StatsService -> DB: Query 90 days of data
+activate DB
+DB --> StatsService: Return data
+deactivate DB
+StatsService --> API: Return updated statistics
+deactivate StatsService
+API --> StatsUI: Return data
+deactivate API
+StatsUI --> User: Refresh all charts and metrics\nwith 90-day data
+deactivate StatsUI
+
+== View Detailed Statistics ==
+User -> StatsUI: Click "View Detailed Stats"
+activate StatsUI
+StatsUI --> User: Navigate to /statistics/detailed
+deactivate StatsUI
+
+User -> StatsUI: View detailed statistics page
+activate StatsUI
+StatsUI -> API: GET /api/statistics/detailed?period=90d
+activate API
+API -> StatsService: GetDetailedStatistics(userId, "90d")
+activate StatsService
+StatsService -> DB: Query comprehensive statistics
+activate DB
+DB --> StatsService: Return detailed data
+deactivate DB
+StatsService --> API: Return all stats in table format
+deactivate StatsService
+API --> StatsUI: Return detailed data
+deactivate API
+StatsUI --> User: Display table with:\n- All statistics\n- Drill-down by course\n- Comparison to peers\n- Export to CSV option
+deactivate StatsUI
+
+== Optional: Export Statistics ==
+User -> StatsUI: Click "Export to CSV"
+activate StatsUI
+StatsUI -> API: GET /api/statistics/export?period=90d&format=csv
+activate API
+API -> StatsService: ExportStatistics(userId, "90d", "csv")
+activate StatsService
+StatsService -> DB: Get all statistics
+activate DB
+DB --> StatsService: Return data
+deactivate DB
+StatsService --> API: Return CSV file
+deactivate StatsService
+API --> StatsUI: Return CSV download
+deactivate API
+StatsUI --> User: Download statistics.csv
+deactivate StatsUI
+
+@enduml
