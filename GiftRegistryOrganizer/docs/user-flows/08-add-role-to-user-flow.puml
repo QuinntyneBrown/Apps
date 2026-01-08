@@ -1,0 +1,110 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Admin" as Admin
+participant "User Management\nPage (Angular)" as UI
+participant "User Service\n(Angular)" as UserService
+participant "HTTP Interceptor" as Interceptor
+participant "API Gateway" as API
+participant "Users Controller" as Controller
+participant "Add Role to User\nCommand Handler" as Handler
+participant "User Repository" as UserRepo
+participant "Role Repository" as RoleRepo
+database "Database" as DB
+
+title Add Role to User Flow
+
+Admin -> UI: View user details\nand click "Add Role"
+activate UI
+
+UI -> UI: Show role\nselection dialog
+
+Admin -> UI: Select role\nfrom dropdown
+Admin -> UI: Click "Add"
+
+UI -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+
+UserService -> Interceptor: POST /api/users/{userId}/roles\n{roleId}
+activate Interceptor
+
+Interceptor -> Interceptor: Add Authorization\nheader with JWT token
+
+Interceptor -> API: POST /api/users/{userId}/roles\nAuthorization: Bearer <token>
+activate API
+deactivate Interceptor
+
+API -> API: Validate JWT token\nand Admin role
+
+API -> Controller: AddRoleToUser request
+activate Controller
+
+Controller -> Handler: Handle AddRoleToUserCommand
+activate Handler
+
+Handler -> UserRepo: FindById(userId)
+activate UserRepo
+
+UserRepo -> DB: SELECT * FROM Users\nWHERE UserId = ?
+activate DB
+DB --> UserRepo: User record
+deactivate DB
+
+UserRepo --> Handler: User entity
+deactivate UserRepo
+
+Handler -> RoleRepo: FindById(roleId)
+activate RoleRepo
+
+RoleRepo -> DB: SELECT * FROM Roles\nWHERE RoleId = ?
+activate DB
+DB --> RoleRepo: Role record
+deactivate DB
+
+RoleRepo --> Handler: Role entity
+deactivate RoleRepo
+
+alt User or Role Not Found
+    Handler --> Controller: Not found error
+    Controller --> API: 404 Not Found\n{error: "User or Role not found"}
+    API --> UserService: Error response
+    UserService --> UI: Operation failed
+    UI --> Admin: Display error\nmessage
+else User Already Has Role
+    Handler --> Controller: Idempotent success
+    Controller --> API: 200 OK\n{message: "Role already assigned"}
+    API --> UserService: Success response
+    UserService --> UI: Role assignment confirmed
+    UI --> Admin: Show info\nmessage
+else Valid Addition
+    Handler -> UserRepo: AddRoleToUser(userId, roleId)
+    activate UserRepo
+
+    UserRepo -> DB: INSERT INTO UserRoles\n(UserId, RoleId)
+    activate DB
+    DB --> UserRepo: Success
+    deactivate DB
+
+    UserRepo --> Handler: Role added
+    deactivate UserRepo
+
+    Handler --> Controller: Success
+    deactivate Handler
+
+    Controller --> API: 200 OK\n{message: "Role added successfully"}
+    deactivate Controller
+
+    API --> UserService: Success response
+    deactivate API
+
+    UserService --> UI: Role added
+    deactivate UserService
+
+    UI -> UI: Refresh user's\nrole list
+
+    UI --> Admin: Show success message\nand close dialog
+    deactivate UI
+end
+
+@enduml
