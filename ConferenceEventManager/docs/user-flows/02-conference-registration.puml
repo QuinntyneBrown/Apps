@@ -1,0 +1,90 @@
+@startuml
+title Conference Registration Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Conferences List\nPage" as ListPage
+participant "Add Conference\nModal" as Modal
+participant "ConferenceService" as Svc
+participant "ConferencesController\n/api/conferences" as API
+participant "RegisterConference\nCommandHandler" as Handler
+participant "IConferenceEventManagerContext" as DbContext
+database "Database\n(Conferences)" as DB
+
+User -> ListPage: Click "Add Conference"
+activate ListPage
+
+ListPage -> Modal: Open add conference modal
+activate Modal
+
+Modal -> User: Display registration form\n(Name, Location, Dates, Cost, Type)
+
+User -> Modal: Fill in conference details\n- Name\n- Location\n- Start/End dates\n- Registration type\n- Cost\n- Confirmation number
+
+User -> Modal: Upload confirmation email (optional)
+
+User -> Modal: Click "Register"
+
+Modal -> Modal: Validate form inputs\n- Required fields\n- Date validation (not in past)\n- Cost validation
+
+alt Validation fails
+    Modal -> User: Show validation errors
+else Validation succeeds
+    Modal -> Svc: registerConference(conferenceData)
+    activate Svc
+
+    Svc -> API: POST /api/conferences\nConferenceDto
+    activate API
+
+    API -> Handler: Send RegisterConferenceCommand\nvia MediatR
+    activate Handler
+
+    Handler -> Handler: Validate business rules\n- Check dates not in past\n- Ensure unique confirmation number
+
+    alt Business rule violation
+        Handler --> API: ValidationException
+        API --> Svc: 400 Bad Request\n{errors}
+        Svc --> Modal: Registration failed
+        Modal -> User: Display error message
+    else Validation passes
+        Handler -> Handler: Create Conference entity\n- Generate ConferenceId\n- Set TenantId from ITenantContext\n- Set Status = Registered
+
+        Handler -> DbContext: Add(conference)
+        activate DbContext
+
+        DbContext -> DB: INSERT Conference record
+        activate DB
+        DB --> DbContext: Success
+        deactivate DB
+
+        Handler -> Handler: Raise ConferenceRegistered\ndomain event
+
+        DbContext -> DB: Save changes
+        activate DB
+        DB --> DbContext: Success
+        deactivate DB
+
+        deactivate DbContext
+
+        Handler --> API: ConferenceDto
+        deactivate Handler
+
+        API --> Svc: 201 Created\nConferenceDto
+        deactivate API
+
+        Svc --> Modal: Registration successful
+        deactivate Svc
+
+        Modal -> Modal: Close modal
+
+        Modal --> ListPage: Refresh conference list
+        deactivate Modal
+
+        ListPage -> User: Show success notification\n"Conference registered successfully"
+        deactivate ListPage
+    end
+end
+
+@enduml
