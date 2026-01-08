@@ -1,0 +1,108 @@
+@startuml view-parts-list
+title View Parts List Flow
+
+actor User
+participant "Parts Dashboard" as UI
+participant "Part Service\n(Angular)" as PartService
+participant "Parts Controller\n(/api/parts)" as PartsController
+participant "Get Parts\nQuery Handler" as QueryHandler
+database "CarModificationPartsDatabase\nContext" as DB
+
+== Initial Load ==
+User -> UI: Navigate to Parts page
+UI -> UI: Initialize component\nSet default filters:\npage=1, pageSize=20,\nsortBy=name
+
+UI -> PartService: getParts()\n(uses async pipe)
+
+note right of UI
+  Component exposes parts$ observable
+  Template uses: parts$ | async
+end note
+
+PartService -> PartsController: GET /api/parts?\npage=1&pageSize=20&sortBy=name
+
+PartsController -> QueryHandler: Handle GetPartsQuery\n(page, pageSize, sortBy)
+
+QueryHandler -> DB: Query Parts\nWHERE TenantId = currentTenantId\nORDER BY name\nSKIP 0 TAKE 20
+DB --> QueryHandler: Return Part entities (page 1)
+
+QueryHandler -> QueryHandler: Map Parts to DTOs
+QueryHandler -> QueryHandler: Calculate total count and pages
+QueryHandler --> PartsController: 200 OK\n{items: [...], totalCount: 250,\npage: 1, pageSize: 20, totalPages: 13}
+
+PartsController --> PartService: Parts data received
+PartService --> UI: Observable emits parts data
+UI -> UI: Render parts list/grid\nShow pagination controls
+
+== Search ==
+User -> UI: Enter search term in search box\n(e.g., "brake")
+UI -> UI: Debounce input (300ms)
+UI -> PartService: getParts(search="brake")
+
+PartService -> PartsController: GET /api/parts?\nsearch=brake&page=1&pageSize=20
+
+PartsController -> QueryHandler: Handle GetPartsQuery\n(search, page, pageSize)
+
+QueryHandler -> DB: Query Parts\nWHERE TenantId = currentTenantId\nAND (Name LIKE '%brake%'\nOR Description LIKE '%brake%')\nORDER BY name\nSKIP 0 TAKE 20
+DB --> QueryHandler: Return filtered Part entities
+
+QueryHandler -> QueryHandler: Map Parts to DTOs
+QueryHandler --> PartsController: 200 OK with filtered results
+
+PartsController --> PartService: Filtered parts data
+PartService --> UI: Observable emits filtered data
+UI -> UI: Update parts list with search results
+
+== Filter ==
+User -> UI: Select filter option\n(e.g., category="Brakes")
+UI -> PartService: getParts(search="brake",\ncategory="Brakes")
+
+PartService -> PartsController: GET /api/parts?\nsearch=brake&category=Brakes&\npage=1&pageSize=20
+
+PartsController -> QueryHandler: Handle GetPartsQuery\n(search, category, page, pageSize)
+
+QueryHandler -> DB: Query Parts\nWHERE TenantId = currentTenantId\nAND Category = 'Brakes'\nAND Name/Description LIKE '%brake%'\nORDER BY name
+DB --> QueryHandler: Return filtered Part entities
+
+QueryHandler --> PartsController: 200 OK with filtered results
+PartsController --> PartService: Filtered parts data
+PartService --> UI: Observable emits filtered data
+UI -> UI: Update parts list with filters applied
+
+== Sort ==
+User -> UI: Select sort option\n(e.g., "Price: High to Low")
+UI -> PartService: getParts(search="brake",\ncategory="Brakes",\nsortBy="price_desc")
+
+PartService -> PartsController: GET /api/parts?\nsearch=brake&category=Brakes&\nsortBy=price_desc&page=1&pageSize=20
+
+PartsController -> QueryHandler: Handle GetPartsQuery\n(all filters + sort)
+
+QueryHandler -> DB: Query Parts with filters\nORDER BY Price DESC
+DB --> QueryHandler: Return sorted Part entities
+
+QueryHandler --> PartsController: 200 OK with sorted results
+PartsController --> PartService: Sorted parts data
+PartService --> UI: Observable emits sorted data
+UI -> UI: Update parts list with new sort order
+
+== Pagination ==
+User -> UI: Click "Next Page" or page number
+UI -> PartService: getParts(search="brake",\ncategory="Brakes",\nsortBy="price_desc", page=2)
+
+PartService -> PartsController: GET /api/parts?\nsearch=brake&category=Brakes&\nsortBy=price_desc&page=2&pageSize=20
+
+PartsController -> QueryHandler: Handle GetPartsQuery (page 2)
+
+QueryHandler -> DB: Query Parts with filters\nORDER BY Price DESC\nSKIP 20 TAKE 20
+DB --> QueryHandler: Return Part entities (page 2)
+
+QueryHandler --> PartsController: 200 OK (page 2 data)
+PartsController --> PartService: Page 2 parts data
+PartService --> UI: Observable emits page 2 data
+UI -> UI: Update parts list with page 2 items\nUpdate pagination controls
+
+== View Part Details ==
+User -> UI: Click on part card/row
+UI -> UI: Navigate to part detail page\n/parts/{partId}
+
+@enduml
