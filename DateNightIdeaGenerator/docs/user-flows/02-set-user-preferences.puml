@@ -1,0 +1,103 @@
+@startuml Set User Preferences
+title Set User Preferences Flow
+
+actor User
+participant "Preferences\nSettings UI" as UI
+participant "Budget Manager\nUI" as BudgetUI
+participant "API Gateway" as API
+participant "Preferences\nService" as PrefService
+database "SQL Server" as DB
+
+== Load Existing Preferences ==
+User -> UI: Open Preferences
+UI -> API: GET /api/preferences
+API -> PrefService: Get User Preferences Query
+PrefService -> DB: SELECT UserPreferences\nWHERE TenantId = @TenantId
+DB --> PrefService: Current Preferences
+PrefService --> API: UserPreferences
+API --> UI: Display Current Settings
+UI --> User: Show Preferences Form
+
+== Update Category Preferences ==
+User -> UI: Select/Deselect\nCategories
+note right
+Categories may include:
+- Dining
+- Entertainment
+- Outdoor Activities
+- Arts & Culture
+- Sports
+- Adventure
+end note
+UI -> UI: Update UI State
+
+User -> UI: Set Location\nPreferences
+UI -> UI: Update Location Settings
+
+User -> UI: Click Save
+UI -> API: PUT /api/preferences
+note right
+Request Body:
+{
+  "likedCategories": [...],
+  "dislikedCategories": [...],
+  "locationPrefs": {...}
+}
+end note
+API -> PrefService: Update Preferences Command
+PrefService -> DB: UPDATE UserPreferences\nWHERE TenantId = @TenantId
+DB --> PrefService: Success
+PrefService --> PrefService: Publish CategoryPreferenceUpdated Event
+PrefService --> API: Updated Preferences
+API --> UI: Confirmation
+UI --> User: Show Success Message
+
+== Set Budget Limits ==
+User -> BudgetUI: Open Budget Manager
+BudgetUI -> API: GET /api/budget
+API -> PrefService: Get Budget Query
+PrefService -> DB: SELECT BudgetSettings\nWHERE TenantId = @TenantId
+DB --> PrefService: Budget Data
+PrefService --> API: BudgetSettings
+API --> BudgetUI: Display Budget Info
+BudgetUI --> User: Show Budget Form
+
+User -> BudgetUI: Set Monthly Budget
+User -> BudgetUI: Set Per-Date Limits
+note right
+Budget tiers:
+- Low: < $50
+- Medium: $50-$150
+- High: > $150
+end note
+
+User -> BudgetUI: Click Save
+BudgetUI -> API: POST /api/budget
+note right
+Request Body:
+{
+  "monthlyBudget": 500,
+  "perDateMin": 30,
+  "perDateMax": 150
+}
+end note
+API -> PrefService: Set Budget Command
+PrefService -> DB: INSERT/UPDATE Budget
+DB --> PrefService: Success
+PrefService --> PrefService: Publish BudgetLimitSet Event
+PrefService --> API: Budget Confirmed
+API --> BudgetUI: Confirmation
+BudgetUI --> User: Show Success Message
+
+== View Budget Tracking ==
+User -> BudgetUI: View Spending Summary
+BudgetUI -> API: GET /api/budget/summary
+API -> PrefService: Get Budget Summary Query
+PrefService -> DB: SELECT Spending\nWHERE TenantId = @TenantId\nAND Month = @CurrentMonth
+DB --> PrefService: Spending Data
+PrefService --> PrefService: Calculate Remaining Budget
+PrefService --> API: Budget Summary
+API --> BudgetUI: Display Summary
+BudgetUI --> User: Show Budget vs Actual
+
+@enduml
