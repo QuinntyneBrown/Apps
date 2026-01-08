@@ -1,0 +1,46 @@
+@startuml authentication
+title User Login/Authentication Flow
+
+actor User
+participant "Login Page" as LoginPage
+participant "Auth Service" as AuthService
+participant "API Controller\n(/api/auth/login)" as API
+participant "Auth Handler" as Handler
+participant "Password Service" as PasswordService
+database "Users Table" as DB
+
+User -> LoginPage: Enter username and password
+LoginPage -> LoginPage: Validate form fields
+LoginPage -> AuthService: login(username, password)
+AuthService -> API: POST /api/auth/login\n{username, password}
+
+API -> Handler: Handle LoginCommand
+Handler -> DB: Query user by username
+DB --> Handler: User record (with password hash, salt)
+
+alt User exists
+    Handler -> PasswordService: ValidatePassword(password, hash, salt)
+    PasswordService --> Handler: Validation result
+
+    alt Password valid
+        Handler -> Handler: Generate JWT token\n(claims: sub, name, email, roles)
+        Handler --> API: LoginResponse\n{token, expiresAt, user}
+        API --> AuthService: 200 OK\n{token, expiresAt, user}
+        AuthService -> AuthService: Store token in localStorage
+        AuthService --> LoginPage: Success
+        LoginPage -> LoginPage: Redirect to dashboard
+        LoginPage --> User: Show dashboard
+    else Password invalid
+        Handler --> API: 401 Unauthorized\n{error: "Invalid username or password"}
+        API --> AuthService: 401 Unauthorized
+        AuthService --> LoginPage: Authentication failed
+        LoginPage --> User: Display error message
+    end
+else User not found
+    Handler --> API: 401 Unauthorized\n{error: "Invalid username or password"}
+    API --> AuthService: 401 Unauthorized
+    AuthService --> LoginPage: Authentication failed
+    LoginPage --> User: Display error message
+end
+
+@enduml
