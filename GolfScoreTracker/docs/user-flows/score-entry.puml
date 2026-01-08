@@ -1,0 +1,102 @@
+@startuml Score Entry User Flow
+!pragma teoz true
+title Score Entry During Active Round
+
+actor User
+participant "Active Round\nPage" as ActiveUI
+participant "Hole Detail\nModal" as DetailModal
+participant "Scorecard\nGrid" as Grid
+participant "API Gateway" as API
+participant "Score\nService" as ScoreService
+database "Database" as DB
+
+User -> ActiveUI: View active round /rounds/{id}/active
+activate ActiveUI
+ActiveUI -> API: GET /api/rounds/{id}
+activate API
+API -> ScoreService: GetRound(roundId)
+activate ScoreService
+ScoreService -> DB: Query round and scores
+activate DB
+DB --> ScoreService: Return round data
+deactivate DB
+ScoreService --> API: Return round details
+deactivate ScoreService
+API --> ActiveUI: Return round with scores
+deactivate API
+ActiveUI --> User: Display scorecard grid\nwith current hole indicator
+deactivate ActiveUI
+
+== Quick Score Entry ==
+User -> Grid: Tap hole #5
+activate Grid
+Grid -> DetailModal: Open hole detail modal
+activate DetailModal
+DetailModal --> User: Show score entry form\n(Par 4, Score selector, Putts, etc.)
+deactivate DetailModal
+deactivate Grid
+
+User -> DetailModal: Enter score: 5
+activate DetailModal
+DetailModal --> User: Update display
+deactivate DetailModal
+
+User -> DetailModal: Enter putts: 2
+activate DetailModal
+DetailModal --> User: Update display
+deactivate DetailModal
+
+User -> DetailModal: Toggle fairway hit: Yes
+activate DetailModal
+DetailModal --> User: Update display
+deactivate DetailModal
+
+User -> DetailModal: Toggle GIR: No
+activate DetailModal
+DetailModal --> User: Update display
+deactivate DetailModal
+
+User -> DetailModal: Click "Save"
+activate DetailModal
+DetailModal -> API: PUT /api/rounds/{id}/holes/{holeNum}
+activate API
+note right: Request body:\n{\n  score: 5,\n  putts: 2,\n  fairwayHit: true,\n  greenInRegulation: false,\n  penalties: 0\n}
+API -> ScoreService: UpdateHoleScore(roundId, holeNum, data)
+activate ScoreService
+ScoreService -> DB: UPDATE RoundScores
+activate DB
+DB --> ScoreService: Success
+deactivate DB
+ScoreService -> DB: UPDATE Round.TotalScore
+activate DB
+DB --> ScoreService: Success
+deactivate DB
+ScoreService --> API: Return updated hole data
+deactivate ScoreService
+API --> DetailModal: Return success
+deactivate API
+DetailModal -> Grid: Close modal and refresh
+deactivate DetailModal
+
+activate Grid
+Grid -> API: GET /api/rounds/{id}
+activate API
+API -> ScoreService: GetRound(roundId)
+activate ScoreService
+ScoreService -> DB: Query updated scores
+activate DB
+DB --> ScoreService: Return round data
+deactivate DB
+ScoreService --> API: Return updated round
+deactivate ScoreService
+API --> Grid: Return updated scorecard
+deactivate API
+Grid --> User: Display updated scorecard\nwith color-coded cell (Bogey: Yellow)
+deactivate Grid
+
+User -> ActiveUI: Click "Next Hole"
+activate ActiveUI
+ActiveUI --> User: Navigate to Hole #6
+deactivate ActiveUI
+
+@enduml
