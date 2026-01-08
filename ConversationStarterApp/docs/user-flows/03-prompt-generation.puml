@@ -1,0 +1,96 @@
+@startuml Prompt Generation Flow
+title Prompt Generation Flow
+
+actor User
+participant "Dashboard/Home\nPage (Angular)" as UI
+participant "Prompt Service\n(Angular)" as PromptService
+participant "Prompts Controller\n/api/prompts" as API
+participant "GeneratePrompt\nQuery Handler" as Handler
+participant "ITenantContext" as TenantContext
+participant "ConversationStarter\nAppContext" as DB
+database "SQL Server\nDatabase" as Database
+
+== Initial Page Load ==
+User -> UI: Navigate to\nHome page
+activate UI
+
+UI -> UI: Initialize filter\noptions:\n- Category\n- Context\n- Difficulty
+
+UI --> User: Display filters\nand Generate button
+deactivate UI
+
+== Generate Prompt ==
+User -> UI: (Optional) Select filters:\n- Category\n- Context\n- DifficultyLevel
+activate UI
+
+User -> UI: Click "Generate"\nbutton
+
+UI -> PromptService: generatePrompt(filters)
+activate PromptService
+
+PromptService -> API: GET /api/prompts/generate\n?category=X&context=Y&difficulty=Z
+activate API
+note right: JWT token included\nin Authorization header
+
+API -> Handler: Handle GeneratePromptQuery
+activate Handler
+
+Handler -> TenantContext: Get TenantId
+activate TenantContext
+TenantContext -> TenantContext: Extract tenant_id\nfrom JWT claims
+TenantContext --> Handler: TenantId (Guid)
+deactivate TenantContext
+
+Handler -> DB: ConversationPrompts\n.Where(p => p.IsActive)\n.Where(p => p.TenantId == tenantId)\n+ apply filters
+activate DB
+note right: Global query filter\nautomatically adds\nTenantId filter
+
+DB -> Database: SELECT * FROM ConversationPrompts\nWHERE TenantId = @tenantId\nAND IsActive = 1\nAND Category = @category\nAND Context = @context\nAND DifficultyLevel = @difficulty
+activate Database
+Database --> DB: Matching prompts
+deactivate Database
+
+DB --> Handler: List<Prompt>
+deactivate DB
+
+Handler -> Handler: Select random prompt\nfrom filtered results
+
+Handler -> Handler: Increment UsageCount\nfor selected prompt
+
+Handler -> DB: SaveChanges()
+activate DB
+DB -> Database: UPDATE ConversationPrompts\nSET UsageCount = UsageCount + 1\nWHERE PromptId = @promptId\nAND TenantId = @tenantId
+activate Database
+Database --> DB: Success
+deactivate Database
+DB --> Handler: Success
+deactivate DB
+
+Handler -> Handler: Emit PromptGenerated\ndomain event
+
+Handler --> API: 200 OK\n{promptId, promptText,\ncategory, context,\ndifficultyLevel}
+deactivate Handler
+
+API --> PromptService: PromptDto
+deactivate API
+
+PromptService --> UI: Prompt data
+deactivate PromptService
+
+UI -> UI: Display prompt:\n- Prompt text\n- Category badge\n- Difficulty indicator\n- Action buttons
+
+UI --> User: Show generated prompt\nwith actions:\n- Favorite\n- Share\n- Skip (Generate new)
+deactivate UI
+
+== Skip Prompt (Generate Another) ==
+User -> UI: Click "Skip" button
+activate UI
+
+UI -> UI: Clear current prompt
+
+note right: Repeat the Generate\nPrompt flow above
+
+UI --> User: Show new prompt
+deactivate UI
+
+@enduml
