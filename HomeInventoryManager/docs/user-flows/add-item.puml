@@ -1,0 +1,84 @@
+@startuml add-item
+title Add New Item Flow
+
+actor User
+participant "Add Item Page\n(/items/new)" as AddPage
+participant "Item Service" as ItemService
+participant "Photo Upload\nService" as PhotoService
+participant "API Controller\n(/api/items)" as API
+participant "AddItem Handler" as Handler
+database "Items Table" as ItemsDB
+database "ItemPhotos Table" as PhotosDB
+database "Categories Table" as CategoriesDB
+database "Locations Table" as LocationsDB
+
+User -> AddPage: Click "Add Item" button
+activate AddPage
+
+AddPage -> ItemService: getCategories()
+ItemService -> API: GET /api/items/categories
+API -> CategoriesDB: Query categories
+CategoriesDB --> API: Category list
+API --> ItemService: Categories
+ItemService --> AddPage: Display category options
+
+AddPage -> ItemService: getLocations()
+ItemService -> API: GET /api/locations
+API -> LocationsDB: Query locations
+LocationsDB --> API: Location list
+API --> ItemService: Locations
+ItemService --> AddPage: Display location options
+
+AddPage --> User: Show form with categories and locations
+
+User -> AddPage: Fill required fields\n(name, category, location)
+User -> AddPage: Optionally add photos,\npurchase info, notes
+
+alt Photos added
+    User -> AddPage: Drag and drop photos\n(max 10, max 5MB each)
+    AddPage -> AddPage: Validate photo count and size
+
+    alt Validation passes
+        AddPage -> PhotoService: uploadPhotos(files)
+        PhotoService -> API: POST /api/photos\n(multipart/form-data)
+        API --> PhotoService: Photo URLs
+        PhotoService --> AddPage: Upload successful
+    else Validation fails
+        AddPage --> User: Show error:\n"Max 10 photos" or\n"Photo too large (max 5MB)"
+    end
+end
+
+User -> AddPage: Click "Save"
+AddPage -> AddPage: Validate form\n(name, category, location required)
+
+alt Validation passes
+    AddPage -> ItemService: createItem(itemData)
+    ItemService -> API: POST /api/items\nAuthorization: Bearer {token}\n{itemData}
+
+    API -> Handler: Handle AddItemCommand
+    Handler -> Handler: Extract TenantId from JWT
+    Handler -> Handler: Calculate CurrentValue\n(defaults to PurchasePrice)
+    Handler -> Handler: Create Item entity\n(ItemId, TenantId, data)
+    Handler -> ItemsDB: INSERT Item record
+    ItemsDB --> Handler: Item created
+
+    alt Photos included
+        Handler -> PhotosDB: INSERT ItemPhotos records\n(linked to ItemId)
+        PhotosDB --> Handler: Photos linked
+    end
+
+    Handler -> Handler: Raise ItemAdded event
+    Handler --> API: ItemDto
+    API --> ItemService: 201 Created\n{itemId, itemDetails}
+    ItemService --> AddPage: Success
+
+    AddPage --> User: Show success notification\n"Item added successfully"
+    AddPage -> AddPage: Redirect to item details\nor dashboard
+
+else Validation fails
+    AddPage --> User: Show validation errors\n(highlight required fields)
+end
+
+deactivate AddPage
+
+@enduml
