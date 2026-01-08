@@ -1,0 +1,236 @@
+@startuml
+
+title BBQ Grilling Recipe Book - User Management Flow (Admin)
+
+actor Admin
+participant "Admin Dashboard" as Dashboard
+participant "User Management" as UserMgmt
+participant "Role Management" as RoleMgmt
+participant "User Service" as UserService
+participant "User Controller" as UserAPI
+participant "Database" as DB
+
+== View All Users ==
+Admin -> Dashboard: Navigate to user management
+activate Dashboard
+Dashboard -> UserMgmt: Load user management page
+activate UserMgmt
+UserMgmt -> UserService: getUsers()
+activate UserService
+UserService -> UserAPI: GET /api/users
+activate UserAPI
+UserAPI -> UserAPI: Verify admin role
+UserAPI -> DB: Query all users
+activate DB
+DB --> UserAPI: Return user list
+deactivate DB
+UserAPI --> UserService: 200 OK with users
+deactivate UserAPI
+UserService --> UserMgmt: User list data
+deactivate UserService
+UserMgmt --> Admin: Display users with search and filters
+note right of Admin
+User list shows:
+- Username
+- Email
+- Roles assigned
+- Account status
+- Created date
+- Last login
+end note
+deactivate Dashboard
+
+== Create New User ==
+Admin -> UserMgmt: Click "Add User"
+activate UserMgmt
+UserMgmt --> Admin: Display user creation form
+Admin -> UserMgmt: Enter user details
+note right of UserMgmt
+Required fields:
+- Username (unique)
+- Email (unique, validated)
+- Password (min 8 chars)
+- Initial roles
+end note
+Admin -> UserMgmt: Click "Create"
+UserMgmt -> UserMgmt: Validate form data
+UserMgmt -> UserService: createUser(userData)
+activate UserService
+UserService -> UserAPI: POST /api/users
+activate UserAPI
+UserAPI -> UserAPI: Validate admin permissions
+UserAPI -> UserAPI: Validate username uniqueness
+UserAPI -> UserAPI: Validate email format and uniqueness
+UserAPI -> UserAPI: Hash password with salt
+UserAPI -> DB: Insert new user record
+activate DB
+DB --> UserAPI: Return created user
+deactivate DB
+UserAPI --> UserService: 201 Created with user
+deactivate UserAPI
+UserService --> UserMgmt: User created successfully
+deactivate UserService
+UserMgmt -> UserMgmt: Refresh user list
+UserMgmt --> Admin: Show updated user list
+deactivate UserMgmt
+
+== Update User ==
+Admin -> UserMgmt: Click "Edit" on user
+activate UserMgmt
+UserMgmt -> UserService: getUserById(userId)
+activate UserService
+UserService -> UserAPI: GET /api/users/{userId}
+activate UserAPI
+UserAPI -> DB: Query user by ID
+activate DB
+DB --> UserAPI: Return user details
+deactivate DB
+UserAPI --> UserService: 200 OK with user
+deactivate UserAPI
+UserService --> UserMgmt: User data
+deactivate UserService
+UserMgmt --> Admin: Display user edit form
+
+Admin -> UserMgmt: Modify user details
+Admin -> UserMgmt: Click "Update"
+UserMgmt -> UserMgmt: Validate form data
+UserMgmt -> UserService: updateUser(userId, userData)
+activate UserService
+UserService -> UserAPI: PUT /api/users/{userId}
+activate UserAPI
+UserAPI -> UserAPI: Validate admin permissions
+UserAPI -> UserAPI: Validate email uniqueness if changed
+UserAPI -> DB: Update user record
+activate DB
+DB --> UserAPI: Return updated user
+deactivate DB
+UserAPI --> UserService: 200 OK with user
+deactivate UserAPI
+UserService --> UserMgmt: User updated successfully
+deactivate UserService
+UserMgmt -> UserMgmt: Refresh user list
+UserMgmt --> Admin: Show updated user
+deactivate UserMgmt
+
+== Manage User Roles ==
+Admin -> UserMgmt: Click "Manage Roles" for user
+activate UserMgmt
+UserMgmt -> RoleMgmt: Load role management
+activate RoleMgmt
+RoleMgmt -> UserService: getUserRoles(userId)
+activate UserService
+UserService -> UserAPI: GET /api/users/{userId}/roles
+activate UserAPI
+UserAPI -> DB: Query user roles
+activate DB
+DB --> UserAPI: Return user roles
+deactivate DB
+UserAPI --> UserService: 200 OK with roles
+deactivate UserAPI
+UserService --> RoleMgmt: User roles data
+deactivate UserService
+RoleMgmt -> UserService: getAllRoles()
+activate UserService
+UserService -> UserAPI: GET /api/roles
+activate UserAPI
+UserAPI -> DB: Query all roles
+activate DB
+DB --> UserAPI: Return all roles
+deactivate DB
+UserAPI --> UserService: 200 OK with roles
+deactivate UserAPI
+UserService --> RoleMgmt: All roles data
+deactivate UserService
+RoleMgmt --> Admin: Display role assignment interface
+
+Admin -> RoleMgmt: Add role to user
+RoleMgmt -> UserService: addRoleToUser(userId, roleId)
+activate UserService
+UserService -> UserAPI: POST /api/users/{userId}/roles
+activate UserAPI
+UserAPI -> UserAPI: Validate admin permissions
+UserAPI -> DB: Insert user-role association
+activate DB
+DB --> UserAPI: Association created
+deactivate DB
+UserAPI --> UserService: 200 OK
+deactivate UserAPI
+UserService --> RoleMgmt: Role added successfully
+deactivate UserService
+RoleMgmt --> Admin: Show updated roles
+deactivate RoleMgmt
+deactivate UserMgmt
+
+== Delete User ==
+Admin -> UserMgmt: Click "Delete" on user
+activate UserMgmt
+UserMgmt -> UserMgmt: Show confirmation dialog
+UserMgmt --> Admin: Confirm deletion
+note right of Admin
+Warning displayed:
+- This action cannot be undone
+- All user data will be deleted
+- User recipes and logs will remain
+  but be orphaned
+end note
+
+Admin -> UserMgmt: Confirm delete
+UserMgmt -> UserService: deleteUser(userId)
+activate UserService
+UserService -> UserAPI: DELETE /api/users/{userId}
+activate UserAPI
+UserAPI -> UserAPI: Validate admin permissions
+UserAPI -> UserAPI: Prevent self-deletion
+UserAPI -> DB: Delete user and associations
+activate DB
+DB --> UserAPI: Deletion confirmed
+deactivate DB
+UserAPI --> UserService: 204 No Content
+deactivate UserAPI
+UserService --> UserMgmt: User deleted successfully
+deactivate UserService
+UserMgmt -> UserMgmt: Refresh user list
+UserMgmt --> Admin: Show updated list without deleted user
+deactivate UserMgmt
+
+== Manage Roles ==
+Admin -> Dashboard: Navigate to role management
+activate Dashboard
+Dashboard -> RoleMgmt: Load role management page
+activate RoleMgmt
+RoleMgmt -> UserService: getRoles()
+activate UserService
+UserService -> UserAPI: GET /api/roles
+activate UserAPI
+UserAPI -> DB: Query all roles
+activate DB
+DB --> UserAPI: Return role list
+deactivate DB
+UserAPI --> UserService: 200 OK with roles
+deactivate UserAPI
+UserService --> RoleMgmt: Role list data
+deactivate UserService
+RoleMgmt --> Admin: Display roles with user counts
+deactivate Dashboard
+
+Admin -> RoleMgmt: Create new role
+RoleMgmt --> Admin: Display role creation form
+Admin -> RoleMgmt: Enter role name and click "Create"
+RoleMgmt -> UserService: createRole(roleData)
+activate UserService
+UserService -> UserAPI: POST /api/roles
+activate UserAPI
+UserAPI -> UserAPI: Validate role name uniqueness
+UserAPI -> DB: Insert new role
+activate DB
+DB --> UserAPI: Return created role
+deactivate DB
+UserAPI --> UserService: 201 Created with role
+deactivate UserAPI
+UserService --> RoleMgmt: Role created successfully
+deactivate UserService
+RoleMgmt -> RoleMgmt: Refresh role list
+RoleMgmt --> Admin: Show updated roles
+deactivate RoleMgmt
+
+@enduml
