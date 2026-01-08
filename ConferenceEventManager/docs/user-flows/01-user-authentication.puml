@@ -1,0 +1,63 @@
+@startuml
+title User Authentication Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor User
+participant "Login Page" as UI
+participant "AuthService" as AuthSvc
+participant "AuthController\n/api/auth/login" as API
+participant "JWT Service" as JWT
+database "Database\n(Users)" as DB
+
+User -> UI: Enter username & password
+activate UI
+
+UI -> UI: Validate form inputs
+alt Form validation fails
+    UI -> User: Show validation errors
+else Form validation succeeds
+    UI -> AuthSvc: login(credentials)
+    activate AuthSvc
+
+    AuthSvc -> API: POST /api/auth/login\n{username, password}
+    activate API
+
+    API -> DB: Query user by username
+    activate DB
+    DB --> API: User record
+    deactivate DB
+
+    alt User not found
+        API --> AuthSvc: 401 Unauthorized\n{error: "Invalid credentials"}
+        AuthSvc --> UI: Authentication failed
+        UI -> User: Display error message
+    else User found
+        API -> API: Verify password hash\n(PBKDF2 SHA-256)
+
+        alt Password invalid
+            API --> AuthSvc: 401 Unauthorized
+            AuthSvc --> UI: Authentication failed
+            UI -> User: Display error message
+        else Password valid
+            API -> JWT: Generate JWT token\n(userId, username, email, roles)
+            activate JWT
+            JWT -> JWT: Create claims\n- sub (userId)\n- name (username)\n- email\n- roles\n- iat, exp
+            JWT --> API: JWT token string
+            deactivate JWT
+
+            API --> AuthSvc: 200 OK\n{token, expiresAt, user}
+            deactivate API
+
+            AuthSvc -> AuthSvc: Store token in localStorage
+            AuthSvc --> UI: Login successful
+            deactivate AuthSvc
+
+            UI -> User: Redirect to dashboard
+            deactivate UI
+        end
+    end
+end
+
+@enduml
