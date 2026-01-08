@@ -1,0 +1,31 @@
+@startuml
+
+actor Administrator
+participant "User Management\nPage" as UI
+participant "User Service" as UserService
+participant "API" as API
+database "Database" as DB
+
+Administrator -> UI: Navigate to user list\nor user details
+Administrator -> UI: Click Delete button\nfor specific user
+
+UI -> UI: Show confirmation dialog
+
+alt Confirmed
+    UI -> UserService: deleteUser(userId)
+    UserService -> API: DELETE /api/users/{userId}
+
+    API -> DB: DELETE FROM UserRole\nWHERE UserId\n(remove role associations)
+    DB --> API: Roles removed
+
+    API -> DB: DELETE FROM User\nWHERE UserId
+    DB --> API: User deleted
+
+    API --> UserService: 204 No Content
+    UserService --> UI: User deleted successfully
+    UI --> Administrator: Show success message\nand refresh user list
+else Cancelled
+    UI --> Administrator: Return to user list\n(no changes)
+end
+
+@enduml
