@@ -1,0 +1,108 @@
+@startuml Log Exercise Activity Flow
+title Log Exercise Activity Flow
+
+actor User
+participant "Recovery Plan Page" as UI
+participant "Exercise Log Modal" as Modal
+participant "Exercise Service" as Service
+participant "API Controller" as API
+participant "Command Handler" as Handler
+participant "ITenantContext" as TenantCtx
+participant "DbContext" as DB
+participant "Event Bus" as Events
+
+User -> UI: View recovery plan\nwith exercises
+UI -> Service: Observable: recoveryPlan$\n= getRecoveryPlan(planId)
+Service -> API: GET /api/recovery-plans/{planId}
+
+API -> DB: Query recovery plan\n(tenant-scoped)\nwith exercises
+DB --> API: RecoveryPlan with exercises
+API --> Service: RecoveryPlanDto
+Service --> UI: Display plan with\nexercise schedule
+
+UI --> User: Show exercises list\nwith "Log Activity" buttons
+
+User -> UI: Click "Log Activity"\nfor an exercise
+UI -> Modal: Open exercise log modal\nwith exercise details
+Modal --> User: Display form\n(duration, reps, sets, notes)
+
+User -> Modal: Fill in activity details:\n- Duration/Time\n- Repetitions\n- Sets completed\n- Difficulty level\n- Notes
+
+User -> Modal: Submit log entry
+
+Modal -> Modal: Validate input
+Modal -> Service: logExerciseActivity(activityDto)
+Service -> API: POST /api/recovery-exercises/{exerciseId}/activities
+
+API -> Handler: Handle LogExerciseActivityCommand
+Handler -> TenantCtx: Get current TenantId
+TenantCtx --> Handler: TenantId
+
+Handler -> DB: Query recovery exercise\n(verify ownership & tenant)
+DB --> Handler: RecoveryExercise entity
+
+alt Exercise not found or wrong tenant
+    Handler --> API: 404 Not Found
+    API --> Service: Error response
+    Service --> Modal: Show error
+    Modal --> User: "Exercise not found"
+else Valid exercise
+    Handler -> Handler: Create ExerciseActivity entity\n(with TenantId, ExerciseId)
+    Handler -> Handler: Update exercise progress\nand completion stats
+
+    Handler -> DB: Save activity log
+    DB --> Handler: Activity saved
+
+    Handler -> Handler: Check if milestone reached
+    alt Milestone completed
+        Handler -> DB: Update milestone status
+        Handler -> Events: Publish MilestoneReached event
+    end
+
+    Handler -> Events: Publish ExerciseActivityLogged event
+    Handler --> API: 201 Created
+
+    API --> Service: Success response
+    Service --> Modal: Activity logged
+    Modal -> Modal: Close modal
+    Modal -> UI: Refresh recovery plan
+
+    UI -> Service: getRecoveryPlan(planId)
+    Service -> API: GET /api/recovery-plans/{planId}
+    API -> DB: Query updated plan
+    DB --> API: Plan with activities
+    API --> Service: RecoveryPlanDto
+    Service --> UI: Update display
+
+    UI --> User: Show updated progress\n& activity history
+
+    alt Milestone reached
+        UI -> UI: Show milestone\nachievement notification
+        UI --> User: "Congratulations!\nMilestone reached"
+    end
+end
+
+note right of Handler
+  ExerciseActivity entity:
+  - ActivityId (Guid)
+  - TenantId (Guid)
+  - RecoveryExerciseId (Guid)
+  - Duration
+  - Repetitions
+  - Sets
+  - DifficultyLevel
+  - Notes
+  - CompletedAt
+end note
+
+note left of UI
+  UI shows:
+  - Exercise schedule
+  - Completion progress
+  - Activity history
+  - Milestone progress bars
+  - Streak tracking
+  - Achievement badges
+end note
+
+@enduml
