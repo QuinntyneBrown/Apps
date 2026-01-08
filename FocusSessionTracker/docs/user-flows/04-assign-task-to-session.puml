@@ -1,0 +1,61 @@
+@startuml Assign Task to Session Flow
+
+skinparam sequence {
+    ArrowColor Black
+    LifeLineBorderColor Black
+    ParticipantBorderColor Black
+    ParticipantBackgroundColor White
+}
+
+title Assign Task to Session Flow
+
+actor User
+participant "Session Setup\nModal" as Modal
+participant "Task Selector" as Selector
+participant "Session Store" as SessionStore
+participant "Task Store" as TaskStore
+participant "API" as API
+database Database
+
+User -> Modal: Start new focus session
+activate Modal
+Modal -> Selector: Show task selector
+activate Selector
+Selector -> TaskStore: fetchTasks()
+activate TaskStore
+TaskStore -> API: GET /api/tasks?status=active
+activate API
+API -> Database: SELECT tasks WHERE status='active'
+activate Database
+Database --> API: Task list
+deactivate Database
+API --> TaskStore: Tasks data
+deactivate API
+TaskStore --> Selector: Task list
+deactivate TaskStore
+
+User -> Selector: Search/filter tasks
+Selector --> User: Filtered results
+
+User -> Selector: Select task from list
+Selector --> Modal: Task selected
+deactivate Selector
+
+Modal -> SessionStore: startSession(config with taskId)
+activate SessionStore
+SessionStore -> API: POST /api/sessions\n{taskId, sessionType, duration}
+activate API
+API -> Database: INSERT session\nWITH task_id
+activate Database
+Database --> API: Session created
+deactivate Database
+API --> SessionStore: Session data
+deactivate API
+
+SessionStore --> Modal: Session started
+deactivate SessionStore
+Modal -> Modal: Close modal
+Modal --> User: Timer shows task name
+deactivate Modal
+
+@enduml
