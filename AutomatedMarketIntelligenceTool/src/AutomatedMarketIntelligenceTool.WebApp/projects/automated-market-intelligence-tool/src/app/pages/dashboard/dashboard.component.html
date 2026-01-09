@@ -1,0 +1,150 @@
+<div class="dashboard">
+  <h1 class="dashboard__title">Dashboard</h1>
+  <p class="dashboard__subtitle">Welcome back! Here's your market intelligence overview.</p>
+
+  @if (viewModel$ | async; as vm) {
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <mat-icon>business</mat-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__label">Competitors Tracked</div>
+          <div class="stat-card__value">{{ vm.competitorsCount }}</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green">
+          <mat-icon>lightbulb</mat-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__label">Active Insights</div>
+          <div class="stat-card__value">{{ vm.insightsCount }}</div>
+          <div class="stat-card__trend">{{ vm.actionableInsights }} actionable</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange">
+          <mat-icon>notifications_active</mat-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__label">Active Alerts</div>
+          <div class="stat-card__value">{{ vm.activeAlerts }}</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-card__content">
+          <div class="stat-card__label">Market Trends</div>
+          <div class="stat-card__value">--</div>
+          <div class="stat-card__trend">Coming soon</div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Recent Insights -->
+      <mat-card class="content-card">
+        <mat-card-header>
+          <mat-card-title>Recent Insights</mat-card-title>
+          <a mat-button color="primary" routerLink="/insights">View All</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (vm.recentInsights.length > 0) {
+            <mat-list>
+              @for (insight of vm.recentInsights; track insight.insightId) {
+                <mat-list-item class="insight-item">
+                  <div class="insight-item__icon" [class]="'insight-item__icon--' + insight.category">
+                    <mat-icon>{{ insight.category === 1 ? 'trending_up' : insight.category === 2 ? 'warning' : 'insights' }}</mat-icon>
+                  </div>
+                  <div class="insight-item__content">
+                    <div class="insight-item__title">{{ insight.title }}</div>
+                    <div class="insight-item__meta">
+                      {{ InsightImpactLabels[insight.impact] }} Impact | {{ insight.source || 'Unknown source' }}
+                    </div>
+                  </div>
+                </mat-list-item>
+              }
+            </mat-list>
+          } @else {
+            <div class="empty-state">
+              <mat-icon>lightbulb_outline</mat-icon>
+              <p>No insights yet</p>
+              <a mat-stroked-button color="primary" routerLink="/insights/new">Add Insight</a>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Right Column -->
+      <div class="right-column">
+        <!-- Active Alerts -->
+        <mat-card class="content-card">
+          <mat-card-header>
+            <mat-card-title>Recent Alerts</mat-card-title>
+            <a mat-button color="primary" routerLink="/alerts">Manage</a>
+          </mat-card-header>
+          <mat-card-content>
+            @if (vm.triggeredAlerts.length > 0) {
+              <mat-list>
+                @for (alert of vm.triggeredAlerts; track alert.alertId) {
+                  <mat-list-item class="alert-item">
+                    <div class="alert-item__indicator" [class.alert-item__indicator--active]="alert.isActive"></div>
+                    <div class="alert-item__content">
+                      <div class="alert-item__title">{{ alert.name }}</div>
+                      <div class="alert-item__time">{{ alert.lastTriggered | date:'short' }}</div>
+                    </div>
+                  </mat-list-item>
+                }
+              </mat-list>
+            } @else {
+              <div class="empty-state empty-state--small">
+                <mat-icon>notifications_none</mat-icon>
+                <p>No triggered alerts</p>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Top Competitors -->
+        <mat-card class="content-card">
+          <mat-card-header>
+            <mat-card-title>Top Competitors</mat-card-title>
+            <a mat-button color="primary" routerLink="/competitors">View All</a>
+          </mat-card-header>
+          <mat-card-content>
+            @if (vm.topCompetitors.length > 0) {
+              <mat-list>
+                @for (competitor of vm.topCompetitors; track competitor.competitorId) {
+                  <mat-list-item class="competitor-item">
+                    <div class="competitor-item__avatar">{{ getCompetitorInitials(competitor.name) }}</div>
+                    <div class="competitor-item__info">
+                      <div class="competitor-item__name">{{ competitor.name }}</div>
+                      <div class="competitor-item__industry">{{ competitor.industry || 'Unknown' }}</div>
+                    </div>
+                    <span class="competitor-item__position" [class]="'competitor-item__position--' + competitor.marketPosition">
+                      {{ MarketPositionLabels[competitor.marketPosition] }}
+                    </span>
+                  </mat-list-item>
+                }
+              </mat-list>
+            } @else {
+              <div class="empty-state empty-state--small">
+                <mat-icon>business_center</mat-icon>
+                <p>No competitors tracked</p>
+                <a mat-stroked-button color="primary" routerLink="/competitors/new">Add Competitor</a>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  }
+</div>
