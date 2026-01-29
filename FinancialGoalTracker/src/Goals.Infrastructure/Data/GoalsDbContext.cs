@@ -1,0 +1,30 @@
+using Goals.Core;
+using Goals.Core.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace Goals.Infrastructure.Data;
+
+public class GoalsDbContext : DbContext, IGoalsDbContext
+{
+    public GoalsDbContext(DbContextOptions<GoalsDbContext> options) : base(options)
+    {
+    }
+
+    public DbSet<Goal> Goals { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Goal>(entity =>
+        {
+            entity.ToTable("Goals");
+            entity.HasKey(e => e.GoalId);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.TargetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.CurrentAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Status).HasConversion<string>();
+            entity.HasIndex(e => e.TenantId);
+        });
+    }
+}
