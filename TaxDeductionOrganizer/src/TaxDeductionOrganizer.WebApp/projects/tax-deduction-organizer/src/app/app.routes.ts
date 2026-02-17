@@ -8,14 +8,14 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'tax-years',
-    loadComponent: () => import('./pages/tax-years/tax-years').then(m => m.TaxYears)
+    loadComponent: () => import('@lib/tax-years').then(m => m.TaxYears)
   },
   {
     path: 'deductions',
-    loadComponent: () => import('./pages/deductions/deductions').then(m => m.Deductions)
+    loadComponent: () => import('@lib/deductions').then(m => m.Deductions)
   }
 ];

@@ -8,18 +8,18 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'time-blocks',
-    loadComponent: () => import('./pages/time-blocks/time-blocks').then(m => m.TimeBlocks)
+    loadComponent: () => import('@lib/time-blocks').then(m => m.TimeBlocks)
   },
   {
     path: 'goals',
-    loadComponent: () => import('./pages/goals/goals').then(m => m.Goals)
+    loadComponent: () => import('@lib/goals').then(m => m.Goals)
   },
   {
     path: 'audit-reports',
-    loadComponent: () => import('./pages/audit-reports/audit-reports').then(m => m.AuditReports)
+    loadComponent: () => import('@lib/audit-reports').then(m => m.AuditReports)
   }
 ];

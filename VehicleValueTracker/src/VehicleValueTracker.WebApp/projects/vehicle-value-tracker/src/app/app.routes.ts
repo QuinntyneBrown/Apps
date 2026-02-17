@@ -8,19 +8,19 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'vehicles',
-    loadComponent: () => import('./pages/vehicles/vehicles').then(m => m.Vehicles)
+    loadComponent: () => import('@lib/vehicles').then(m => m.Vehicles)
   },
   {
     path: 'value-assessments',
-    loadComponent: () => import('./pages/value-assessments/value-assessments').then(m => m.ValueAssessments)
+    loadComponent: () => import('@lib/value-assessments').then(m => m.ValueAssessments)
   },
   {
     path: 'market-comparisons',
-    loadComponent: () => import('./pages/market-comparisons/market-comparisons').then(m => m.MarketComparisons)
+    loadComponent: () => import('@lib/market-comparisons').then(m => m.MarketComparisons)
   },
   {
     path: '**',

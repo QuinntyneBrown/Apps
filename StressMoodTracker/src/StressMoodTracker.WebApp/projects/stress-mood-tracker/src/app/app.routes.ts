@@ -8,18 +8,18 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'mood-entries',
-    loadComponent: () => import('./pages/mood-entries/mood-entries').then(m => m.MoodEntries)
+    loadComponent: () => import('@lib/mood-entries').then(m => m.MoodEntries)
   },
   {
     path: 'journals',
-    loadComponent: () => import('./pages/journals/journals').then(m => m.Journals)
+    loadComponent: () => import('@lib/journals').then(m => m.Journals)
   },
   {
     path: 'triggers',
-    loadComponent: () => import('./pages/triggers/triggers').then(m => m.Triggers)
+    loadComponent: () => import('@lib/triggers').then(m => m.Triggers)
   }
 ];

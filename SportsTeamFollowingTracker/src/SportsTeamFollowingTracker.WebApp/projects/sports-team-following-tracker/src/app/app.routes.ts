@@ -8,22 +8,22 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'teams',
-    loadComponent: () => import('./pages/teams/teams').then(m => m.Teams)
+    loadComponent: () => import('@lib/teams').then(m => m.Teams)
   },
   {
     path: 'games',
-    loadComponent: () => import('./pages/games/games').then(m => m.Games)
+    loadComponent: () => import('@lib/games').then(m => m.Games)
   },
   {
     path: 'seasons',
-    loadComponent: () => import('./pages/seasons/seasons').then(m => m.Seasons)
+    loadComponent: () => import('@lib/seasons').then(m => m.Seasons)
   },
   {
     path: 'statistics',
-    loadComponent: () => import('./pages/statistics/statistics').then(m => m.Statistics)
+    loadComponent: () => import('@lib/statistics').then(m => m.Statistics)
   }
 ];

@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { Prompts } from './pages/prompts';
-import { Favorites } from './pages/favorites';
-import { Sessions } from './pages/sessions';
+import { Dashboard } from '@lib/dashboard';
+import { Prompts } from '@lib/prompts';
+import { Favorites } from '@lib/favorites';
+import { Sessions } from '@lib/sessions';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },

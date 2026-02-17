@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { ChoresList } from './pages/chores-list';
-import { FamilyMembersList } from './pages/family-members-list';
-import { AssignmentsList } from './pages/assignments-list';
-import { RewardsList } from './pages/rewards-list';
+import { Dashboard } from '@lib/dashboard';
+import { ChoresList } from '@lib/chores-list';
+import { FamilyMembersList } from '@lib/family-members-list';
+import { AssignmentsList } from '@lib/assignments-list';
+import { RewardsList } from '@lib/rewards-list';
 
 export const routes: Routes = [
   { path: '', component: Dashboard },

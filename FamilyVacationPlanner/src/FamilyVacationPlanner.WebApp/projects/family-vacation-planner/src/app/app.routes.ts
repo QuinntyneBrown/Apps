@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { Trips, Bookings, Itineraries, PackingLists, Budgets } from './pages';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: '/trips', pathMatch: 'full' },

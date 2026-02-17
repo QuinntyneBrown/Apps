@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Header } from './header.component';
-import { AuthService } from '../../services';
+import { AuthService } from '@lib/shared';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';

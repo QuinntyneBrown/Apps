@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { Events } from './pages/events';
-import { Sessions } from './pages/sessions';
-import { Contacts } from './pages/contacts';
-import { Notes } from './pages/notes';
+import { Dashboard } from '@lib/dashboard';
+import { Events } from '@lib/events';
+import { Sessions } from '@lib/sessions';
+import { Contacts } from '@lib/contacts';
+import { Notes } from '@lib/notes';
 
 export const routes: Routes = [
   { path: '', component: Dashboard },

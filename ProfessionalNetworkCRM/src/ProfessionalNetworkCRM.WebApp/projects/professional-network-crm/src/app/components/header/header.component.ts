@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services';
+import { AuthService } from '@lib/shared';
 import { filter } from 'rxjs/operators';
 
 @Component({

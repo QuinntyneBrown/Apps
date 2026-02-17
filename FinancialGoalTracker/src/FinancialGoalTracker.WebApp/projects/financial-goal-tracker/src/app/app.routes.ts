@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { Dashboard, Goals, GoalDetails, Contributions, Milestones } from './pages';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
