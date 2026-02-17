@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { Home } from './pages/home';
-import { Albums } from './pages/albums';
-import { Photos } from './pages/photos';
-import { Tags } from './pages/tags';
-import { People } from './pages/people';
+import { Home } from '@lib/home';
+import { Albums } from '@lib/albums';
+import { Photos } from '@lib/photos';
+import { Tags } from '@lib/tags';
+import { People } from '@lib/people';
 
 export const routes: Routes = [
   { path: '', component: Home },

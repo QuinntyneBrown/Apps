@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { Donations } from './pages/donations';
-import { Organizations } from './pages/organizations';
-import { TaxReports } from './pages/tax-reports';
+import { Dashboard } from '@lib/dashboard';
+import { Donations } from '@lib/donations';
+import { Organizations } from '@lib/organizations';
+import { TaxReports } from '@lib/tax-reports';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },

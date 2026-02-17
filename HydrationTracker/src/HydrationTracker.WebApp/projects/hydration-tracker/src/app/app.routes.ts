@@ -8,18 +8,18 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'intakes',
-    loadComponent: () => import('./pages/intakes/intakes').then(m => m.Intakes)
+    loadComponent: () => import('@lib/intakes').then(m => m.Intakes)
   },
   {
     path: 'goals',
-    loadComponent: () => import('./pages/goals/goals').then(m => m.Goals)
+    loadComponent: () => import('@lib/goals').then(m => m.Goals)
   },
   {
     path: 'reminders',
-    loadComponent: () => import('./pages/reminders/reminders').then(m => m.Reminders)
+    loadComponent: () => import('@lib/reminders').then(m => m.Reminders)
   }
 ];

@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { Tasks } from './pages/tasks';
-import { Categories } from './pages/categories';
+import { Dashboard } from '@lib/dashboard';
+import { Tasks } from '@lib/tasks';
+import { Categories } from '@lib/categories';
 
 export const routes: Routes = [
   { path: '', component: Dashboard },

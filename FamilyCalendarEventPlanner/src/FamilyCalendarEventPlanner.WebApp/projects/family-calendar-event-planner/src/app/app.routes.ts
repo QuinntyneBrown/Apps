@@ -3,23 +3,23 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'calendar',
-    loadComponent: () => import('./pages/calendar/calendar').then(m => m.Calendar)
+    loadComponent: () => import('@lib/calendar').then(m => m.Calendar)
   },
   {
     path: 'family-members',
-    loadComponent: () => import('./pages/family-members/family-members').then(m => m.FamilyMembers)
+    loadComponent: () => import('@lib/family-members').then(m => m.FamilyMembers)
   },
   {
     path: 'reminders',
-    loadComponent: () => import('./pages/reminders/reminders').then(m => m.Reminders)
+    loadComponent: () => import('@lib/reminders').then(m => m.Reminders)
   },
   {
     path: 'households',
-    loadComponent: () => import('./pages/households/households').then(m => m.Households)
+    loadComponent: () => import('@lib/households').then(m => m.Households)
   },
   {
     path: '**',

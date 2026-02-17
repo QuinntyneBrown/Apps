@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { EquipmentList, EquipmentForm } from './pages/equipment';
-import { MaintenanceList, MaintenanceForm } from './pages/maintenance';
-import { WorkoutMappingList, WorkoutMappingForm } from './pages/workout-mapping';
+import { EquipmentList, EquipmentForm } from '@lib/equipment';
+import { MaintenanceList, MaintenanceForm } from '@lib/maintenance';
+import { WorkoutMappingList, WorkoutMappingForm } from '@lib/workout-mapping';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/equipment', pathMatch: 'full' },

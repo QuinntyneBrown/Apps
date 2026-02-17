@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { ReadingsList } from './pages/readings-list';
-import { Trends } from './pages/trends';
+import { Dashboard } from '@lib/dashboard';
+import { ReadingsList } from '@lib/readings-list';
+import { Trends } from '@lib/trends';
 
 export const routes: Routes = [
   {

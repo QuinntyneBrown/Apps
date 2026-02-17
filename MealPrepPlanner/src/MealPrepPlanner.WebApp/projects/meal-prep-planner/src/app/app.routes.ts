@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
-import { Dashboard, Recipes, MealPlans, Grocery, Nutrition } from './pages';
+import { Dashboard } from '@lib/dashboard';
+import { Recipes } from '@lib/recipes';
+import { MealPlans } from '@lib/meal-plans';
+import { Grocery } from '@lib/grocery';
+import { Nutrition } from '@lib/nutrition';
 
 export const routes: Routes = [
   { path: '', component: Dashboard },

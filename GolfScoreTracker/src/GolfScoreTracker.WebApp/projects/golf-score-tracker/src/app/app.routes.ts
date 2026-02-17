@@ -1,16 +1,5 @@
 import { Routes } from '@angular/router';
-import {
-  Home,
-  CoursesList,
-  CourseDetail,
-  CourseForm,
-  RoundsList,
-  RoundDetail,
-  RoundForm,
-  Scorecard,
-  HandicapsList,
-  HandicapDetail
-} from './pages';
+
 
 export const routes: Routes = [
   { path: '', component: Home },

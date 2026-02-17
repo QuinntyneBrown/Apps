@@ -8,22 +8,22 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('@lib/dashboard').then(m => m.Dashboard)
   },
   {
     path: 'books',
-    loadComponent: () => import('./pages/books/books').then(m => m.Books)
+    loadComponent: () => import('@lib/books').then(m => m.Books)
   },
   {
     path: 'reading-logs',
-    loadComponent: () => import('./pages/reading-logs/reading-logs').then(m => m.ReadingLogs)
+    loadComponent: () => import('@lib/reading-logs').then(m => m.ReadingLogs)
   },
   {
     path: 'reviews',
-    loadComponent: () => import('./pages/reviews/reviews').then(m => m.Reviews)
+    loadComponent: () => import('@lib/reviews').then(m => m.Reviews)
   },
   {
     path: 'wishlist',
-    loadComponent: () => import('./pages/wishlist/wishlist').then(m => m.Wishlist)
+    loadComponent: () => import('@lib/wishlist').then(m => m.Wishlist)
   }
 ];

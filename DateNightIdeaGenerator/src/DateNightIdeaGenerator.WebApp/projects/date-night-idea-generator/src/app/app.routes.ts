@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard';
-import { DateIdeaList } from './pages/date-idea-list';
-import { DateIdeaDetail } from './pages/date-idea-detail';
-import { DateIdeaForm } from './pages/date-idea-form';
-import { ExperienceList } from './pages/experience-list';
-import { Favorites } from './pages/favorites';
+import { Dashboard } from '@lib/dashboard';
+import { DateIdeaList } from '@lib/date-idea-list';
+import { DateIdeaDetail } from '@lib/date-idea-detail';
+import { DateIdeaForm } from '@lib/date-idea-form';
+import { ExperienceList } from '@lib/experience-list';
+import { Favorites } from '@lib/favorites';
 
 export const routes: Routes = [
   { path: '', component: Dashboard },

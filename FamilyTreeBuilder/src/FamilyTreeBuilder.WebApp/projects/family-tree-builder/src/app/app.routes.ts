@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { Persons, Relationships, Stories, Photos } from './pages';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: '/persons', pathMatch: 'full' },

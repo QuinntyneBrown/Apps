@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
-import { Dashboard, Goals, GoalDetail } from './pages';
+import { Dashboard } from '@lib/dashboard';
+import { Goals } from '@lib/goals';
+import { GoalDetail } from '@lib/goal-detail';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },

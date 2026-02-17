@@ -2,8 +2,8 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Header, GiftIdeaDialog, GiftIdeaDialogResult } from './components';
-import { GiftIdeasService, RecipientsService } from './services';
-import { CreateGiftIdeaRequest } from './models';
+import { GiftIdeasService, RecipientsService } from '@lib/shared';
+import { CreateGiftIdeaRequest } from '@lib/shared';
 
 @Component({
   selector: 'app-root',

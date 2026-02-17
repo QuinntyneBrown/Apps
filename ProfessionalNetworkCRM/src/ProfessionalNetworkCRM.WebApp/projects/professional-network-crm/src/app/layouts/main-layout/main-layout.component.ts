@@ -3,7 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
-import { Header, Sidebar } from '../../components';
+import { Header, Sidebar } from '@lib/shared';
 
 @Component({
   selector: 'app-main-layout',
