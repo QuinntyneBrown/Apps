@@ -1,0 +1,178 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
+import { FamilyMembersService } from '@lib/api';
+import { HouseholdsService } from '@lib/api';
+import { FamilyMemberDto, MemberRole, getRoleLabel } from '@lib/api';
+import { HouseholdDto } from '@lib/api';
+import { CreateOrEditFamilyMemberDialog, CreateOrEditFamilyMemberDialogResult } from '@lib/api';
+import { ConfirmDialog, ConfirmDialogResult } from '@lib/api';
+
+type ImmediateFilter = 'all' | 'immediate' | 'extended';
+
+@Component({
+  selector: 'app-family-members',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatButtonToggleModule,
+    MatChipsModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './family-members.html',
+  styleUrls: ['./family-members.scss']
+})
+export class FamilyMembers {
+  private membersService = inject(FamilyMembersService);
+  private householdsService = inject(HouseholdsService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  private refresh$ = new BehaviorSubject<void>(undefined);
+  immediateFilter$ = new BehaviorSubject<ImmediateFilter>('all');
+  householdFilter$ = new BehaviorSubject<string | null>(null);
+
+  households$ = this.householdsService.getHouseholds();
+
+  displayedColumns: string[] = ['avatar', 'name', 'email', 'relationType', 'role', 'isImmediate', 'color', 'actions'];
+
+  members$ = combineLatest([this.refresh$, this.immediateFilter$, this.householdFilter$]).pipe(
+    switchMap(([_, immediateFilter, householdId]) => {
+      const isImmediate = immediateFilter === 'all' ? undefined : immediateFilter === 'immediate';
+      return this.membersService.getFamilyMembers({
+        isImmediate,
+        householdId: householdId || undefined
+      });
+    })
+  );
+
+  getInitials(name: string): string {
+    const names = name.split(' ');
+    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  getRelationTypeLabel(relationType: string): string {
+    const labels: Record<string, string> = {
+      Self: 'Self',
+      Spouse: 'Spouse',
+      Child: 'Child',
+      Parent: 'Parent',
+      Sibling: 'Sibling',
+      Grandparent: 'Grandparent',
+      Grandchild: 'Grandchild',
+      AuntUncle: 'Aunt/Uncle',
+      NieceNephew: 'Niece/Nephew',
+      Cousin: 'Cousin',
+      InLaw: 'In-Law',
+      Other: 'Other'
+    };
+    return labels[relationType] || relationType;
+  }
+
+  onFilterChange(filter: ImmediateFilter): void {
+    this.immediateFilter$.next(filter);
+  }
+
+  onHouseholdFilterChange(householdId: string | null): void {
+    this.householdFilter$.next(householdId);
+  }
+
+  getRoleLabel(role: number): string {
+    return getRoleLabel(role);
+  }
+
+  isAdminRole(role: number): boolean {
+    return role === MemberRole.Admin;
+  }
+
+  onCreateMember(): void {
+    const dialogRef = this.dialog.open(CreateOrEditFamilyMemberDialog, {
+      width: '500px',
+      data: {
+        familyId: crypto.randomUUID()
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: CreateOrEditFamilyMemberDialogResult) => {
+      if (result?.action === 'create' && result.data) {
+        console.log('CreateFamilyMemberCommand payload:', result.data);
+        this.membersService.createFamilyMember(result.data).subscribe({
+          next: () => {
+            this.refresh$.next();
+            this.snackBar.open('Family member created successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error creating member:', error);
+            this.snackBar.open('Error creating family member', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
+  onEditMember(member: FamilyMemberDto): void {
+    const dialogRef = this.dialog.open(CreateOrEditFamilyMemberDialog, {
+      width: '500px',
+      data: {
+        member,
+        familyId: member.familyId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: CreateOrEditFamilyMemberDialogResult) => {
+      if (result?.action === 'update' && result.data) {
+        this.membersService.updateFamilyMember(member.memberId, { ...result.data, memberId: member.memberId }).subscribe({
+          next: () => {
+            this.refresh$.next();
+            this.snackBar.open('Family member updated successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error updating member:', error);
+            this.snackBar.open('Error updating family member', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
+  onDeleteMember(member: FamilyMemberDto): void {
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '400px',
+      data: {
+        title: 'Delete Family Member',
+        message: `Are you sure you want to delete ${member.name}?`
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: ConfirmDialogResult) => {
+      if (result?.confirmed) {
+        this.membersService.deleteFamilyMember(member.memberId).subscribe({
+          next: () => {
+            this.refresh$.next();
+            this.snackBar.open('Family member deleted successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error deleting member:', error);
+            this.snackBar.open('Error deleting family member', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+}
