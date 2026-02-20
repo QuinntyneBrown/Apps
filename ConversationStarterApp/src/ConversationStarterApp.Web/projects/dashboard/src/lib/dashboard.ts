@@ -1,23 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { Observable } from 'rxjs';
 import { PromptService, SessionService } from '@lib/api';
 import { Prompt, Session, CategoryLabels, DepthLabels } from '@lib/api';
+import {
+  DailyPromptHeroComponent,
+  StatCardComponent,
+  SectionHeaderComponent,
+  ConversationCardComponent
+} from '@lib/components';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule
+    DailyPromptHeroComponent,
+    StatCardComponent,
+    SectionHeaderComponent,
+    ConversationCardComponent
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
@@ -28,7 +30,6 @@ export class Dashboard implements OnInit {
   categoryLabels = CategoryLabels;
   depthLabels = DepthLabels;
 
-  // For demo purposes - in a real app, this would come from auth
   private readonly userId = '00000000-0000-0000-0000-000000000001';
 
   constructor(
@@ -53,15 +54,15 @@ export class Dashboard implements OnInit {
     this.sessionService.getRecent(this.userId, 5).subscribe();
   }
 
-  usePrompt(prompt: Prompt): void {
-    this.promptService.incrementUsage(prompt.promptId).subscribe();
+  usePrompt(): void {
+    this.promptService.currentPrompt$.subscribe(prompt => {
+      if (prompt) {
+        this.promptService.incrementUsage(prompt.promptId).subscribe();
+      }
+    }).unsubscribe();
   }
 
-  navigateToPrompts(): void {
-    this.router.navigate(['/prompts']);
-  }
-
-  navigateToSessions(): void {
-    this.router.navigate(['/sessions']);
+  skipPrompt(): void {
+    this.loadRandomPrompt();
   }
 }
