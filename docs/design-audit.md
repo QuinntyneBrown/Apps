@@ -2,8 +2,8 @@
 
 **Date:** 2026-03-03
 **Total Apps:** 70
-**Apps with design.pen:** 30
-**Apps missing design.pen:** 40
+**Apps with design.pen:** 31
+**Apps missing design.pen:** 39
 
 ---
 
@@ -17,52 +17,51 @@
 
 ## 1. Apps Missing Design Files
 
-The following 40 apps do not have a `designs/design.pen` file and require design work.
+The following 39 apps do not have a `designs/design.pen` file and require design work.
 
 | # | App | Has Requirements |
 |---|-----|:---:|
-| 1 | HouseholdBudgetManager | Yes |
-| 2 | HydrationTracker | Yes |
-| 3 | InjuryPreventionRecoveryTracker | Yes |
-| 4 | InvestmentPortfolioTracker | Yes |
-| 5 | JobSearchOrganizer | Yes |
-| 6 | KidsActivitySportsTracker | Yes |
-| 7 | LetterToFutureSelf | Yes |
-| 8 | LifeAdminDashboard | Yes |
-| 9 | MarriageEnrichmentJournal | Yes |
-| 10 | MealPrepPlanner | Yes |
-| 11 | MeetingNotesActionItemTracker | Yes |
-| 12 | MensGroupDiscussionTracker | Yes |
-| 13 | MorningRoutineBuilder | Yes |
-| 14 | MovieTVShowWatchlist | Yes |
-| 15 | NeighborhoodSocialNetwork | Yes |
-| 16 | NutritionLabelScanner | Yes |
-| 17 | PersonalBudgetTracker | Yes |
-| 18 | PersonalLibraryLessonsLearned | Yes |
-| 19 | PersonalLoanComparisonTool | Yes |
-| 20 | PersonalMissionStatementBuilder | Yes |
-| 21 | PersonalWiki | Yes |
-| 22 | PhotographySessionLogger | Yes |
-| 23 | ProfessionalNetworkCRM | Yes |
-| 24 | ProfessionalReadingList | Yes |
-| 25 | ResumeCareerAchievementTracker | Yes |
-| 26 | RetirementSavingsCalculator | Yes |
-| 27 | RoadsideAssistanceInfoHub | Yes |
-| 28 | RunningLogRaceTracker | Yes |
-| 29 | SideHustleIncomeTracker | Yes |
-| 30 | SkillDevelopmentTracker | Yes |
-| 31 | SportsTeamFollowingTracker | Yes |
-| 32 | StressMoodTracker | Yes |
-| 33 | SubscriptionAuditTool | Yes |
-| 34 | TaskPriorityMatrix | Yes |
-| 35 | TaxDeductionOrganizer | Yes |
-| 36 | TimeAuditTracker | Yes |
-| 37 | VehicleValueTracker | Yes |
-| 38 | VideoGameCollectionManager | Yes |
-| 39 | WarrantyReturnPeriodTracker | Yes |
-| 40 | WeeklyReviewSystem | Yes |
+| 1 | HydrationTracker | Yes |
+| 2 | InjuryPreventionRecoveryTracker | Yes |
+| 3 | InvestmentPortfolioTracker | Yes |
+| 4 | JobSearchOrganizer | Yes |
+| 5 | KidsActivitySportsTracker | Yes |
+| 6 | LetterToFutureSelf | Yes |
+| 7 | LifeAdminDashboard | Yes |
+| 8 | MarriageEnrichmentJournal | Yes |
+| 9 | MealPrepPlanner | Yes |
+| 10 | MeetingNotesActionItemTracker | Yes |
+| 11 | MensGroupDiscussionTracker | Yes |
+| 12 | MorningRoutineBuilder | Yes |
+| 13 | MovieTVShowWatchlist | Yes |
+| 14 | NeighborhoodSocialNetwork | Yes |
+| 15 | NutritionLabelScanner | Yes |
+| 16 | PersonalBudgetTracker | Yes |
+| 17 | PersonalLibraryLessonsLearned | Yes |
+| 18 | PersonalLoanComparisonTool | Yes |
+| 19 | PersonalMissionStatementBuilder | Yes |
+| 20 | PersonalWiki | Yes |
+| 21 | PhotographySessionLogger | Yes |
+| 22 | ProfessionalNetworkCRM | Yes |
+| 23 | ProfessionalReadingList | Yes |
+| 24 | ResumeCareerAchievementTracker | Yes |
+| 25 | RetirementSavingsCalculator | Yes |
+| 26 | RoadsideAssistanceInfoHub | Yes |
+| 27 | RunningLogRaceTracker | Yes |
+| 28 | SideHustleIncomeTracker | Yes |
+| 29 | SkillDevelopmentTracker | Yes |
+| 30 | SportsTeamFollowingTracker | Yes |
+| 31 | StressMoodTracker | Yes |
+| 32 | SubscriptionAuditTool | Yes |
+| 33 | TaskPriorityMatrix | Yes |
+| 34 | TaxDeductionOrganizer | Yes |
+| 35 | TimeAuditTracker | Yes |
+| 36 | VehicleValueTracker | Yes |
+| 37 | VideoGameCollectionManager | Yes |
+| 38 | WarrantyReturnPeriodTracker | Yes |
+| 39 | WeeklyReviewSystem | Yes |
 
-> **Note:** All 40 remaining apps have requirements documents.
+> **Note:** All 39 remaining apps have requirements documents.
 
 ---
 
@@ -768,13 +767,38 @@ Each design is evaluated against the following criteria:
 
 ---
 
+### 2.31 HouseholdBudgetManager
+
+| Criteria | Status | Details |
+|----------|--------|---------|
+| Mobile Screens | 5 screens | Dashboard, Expenses, Budget, Members, Reports |
+| Desktop Screens | 5 screens | Dashboard, Expenses, Budget, Members, Reports |
+| Angular Material | Yes | card, table, sidebar, badge, icon, chip, progress bar |
+| Feature Coverage | See below | |
+| Screen Naming | Yes | Domain-appropriate household budget terminology |
+
+**Feature Coverage:**
+
+| Feature | Mobile | Desktop |
+|---------|:------:|:-------:|
+| Budget Management | Yes | Yes |
+| Expense Tracking | Yes | Yes |
+| Collaboration/Members | Yes | Yes |
+| Category Management | Yes | Yes |
+| Alerts & Notifications | Yes | Yes |
+| Reporting | Yes | Yes |
+
+**Rating: Complete** - New design created from scratch with green finance theme (#2E7D32). Mobile includes Dashboard with budget hero card showing remaining/total with progress bar and category spending cards with percentage badges, Expenses with filter chips and transaction list with merchant icons/category/amount, Budget with overview hero card showing 66% usage and category budget cards with progress bars and status badges, Members with household info card and member cards with avatar initials/role badges/spending totals and pending invitations, and Reports with period filter chips and income/expenses/savings stat cards with trend percentages and category breakdown with trend indicators. Desktop includes Dashboard with budget/spent/remaining/categories stat cards and recent expenses table with category/member/date/amount columns, Expenses with month/transactions/avg/pending stat cards and detailed expense table with merchant/category/member/date/amount/status columns, Budget with total/allocated/unallocated/over-budget stat cards and category budget table with budget/spent/remaining/usage/status columns, Members with total/budget/invites/spent stat cards and members table with avatar/role/spending/transactions/activity/status columns, and Reports with income/expenses/savings/savings-rate stat cards and category comparison table with this-month/last-month/change/percentage/trend columns.
+
+---
+
 ## 3. Summary of Critical Issues
 
 ### 3.1 Systemic Issues
 
 | Issue | Count | Details |
 |-------|-------|---------|
-| Apps missing design files | 40 | 57% of apps have no design |
+| Apps missing design files | 39 | 56% of apps have no design |
 | Desktop screen deficit | 0/27 | All designs now have matching desktop and mobile screen counts |
 | Missing requirements | 0 | All apps now have requirements documents |
 
@@ -782,15 +806,15 @@ Each design is evaluated against the following criteria:
 
 | Rating | Count | Apps |
 |--------|-------|------|
-| Complete | 30 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, CouplesGoalTracker, DailyJournalingApp, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator, GiftIdeaTracker, GiftRegistryOrganizer, GolfScoreTracker, HomeGymEquipmentManager, HomeInventoryManager |
+| Complete | 31 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, CouplesGoalTracker, DailyJournalingApp, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator, GiftIdeaTracker, GiftRegistryOrganizer, GolfScoreTracker, HomeGymEquipmentManager, HomeInventoryManager, HouseholdBudgetManager |
 | Partial | 0 | — |
 | Incomplete | 0 | — |
 | Critical | 0 | — |
 
 ### 3.3 Top Priority Actions
 
-1. **40 apps without designs** - Need design files created based on their requirements. All 40 now have requirements ready to drive design work.
-2. **All 30 existing designs** - Now complete with full mobile and desktop coverage. No critical or incomplete designs remain.
+1. **39 apps without designs** - Need design files created based on their requirements. All 39 now have requirements ready to drive design work.
+2. **All 31 existing designs** - Now complete with full mobile and desktop coverage. No critical or incomplete designs remain.
 
 ### 3.4 Angular Material Compliance
 
