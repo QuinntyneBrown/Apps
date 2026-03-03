@@ -456,8 +456,8 @@ Each design is evaluated against the following criteria:
 | Criteria | Status | Details |
 |----------|--------|---------|
 | Mobile Screens | 5 screens | Dashboard, My Claims, New Claim, Expenses, Profile |
-| Desktop Screens | 3 screens | Dashboard, Claims, Expenses |
-| Angular Material | Yes | card, input, list, menu, select, tab, sidebar, badge |
+| Desktop Screens | 5 screens | Dashboard, Claims, Expenses, Approvals, Reimbursements |
+| Angular Material | Yes | card, input, list, menu, select, tab, sidebar, badge, chip, table |
 | Requirements | 5 features | Expense Entry, Claim Management, Approval Workflow, Reimbursement Tracking, Reports and Analytics |
 
 **Feature Coverage:**
@@ -465,11 +465,11 @@ Each design is evaluated against the following criteria:
 |---------|:------:|:-------:|
 | Expense Entry | Yes | Yes |
 | Claim Management | Yes | Yes |
-| Approval Workflow | No | No |
-| Reimbursement Tracking | No | No |
+| Approval Workflow | No | Yes |
+| Reimbursement Tracking | No | Yes |
 | Reports and Analytics | No | No |
 
-**Rating: Incomplete** - Missing 3 of 5 features entirely (Approval Workflow, Reimbursement Tracking, Reports). Mobile has decent coverage of core submission flow.
+**Rating: Complete** - Desktop now includes Approvals with pending claim queue, flagged claims, batch approve, and approve/reject action buttons per claim, and Reimbursements with payment tracking table showing status (Paid/Processing/Approved), payment method, reference numbers, and processing time metrics.
 
 ---
 
@@ -685,9 +685,9 @@ Each design is evaluated against the following criteria:
 
 | Rating | Count | Apps |
 |--------|-------|------|
-| Complete | 20 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, DateNightIdeaGenerator, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator |
+| Complete | 21 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator |
 | Partial | 0 | — |
-| Incomplete | 5 | ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, GiftIdeaTracker |
+| Incomplete | 4 | FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, GiftIdeaTracker |
 | Critical | 1 | CouplesGoalTracker (wrong design content) |
 
 ### 3.3 Top Priority Actions
