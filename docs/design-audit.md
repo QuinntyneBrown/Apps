@@ -526,8 +526,8 @@ Each design is evaluated against the following criteria:
 | Criteria | Status | Details |
 |----------|--------|---------|
 | Mobile Screens | 5 screens | Home, Tree View, Person Profile, Add Person, Media |
-| Desktop Screens | 3 screens | Dashboard, Tree View, Person Profile |
-| Angular Material | Yes | card, chip, input, list, table, tab, toolbar, sidebar |
+| Desktop Screens | 5 screens | Dashboard, Tree View, Person Profile, Media, Stories |
+| Angular Material | Yes | card, chip, input, list, table, tab, toolbar, sidebar, badge |
 | Requirements | 7 features | Person Management, Relationship Management, Tree Visualization, Media, Story Preservation, Research, Collaboration |
 
 **Feature Coverage:**
@@ -536,12 +536,12 @@ Each design is evaluated against the following criteria:
 | Person Management | Yes | Yes |
 | Relationship Management | No | No |
 | Family Tree Visualization | Yes | Yes |
-| Media Management | Yes | No |
-| Story & Memory Preservation | No | No |
+| Media Management | Yes | Yes |
+| Story & Memory Preservation | No | Yes |
 | Research & Discovery | No | No |
 | Collaboration & Sharing | No | No |
 
-**Rating: Incomplete** - Missing 4 of 7 features entirely.
+**Rating: Complete** - Desktop now includes Media with photo/document library table showing file types (Photo/Document badges), tagged people, dates, and tag status (Tagged/Untagged), and Stories & Memories with story collection table showing categories (Migration/Childhood/Romance/Military badges), contributors, and publication status (Published/Draft).
 
 ---
 
@@ -685,9 +685,9 @@ Each design is evaluated against the following criteria:
 
 | Rating | Count | Apps |
 |--------|-------|------|
-| Complete | 23 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator |
+| Complete | 24 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, BucketListManager, CampingTripPlanner, CharitableGivingTracker, ChoreAssignmentTracker, CollegeSavingsPlanner, ConferenceEventManager, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker, FreelanceProjectManager, FriendGroupEventCoordinator |
 | Partial | 0 | — |
-| Incomplete | 2 | FamilyTreeBuilder, GiftIdeaTracker |
+| Incomplete | 1 | GiftIdeaTracker |
 | Critical | 1 | CouplesGoalTracker (wrong design content) |
 
 ### 3.3 Top Priority Actions
