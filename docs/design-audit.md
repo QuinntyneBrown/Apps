@@ -141,21 +141,21 @@ Each design is evaluated against the following criteria:
 
 | Criteria | Status | Details |
 |----------|--------|---------|
-| Mobile Screens | 5 screens | Dashboard, My Appliances, Appliance Detail, Warranties, Add Appliance |
-| Desktop Screens | 3 screens | Dashboard, My Appliances, Appliance Detail |
-| Angular Material | Yes | card, chip, list, table, tab, sidebar, badge |
+| Mobile Screens | 8 screens | Dashboard, My Appliances, Appliance Detail, Warranties, Add Appliance, Manual Library, Service History, Maintenance |
+| Desktop Screens | 7 screens | Dashboard, My Appliances, Appliance Detail, Warranties, Manual Library, Service History, Maintenance |
+| Angular Material | Yes | card, chip, list, table, tab, sidebar, badge, input, toggle |
 | Requirements | 5 features | Appliance Management, Warranty Tracking, Manual Library, Service History, Maintenance Scheduling |
 
 **Feature Coverage:**
 | Feature | Mobile | Desktop |
 |---------|:------:|:-------:|
 | Appliance Management | Yes | Yes |
-| Warranty Tracking | Yes | No |
-| Manual Library | No | No |
-| Service History | No | No |
-| Maintenance Scheduling | No | No |
+| Warranty Tracking | Yes | Yes |
+| Manual Library | Yes | Yes |
+| Service History | Yes | Yes |
+| Maintenance Scheduling | Yes | Yes |
 
-**Rating: Incomplete** - Missing 3 of 5 required features entirely. Desktop also lacks Warranty and Add screens.
+**Rating: Complete** - Full mobile and desktop coverage for all 5 features.
 
 ---
 
@@ -685,9 +685,9 @@ Each design is evaluated against the following criteria:
 
 | Rating | Count | Apps |
 |--------|-------|------|
-| Complete | 5 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker |
+| Complete | 6 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker |
 | Partial | 8 | BloodPressureMonitor, BookReadingTrackerLibrary, ChoreAssignmentTracker, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, FreelanceProjectManager, FriendGroupEventCoordinator |
-| Incomplete | 12 | ApplianceWarrantyManualOrganizer, BucketListManager, CampingTripPlanner, CharitableGivingTracker, CollegeSavingsPlanner, ConferenceEventManager, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, GiftIdeaTracker |
+| Incomplete | 11 | BucketListManager, CampingTripPlanner, CharitableGivingTracker, CollegeSavingsPlanner, ConferenceEventManager, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, GiftIdeaTracker |
 | Critical | 1 | CouplesGoalTracker (wrong design content) |
 
 ### 3.3 Top Priority Actions
