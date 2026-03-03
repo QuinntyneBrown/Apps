@@ -8,6 +8,6 @@ export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: Dashboard },
   { path: 'prompts', component: Prompts },
-  { path: 'favorites', component: Favorites },
-  { path: 'sessions', component: Sessions }
+  { path: 'collections', component: Favorites },
+  { path: 'progress', component: Sessions }
 ];
