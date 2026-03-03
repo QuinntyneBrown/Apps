@@ -410,8 +410,8 @@ Each design is evaluated against the following criteria:
 | Criteria | Status | Details |
 |----------|--------|---------|
 | Mobile Screens | 5 screens | Dashboard, Entries, Entry Detail, Prompts, Mood Insights |
-| Desktop Screens | 3 screens | Dashboard, Entries, Analytics |
-| Angular Material | Yes | card, tab |
+| Desktop Screens | 5 screens | Dashboard, Entries, Analytics, Entry Detail, Prompts |
+| Angular Material | Yes | card, chip, table, tab, sidebar, badge |
 | Requirements | 5 features | Journal Entries, Mood Tracking, Writing Prompts, Reflection Tools, Privacy & Security |
 
 **Feature Coverage:**
@@ -419,11 +419,11 @@ Each design is evaluated against the following criteria:
 |---------|:------:|:-------:|
 | Journal Entries | Yes | Yes |
 | Mood Tracking | Yes | Yes |
-| Writing Prompts | Yes | No |
-| Reflection Tools | No | No |
+| Writing Prompts | Yes | Yes |
+| Reflection Tools | Yes | Yes |
 | Privacy & Security | No | No |
 
-**Rating: Partial** - Good mobile screens for core features. Missing Reflection Tools and Privacy/Security screens. Limited Angular Material component usage (only card and tab).
+**Rating: Complete** - Full mobile and desktop coverage. Desktop now includes Entry Detail with mood tags and metadata, and Prompts with today's prompt hero and category-tagged prompt grid.
 
 ---
 
@@ -685,8 +685,8 @@ Each design is evaluated against the following criteria:
 
 | Rating | Count | Apps |
 |--------|-------|------|
-| Complete | 11 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, ChoreAssignmentTracker, ContactManagementApp, ConversationStarterApp, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker |
-| Partial | 3 | DailyJournalingApp, FreelanceProjectManager, FriendGroupEventCoordinator |
+| Complete | 12 | AnniversaryBirthdayReminder, AnnualHealthScreeningReminder, ApplianceWarrantyManualOrganizer, BloodPressureMonitor, BookReadingTrackerLibrary, ChoreAssignmentTracker, ContactManagementApp, ConversationStarterApp, DailyJournalingApp, FamilyVacationPlanner, FinancialGoalTracker, FocusSessionTracker |
+| Partial | 2 | FreelanceProjectManager, FriendGroupEventCoordinator |
 | Incomplete | 11 | BucketListManager, CampingTripPlanner, CharitableGivingTracker, CollegeSavingsPlanner, ConferenceEventManager, DateNightIdeaGenerator, ExpenseClaimSystem, FamilyCalendarEventPlanner, FamilyPhotoAlbumOrganizer, FamilyTreeBuilder, GiftIdeaTracker |
 | Critical | 1 | CouplesGoalTracker (wrong design content) |
 
